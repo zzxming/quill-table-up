@@ -1,0 +1,45 @@
+{
+  "name": "quill-table-up",
+  "type": "module",
+  "version": "0.0.0",
+  "description": "A table module for quill2.x",
+  "author": "zzxming",
+  "keywords": [
+    "quill",
+    "table",
+    "module"
+  ],
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "main": "./dist/index.cjs",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "lint": "eslint . --cache",
+    "lint:fix": "eslint . --fix",
+    "build": "unbuild",
+    "dev": "unbuild --stub"
+  },
+  "peerDependencies": {
+    "quill": "^2.0.0"
+  },
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^7.16.0",
+    "@typescript-eslint/parser": "^7.16.0",
+    "@zzxming/eslint-config": "^0.0.10",
+    "eslint-merge-processors": "^0.1.0",
+    "eslint-plugin-jsonc": "^2.16.0",
+    "eslint-plugin-markdown": "^5.1.0",
+    "eslint-plugin-yml": "^1.14.0",
+    "jsonc-eslint-parser": "^2.4.0",
+    "typescript": "^5.5.3",
+    "unbuild": "^2.0.0",
+    "yaml-eslint-parser": "^1.2.3"
+  }
+}
