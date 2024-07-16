@@ -1,5 +1,6 @@
 {
   "name": "quill-table-up",
+  "type": "module",
   "version": "0.0.0",
   "description": "A table module for quill2.x",
   "author": "zzxming",

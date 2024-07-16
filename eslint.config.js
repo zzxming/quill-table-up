@@ -5,5 +5,10 @@ export default factory({
     {
       ignores: ['docs/dev.js'],
     },
+    {
+      rules: {
+        'unicorn/prefer-dom-node-dataset': 'off',
+      },
+    },
   ],
 });
