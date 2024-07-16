@@ -39,25 +39,27 @@ const buildTs = async (isDev: boolean = false) => {
     },
   );
 
-  return bundle.write(isDev
-    ? {
-        file: resolve(demoBundle, 'dev.js'),
-        sourcemap: false,
-        format: 'umd',
-        name: 'TableUp',
-        globals: {
-          quill: 'Quill',
+  return bundle.write(
+    isDev
+      ? {
+          file: resolve(demoBundle, 'dev.js'),
+          sourcemap: false,
+          format: 'umd',
+          name: 'TableUp',
+          globals: {
+            quill: 'Quill',
+          },
+          exports: 'named',
+        }
+      : {
+          file: resolve(distBundle, 'index.js'),
+          sourcemap: false,
+          format: 'es',
         },
-        exports: 'named',
-      }
-    : {
-        file: resolve(distBundle, 'index.js'),
-        sourcemap: false,
-        format: 'es',
-      });
+  );
 };
 const buildTheme = (isDev: boolean = false) => {
-  return src('./src/style/index.less')
+  return src(['./src/style/index.less', './src/style/table-creator.less'])
     .pipe(less())
     .pipe(
       postcss([
@@ -65,7 +67,7 @@ const buildTheme = (isDev: boolean = false) => {
         pxtorem({
           rootValue: 16,
           propList: ['*'],
-          selectorBlackList: ['*-origin'],
+          selectorBlackList: ['.ql-'],
         }),
       ]),
     )
@@ -81,11 +83,11 @@ const buildTheme = (isDev: boolean = false) => {
     .pipe(dest(isDev ? demoBundle : distBundle));
 };
 
-const buildModule = parallel(buildTs, buildDts);
+const buildModule = parallel(buildTs.bind(undefined, false), buildDts);
 const dev = () => {
   watch('./src/**/*.ts', buildTs.bind(undefined, true));
   watch('./src/**/*.less', buildTheme.bind(undefined, true));
 };
 
-task('default', parallel(buildModule, buildTheme));
+task('default', parallel(buildModule, buildTheme.bind(undefined, false)));
 task('dev', series(dev));

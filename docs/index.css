@@ -1,0 +1,44 @@
+.ql-snow .ql-table.ql-picker {
+  width: 28px;
+}
+.ql-snow .ql-table.ql-picker .ql-picker-label {
+  padding: 2px 4px;
+}
+.ql-snow .ql-table.ql-picker .ql-picker-label svg {
+  position: static;
+  margin-top: 0;
+}
+.select-box {
+  --select-box-color-border: #e5e7eb;
+  --select-box-border: 0.0625rem solid var(--select-box-color-border);
+  --select-box-color-active: #0ea5e9;
+  --select-box-bg-active: #e0f2fe;
+  --select-box-bg-hover: #f5f5f5;
+}
+.select-box__block {
+  display: flex;
+  width: 10rem;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+}
+.select-box__item {
+  margin: 0.125rem;
+  height: 1rem;
+  width: 1rem;
+  border: var(--select-box-border);
+}
+.select-box__item.active {
+  border-color: var(--select-box-color-active);
+  background-color: var(--select-box-bg-active);
+}
+.select-box__custom {
+  padding: 0.5rem;
+  color: #000;
+  font-size: 1rem;
+  text-align: center;
+  cursor: pointer;
+}
+.select-box__custom:hover {
+  background-color: var(--select-box-bg-hover);
+}

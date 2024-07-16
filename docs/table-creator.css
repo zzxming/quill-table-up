@@ -1,0 +1,159 @@
+.input__item {
+  --input-height: 2rem;
+  --input-inner-height: calc(var(--input-height) - 0.125rem);
+  --input-color-text: #606266;
+  --input-color-boxshaow: #dcdfe6;
+  --input-color-focus: #409eff;
+  --input-color-error: #f56c6c;
+  --input-boxshaow: 0 0 0 0.0625rem var(--input-color-boxshaow) inset;
+  --input-boxshaow-focus: 0 0 0 0.0625rem var(--input-color-focus) inset;
+  --input-boxshaow-error: 0 0 0 0.0625rem var(--input-color-error) inset;
+  display: flex;
+  align-items: center;
+}
+.input__item + .input__item {
+  margin-top: 1.125rem;
+}
+.input__label {
+  width: 5rem;
+  flex-shrink: 0;
+}
+.input__input {
+  box-sizing: border-box;
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  width: 100%;
+  height: var(--input-height);
+  line-height: var(--input-height);
+  padding: 0.0625rem 0.5rem;
+  border-radius: 0.25rem;
+  box-shadow: var(--input-boxshaow);
+  transition: box-shadow 0.2s linear;
+}
+.input__input.focus {
+  box-shadow: var(--input-boxshaow-focus);
+}
+.input__input input {
+  width: 100%;
+  height: var(--input-inner-height);
+  line-height: var(--input-inner-height);
+  flex-grow: 1;
+  font-size: 0.875rem;
+  color: var(--input-color-text);
+  outline: 0;
+  border: 0;
+  padding: 0;
+}
+.input__input.error {
+  box-shadow: var(--input-boxshaow-error);
+}
+.input__error-tip {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  font-size: 0.75rem;
+  color: var(--input-color-error);
+  line-height: 1rem;
+}
+.dialog {
+  --dialog-bg: rgba(0, 0, 0, 0.5);
+  --dialog-color-border: #ebeef5;
+  --dialog-color-boxshadow: rgba(0, 0, 0, 0.12);
+  --dialog-border: 0.0625rem solid var(--dialog-color-border);
+  --dialog-boxshadow: 0 0 0.75rem @result: var(--dialog-color-boxshadow);
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 2000;
+  height: 100%;
+  background-color: var(--dialog-bg);
+  overflow: auto;
+}
+.dialog__overlay {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  padding: 1rem;
+  overflow: auto;
+  text-align: center;
+}
+.dialog__overlay::after {
+  content: '';
+  display: inline-block;
+  height: 100%;
+  width: 0;
+  vertical-align: middle;
+}
+.dialog__content {
+  display: inline-block;
+  max-width: 50vw;
+  width: 100%;
+  vertical-align: middle;
+  background-color: #fff;
+  border-radius: 0.25rem;
+  border: var(--dialog-border);
+  font-size: 1.125rem;
+  box-shadow: var(--dialog-boxshadow);
+  text-align: left;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+.table-creator {
+  --table-creator-btn-color: #606266;
+  --table-creator-bg-hover: #f3f4f6;
+  --table-creator-btn-color-border: #dcdfe6;
+  --table-creator-btn-border: 0.0625rem solid
+    var(--table-creator-btn-color-border);
+  --table-creator-btn-confirm-color-border: #409eff;
+  --table-creator-btn-confirm-bg: #409eff;
+  --table-creator-btn-confirm-hover: #79bbff;
+  --table-creator-btn-confirm-outline-focus-visible: 0.125rem solid #a0cfff;
+  padding: 1.5rem;
+}
+.table-creator__input {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+.table-creator__control {
+  margin-top: 1rem;
+  text-align: right;
+}
+.table-creator__btn {
+  box-sizing: border-box;
+  display: inline-flex;
+  height: 2rem;
+  line-height: 1;
+  margin: 0;
+  padding: 0.5rem 1rem;
+  border-radius: 0.25rem;
+  border: var(--table-creator-btn-border);
+  color: var(--table-creator-btn-color);
+  background-color: transparent;
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+.table-creator__btn + .table-creator__btn {
+  margin-left: 0.375rem;
+}
+.table-creator__btn:hover {
+  background-color: var(--table-creator-bg-hover);
+}
+.table-creator__btn.confirm {
+  border-color: var(--table-creator-btn-confirm-color-border);
+  background-color: var(--table-creator-btn-confirm-bg);
+  color: #fff;
+}
+.table-creator__btn.confirm:hover {
+  border-color: var(--table-creator-btn-confirm-hover);
+  background-color: var(--table-creator-btn-confirm-hover);
+}
+.table-creator__btn.confirm:focus-visible {
+  outline: var(--table-creator-btn-confirm-outline-focus-visible);
+  outline-offset: 0.0625rem;
+}

@@ -1,0 +1,9 @@
+.getCssVarName(@name) {
+  @result: e('--@{name}');
+}
+.getCssVar(@name) {
+  @result: var(.getCssVarName(@name) []);
+}
+.setCssVar(@name; @value) {
+  --@{name}: @value;
+}

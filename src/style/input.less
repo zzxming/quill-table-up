@@ -1,0 +1,65 @@
+@import './functions.less';
+
+.input {
+  &__item {
+    .setCssVar(input-height,  32px);
+    .setCssVar(input-inner-height,  calc(.getCssVar(input-height) [] - 2px));
+    .setCssVar(input-color-text,  #606266);
+    .setCssVar(input-color-boxshaow,  #dcdfe6);
+    .setCssVar(input-color-focus,  #409eff);
+    .setCssVar(input-color-error,  #f56c6c);
+    .setCssVar(input-boxshaow,  0 0 0 1px .getCssVar(input-color-boxshaow) [] inset);
+    .setCssVar(input-boxshaow-focus,  0 0 0 1px .getCssVar(input-color-focus) [] inset);
+    .setCssVar(input-boxshaow-error,  0 0 0 1px .getCssVar(input-color-error) [] inset);
+
+    display: flex;
+    align-items: center;
+    & + & {
+      margin-top: 18px;
+    }
+  }
+  &__label {
+    width: 80px;
+    flex-shrink: 0;
+  }
+  &__input {
+    box-sizing: border-box;
+    position: relative;
+    display: flex;
+    flex-wrap: wrap;
+    width: 100%;
+    height: .getCssVar(input-height) [];
+    line-height: .getCssVar(input-height) [];
+    padding: 1px 8px;
+    border-radius: 4px;
+    box-shadow: .getCssVar(input-boxshaow) [];
+    transition: box-shadow 0.2s linear;
+    &.focus {
+      box-shadow: .getCssVar(input-boxshaow-focus) [];
+    }
+    input {
+      width: 100%;
+      height: .getCssVar(input-inner-height) [];
+      line-height: .getCssVar(input-inner-height) [];
+      flex-grow: 1;
+      font-size: 14px;
+      color: .getCssVar(input-color-text) [];
+      outline: none;
+      border: 0;
+      padding: 0;
+    }
+    &.error {
+      box-shadow: .getCssVar(input-boxshaow-error) [];
+    }
+  }
+  &__error {
+    &-tip {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      font-size: 12px;
+      color: .getCssVar(input-color-error) [];
+      line-height: 16px;
+    }
+  }
+}
