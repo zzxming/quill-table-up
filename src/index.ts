@@ -1,14 +1,7 @@
 import Quill from 'quill';
 import { createSelectBox, isFunction } from './utils';
 import { TableSelection } from './modules';
-import type { AnyClass } from './utils';
-
-interface TableUpOptions {
-  customSelect?: (this: TableUp) => HTMLElement;
-  texts?: {
-    customBtnText?: string;
-  };
-}
+import type { AnyClass, TableUpOptions } from './utils';
 
 const icons = Quill.import('ui/icons') as Record<string, any>;
 const TableModule = Quill.import('modules/table') as AnyClass;

@@ -1,6 +1,7 @@
 import type { Parchment } from 'quill';
 import Quill from 'quill';
-import { type AnyClass, createToolTip, isFunction } from '../utils';
+import type { AnyClass, TableSelectionOptions, Tool, ToolOption } from '../utils';
+import { createToolTip, isFunction } from '../utils';
 
 import InsertLeft from '../svg/insert-left.svg';
 import InsertRight from '../svg/insert-right.svg';
@@ -10,22 +11,6 @@ import RemoveRow from '../svg/remove-row.svg';
 import RemoveColumn from '../svg/remove-column.svg';
 import RemoveTable from '../svg/remove-table.svg';
 import type TableUp from '..';
-
-interface ToolOption {
-  name: string;
-  icon: string;
-  tip?: string;
-  handle: (tableModule: TableUp) => void;
-};
-interface ToolOptionBreak {
-  name: 'break';
-}
-type Tool = ToolOption | ToolOptionBreak;
-
-interface TableSelectionOptions {
-  selectColor: string;
-  tools: Tool[];
-}
 
 const TableFormat = Quill.import('formats/table') as AnyClass;
 
