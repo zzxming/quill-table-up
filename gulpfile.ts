@@ -10,6 +10,7 @@ import { rollup } from 'rollup';
 import typescript from '@rollup/plugin-typescript';
 import { dts } from 'rollup-plugin-dts';
 import svg from 'rollup-plugin-svg-import';
+import terser from '@rollup/plugin-terser';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const distBundle = resolve(__dirname, './dist');
@@ -41,6 +42,7 @@ const buildTs = async (isDev: boolean = false) => {
         svg({
           stringify: true,
         }),
+        terser(),
       ],
     },
   );
@@ -59,7 +61,7 @@ const buildTs = async (isDev: boolean = false) => {
         }
       : {
           file: resolve(distBundle, 'index.js'),
-          sourcemap: false,
+          sourcemap: true,
           format: 'es',
         },
   );
