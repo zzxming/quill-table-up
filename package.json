@@ -4,6 +4,11 @@
   "version": "0.0.0",
   "description": "A table module for quill2.x",
   "author": "zzxming",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zzxming/quill-table"
+  },
   "keywords": [
     "quill",
     "table",
