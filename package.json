@@ -49,6 +49,7 @@
     "postcss-pxtorem": "^6.1.0",
     "rollup": "^4.18.1",
     "rollup-plugin-dts": "^6.1.1",
+    "rollup-plugin-svg-import": "^3.0.0",
     "typescript": "^5.5.3",
     "yaml-eslint-parser": "^1.2.3"
   }

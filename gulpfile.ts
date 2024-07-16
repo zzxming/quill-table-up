@@ -9,6 +9,7 @@ import autoprefixer from 'autoprefixer';
 import { rollup } from 'rollup';
 import typescript from '@rollup/plugin-typescript';
 import { dts } from 'rollup-plugin-dts';
+import svg from 'rollup-plugin-svg-import';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const distBundle = resolve(__dirname, './dist');
@@ -35,7 +36,12 @@ const buildTs = async (isDev: boolean = false) => {
       input: './src/index.ts',
       external: [/^quill/],
       treeshake: true,
-      plugins: [typescript({ tsconfig: './tsconfig.json' })],
+      plugins: [
+        typescript({ tsconfig: './tsconfig.json' }),
+        svg({
+          stringify: true,
+        }),
+      ],
     },
   );
 
@@ -58,8 +64,8 @@ const buildTs = async (isDev: boolean = false) => {
         },
   );
 };
-const buildTheme = (isDev: boolean = false) => {
-  return src(['./src/style/index.less', './src/style/table-creator.less'])
+const buildTheme = async (isDev: boolean = false) => {
+  const bunlde = await src(['./src/style/index.less', './src/style/table-creator.less'])
     .pipe(less())
     .pipe(
       postcss([
@@ -70,8 +76,9 @@ const buildTheme = (isDev: boolean = false) => {
           selectorBlackList: ['.ql-'],
         }),
       ]),
-    )
-    .pipe(
+    );
+  if (!isDev) {
+    await bunlde.pipe(
       cleanCSS({}, (details) => {
         console.log(
           `${details.name}: ${details.stats.originalSize / 1000} KB -> ${
@@ -79,8 +86,9 @@ const buildTheme = (isDev: boolean = false) => {
           } KB`,
         );
       }),
-    )
-    .pipe(dest(isDev ? demoBundle : distBundle));
+    );
+  }
+  return bunlde.pipe(dest(isDev ? demoBundle : distBundle));
 };
 
 const buildModule = parallel(buildTs.bind(undefined, false), buildDts);

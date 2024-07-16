@@ -67,6 +67,9 @@ devDependencies:
   rollup-plugin-dts:
     specifier: ^6.1.1
     version: 6.1.1(rollup@4.18.1)(typescript@5.5.3)
+  rollup-plugin-svg-import:
+    specifier: ^3.0.0
+    version: 3.0.0(rollup@4.18.1)
   typescript:
     specifier: ^5.5.3
     version: 5.5.3
@@ -4113,6 +4116,16 @@ packages:
       typescript: 5.5.3
     optionalDependencies:
       '@babel/code-frame': 7.24.7
+    dev: true
+
+  /rollup-plugin-svg-import@3.0.0(rollup@4.18.1):
+    resolution: {integrity: sha512-5fUESTM5hdqJojrwO53JQUO7NespLNx4iLeMsToQfuaGGqGT5sz85Ns5gCDNxLO6yBPbn7p0A/6YA+Rq3clg4Q==}
+    engines: {node: '>=18.0.0'}
+    peerDependencies:
+      rollup: ^3.0.0||^4.0.0
+    dependencies:
+      '@rollup/pluginutils': 5.1.0(rollup@4.18.1)
+      rollup: 4.18.1
     dev: true
 
   /rollup@4.18.1:
