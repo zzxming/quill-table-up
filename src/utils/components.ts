@@ -261,3 +261,38 @@ export const createSelectBox = (options: TableSelectOptions = {}) => {
 
   return selectDom;
 };
+
+interface ToolTipOptions {
+  msg?: string;
+  delay?: number;
+}
+export const createToolTip = (target: HTMLElement, options: ToolTipOptions = {}) => {
+  const { msg = '', delay = 0 } = options;
+  const wrapper = document.createElement('div');
+  wrapper.classList.add('tool-tip');
+  wrapper.appendChild(target);
+
+  if (msg) {
+    const tip = document.createElement('div');
+    tip.classList.add('tool-tip__text');
+    tip.classList.add('hidden');
+    tip.textContent = msg;
+    wrapper.appendChild(tip);
+    let timer: number | null = null;
+    wrapper.addEventListener('mouseenter', () => {
+      if (timer) clearTimeout(timer);
+      timer = setTimeout(() => {
+        tip.classList.remove('hidden');
+      }, delay);
+    });
+    wrapper.addEventListener('mouseleave', () => {
+      if (timer) clearTimeout(timer);
+      timer = setTimeout(() => {
+        tip.classList.add('hidden');
+        timer = null;
+      }, delay);
+    });
+  }
+
+  return wrapper;
+};

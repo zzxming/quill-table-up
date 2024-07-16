@@ -1,0 +1,32 @@
+.tool-tip {
+  position: relative;
+  display: flex;
+  &__text {
+    position: absolute;
+    left: 50%;
+    top: 100%;
+    transform: translate(-50%, 6px);
+    z-index: 20;
+    padding: 4px 8px;
+    border-radius: 4px;
+    background-color: rgba(0, 0, 0, 0.8);
+    font-size: 12px;
+    text-align: center;
+    white-space: nowrap;
+    color: #ffffff;
+    transition: opacity 0.15s linear;
+    &::before {
+      position: absolute;
+      top: -16px;
+      left: 50%;
+      z-index: 30;
+      transform: translateX(-50%);
+      content: '';
+      border: 8px solid rgba(0, 0, 0, 0);
+      border-bottom-color: rgba(0, 0, 0, 0.8);
+    }
+    &.hidden {
+      opacity: 0;
+    }
+  }
+}

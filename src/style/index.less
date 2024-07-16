@@ -1,12 +1,56 @@
-.ql-snow .ql-table.ql-picker {
-  width: 28px;
-  .ql-picker-label {
-    padding: 2px 4px;
-    svg {
-      position: static;
-      margin-top: 0;
+.ql-snow {
+  .ql-table.ql-picker {
+    width: 28px;
+    .ql-picker-label {
+      padding: 2px 4px;
+      svg {
+        position: static;
+        margin-top: 0;
+      }
+    }
+  }
+  .ql-table-selection {
+    display: none;
+    position: absolute;
+    z-index: 10;
+    border: 1px solid;
+    pointer-events: none;
+    &-tool {
+      position: absolute;
+      z-index: 10;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      position: absolute;
+      padding: 4px;
+      border-radius: 6px;
+      box-shadow: 0 0 8px rgba(0, 0, 0, 0.5);
+      background-color: #ffffff;
+      font-size: 20px;
+    }
+    &-item {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 4px;
+      border-radius: 4px;
+      &.break {
+        padding: 0px;
+        border-radius: 0px;
+        margin: 0px 4px;
+        cursor: default;
+        border-left: 1px solid #a3a3a3;
+        border-right: 1px solid #a3a3a3;
+      }
+      &.icon {
+        cursor: pointer;
+        &:hover {
+          background-color: #eeeeee;
+        }
+      }
     }
   }
 }
 
 @import './select-box.less';
+@import './tool-tip.less';

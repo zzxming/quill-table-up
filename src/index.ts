@@ -1,14 +1,7 @@
 import Quill from 'quill';
-import { isFunction } from './utils';
-import { createSelectBox } from './components';
-
-// interface CreateTableOptions {
-//   row: number;
-//   col: number;
-// };
-// const Delta = Quill.import('delta');
-const icons = Quill.import('ui/icons') as Record<string, any>;
-const TableModule = Quill.import('modules/table') as new (...arg: any[]) => any;
+import { createSelectBox, isFunction } from './utils';
+import { TableSelection } from './modules';
+import type { AnyClass } from './utils';
 
 interface TableUpOptions {
   customSelect?: (this: TableUp) => HTMLElement;
@@ -17,7 +10,9 @@ interface TableUpOptions {
   };
 }
 
-// const CREATE_TABLE = 'createTable';
+const icons = Quill.import('ui/icons') as Record<string, any>;
+const TableModule = Quill.import('modules/table') as AnyClass;
+
 const toolName = 'table';
 export default class TableUp extends TableModule {
   constructor(quill: Quill, options: TableUpOptions) {
@@ -33,6 +28,8 @@ export default class TableUp extends TableModule {
       this.buildCustomSelect(this.options.customSelect);
       this.picker.label.addEventListener('mousedown', this.handleInViewport);
     }
+
+    this.selection = new TableSelection(this, this.quill, this.options.selection);
   }
 
   handleInViewport = () => {

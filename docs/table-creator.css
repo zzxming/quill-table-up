@@ -41,7 +41,7 @@
   flex-grow: 1;
   font-size: 0.875rem;
   color: var(--input-color-text);
-  outline: 0;
+  outline: none;
   border: 0;
   padding: 0;
 }
@@ -61,7 +61,7 @@
   --dialog-color-border: #ebeef5;
   --dialog-color-boxshadow: rgba(0, 0, 0, 0.12);
   --dialog-border: 0.0625rem solid var(--dialog-color-border);
-  --dialog-boxshadow: 0 0 0.75rem @result: var(--dialog-color-boxshadow);
+  --dialog-boxshadow: 0 0 0.75rem var(--dialog-color-boxshadow);
   position: fixed;
   top: 0;
   right: 0;
@@ -107,8 +107,7 @@
   --table-creator-btn-color: #606266;
   --table-creator-bg-hover: #f3f4f6;
   --table-creator-btn-color-border: #dcdfe6;
-  --table-creator-btn-border: 0.0625rem solid
-    var(--table-creator-btn-color-border);
+  --table-creator-btn-border: 0.0625rem solid var(--table-creator-btn-color-border);
   --table-creator-btn-confirm-color-border: #409eff;
   --table-creator-btn-confirm-bg: #409eff;
   --table-creator-btn-confirm-hover: #79bbff;
