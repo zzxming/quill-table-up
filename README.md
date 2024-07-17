@@ -12,8 +12,6 @@ This module is only an ui extension of the basic table module, without adding an
 
 ## Usage
 
-1. Install
-
 ```sh
 npm install quill-table-up
 ```
