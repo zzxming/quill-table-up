@@ -43,12 +43,12 @@ const quill = new Quill('#editor', {
 | attribute    | description                                                                                                              | type                                    |
 | ------------ | ------------------------------------------------------------------------------------------------------------------------ | --------------------------------------- |
 | customSelect | Custom table size selector. You can use the argument to insert any size table. It’s only enable when table is a `picker` | `(tableModule: TableUp) => HTMLElement` |
-| texts        | The text used in the module                                                                                              | `TextMap`                               |
+| texts        | The text used in the module                                                                                              | `TableTextOptions`                      |
 | isCustom     | Use input to input the table size                                                                                        | `boolean`                               |
 | selection    | The options for table select module                                                                                      | `TableSelectionOptions`                 |
 
 ```ts
-interface TextMap {
+interface TableTextOptions {
   customBtnText?: string;
   confirmText?: string; // input confirm button text
   cancelText?: string; // input cancel button text
@@ -68,6 +68,6 @@ interface ToolOptionBreak {
 type Tool = ToolOption | ToolOptionBreak;
 interface TableSelectionOptions {
   selectColor: string; // select border color
-  tools: Tool[]; // api button
+  tools: Tool[]; // display tools when table cell selection
 }
 ```
