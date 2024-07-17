@@ -1,7 +1,7 @@
 {
   "name": "quill-table-up",
   "type": "module",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "A table module for quill2.x",
   "author": "zzxming",
   "license": "MIT",
