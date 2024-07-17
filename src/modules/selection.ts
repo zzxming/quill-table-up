@@ -186,8 +186,8 @@ export class TableSelection {
     Object.assign(this.selectTool.style, {
       display: 'flex',
       left: `${this.boundary.x + (this.boundary.width / 2) - 1}px`,
-      top: `${this.boundary.y - 1}px`,
-      transform: `translate(-50%, 100%)`,
+      top: `${this.boundary.y + this.boundary.height}px`,
+      transform: `translate(-50%, 20%)`,
     });
 
     const { paddingLeft, paddingRight } = getComputedStyle(this.quill.root);
