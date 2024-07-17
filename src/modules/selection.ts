@@ -76,6 +76,18 @@ const defaultTools: Tool[] = [
   },
 ];
 
+const getRelativeRect = (targetRect: DOMRect, containerRect: DOMRect) => ({
+  x: targetRect.x - containerRect.x,
+  y: targetRect.y - containerRect.y,
+  width: targetRect.width,
+  height: targetRect.height,
+});
+
+const parseNum = (num: any) => {
+  const n = Number.parseFloat(num);
+  return Number.isNaN(n) ? 0 : n;
+};
+
 export class TableSelection {
   tableModule: TableUp;
   quill: Quill;
@@ -160,7 +172,8 @@ export class TableSelection {
 
   updateSelectBox = () => {
     if (!this.selectTd) return;
-    this.boundary = this.getRelativeRect(this.selectTd.domNode.getBoundingClientRect(), this.quill.container.getBoundingClientRect());
+    const containerRect = this.quill.container.getBoundingClientRect();
+    this.boundary = getRelativeRect(this.selectTd.domNode.getBoundingClientRect(), containerRect);
 
     Object.assign(this.cellSelect.style, {
       'border-color': this.options.selectColor,
@@ -176,12 +189,22 @@ export class TableSelection {
       top: `${this.boundary.y - 1}px`,
       transform: `translate(-50%, 100%)`,
     });
-  };
 
-  getRelativeRect = (targetRect: DOMRect, containerRect: DOMRect) => ({
-    x: targetRect.x - containerRect.x,
-    y: targetRect.y - containerRect.y,
-    width: targetRect.width,
-    height: targetRect.height,
-  });
+    const { paddingLeft, paddingRight } = getComputedStyle(this.quill.root);
+    const selectToolRect = this.selectTool.getBoundingClientRect();
+
+    // why 12
+    if (selectToolRect.right > containerRect.right - parseNum(paddingRight)) {
+      Object.assign(this.selectTool.style, {
+        left: `${containerRect.right - containerRect.left - selectToolRect.width - parseNum(paddingRight) - 1 - 12}px`,
+        transform: `translate(0%, 100%)`,
+      });
+    }
+    else if (selectToolRect.left < parseNum(paddingLeft)) {
+      Object.assign(this.selectTool.style, {
+        left: `${parseNum(paddingLeft) + 1 + 12}px`,
+        transform: `translate(0%, 100%)`,
+      });
+    }
+  };
 }
