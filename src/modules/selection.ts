@@ -106,18 +106,17 @@ export class TableSelection {
     this.cellSelect = this.quill.addContainer('ql-table-selection');
     this.selectTool = this.buildTools();
 
-    this.quill.root.addEventListener('mousedown', this.destory);
     this.quill.root.addEventListener('scroll', this.destory);
     this.quill.on(Quill.events.EDITOR_CHANGE, (name, range, _oldRange, _source) => {
       if (name === Quill.events.SELECTION_CHANGE && range) {
         const [blot] = this.quill.scroll.descendant(TableFormat, range.index);
-        if (!blot) return;
-        this.selectTd = blot;
-        this.updateSelectBox();
+        if (blot) {
+          this.selectTd = blot;
+          this.updateSelectBox();
+          return;
+        }
       }
-      else {
-        this.destory();
-      }
+      this.destory();
     });
   }
 
