@@ -36,14 +36,13 @@
 }
 .ql-snow .ql-table-selection-item.break {
   align-self: stretch;
+  width: 1px;
   padding: 0px;
   margin: 2px 4px;
+  background-color: #a3a3a3;
   cursor: default;
-  border-left: 1px solid #a3a3a3;
-  border-right: 1px solid #a3a3a3;
 }
 .ql-snow .ql-table-selection-item.icon {
-  flex-shrink: 0;
   cursor: pointer;
 }
 .ql-snow .ql-table-selection-item.icon:hover {
