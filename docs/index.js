@@ -25,6 +25,14 @@ const quill = new Quill('#editor', {
       [{ table: [] }],
       ['clean'],
     ],
-    tableUp: {},
+    tableUp: {
+      texts: {
+        customBtnText: 'Custom',
+        confirmText: 'Confirm',
+        cancelText: 'Cancel',
+        rowText: 'Row',
+        colText: 'Column',
+      },
+    },
   },
 });

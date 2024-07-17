@@ -68,7 +68,7 @@ export default class TableUp extends TableModule {
         this.picker.close();
       },
       isCustom: this.options.isCustom,
-      customText: this.options.texts.customBtn,
+      texts: this.options.texts,
     });
   };
 

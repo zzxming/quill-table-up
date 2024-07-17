@@ -17,16 +17,16 @@ export interface TableSelectionOptions {
   selectColor: string;
   tools: Tool[];
 }
-
+export interface TableTextOptions {
+  customBtnText?: string;
+  confirmText?: string;
+  cancelText?: string;
+  rowText?: string;
+  colText?: string;
+}
 export interface TableUpOptions {
   customSelect?: (this: TableUp) => HTMLElement;
   isCustom?: boolean;
-  texts?: {
-    customBtnText?: string;
-    confirmText?: string;
-    cancelText?: string;
-    rowText?: string;
-    colText?: string;
-  };
+  texts?: TableTextOptions;
   selection?: TableSelectionOptions;
 }

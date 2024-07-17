@@ -1,3 +1,5 @@
+import type { TableTextOptions } from './types';
+
 interface InputOptions {
   type?: string;
   value?: string;
@@ -109,13 +111,9 @@ export const createDialog = ({ child, target = document.body, beforeClose = () =
   return { dialog, close };
 };
 
-interface TableCreatorOptions {
+interface TableCreatorOptions extends Omit<TableTextOptions, 'customBtn'> {
   row?: number;
   col?: number;
-  confirmText?: string;
-  cancelText?: string;
-  rowText?: string;
-  colText?: string;
 }
 export const showTableCreator = async (options: TableCreatorOptions = {}) => {
   const box = document.createElement('div');
@@ -132,7 +130,7 @@ export const showTableCreator = async (options: TableCreatorOptions = {}) => {
     item: colItem,
     input: colInput,
     errorTip: colErrorTip,
-  } = createInputItem(options.rowText || '列数', { type: 'number', value: String(options.col || ''), max: 99 });
+  } = createInputItem(options.colText || '列数', { type: 'number', value: String(options.col || ''), max: 99 });
 
   inputContent.appendChild(rowItem);
   inputContent.appendChild(colItem);
@@ -180,11 +178,7 @@ interface TableSelectOptions {
   col?: number;
   onSelect?: (row: number, col: number) => void;
   isCustom?: boolean;
-  customText?: string;
-  confirmText?: string;
-  cancelText?: string;
-  rowText?: string;
-  colText?: string;
+  texts?: TableTextOptions;
 }
 export const createSelectBox = (options: TableSelectOptions = {}) => {
   const selectDom = document.createElement('div');
@@ -242,16 +236,12 @@ export const createSelectBox = (options: TableSelectOptions = {}) => {
   selectDom.appendChild(selectBlock);
 
   if (options.isCustom) {
+    const texts = options.texts || {};
     const selectCustom = document.createElement('div');
     selectCustom.classList.add('select-box__custom');
-    selectCustom.textContent = options.customText || '自定义行列数';
+    selectCustom.textContent = texts.customBtnText || '自定义行列数';
     selectCustom.addEventListener('click', async () => {
-      const res = await showTableCreator({
-        confirmText: options.confirmText,
-        cancelText: options.cancelText,
-        rowText: options.rowText,
-        colText: options.colText,
-      });
+      const res = await showTableCreator(texts);
       if (res) {
         options.onSelect && options.onSelect(res.row, res.col);
       }
