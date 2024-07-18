@@ -23,6 +23,7 @@ export interface TableTextOptions {
   cancelText?: string;
   rowText?: string;
   colText?: string;
+  notPositiveNumberError?: string;
 }
 export interface TableUpOptions {
   customSelect?: (this: TableUp) => HTMLElement;

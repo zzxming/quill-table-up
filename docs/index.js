@@ -32,6 +32,7 @@ const quill = new Quill('#editor', {
         cancelText: 'Cancel',
         rowText: 'Row',
         colText: 'Column',
+        notPositiveNumberError: 'Please enter a positive integer',
       },
     },
   },

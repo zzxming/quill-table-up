@@ -159,10 +159,10 @@ export const showTableCreator = async (options: TableCreatorOptions = {}) => {
       const col = Number(colInput.value);
 
       if (Number.isNaN(row) || row <= 0) {
-        return rowErrorTip('Invalid number');
+        return rowErrorTip(options.notPositiveNumberError || '请输入正整数');
       }
       if (Number.isNaN(col) || col <= 0) {
-        return colErrorTip('Invalid number');
+        return colErrorTip(options.notPositiveNumberError || '请输入正整数');
       }
       resolve({ row, col });
       close();

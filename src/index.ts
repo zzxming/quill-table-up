@@ -50,6 +50,7 @@ export default class TableUp extends TableModule {
       cancelText: '取消',
       rowText: '行数',
       colText: '列数',
+      notPositiveNumberError: '请输入正整数',
     }, options);
   };
 
