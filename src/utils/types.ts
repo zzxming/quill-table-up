@@ -6,7 +6,7 @@ export interface ToolOption {
   name: string;
   icon: string;
   tip?: string;
-  handle: (tableModule: TableUp) => void;
+  handle: (tableModule: TableUp, e: MouseEvent) => void;
 };
 export interface ToolOptionBreak {
   name: 'break';

@@ -34,6 +34,9 @@
   padding: 4px;
   border-radius: 4px;
 }
+.ql-snow .ql-table-selection-item:hover {
+  background-color: #eeeeee;
+}
 .ql-snow .ql-table-selection-item.break {
   align-self: stretch;
   width: 1px;
@@ -45,8 +48,8 @@
 .ql-snow .ql-table-selection-item.icon {
   cursor: pointer;
 }
-.ql-snow .ql-table-selection-item.icon:hover {
-  background-color: #eeeeee;
+.ql-snow .ql-table-selection-item .table-color-picker {
+  cursor: pointer;
 }
 .select-box {
   --select-box-color-border: #e5e7eb;

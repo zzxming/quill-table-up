@@ -1,4 +1,3 @@
-/* eslint-disable unused-imports/no-unused-vars */
 const Quill = window.Quill;
 const TableUp = window.TableUp.default;
 Quill.register({ 'modules/tableUp': TableUp }, true);
@@ -36,4 +35,9 @@ const quill = new Quill('#editor', {
       },
     },
   },
+});
+
+// eslint-disable-next-line no-undef
+btn.addEventListener('click', () => {
+  console.log(quill.getContents());
 });

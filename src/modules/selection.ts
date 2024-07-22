@@ -10,6 +10,7 @@ import InsertBottom from '../svg/insert-bottom.svg';
 import RemoveRow from '../svg/remove-row.svg';
 import RemoveColumn from '../svg/remove-column.svg';
 import RemoveTable from '../svg/remove-table.svg';
+import Color from '../svg/color.svg';
 import type TableUp from '..';
 
 const TableFormat = Quill.import('formats/table') as AnyClass;
@@ -19,7 +20,7 @@ const defaultTools: Tool[] = [
     name: 'InsertTop',
     icon: InsertTop,
     tip: '向上插入一行',
-    handle: (tableModule: TableUp) => {
+    handle: (tableModule) => {
       tableModule.insertRow(0);
     },
   },
@@ -27,7 +28,7 @@ const defaultTools: Tool[] = [
     name: 'InsertRight',
     icon: InsertRight,
     tip: '向右插入一列',
-    handle: (tableModule: TableUp) => {
+    handle: (tableModule) => {
       tableModule.insertColumn(1);
     },
   },
@@ -35,7 +36,7 @@ const defaultTools: Tool[] = [
     name: 'InsertBottom',
     icon: InsertBottom,
     tip: '向下插入一行',
-    handle: (tableModule: TableUp) => {
+    handle: (tableModule) => {
       tableModule.insertRow(1);
     },
   },
@@ -43,7 +44,7 @@ const defaultTools: Tool[] = [
     name: 'InsertLeft',
     icon: InsertLeft,
     tip: '向左插入一列',
-    handle: (tableModule: TableUp) => {
+    handle: (tableModule) => {
       tableModule.insertColumn(0);
     },
   },
@@ -54,7 +55,7 @@ const defaultTools: Tool[] = [
     name: 'DeleteRow',
     icon: RemoveRow,
     tip: '删除当前行',
-    handle: (tableModule: TableUp) => {
+    handle: (tableModule) => {
       tableModule.deleteRow();
     },
   },
@@ -62,7 +63,7 @@ const defaultTools: Tool[] = [
     name: 'DeleteColumn',
     icon: RemoveColumn,
     tip: '删除当前列',
-    handle: (tableModule: TableUp) => {
+    handle: (tableModule) => {
       tableModule.deleteColumn();
     },
   },
@@ -70,8 +71,35 @@ const defaultTools: Tool[] = [
     name: 'DeleteTable',
     icon: RemoveTable,
     tip: '删除当前表格',
-    handle: (tableModule: TableUp) => {
+    handle: (tableModule) => {
       tableModule.deleteTable();
+    },
+  },
+  {
+    name: 'break',
+  },
+  {
+    name: 'Background',
+    icon: `<label class="table-color-picker" style="display: flex">${Color}</label>`,
+    tip: '设置背景颜色',
+    handle: (tableModule) => {
+      const label = tableModule.selection.selectTool.querySelector('.table-color-picker');
+      if (!label) return;
+      let input = label.querySelector('input');
+      if (!input) {
+        input = document.createElement('input');
+        input.type = 'color';
+        Object.assign(input.style, {
+          width: 0,
+          height: 0,
+          padding: 0,
+          border: 0,
+        });
+        input.addEventListener('input', () => {
+          tableModule.setBackgroundColor(input.value);
+        });
+        label.appendChild(input);
+      }
     },
   },
 ];
@@ -107,16 +135,8 @@ export class TableSelection {
     this.selectTool = this.buildTools();
 
     this.quill.root.addEventListener('scroll', this.destory);
-    this.quill.on(Quill.events.EDITOR_CHANGE, (name, range, _oldRange, _source) => {
-      if (name === Quill.events.SELECTION_CHANGE && range) {
-        const [blot] = this.quill.scroll.descendant(TableFormat, range.index);
-        if (blot) {
-          this.selectTd = blot;
-          this.updateSelectBox();
-          return;
-        }
-      }
-      this.destory();
+    this.quill.on(Quill.events.EDITOR_CHANGE, () => {
+      this.updateSelectBox();
     });
   }
 
@@ -140,9 +160,9 @@ export class TableSelection {
         item.classList.add('icon');
         item.innerHTML = icon!;
         if (isFunction(handle)) {
-          item.addEventListener('click', () => {
+          item.addEventListener('click', (e) => {
             this.quill.focus();
-            handle(this.tableModule);
+            handle(this.tableModule, e);
           });
         }
         if (tip) {
@@ -170,7 +190,13 @@ export class TableSelection {
   };
 
   updateSelectBox = () => {
-    if (!this.selectTd) return;
+    const range = this.quill.getSelection();
+    if (!range) return this.destory();
+    // dts cannot find type Scroll
+    const [blot] = (this.quill.scroll as any).descendant(TableFormat, range.index);
+    if (!blot) return this.destory();
+    this.selectTd = blot;
+    if (!this.selectTd) return this.destory();
     const containerRect = this.quill.container.getBoundingClientRect();
     this.boundary = getRelativeRect(this.selectTd.domNode.getBoundingClientRect(), containerRect);
 

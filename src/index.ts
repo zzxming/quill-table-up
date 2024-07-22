@@ -1,13 +1,20 @@
 import Quill from 'quill';
 import { createSelectBox, isFunction } from './utils';
-import { TableSelection } from './modules';
+import { BlockBackground, TableSelection } from './modules';
 import type { AnyClass, TableUpOptions } from './utils';
 
 const icons = Quill.import('ui/icons') as Record<string, any>;
-const TableModule = Quill.import('modules/table') as AnyClass;
-
+const TableModule = Quill.import('modules/table') as AnyClass & { register: () => void };
 const toolName = 'table';
+
 export default class TableUp extends TableModule {
+  static register() {
+    super.register();
+    Quill.register({
+      'formats/block-background-color': BlockBackground,
+    }, true);
+  }
+
   constructor(quill: Quill, options: TableUpOptions) {
     super(quill, options);
     this.options = this.resolveOptions(options || {});
@@ -73,8 +80,18 @@ export default class TableUp extends TableModule {
     });
   };
 
+  setBackgroundColor = (color: string) => {
+    const range = this.quill.getSelection();
+    if (!range) return;
+    const cell = this.getTable(range)[2];
+    if (cell === null) return;
+    cell.format('block-background-color', color);
+  };
+
   insertTable = (rows: number, columns: number) => {
     this.quill.focus();
     super.insertTable(rows, columns);
   };
 }
+
+export * from './modules';
