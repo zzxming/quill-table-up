@@ -35,7 +35,14 @@ const quill = new Quill('#editor', {
     tableUp: {},
   },
 });
+```
 
+## Background
+
+To use the table background color, the module has registered a `block-background-color` module. You can use it on any `BlockBlot` like this:
+
+```js
+tableCell.format('block-background-color', color);
 ```
 
 ### Options
@@ -60,7 +67,7 @@ interface ToolOption {
   name: string; // tool name
   icon: string; // icon string
   tip?: string; // tool tip text
-  handle: (tableModule: TableUp) => void;
+  handle: (tableModule: TableUp, e: MouseEvent) => void;
 };
 interface ToolOptionBreak {
   name: 'break'; // when name is break, tool will insert a separator
