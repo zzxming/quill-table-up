@@ -11,7 +11,7 @@
     "noUnusedLocals": true,
     "noEmit": true,
     "outDir": "dist",
-    "sourceMap": false,
+    "sourceMap": true,
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
     "skipLibCheck": true

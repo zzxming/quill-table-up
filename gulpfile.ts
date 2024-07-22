@@ -51,7 +51,7 @@ const buildTs = async (isDev: boolean = false) => {
     isDev
       ? {
           file: resolve(demoBundle, 'dev.js'),
-          sourcemap: false,
+          sourcemap: true,
           format: 'umd',
           name: 'TableUp',
           globals: {
