@@ -32,39 +32,38 @@ const buildDts = async () => {
   });
 };
 const buildTs = async (isDev: boolean = false) => {
+  const plugins = [
+    typescript({ tsconfig: './tsconfig.json' }),
+    svg({
+      stringify: true,
+    }),
+  ];
+  !isDev && plugins.push(terser());
   const bundle = await rollup(
     {
       input: './src/index.ts',
       external: [/^quill/],
       treeshake: true,
-      plugins: [
-        typescript({ tsconfig: './tsconfig.json' }),
-        svg({
-          stringify: true,
-        }),
-        terser(),
-      ],
+      plugins,
     },
   );
-
-  return bundle.write(
-    isDev
-      ? {
-          file: resolve(demoBundle, 'dev.js'),
-          sourcemap: true,
-          format: 'umd',
-          name: 'TableUp',
-          globals: {
-            quill: 'Quill',
-          },
-          exports: 'named',
-        }
-      : {
-          file: resolve(distBundle, 'index.js'),
-          sourcemap: true,
-          format: 'es',
-        },
-  );
+  if (isDev) {
+    await bundle.write({
+      file: resolve(demoBundle, 'dev.js'),
+      sourcemap: true,
+      format: 'umd',
+      name: 'TableUp',
+      globals: {
+        quill: 'Quill',
+      },
+      exports: 'named',
+    });
+  }
+  return bundle.write({
+    file: resolve(distBundle, 'index.js'),
+    sourcemap: true,
+    format: 'es',
+  });
 };
 const buildTheme = async (isDev: boolean = false) => {
   const bunlde = await src(['./src/style/index.less', './src/style/table-creator.less'])
