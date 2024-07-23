@@ -47,6 +47,7 @@ export default class TableUp extends TableModule {
     return Object.assign({
       isCustom: true,
       texts: this.resolveTexts(options.texts || {}),
+      selection: {},
     }, options);
   };
 

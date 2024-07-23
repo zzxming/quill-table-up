@@ -15,6 +15,7 @@ export type Tool = ToolOption | ToolOptionBreak;
 
 export interface TableSelectionOptions {
   selectColor: string;
+  tipText?: boolean;
   tools: Tool[];
 }
 export interface TableTextOptions {

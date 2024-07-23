@@ -94,6 +94,8 @@ const defaultTools: Tool[] = [
           height: 0,
           padding: 0,
           border: 0,
+          outline: 'none',
+          opacity: 0,
         });
         input.addEventListener('input', () => {
           tableModule.setBackgroundColor(input.value);
@@ -135,6 +137,8 @@ export class TableSelection {
     this.selectTool = this.buildTools();
 
     this.quill.root.addEventListener('scroll', this.destory);
+    const resizeObserver = new ResizeObserver(this.destory);
+    resizeObserver.observe(this.quill.root);
     this.quill.on(Quill.events.EDITOR_CHANGE, () => {
       this.updateSelectBox();
     });
@@ -143,6 +147,7 @@ export class TableSelection {
   resolveOptions = (options: Partial<TableSelectionOptions>) => {
     return Object.assign({
       selectColor: '#0589f3',
+      tipText: true,
       tools: defaultTools,
     }, options);
   };
@@ -165,7 +170,7 @@ export class TableSelection {
             handle(this.tableModule, e);
           });
         }
-        if (tip) {
+        if (this.options.tipText && tip) {
           item = createToolTip(item, { msg: tip, delay: 150 });
         }
       }
@@ -222,13 +227,13 @@ export class TableSelection {
     if (selectToolRect.right > containerRect.right - parseNum(paddingRight)) {
       Object.assign(this.selectTool.style, {
         left: `${containerRect.right - containerRect.left - selectToolRect.width - parseNum(paddingRight) - 1 - 12}px`,
-        transform: `translate(0%, 100%)`,
+        transform: `translate(0%, 20%)`,
       });
     }
     else if (selectToolRect.left < parseNum(paddingLeft)) {
       Object.assign(this.selectTool.style, {
         left: `${parseNum(paddingLeft) + 1 + 12}px`,
-        transform: `translate(0%, 100%)`,
+        transform: `translate(0%, 20%)`,
       });
     }
   };
