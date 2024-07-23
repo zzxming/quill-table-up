@@ -82,7 +82,7 @@ export default class TableUp extends TableModule {
   };
 
   setBackgroundColor = (color: string) => {
-    const range = this.quill.getSelection();
+    const range = this.quill.getSelection(true);
     if (!range) return;
     const cell = this.getTable(range)[2];
     if (cell === null) return;
