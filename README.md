@@ -37,14 +37,6 @@ const quill = new Quill('#editor', {
 });
 ```
 
-## Background
-
-To use the table background color, the module has registered a `block-background-color` module. You can use it on any `BlockBlot` like this:
-
-```js
-tableCell.format('block-background-color', color);
-```
-
 ### Options
 
 | attribute    | description                                                                                                              | type                                    |
