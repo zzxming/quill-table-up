@@ -6,12 +6,31 @@ import type { AnyClass, TableUpOptions } from './utils';
 const icons = Quill.import('ui/icons') as Record<string, any>;
 const TableModule = Quill.import('modules/table') as AnyClass & { register: () => void };
 const toolName = 'table';
+const TableCell = Quill.import('formats/table') as AnyClass;
+
+class TableCellWithBackground extends TableCell {
+  format(name: string, value: string) {
+    if (name === BlockBackground.attrName) {
+      this.domNode.style.backgroundColor = value;
+    }
+    return super.format(name, value);
+  }
+
+  formats() {
+    const formats = super.formats();
+    if (formats[BlockBackground.attrName]) {
+      delete formats.background;
+    }
+    return formats;
+  }
+}
 
 export default class TableUp extends TableModule {
   static register() {
     super.register();
     Quill.register({
       'formats/block-background-color': BlockBackground,
+      'formats/table': TableCellWithBackground,
     }, true);
   }
 
@@ -86,7 +105,7 @@ export default class TableUp extends TableModule {
     if (!range) return;
     const cell = this.getTable(range)[2];
     if (cell === null) return;
-    cell.format('block-background-color', color);
+    cell.format(BlockBackground.attrName, color);
   };
 
   insertTable = (rows: number, columns: number) => {

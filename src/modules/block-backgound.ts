@@ -1,6 +1,6 @@
 import Quill from 'quill';
 
 const Parchment = Quill.import('parchment');
-export const BlockBackground = new Parchment.StyleAttributor('block-background-color', 'background-color', {
+export const BlockBackground = new Parchment.Attributor('block-background-color', 'data-background-color', {
   scope: Parchment.Scope.BLOCK,
 });
