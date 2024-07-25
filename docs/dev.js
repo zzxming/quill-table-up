@@ -466,18 +466,35 @@
     }
 
     const Parchment = Quill.import('parchment');
-    const BlockBackground = new Parchment.StyleAttributor('block-background-color', 'background-color', {
+    const BlockBackground = new Parchment.Attributor('block-background-color', 'data-background-color', {
         scope: Parchment.Scope.BLOCK,
     });
 
     const icons = Quill.import('ui/icons');
     const TableModule = Quill.import('modules/table');
     const toolName = 'table';
+    const TableCell = Quill.import('formats/table');
+    class TableCellWithBackground extends TableCell {
+        format(name, value) {
+            if (name === BlockBackground.attrName) {
+                this.domNode.style.backgroundColor = value;
+            }
+            return super.format(name, value);
+        }
+        formats() {
+            const formats = super.formats();
+            if (formats[BlockBackground.attrName]) {
+                delete formats.background;
+            }
+            return formats;
+        }
+    }
     class TableUp extends TableModule {
         static register() {
             super.register();
             Quill.register({
                 'formats/block-background-color': BlockBackground,
+                'formats/table': TableCellWithBackground,
             }, true);
         }
         constructor(quill, options) {
@@ -546,7 +563,7 @@
             const cell = this.getTable(range)[2];
             if (cell === null)
                 return;
-            cell.format('block-background-color', color);
+            cell.format(BlockBackground.attrName, color);
         };
         insertTable = (rows, columns) => {
             this.quill.focus();
