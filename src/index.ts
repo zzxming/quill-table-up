@@ -1,8 +1,10 @@
 import Quill from 'quill';
+import type { Delta as TypeDelta } from 'quill/core';
 import { createSelectBox, isFunction } from './utils';
 import { BlockBackground, TableSelection } from './modules';
 import type { AnyClass, TableUpOptions } from './utils';
 
+const Delta = Quill.import('delta');
 const icons = Quill.import('ui/icons') as Record<string, any>;
 const TableModule = Quill.import('modules/table') as AnyClass & { register: () => void };
 const toolName = 'table';
@@ -49,7 +51,22 @@ export default class TableUp extends TableModule {
     }
 
     this.selection = new TableSelection(this, this.quill, this.options.selection);
+
+    this.tdDackgroundPasteHandle();
   }
+
+  tdDackgroundPasteHandle = () => {
+    const clipboard = this.quill.getModule('clipboard');
+    clipboard.addMatcher(Node.ELEMENT_NODE, (node: HTMLElement, delta: TypeDelta) => {
+      if (['td', 'th'].includes(node.tagName.toLocaleLowerCase())) {
+        const backgroundColor = node.style.backgroundColor;
+        if (backgroundColor) {
+          return delta.compose(new Delta().retain(delta.length(), { background: null, [BlockBackground.attrName]: backgroundColor }));
+        }
+      }
+      return delta;
+    });
+  };
 
   handleInViewport = () => {
     const selectRect = this.selector.getBoundingClientRect();
