@@ -3,7 +3,7 @@ import { factory } from '@zzxming/eslint-config';
 export default factory({
   overrides: [
     {
-      ignores: ['docs/dev.js'],
+      ignores: ['docs/dev.js', 'docs/dev.js.map', 'docs/table-creator.css'],
     },
     {
       rules: {
