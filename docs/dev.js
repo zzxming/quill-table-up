@@ -388,15 +388,15 @@
                     usedColorWrapper.style.display = 'flex';
                     const containerRect = tableModule.quill.container.getBoundingClientRect();
                     const { paddingLeft, paddingRight } = getComputedStyle(tableModule.quill.root);
-                    const selectToolRect = usedColorWrapper.getBoundingClientRect();
-                    if (selectToolRect.right > containerRect.right - parseNum(paddingRight)) {
+                    const usedColorRect = usedColorWrapper.getBoundingClientRect();
+                    if (usedColorRect.right > containerRect.right - parseNum(paddingRight)) {
                         Object.assign(usedColorWrapper.style, {
-                            transform: `translateX(-75%)`,
+                            transform: `translate(-80%, -100%)`,
                         });
                     }
-                    else if (selectToolRect.left < parseNum(paddingLeft)) {
+                    else if (usedColorRect.left < parseNum(paddingLeft)) {
                         Object.assign(usedColorWrapper.style, {
-                            transform: `translateX(-25%)`,
+                            transform: `translate(-20%, -100%)`,
                         });
                     }
                 });
@@ -459,8 +459,8 @@
             this.cellSelect = this.quill.addContainer('ql-table-selection');
             this.selectTool = this.buildTools();
             this.quill.root.addEventListener('scroll', this.destory);
-            const resizeObserver = new ResizeObserver(this.destory);
-            resizeObserver.observe(this.quill.root);
+            // const resizeObserver = new ResizeObserver(this.destory);
+            // resizeObserver.observe(this.quill.root);
             this.quill.on(Quill.events.EDITOR_CHANGE, () => {
                 this.updateSelectBox();
             });

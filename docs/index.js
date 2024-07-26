@@ -25,9 +25,6 @@ const quill = new Quill('#editor', {
       ['clean'],
     ],
     tableUp: {
-      selection: {
-        tipText: false,
-      },
       texts: {
         customBtnText: 'Custom',
         confirmText: 'Confirm',
