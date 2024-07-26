@@ -48,8 +48,34 @@
       &.icon {
         cursor: pointer;
       }
-      .table-color-picker {
-        cursor: pointer;
+      .table-color {
+        &-wrapper {
+          position: relative;
+        }
+        &-picker {
+          display: flex;
+          cursor: pointer;
+        }
+        &-used {
+          position: absolute;
+          top: 100%;
+          left: 0px;
+          transform: translateX(-50%);
+          display: none;
+          align-items: center;
+          justify-content: center;
+          flex-direction: row-reverse;
+          padding: 6px 10px;
+          background-color: #ffffff;
+          border-radius: 4px;
+          border: 1px solid #888888;
+          &-item {
+            width: 16px;
+            height: 16px;
+            margin: 0px 3px;
+            border: 1px solid #a3a3a3;
+          }
+        }
       }
     }
   }

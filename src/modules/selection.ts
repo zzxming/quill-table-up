@@ -1,7 +1,7 @@
 import type { Parchment } from 'quill';
 import Quill from 'quill';
 import type { AnyClass, TableSelectionOptions, Tool, ToolOption } from '../utils';
-import { createToolTip, isFunction } from '../utils';
+import { createToolTip, debounce, isArray, isFunction } from '../utils';
 
 import InsertLeft from '../svg/insert-left.svg';
 import InsertRight from '../svg/insert-right.svg';
@@ -14,6 +14,43 @@ import Color from '../svg/color.svg';
 import type TableUp from '..';
 
 const TableFormat = Quill.import('formats/table') as AnyClass;
+const usedColors = new Set<string>();
+const updateUsedColor = debounce((tableModule: TableUp, color: string) => {
+  usedColors.add(color);
+  if (usedColors.size > 10) {
+    const saveColors = Array.from(usedColors).slice(-10);
+    usedColors.clear();
+    saveColors.map(v => usedColors.add(v));
+  }
+
+  localStorage.setItem(tableModule.selection.options.localstorageKey, JSON.stringify(Array.from(usedColors)));
+  const usedColorWrapper = tableModule.selection.selectTool.querySelector('.table-color-wrapper .table-color-used');
+  if (!usedColorWrapper) return;
+
+  usedColorWrapper.innerHTML = '';
+  for (const recordColor of usedColors) {
+    const colorItem = document.createElement('div');
+    colorItem.classList.add('table-color-used-item');
+    colorItem.style.backgroundColor = recordColor;
+    colorItem.addEventListener('click', (e) => {
+      e.stopPropagation();
+      tableModule.setBackgroundColor(colorItem.style.backgroundColor);
+    });
+    usedColorWrapper.appendChild(colorItem);
+  }
+}, 1000);
+
+const getRelativeRect = (targetRect: DOMRect, containerRect: DOMRect) => ({
+  x: targetRect.x - containerRect.x,
+  y: targetRect.y - containerRect.y,
+  width: targetRect.width,
+  height: targetRect.height,
+});
+
+const parseNum = (num: any) => {
+  const n = Number.parseFloat(num);
+  return Number.isNaN(n) ? 0 : n;
+};
 
 const defaultTools: Tool[] = [
   {
@@ -79,12 +116,62 @@ const defaultTools: Tool[] = [
     name: 'break',
   },
   {
-    name: 'Background',
-    icon: `<label class="table-color-picker" style="display: flex">${Color}</label>`,
+    name: 'BackgroundColor',
+    icon: (tableModule) => {
+      const wrapper = document.createElement('div');
+      wrapper.classList.add('table-color-wrapper');
+      const label = document.createElement('label');
+      label.classList.add('table-color-picker');
+      label.innerHTML = Color;
+      const usedColorWrapper = document.createElement('div');
+      usedColorWrapper.classList.add('table-color-used');
+
+      for (const recordColor of usedColors) {
+        const colorItem = document.createElement('div');
+        colorItem.classList.add('table-color-used-item');
+        colorItem.style.backgroundColor = recordColor;
+        colorItem.addEventListener('click', (e) => {
+          e.stopPropagation();
+          tableModule.setBackgroundColor(colorItem.style.backgroundColor);
+        });
+        usedColorWrapper.appendChild(colorItem);
+      }
+
+      wrapper.appendChild(label);
+      wrapper.appendChild(usedColorWrapper);
+
+      wrapper.addEventListener('mouseenter', () => {
+        if (usedColors.size === 0) return;
+        usedColorWrapper.style.display = 'flex';
+        const containerRect = tableModule.quill.container.getBoundingClientRect();
+        const { paddingLeft, paddingRight } = getComputedStyle(tableModule.quill.root);
+        const selectToolRect = usedColorWrapper.getBoundingClientRect();
+
+        if (selectToolRect.right > containerRect.right - parseNum(paddingRight)) {
+          Object.assign(usedColorWrapper.style, {
+            transform: `translateX(-75%)`,
+          });
+        }
+        else if (selectToolRect.left < parseNum(paddingLeft)) {
+          Object.assign(usedColorWrapper.style, {
+            transform: `translateX(-25%)`,
+          });
+        }
+      });
+      wrapper.addEventListener('mouseleave', () => {
+        Object.assign(usedColorWrapper.style, {
+          display: 'none',
+          transform: null,
+        });
+      });
+
+      return wrapper;
+    },
     tip: '设置背景颜色',
     handle: (tableModule) => {
       const label = tableModule.selection.selectTool.querySelector('.table-color-picker');
       if (!label) return;
+
       let input = label.querySelector('input');
       if (!input) {
         input = document.createElement('input');
@@ -99,24 +186,13 @@ const defaultTools: Tool[] = [
         });
         input.addEventListener('input', () => {
           tableModule.setBackgroundColor(input.value);
+          updateUsedColor(tableModule, input.value);
         });
         label.appendChild(input);
       }
     },
   },
 ];
-
-const getRelativeRect = (targetRect: DOMRect, containerRect: DOMRect) => ({
-  x: targetRect.x - containerRect.x,
-  y: targetRect.y - containerRect.y,
-  width: targetRect.width,
-  height: targetRect.height,
-});
-
-const parseNum = (num: any) => {
-  const n = Number.parseFloat(num);
-  return Number.isNaN(n) ? 0 : n;
-};
 
 export class TableSelection {
   tableModule: TableUp;
@@ -132,6 +208,16 @@ export class TableSelection {
     this.tableModule = tableModule;
     this.quill = quill;
     this.options = this.resolveOptions(options);
+
+    try {
+      const storageValue = localStorage.getItem(this.options.localstorageKey) || '[]';
+      let colorValue = JSON.parse(storageValue);
+      if (!isArray(colorValue)) {
+        colorValue = [];
+      }
+      colorValue.map((c: string) => usedColors.add(c));
+    }
+    catch {}
 
     this.cellSelect = this.quill.addContainer('ql-table-selection');
     this.selectTool = this.buildTools();
@@ -149,6 +235,7 @@ export class TableSelection {
       selectColor: '#0589f3',
       tipText: true,
       tools: defaultTools,
+      localstorageKey: '__table-bg-used-color',
     }, options);
   };
 
@@ -163,7 +250,12 @@ export class TableSelection {
       }
       else {
         item.classList.add('icon');
-        item.innerHTML = icon!;
+        if (isFunction(icon)) {
+          item.appendChild(icon(this.tableModule));
+        }
+        else {
+          item.innerHTML = icon;
+        }
         if (isFunction(handle)) {
           item.addEventListener('click', (e) => {
             this.quill.focus();
@@ -201,9 +293,8 @@ export class TableSelection {
     const [blot] = (this.quill.scroll as any).descendant(TableFormat, range.index);
     if (!blot) return this.destory();
     this.selectTd = blot;
-    if (!this.selectTd) return this.destory();
     const containerRect = this.quill.container.getBoundingClientRect();
-    this.boundary = getRelativeRect(this.selectTd.domNode.getBoundingClientRect(), containerRect);
+    this.boundary = getRelativeRect(this.selectTd!.domNode.getBoundingClientRect(), containerRect);
 
     Object.assign(this.cellSelect.style, {
       'border-color': this.options.selectColor,

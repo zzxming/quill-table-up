@@ -233,6 +233,18 @@
     };
 
     const isFunction = (val) => typeof val === 'function';
+    const isArray = Array.isArray;
+    const debounce = (fn, delay) => {
+        let timestamp;
+        return function (...args) {
+            if (timestamp) {
+                clearTimeout(timestamp);
+            }
+            timestamp = setTimeout(() => {
+                fn.apply(this, args);
+            }, delay);
+        };
+    };
 
     var InsertLeft = "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"1em\" height=\"1em\" viewBox=\"0 0 24 24\"><path fill=\"currentColor\" d=\"M4 3h14a2 2 0 0 1 2 2v7.08a6 6 0 0 0-4.32.92H12v4h1.08c-.11.68-.11 1.35 0 2H4a2 2 0 0 1-2-2V5c0-1.1.9-2 2-2m0 4v4h6V7zm8 0v4h6V7zm-8 6v4h6v-4zm14.44 2v2h4v2h-4v2l-3-3z\"/></svg>";
 
@@ -251,6 +263,40 @@
     var Color = "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"1em\" height=\"1em\" viewBox=\"0 0 24 24\"><path fill=\"none\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"m11 7l6 6M4 16L15.7 4.3a1 1 0 0 1 1.4 0l2.6 2.6a1 1 0 0 1 0 1.4L8 20H4z\"/></svg>";
 
     const TableFormat = Quill.import('formats/table');
+    const usedColors = new Set();
+    const updateUsedColor = debounce((tableModule, color) => {
+        usedColors.add(color);
+        if (usedColors.size > 10) {
+            const saveColors = Array.from(usedColors).slice(-10);
+            usedColors.clear();
+            saveColors.map(v => usedColors.add(v));
+        }
+        localStorage.setItem(tableModule.selection.options.localstorageKey, JSON.stringify(Array.from(usedColors)));
+        const usedColorWrapper = tableModule.selection.selectTool.querySelector('.table-color-wrapper .table-color-used');
+        if (!usedColorWrapper)
+            return;
+        usedColorWrapper.innerHTML = '';
+        for (const recordColor of usedColors) {
+            const colorItem = document.createElement('div');
+            colorItem.classList.add('table-color-used-item');
+            colorItem.style.backgroundColor = recordColor;
+            colorItem.addEventListener('click', (e) => {
+                e.stopPropagation();
+                tableModule.setBackgroundColor(colorItem.style.backgroundColor);
+            });
+            usedColorWrapper.appendChild(colorItem);
+        }
+    }, 1000);
+    const getRelativeRect = (targetRect, containerRect) => ({
+        x: targetRect.x - containerRect.x,
+        y: targetRect.y - containerRect.y,
+        width: targetRect.width,
+        height: targetRect.height,
+    });
+    const parseNum = (num) => {
+        const n = Number.parseFloat(num);
+        return Number.isNaN(n) ? 0 : n;
+    };
     const defaultTools = [
         {
             name: 'InsertTop',
@@ -315,8 +361,53 @@
             name: 'break',
         },
         {
-            name: 'Background',
-            icon: `<label class="table-color-picker" style="display: flex">${Color}</label>`,
+            name: 'BackgroundColor',
+            icon: (tableModule) => {
+                const wrapper = document.createElement('div');
+                wrapper.classList.add('table-color-wrapper');
+                const label = document.createElement('label');
+                label.classList.add('table-color-picker');
+                label.innerHTML = Color;
+                const usedColorWrapper = document.createElement('div');
+                usedColorWrapper.classList.add('table-color-used');
+                for (const recordColor of usedColors) {
+                    const colorItem = document.createElement('div');
+                    colorItem.classList.add('table-color-used-item');
+                    colorItem.style.backgroundColor = recordColor;
+                    colorItem.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        tableModule.setBackgroundColor(colorItem.style.backgroundColor);
+                    });
+                    usedColorWrapper.appendChild(colorItem);
+                }
+                wrapper.appendChild(label);
+                wrapper.appendChild(usedColorWrapper);
+                wrapper.addEventListener('mouseenter', () => {
+                    if (usedColors.size === 0)
+                        return;
+                    usedColorWrapper.style.display = 'flex';
+                    const containerRect = tableModule.quill.container.getBoundingClientRect();
+                    const { paddingLeft, paddingRight } = getComputedStyle(tableModule.quill.root);
+                    const selectToolRect = usedColorWrapper.getBoundingClientRect();
+                    if (selectToolRect.right > containerRect.right - parseNum(paddingRight)) {
+                        Object.assign(usedColorWrapper.style, {
+                            transform: `translateX(-75%)`,
+                        });
+                    }
+                    else if (selectToolRect.left < parseNum(paddingLeft)) {
+                        Object.assign(usedColorWrapper.style, {
+                            transform: `translateX(-25%)`,
+                        });
+                    }
+                });
+                wrapper.addEventListener('mouseleave', () => {
+                    Object.assign(usedColorWrapper.style, {
+                        display: 'none',
+                        transform: null,
+                    });
+                });
+                return wrapper;
+            },
             tip: '设置背景颜色',
             handle: (tableModule) => {
                 const label = tableModule.selection.selectTool.querySelector('.table-color-picker');
@@ -336,22 +427,13 @@
                     });
                     input.addEventListener('input', () => {
                         tableModule.setBackgroundColor(input.value);
+                        updateUsedColor(tableModule, input.value);
                     });
                     label.appendChild(input);
                 }
             },
         },
     ];
-    const getRelativeRect = (targetRect, containerRect) => ({
-        x: targetRect.x - containerRect.x,
-        y: targetRect.y - containerRect.y,
-        width: targetRect.width,
-        height: targetRect.height,
-    });
-    const parseNum = (num) => {
-        const n = Number.parseFloat(num);
-        return Number.isNaN(n) ? 0 : n;
-    };
     class TableSelection {
         tableModule;
         quill;
@@ -365,6 +447,15 @@
             this.tableModule = tableModule;
             this.quill = quill;
             this.options = this.resolveOptions(options);
+            try {
+                const storageValue = localStorage.getItem(this.options.localstorageKey) || '[]';
+                let colorValue = JSON.parse(storageValue);
+                if (!isArray(colorValue)) {
+                    colorValue = [];
+                }
+                colorValue.map((c) => usedColors.add(c));
+            }
+            catch { }
             this.cellSelect = this.quill.addContainer('ql-table-selection');
             this.selectTool = this.buildTools();
             this.quill.root.addEventListener('scroll', this.destory);
@@ -379,6 +470,7 @@
                 selectColor: '#0589f3',
                 tipText: true,
                 tools: defaultTools,
+                localstorageKey: '__table-bg-used-color',
             }, options);
         };
         buildTools = () => {
@@ -392,7 +484,12 @@
                 }
                 else {
                     item.classList.add('icon');
-                    item.innerHTML = icon;
+                    if (isFunction(icon)) {
+                        item.appendChild(icon(this.tableModule));
+                    }
+                    else {
+                        item.innerHTML = icon;
+                    }
                     if (isFunction(handle)) {
                         item.addEventListener('click', (e) => {
                             this.quill.focus();
@@ -429,8 +526,6 @@
             if (!blot)
                 return this.destory();
             this.selectTd = blot;
-            if (!this.selectTd)
-                return this.destory();
             const containerRect = this.quill.container.getBoundingClientRect();
             this.boundary = getRelativeRect(this.selectTd.domNode.getBoundingClientRect(), containerRect);
             Object.assign(this.cellSelect.style, {
@@ -470,6 +565,7 @@
         scope: Parchment.Scope.BLOCK,
     });
 
+    const Delta = Quill.import('delta');
     const icons = Quill.import('ui/icons');
     const TableModule = Quill.import('modules/table');
     const toolName = 'table';
@@ -511,7 +607,20 @@
                 this.picker.label.addEventListener('mousedown', this.handleInViewport);
             }
             this.selection = new TableSelection(this, this.quill, this.options.selection);
+            this.tdDackgroundPasteHandle();
         }
+        tdDackgroundPasteHandle = () => {
+            const clipboard = this.quill.getModule('clipboard');
+            clipboard.addMatcher(Node.ELEMENT_NODE, (node, delta) => {
+                if (['td', 'th'].includes(node.tagName.toLocaleLowerCase())) {
+                    const backgroundColor = node.style.backgroundColor;
+                    if (backgroundColor) {
+                        return delta.compose(new Delta().retain(delta.length(), { background: null, [BlockBackground.attrName]: backgroundColor }));
+                    }
+                }
+                return delta;
+            });
+        };
         handleInViewport = () => {
             const selectRect = this.selector.getBoundingClientRect();
             if (selectRect.right >= window.innerWidth) {

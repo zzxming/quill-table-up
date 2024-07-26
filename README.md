@@ -69,5 +69,6 @@ interface TableSelectionOptions {
   selectColor: string; // select border color
   tools: Tool[]; // display tools when table cell selection
   textTip: boolean; // tool tip text display
+  localstorageKey: string; // localstorage key to save selected color
 }
 ```

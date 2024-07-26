@@ -4,7 +4,7 @@ export type AnyClass = new (...arg: any[]) => any;
 
 export interface ToolOption {
   name: string;
-  icon: string;
+  icon: string | ((tableModule: TableUp) => HTMLElement);
   tip?: string;
   handle: (tableModule: TableUp, e: MouseEvent) => void;
 };
@@ -15,8 +15,9 @@ export type Tool = ToolOption | ToolOptionBreak;
 
 export interface TableSelectionOptions {
   selectColor: string;
-  tipText?: boolean;
+  tipText: boolean;
   tools: Tool[];
+  localstorageKey: string;
 }
 export interface TableTextOptions {
   customBtnText?: string;

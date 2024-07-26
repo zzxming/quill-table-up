@@ -48,8 +48,32 @@
 .ql-snow .ql-table-selection-item.icon {
   cursor: pointer;
 }
+.ql-snow .ql-table-selection-item .table-color-wrapper {
+  position: relative;
+}
 .ql-snow .ql-table-selection-item .table-color-picker {
+  display: flex;
   cursor: pointer;
+}
+.ql-snow .ql-table-selection-item .table-color-used {
+  position: absolute;
+  top: 100%;
+  left: 0px;
+  transform: translateX(-50%);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  flex-direction: row-reverse;
+  padding: 6px 10px;
+  background-color: #ffffff;
+  border-radius: 4px;
+  border: 1px solid #888888;
+}
+.ql-snow .ql-table-selection-item .table-color-used-item {
+  width: 16px;
+  height: 16px;
+  margin: 0px 3px;
+  border: 1px solid #a3a3a3;
 }
 .select-box {
   --select-box-color-border: #e5e7eb;
