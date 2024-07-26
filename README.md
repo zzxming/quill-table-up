@@ -57,7 +57,7 @@ interface TableTextOptions {
 
 interface ToolOption {
   name: string; // tool name
-  icon: string; // icon string
+  icon: string | ((tableModule: TableUp) => HTMLElement); // icon string or function return a HTMLElement
   tip?: string; // tool tip text
   handle: (tableModule: TableUp, e: MouseEvent) => void;
 };
