@@ -1,25 +1,25 @@
-import type { Parchment } from 'quill';
+import type { TableUpV2 } from '..';
 // import type TableUp from '..';
 
 // export type AnyClass = new (...arg: any[]) => any;
 
-// export interface ToolOption {
-//   name: string;
-//   icon: string | ((tableModule: TableUp) => HTMLElement);
-//   tip?: string;
-//   handle: (tableModule: TableUp, e: MouseEvent) => void;
-// };
-// export interface ToolOptionBreak {
-//   name: 'break';
-// }
-// export type Tool = ToolOption | ToolOptionBreak;
+export interface ToolOption {
+  name: string;
+  icon: string | ((tableModule: TableUpV2) => HTMLElement);
+  tip?: string;
+  handle: (tableModule: TableUpV2, e: MouseEvent) => void;
+};
+export interface ToolOptionBreak {
+  name: 'break';
+}
+export type Tool = ToolOption | ToolOptionBreak;
 
-// export interface TableSelectionOptions {
-//   selectColor: string;
-//   tipText: boolean;
-//   tools: Tool[];
-//   localstorageKey: string;
-// }
+export interface TableSelectionOptions {
+  selectColor: string;
+  // tipText: boolean;
+  // tools: Tool[];
+  // localstorageKey: string;
+}
 export interface TableTextOptions {
   customBtnText?: string;
   confirmText?: string;
@@ -48,4 +48,11 @@ export interface TableCellValue {
   colspan: number;
 };
 
-export type ContainerConstructor = typeof Parchment.ContainerBlot;
+export interface RelactiveRect {
+  x: number;
+  y: number;
+  x1: number;
+  y1: number;
+  width: number;
+  height: number;
+}

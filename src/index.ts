@@ -136,8 +136,10 @@
 import Quill from 'quill';
 import type { Range, Parchment as TypeParchment } from 'quill';
 import type Picker from 'quill/ui/picker';
+import type { TableSelectionOptions } from './utils';
 import { blotName, createSelectBox, debounce, isFunction, randomId } from './utils';
 import { TableBodyFormat, TableCellFormat, TableCellInnerFormat, TableColFormat, TableColgroupFormat, TableMainFormat, TableRowFormat, TableWrapperFormat } from './formats';
+import { TableSelection } from './modules';
 
 const Delta = Quill.import('delta');
 const Break = Quill.import('blots/break') as TypeParchment.BlotConstructor;
@@ -180,6 +182,8 @@ export class TableUpV2 {
   picker?: QuillPicker;
   selector?: HTMLElement;
   range?: Range | null;
+  table?: HTMLElement;
+  tableSelection?: TableSelection;
 
   static register() {
     TableWrapperFormat.allowedChildren = [TableMainFormat];
@@ -227,6 +231,30 @@ export class TableUpV2 {
       this.picker.label.addEventListener('mousedown', this.handleInViewport);
     }
 
+    // 绑定 table 的选择事件
+    this.quill.root.addEventListener(
+      'click',
+      (evt: MouseEvent) => {
+        const path = evt.composedPath() as HTMLElement[];
+        if (!path || path.length <= 0) return;
+
+        const tableNode = path.find((node) => {
+          return (
+            node.tagName && node.tagName.toUpperCase() === 'TABLE' && node.classList.contains('ql-table')
+          );
+        });
+        // 结束位置位处于表格内不显示
+        if (tableNode) {
+          if (this.table === tableNode) return;
+          if (this.table) this.hideTableTools();
+          this.showTableTools(tableNode, quill, this.options.selection);
+        }
+        else if (this.table) {
+          this.hideTableTools();
+        }
+      },
+      false,
+    );
     this.listenBalanceCells();
   }
 
@@ -249,6 +277,25 @@ export class TableUpV2 {
       notPositiveNumberError: '请输入正整数',
     }, options);
   };
+
+  showTableTools(table: HTMLElement, quill: Quill, options: TableSelectionOptions) {
+    if (table) {
+      this.table = table;
+      this.tableSelection = new TableSelection(table, quill, options);
+    }
+  }
+
+  hideTableTools() {
+    this.tableSelection && this.tableSelection.destroy();
+    // this.tableOperationMenu && this.tableOperationMenu.destroy();
+    // if (this.quill.theme.TableTooltip) {
+    //   this.quill.theme.TableTooltip.curTableId = null;
+    //   this.quill.theme.TableTooltip.hide();
+    // }
+    this.tableSelection = undefined;
+    // this.tableOperationMenu = undefined;
+    this.table = undefined;
+  }
 
   buildCustomSelect = async (customSelect: (module: TableUpV2) => HTMLElement | Promise<HTMLElement>) => {
     if (!this.picker) return;

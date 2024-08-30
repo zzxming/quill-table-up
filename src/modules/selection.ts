@@ -1,331 +1,202 @@
-import type { Parchment } from 'quill';
 import Quill from 'quill';
-import type { AnyClass, TableSelectionOptions, Tool, ToolOption } from '../utils';
-import { createToolTip, debounce, isArray, isFunction } from '../utils';
+import { getRelativeRect, isRectanglesIntersect } from '../utils';
+import type { RelactiveRect, TableSelectionOptions } from '../utils';
+import { TableCellFormat } from '..';
+import type { TableCellInnerFormat, TableMainFormat } from '..';
 
-import InsertLeft from '../svg/insert-left.svg';
-import InsertRight from '../svg/insert-right.svg';
-import InsertTop from '../svg/insert-top.svg';
-import InsertBottom from '../svg/insert-bottom.svg';
-import RemoveRow from '../svg/remove-row.svg';
-import RemoveColumn from '../svg/remove-column.svg';
-import RemoveTable from '../svg/remove-table.svg';
-import Color from '../svg/color.svg';
-import type TableUp from '..';
-
-const TableFormat = Quill.import('formats/table') as AnyClass;
-const usedColors = new Set<string>();
-const updateUsedColor = debounce((tableModule: TableUp, color: string) => {
-  usedColors.add(color);
-  if (usedColors.size > 10) {
-    const saveColors = Array.from(usedColors).slice(-10);
-    usedColors.clear();
-    saveColors.map(v => usedColors.add(v));
-  }
-
-  localStorage.setItem(tableModule.selection.options.localstorageKey, JSON.stringify(Array.from(usedColors)));
-  const usedColorWrapper = tableModule.selection.selectTool.querySelector('.table-color-wrapper .table-color-used');
-  if (!usedColorWrapper) return;
-
-  usedColorWrapper.innerHTML = '';
-  for (const recordColor of usedColors) {
-    const colorItem = document.createElement('div');
-    colorItem.classList.add('table-color-used-item');
-    colorItem.style.backgroundColor = recordColor;
-    colorItem.addEventListener('click', (e) => {
-      e.stopPropagation();
-      tableModule.setBackgroundColor(colorItem.style.backgroundColor);
-    });
-    usedColorWrapper.appendChild(colorItem);
-  }
-}, 1000);
-
-const getRelativeRect = (targetRect: DOMRect, containerRect: DOMRect) => ({
-  x: targetRect.x - containerRect.x,
-  y: targetRect.y - containerRect.y,
-  width: targetRect.width,
-  height: targetRect.height,
-});
-
-const parseNum = (num: any) => {
-  const n = Number.parseFloat(num);
-  return Number.isNaN(n) ? 0 : n;
-};
-
-const defaultTools: Tool[] = [
-  {
-    name: 'InsertTop',
-    icon: InsertTop,
-    tip: '向上插入一行',
-    handle: (tableModule) => {
-      tableModule.insertRow(0);
-    },
-  },
-  {
-    name: 'InsertRight',
-    icon: InsertRight,
-    tip: '向右插入一列',
-    handle: (tableModule) => {
-      tableModule.insertColumn(1);
-    },
-  },
-  {
-    name: 'InsertBottom',
-    icon: InsertBottom,
-    tip: '向下插入一行',
-    handle: (tableModule) => {
-      tableModule.insertRow(1);
-    },
-  },
-  {
-    name: 'InsertLeft',
-    icon: InsertLeft,
-    tip: '向左插入一列',
-    handle: (tableModule) => {
-      tableModule.insertColumn(0);
-    },
-  },
-  {
-    name: 'break',
-  },
-  {
-    name: 'DeleteRow',
-    icon: RemoveRow,
-    tip: '删除当前行',
-    handle: (tableModule) => {
-      tableModule.deleteRow();
-    },
-  },
-  {
-    name: 'DeleteColumn',
-    icon: RemoveColumn,
-    tip: '删除当前列',
-    handle: (tableModule) => {
-      tableModule.deleteColumn();
-    },
-  },
-  {
-    name: 'DeleteTable',
-    icon: RemoveTable,
-    tip: '删除当前表格',
-    handle: (tableModule) => {
-      tableModule.deleteTable();
-    },
-  },
-  {
-    name: 'break',
-  },
-  {
-    name: 'BackgroundColor',
-    icon: (tableModule) => {
-      const wrapper = document.createElement('div');
-      wrapper.classList.add('table-color-wrapper');
-      const label = document.createElement('label');
-      label.classList.add('table-color-picker');
-      label.innerHTML = Color;
-      const usedColorWrapper = document.createElement('div');
-      usedColorWrapper.classList.add('table-color-used');
-
-      for (const recordColor of usedColors) {
-        const colorItem = document.createElement('div');
-        colorItem.classList.add('table-color-used-item');
-        colorItem.style.backgroundColor = recordColor;
-        colorItem.addEventListener('click', (e) => {
-          e.stopPropagation();
-          tableModule.setBackgroundColor(colorItem.style.backgroundColor);
-        });
-        usedColorWrapper.appendChild(colorItem);
-      }
-
-      wrapper.appendChild(label);
-      wrapper.appendChild(usedColorWrapper);
-
-      wrapper.addEventListener('mouseenter', () => {
-        if (usedColors.size === 0) return;
-        usedColorWrapper.style.display = 'flex';
-        const containerRect = tableModule.quill.container.getBoundingClientRect();
-        const { paddingLeft, paddingRight } = getComputedStyle(tableModule.quill.root);
-        const usedColorRect = usedColorWrapper.getBoundingClientRect();
-
-        if (usedColorRect.right > containerRect.right - parseNum(paddingRight)) {
-          Object.assign(usedColorWrapper.style, {
-            transform: `translate(-80%, -100%)`,
-          });
-        }
-        else if (usedColorRect.left < parseNum(paddingLeft)) {
-          Object.assign(usedColorWrapper.style, {
-            transform: `translate(-20%, -100%)`,
-          });
-        }
-      });
-      wrapper.addEventListener('mouseleave', () => {
-        Object.assign(usedColorWrapper.style, {
-          display: 'none',
-          transform: null,
-        });
-      });
-
-      return wrapper;
-    },
-    tip: '设置背景颜色',
-    handle: (tableModule) => {
-      const label = tableModule.selection.selectTool.querySelector('.table-color-picker');
-      if (!label) return;
-
-      let input = label.querySelector('input');
-      if (!input) {
-        input = document.createElement('input');
-        input.type = 'color';
-        Object.assign(input.style, {
-          width: 0,
-          height: 0,
-          padding: 0,
-          border: 0,
-          outline: 'none',
-          opacity: 0,
-        });
-        input.addEventListener('input', () => {
-          tableModule.setBackgroundColor(input.value);
-          updateUsedColor(tableModule, input.value);
-        });
-        label.appendChild(input);
-      }
-    },
-  },
-];
+const ERROR_LIMIT = 2;
 
 export class TableSelection {
-  tableModule: TableUp;
-  quill: Quill;
   options: TableSelectionOptions;
-  tableBlot: Parchment.Parent | null = null;
-  selectTd: Parchment.Parent | null = null;
+  boundary: RelactiveRect | null = null;
+  startScrollX: number = 0;
+  selectedTds: TableCellInnerFormat[] = [];
   cellSelect: HTMLDivElement;
-  boundary: { x: number; y: number; width: number; height: number } | null = null;
-  selectTool: HTMLDivElement;
+  dragging: boolean = false;
+  selectingHandler = this.mouseDownHandler.bind(this);
+  scrollHandler: [HTMLElement, (...args: any[]) => void][] = [];
+  closeHandler: () => void;
 
-  constructor(tableModule: TableUp, quill: Quill, options: Partial<TableSelectionOptions> = {}) {
-    this.tableModule = tableModule;
-    this.quill = quill;
+  constructor(public table: HTMLElement, public quill: Quill, options: Partial<TableSelectionOptions> = {}) {
     this.options = this.resolveOptions(options);
 
-    try {
-      const storageValue = localStorage.getItem(this.options.localstorageKey) || '[]';
-      let colorValue = JSON.parse(storageValue);
-      if (!isArray(colorValue)) {
-        colorValue = [];
-      }
-      colorValue.map((c: string) => usedColors.add(c));
-    }
-    catch {}
+    this.cellSelect = this.quill.addContainer('ql-table-selection_line');
+    this.helpLinesInitial();
 
-    this.cellSelect = this.quill.addContainer('ql-table-selection');
-    this.selectTool = this.buildTools();
-
-    this.quill.root.addEventListener('scroll', this.destory);
-    // const resizeObserver = new ResizeObserver(this.destory);
-    // resizeObserver.observe(this.quill.root);
-    this.quill.on(Quill.events.EDITOR_CHANGE, () => {
-      this.updateSelectBox();
+    const resizeObserver = new ResizeObserver(() => {
+      this.hideSelection();
     });
+    resizeObserver.observe(this.quill.root);
+
+    this.quill.root.addEventListener('mousedown', this.selectingHandler, false);
+    this.closeHandler = this.hideSelection.bind(this);
+    this.quill.on(Quill.events.TEXT_CHANGE, this.closeHandler);
   }
 
   resolveOptions = (options: Partial<TableSelectionOptions>) => {
     return Object.assign({
       selectColor: '#0589f3',
-      tipText: true,
-      tools: defaultTools,
-      localstorageKey: '__table-bg-used-color',
     }, options);
   };
 
-  buildTools = () => {
-    const toolBox = this.quill.addContainer('ql-table-selection-tool');
-    for (const tool of this.options.tools) {
-      const { name, icon, handle, tip = '' } = tool as ToolOption;
-      let item = document.createElement('span');
-      item.classList.add('ql-table-selection-item');
-      if (name === 'break') {
-        item.classList.add('break');
-      }
-      else {
-        item.classList.add('icon');
-        if (isFunction(icon)) {
-          item.appendChild(icon(this.tableModule));
-        }
-        else {
-          item.innerHTML = icon;
-        }
-        if (isFunction(handle)) {
-          item.addEventListener('click', (e) => {
-            this.quill.focus();
-            handle(this.tableModule, e);
-          });
-        }
-        if (this.options.tipText && tip) {
-          item = createToolTip(item, { msg: tip, delay: 150 });
-        }
-      }
-      toolBox.appendChild(item);
+  addScrollEvent(dom: HTMLElement, handle: (...args: any[]) => void) {
+    dom.addEventListener('scroll', handle);
+    this.scrollHandler.push([dom, handle]);
+  }
+
+  clearScrollEvent() {
+    for (let i = 0; i < this.scrollHandler.length; i++) {
+      const [dom, handle] = this.scrollHandler[i];
+      dom.removeEventListener('scroll', handle);
     }
-    return toolBox;
-  };
+    this.scrollHandler = [];
+  }
 
-  remove = () => {
-    Object.assign(this.cellSelect.style, {
-      display: 'none',
-    });
-    Object.assign(this.selectTool.style, {
-      display: 'none',
-    });
-    this.selectTd = null;
-  };
-
-  destory = () => {
-    this.remove();
-    this.tableBlot = null;
-  };
-
-  updateSelectBox = () => {
-    const range = this.quill.getSelection();
-    if (!range) return this.destory();
-    // dts cannot find type Scroll
-    const [blot] = (this.quill.scroll as any).descendant(TableFormat, range.index);
-    if (!blot) return this.destory();
-    this.selectTd = blot;
-    const containerRect = this.quill.container.getBoundingClientRect();
-    this.boundary = getRelativeRect(this.selectTd!.domNode.getBoundingClientRect(), containerRect);
-
+  helpLinesInitial() {
+    this.cellSelect = this.quill.addContainer('ql-table-selection_line');
     Object.assign(this.cellSelect.style, {
       'border-color': this.options.selectColor,
-      'display': 'block',
-      'left': `${this.boundary.x - 1}px`,
-      'top': `${this.boundary.y - 1}px`,
-      'width': `${this.boundary.width + 1}px`,
-      'height': `${this.boundary.height + 1}px`,
     });
-    Object.assign(this.selectTool.style, {
-      display: 'flex',
-      left: `${this.boundary.x + (this.boundary.width / 2) - 1}px`,
-      top: `${this.boundary.y + this.boundary.height}px`,
-      transform: `translate(-50%, 20%)`,
+  }
+
+  computeSelectedTds(startPoint: { x: number; y: number }, endPoint: { x: number; y: number }) {
+    // Use TableCell to calculation selected range, because TableCellInner is scrollable, the width will effect calculate
+    const tableMain = Quill.find(this.table) as TableMainFormat;
+    if (!tableMain) return [];
+    const tableCells = new Set(tableMain.descendants(TableCellFormat));
+
+    // set boundary to initially mouse move rectangle
+    let boundary = {
+      x: Math.min(endPoint.x, startPoint.x),
+      y: Math.min(endPoint.y, startPoint.y),
+      x1: Math.max(endPoint.x, startPoint.x),
+      y1: Math.max(endPoint.y, startPoint.y),
+    };
+
+    const selectedCells = new Set<TableCellFormat>();
+    let findEnd = true;
+    // loop all cells to find correct boundary
+    while (findEnd) {
+      findEnd = false;
+      for (const cell of tableCells) {
+        if (!cell.__rect) {
+          cell.__rect = cell.domNode.getBoundingClientRect();
+        }
+        // Determine whether the cell intersects with the current boundary
+        const { x, y, right, bottom } = cell.__rect;
+        if (isRectanglesIntersect(boundary, { x, y, x1: right, y1: bottom }, ERROR_LIMIT)) {
+          // add cell to selected
+          selectedCells.add(cell);
+          tableCells.delete(cell);
+          // update boundary
+          boundary = {
+            x: Math.min(boundary.x, x),
+            y: Math.min(boundary.y, y),
+            x1: Math.max(boundary.x1, right),
+            y1: Math.max(boundary.y1, bottom),
+          };
+          // recalculate boundary last cells
+          findEnd = true;
+          break;
+        }
+      }
+    }
+    for (const cell of [...selectedCells, ...tableCells]) {
+      delete cell.__rect;
+    }
+    // save result boundary relative to the editor
+    this.boundary = getRelativeRect({
+      ...boundary,
+      width: boundary.x1 - boundary.x,
+      height: boundary.y1 - boundary.y,
+    }, this.quill.root.parentNode as HTMLElement);
+    return Array.from(selectedCells).map(cell => cell.getCellInner());
+  }
+
+  mouseDownHandler(mousedownEvent: MouseEvent) {
+    const { button, target, clientX, clientY } = mousedownEvent;
+    const closestTable = (target as HTMLElement).closest('.ql-table') as HTMLElement;
+    if (button !== 0 || !closestTable) return;
+
+    const startTableId = closestTable.dataset.tableId;
+    const startPoint = { x: clientX, y: clientY };
+    this.startScrollX = (this.table.parentNode as HTMLElement).scrollLeft;
+    this.selectedTds = this.computeSelectedTds(startPoint, startPoint);
+    this.showSelection();
+
+    const mouseMoveHandler = (mousemoveEvent: MouseEvent) => {
+      const { button, target, clientX, clientY } = mousemoveEvent;
+      if (this.selectedTds.length > 1) {
+        mousemoveEvent.preventDefault();
+      }
+      const closestTable = (target as HTMLElement).closest('.ql-table') as HTMLElement;
+      if (
+        button !== 0
+        || !closestTable
+        || closestTable.dataset.tableId !== startTableId
+      ) {
+        return;
+      }
+
+      this.dragging = true;
+      const movePoint = { x: clientX, y: clientY };
+      this.selectedTds = this.computeSelectedTds(startPoint, movePoint);
+      this.updateSelection();
+    };
+    const mouseUpHandler = () => {
+      document.body.removeEventListener('mousemove', mouseMoveHandler, false);
+      document.body.removeEventListener('mouseup', mouseUpHandler, false);
+      this.dragging = false;
+    };
+
+    document.body.addEventListener('mousemove', mouseMoveHandler, false);
+    document.body.addEventListener('mouseup', mouseUpHandler, false);
+  }
+
+  updateSelection() {
+    if (this.selectedTds.length === 0 || !this.boundary) return;
+    const tableViewScrollLeft = (this.table.parentNode as HTMLElement).scrollLeft;
+    const scrollTop = (this.quill.root.parentNode as HTMLElement).scrollTop;
+
+    Object.assign(this.cellSelect.style, {
+      left: `${this.boundary.x + (this.startScrollX - tableViewScrollLeft) - 1}px`,
+      top: `${scrollTop * 2 + this.boundary.y}px`,
+      width: `${this.boundary.width + 1}px`,
+      height: `${this.boundary.height + 1}px`,
     });
+  }
 
-    const { paddingLeft, paddingRight } = getComputedStyle(this.quill.root);
-    const selectToolRect = this.selectTool.getBoundingClientRect();
+  showSelection() {
+    this.clearScrollEvent();
 
-    // why 12
-    if (selectToolRect.right > containerRect.right - parseNum(paddingRight)) {
-      Object.assign(this.selectTool.style, {
-        left: `${containerRect.right - containerRect.left - selectToolRect.width - parseNum(paddingRight) - 1 - 12}px`,
-        transform: `translate(0%, 20%)`,
-      });
-    }
-    else if (selectToolRect.left < parseNum(paddingLeft)) {
-      Object.assign(this.selectTool.style, {
-        left: `${parseNum(paddingLeft) + 1 + 12}px`,
-        transform: `translate(0%, 20%)`,
-      });
-    }
-  };
+    Object.assign(this.cellSelect.style, { display: 'block' });
+    this.updateSelection();
+
+    this.addScrollEvent(this.table.parentNode as HTMLElement, () => {
+      this.updateSelection();
+    });
+    const srcollHide = () => {
+      this.hideSelection();
+      this.quill.root.removeEventListener('scroll', srcollHide);
+    };
+    this.addScrollEvent(this.quill.root, srcollHide);
+  }
+
+  hideSelection() {
+    this.boundary = null;
+    this.selectedTds = [];
+
+    this.cellSelect && Object.assign(this.cellSelect.style, { display: 'none' });
+    this.clearScrollEvent();
+  }
+
+  destroy() {
+    this.hideSelection();
+    this.cellSelect.remove();
+    this.clearScrollEvent();
+
+    this.quill.root.removeEventListener('mousedown', this.selectingHandler, false);
+    this.quill.off(Quill.events.TEXT_CHANGE, this.closeHandler);
+    return null;
+  }
 }

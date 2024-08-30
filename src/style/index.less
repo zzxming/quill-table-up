@@ -9,12 +9,19 @@
       }
     }
   }
+
   .ql-table-selection {
     display: none;
     position: absolute;
     z-index: 10;
     border: 1px solid;
     pointer-events: none;
+    &_line {
+      display: none;
+      position: absolute;
+      border: 2px solid;
+      pointer-events: none;
+    }
     &-tool {
       position: absolute;
       z-index: 10;
