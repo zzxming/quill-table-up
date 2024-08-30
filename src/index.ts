@@ -52,10 +52,10 @@ export default class TableUp extends TableModule {
 
     this.selection = new TableSelection(this, this.quill, this.options.selection);
 
-    this.tdDackgroundPasteHandle();
+    this.tdBackgroundPasteHandle();
   }
 
-  tdDackgroundPasteHandle = () => {
+  tdBackgroundPasteHandle = () => {
     const clipboard = this.quill.getModule('clipboard');
     clipboard.addMatcher(Node.ELEMENT_NODE, (node: HTMLElement, delta: TypeDelta) => {
       if (['td', 'th'].includes(node.tagName.toLocaleLowerCase())) {
