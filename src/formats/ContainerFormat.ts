@@ -1,10 +1,9 @@
 import Quill from 'quill';
 import type { Parchment as TypeParchment } from 'quill';
-import type { ContainerConstructor } from '../utils';
 import { blotName } from '../utils';
 
 const Parchment = Quill.import('parchment');
-const Container = Quill.import('blots/container') as ContainerConstructor;
+const Container = Quill.import('blots/container') as typeof TypeParchment.ContainerBlot;
 const Block = Quill.import('blots/block') as TypeParchment.BlotConstructor;
 const BlockEmbed = Quill.import('blots/block/embed') as TypeParchment.BlotConstructor;
 

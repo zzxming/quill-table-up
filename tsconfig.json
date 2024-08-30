@@ -5,7 +5,7 @@
     "baseUrl": ".",
     "module": "ESNext",
     "moduleResolution": "Bundler",
-    "types": ["quill/quill.d.ts", "quill/core.d.ts", "./src/types/index.d.ts"],
+    "types": ["quill/quill.d.ts", "quill/core.d.ts", "./src/types.d.ts"],
     "allowJs": false,
     "strict": true,
     "noUnusedLocals": true,
@@ -16,5 +16,5 @@
     "esModuleInterop": true,
     "skipLibCheck": true
   },
-  "include": ["src/index.ts"]
+  "include": ["src"]
 }
