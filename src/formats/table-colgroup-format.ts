@@ -1,5 +1,5 @@
 import { blotName } from '../utils';
-import { ContainerFormat } from './ContainerFormat';
+import { ContainerFormat } from './container-format';
 
 export class TableColgroupFormat extends ContainerFormat {
   static blotName = blotName.tableColGroup;

@@ -1,6 +1,6 @@
 import type { Parchment as TypeParchment } from 'quill';
 import { blotName } from '../utils';
-import { ContainerFormat } from './ContainerFormat';
+import { ContainerFormat } from './container-format';
 
 export class TableWrapperFormat extends ContainerFormat {
   static blotName = blotName.tableWrapper;

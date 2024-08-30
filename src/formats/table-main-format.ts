@@ -1,8 +1,8 @@
 import type { Parchment as TypeParchment } from 'quill';
 import { blotName } from '../utils';
-import { TableRowFormat } from './TableRowFormat';
-import { ContainerFormat } from './ContainerFormat';
-import { TableColFormat } from './TableColFormat';
+import { TableRowFormat } from './table-row-format';
+import { ContainerFormat } from './container-format';
+import { TableColFormat } from './table-col-format';
 
 export class TableMainFormat extends ContainerFormat {
   static blotName = blotName.tableMain;
@@ -11,7 +11,7 @@ export class TableMainFormat extends ContainerFormat {
   constructor(scroll: TypeParchment.Root, domNode: Node) {
     super(scroll, domNode);
 
-    // this.formatTableWidth();
+    this.formatTableWidth();
   }
 
   static create(value: string) {

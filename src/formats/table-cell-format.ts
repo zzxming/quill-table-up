@@ -1,16 +1,16 @@
 import type { Parchment as TypeParchment } from 'quill';
 import type { TableCellValue } from '../utils';
 import { blotName } from '../utils';
-import { TableCellInnerFormat } from './TableCellInnerFormat';
-import { ContainerFormat } from './ContainerFormat';
+import { TableCellInnerFormat } from './table-cell-inner-format';
+import { ContainerFormat } from './container-format';
 
 export class TableCellFormat extends ContainerFormat {
   static blotName = blotName.tableCell;
   static tagName = 'td';
   static className = 'ql-table-cell';
 
-  __rect?: DOMRect
-  
+  __rect?: DOMRect;
+
   static create(value: TableCellValue) {
     const { tableId, rowId, colId, rowspan, colspan } = value;
     const node = super.create() as HTMLElement;

@@ -1,5 +1,5 @@
 import { blotName } from '../utils';
-import { ContainerFormat } from './ContainerFormat';
+import { ContainerFormat } from './container-format';
 
 export class TableRowFormat extends ContainerFormat {
   static blotName = blotName.tableRow;

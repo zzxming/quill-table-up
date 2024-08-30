@@ -2,7 +2,7 @@ import Quill from 'quill';
 import type { Parchment as TypeParchment } from 'quill';
 import type { TableCellValue } from '../utils';
 import { blotName } from '../utils';
-import { ContainerFormat } from './ContainerFormat';
+import { ContainerFormat } from './container-format';
 
 const Block = Quill.import('blots/block') as TypeParchment.BlotConstructor;
 
