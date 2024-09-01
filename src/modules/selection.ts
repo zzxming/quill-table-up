@@ -1,8 +1,10 @@
 import Quill from 'quill';
 import { getRelativeRect, isRectanglesIntersect } from '../utils';
 import type { RelactiveRect, TableSelectionOptions } from '../utils';
-import { TableCellFormat } from '..';
-import type { TableCellInnerFormat, TableMainFormat } from '..';
+import { TableCellFormat } from '../formats';
+import type { TableCellInnerFormat, TableMainFormat } from '../formats';
+import type { TableUp } from '..';
+import { TableMenu } from './table-menu';
 
 const ERROR_LIMIT = 2;
 
@@ -16,8 +18,9 @@ export class TableSelection {
   selectingHandler = this.mouseDownHandler.bind(this);
   scrollHandler: [HTMLElement, (...args: any[]) => void][] = [];
   closeHandler: () => void;
+  tableMenu: TableMenu;
 
-  constructor(public table: HTMLElement, public quill: Quill, options: Partial<TableSelectionOptions> = {}) {
+  constructor(public tableModule: TableUp, public table: HTMLElement, public quill: Quill, options: Partial<TableSelectionOptions> = {}) {
     this.options = this.resolveOptions(options);
 
     this.cellSelect = this.quill.addContainer('ql-table-selection_line');
@@ -31,11 +34,13 @@ export class TableSelection {
     this.quill.root.addEventListener('mousedown', this.selectingHandler, false);
     this.closeHandler = this.hideSelection.bind(this);
     this.quill.on(Quill.events.TEXT_CHANGE, this.closeHandler);
+    this.tableMenu = new TableMenu(this.tableModule, quill, this.options.tableMenu);
   }
 
-  resolveOptions = (options: Partial<TableSelectionOptions>) => {
+  resolveOptions(options: Partial<TableSelectionOptions>) {
     return Object.assign({
       selectColor: '#0589f3',
+      tableMenu: {},
     }, options);
   };
 
@@ -53,7 +58,6 @@ export class TableSelection {
   }
 
   helpLinesInitial() {
-    this.cellSelect = this.quill.addContainer('ql-table-selection_line');
     Object.assign(this.cellSelect.style, {
       'border-color': this.options.selectColor,
     });
@@ -164,6 +168,7 @@ export class TableSelection {
       width: `${this.boundary.width + 1}px`,
       height: `${this.boundary.height + 1}px`,
     });
+    this.tableMenu.update();
   }
 
   showSelection() {
@@ -185,12 +190,12 @@ export class TableSelection {
   hideSelection() {
     this.boundary = null;
     this.selectedTds = [];
-
     this.cellSelect && Object.assign(this.cellSelect.style, { display: 'none' });
     this.clearScrollEvent();
   }
 
   destroy() {
+    this.tableMenu.destroy();
     this.hideSelection();
     this.cellSelect.remove();
     this.clearScrollEvent();

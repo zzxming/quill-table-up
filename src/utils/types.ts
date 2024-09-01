@@ -1,24 +1,26 @@
-import type { TableUpV2 } from '..';
-// import type TableUp from '..';
-
-// export type AnyClass = new (...arg: any[]) => any;
+import type { TableCellInnerFormat, TableUp } from '..';
 
 export interface ToolOption {
   name: string;
-  icon: string | ((tableModule: TableUpV2) => HTMLElement);
+  icon: string | ((tableModule: TableUp) => HTMLElement);
   tip?: string;
-  handle: (tableModule: TableUpV2, e: MouseEvent) => void;
-};
+  isColorChoose?: boolean;
+  handle: (tableModule: TableUp, selectedTds: TableCellInnerFormat[], e: Event | string) => void;
+}
 export interface ToolOptionBreak {
   name: 'break';
 }
 export type Tool = ToolOption | ToolOptionBreak;
 
+export interface TableMenuOptions {
+  tipText: boolean;
+  tipTexts: Record<string, any>;
+  tools: Tool[];
+  localstorageKey: string;
+};
 export interface TableSelectionOptions {
   selectColor: string;
-  // tipText: boolean;
-  // tools: Tool[];
-  // localstorageKey: string;
+  tableMenu: TableMenuOptions;
 }
 export interface TableTextOptions {
   customBtnText?: string;
@@ -46,6 +48,7 @@ export interface TableCellValue {
   colId: string;
   rowspan: number;
   colspan: number;
+  backgroundColor?: string;
 };
 
 export interface RelactiveRect {

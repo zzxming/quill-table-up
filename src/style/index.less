@@ -36,6 +36,7 @@
       font-size: 20px;
     }
     &-item {
+      position: relative;
       display: inline-flex;
       align-items: center;
       justify-content: center;
@@ -56,13 +57,6 @@
         cursor: pointer;
       }
       .table-color {
-        &-wrapper {
-          position: relative;
-        }
-        &-picker {
-          display: flex;
-          cursor: pointer;
-        }
         &-used {
           position: absolute;
           top: 0;
@@ -83,6 +77,59 @@
             border: 1px solid #a3a3a3;
           }
         }
+      }
+    }
+  }
+}
+
+.ql-editor {
+  .ql {
+    &-table {
+      border-collapse: separate;
+      table-layout: fixed;
+      width: auto;
+      &[data-full] {
+        width: 100%;
+      }
+      &-dragging {
+        user-select: none;
+      }
+      &-wrapper {
+        width: 100%;
+        padding-left: 1px;
+        padding-right: 1px;
+        overflow: auto;
+        &:hover {
+          &::-webkit-scrollbar-thumb {
+            background-color: #a1a1aa;
+          }
+        }
+        &::-webkit-scrollbar {
+          width: 4px;
+          height: 4px;
+        }
+        &::-webkit-scrollbar-thumb {
+          background-color: #d2d2d2;
+          border-radius: 4px;
+        }
+      }
+      &-cell {
+        padding: 8px 12px;
+        border: 1px solid #a1a1aa;
+        font-size: 14px;
+        outline: none;
+        overflow: auto;
+        &-inner {
+          display: inline-block;
+          min-width: 100%;
+          word-break: break-word;
+        }
+      }
+      col {
+        border-collapse: separate;
+        text-indent: initial;
+        display: table-column;
+        table-layout: fixed;
       }
     }
   }

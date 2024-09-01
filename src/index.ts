@@ -1,143 +1,8 @@
-// import Quill from 'quill';
-// import type { Delta as TypeDelta } from 'quill/core';
-// import type { Parchment as TypeParchment } from 'quill';
-// import { BlockBackground, TableSelection } from './modules';
-// import type { AnyClass, TableUpOptions } from './utils';
-// import { blotName, createSelectBox, isFunction } from './utils';
-// import { TableCellFormat, TableCellInnerFormat } from './formats';
-
-// const Delta = Quill.import('delta');
-// const icons = Quill.import('ui/icons') as Record<string, any>;
-// const TableModule = Quill.import('modules/table') as AnyClass & { register: () => void };
-// const toolName = 'table';
-// const TableCell = Quill.import('formats/table') as AnyClass;
-
-// class TableCellWithBackground extends TableCell {
-//   format(name: string, value: string) {
-//     if (name === BlockBackground.attrName) {
-//       this.domNode.style.backgroundColor = value;
-//     }
-//     return super.format(name, value);
-//   }
-
-//   formats() {
-//     const formats = super.formats();
-//     if (formats[BlockBackground.attrName]) {
-//       delete formats.background;
-//     }
-//     return formats;
-//   }
-// }
-
-// export default class TableUp extends TableModule {
-//   static register() {
-//     super.register();
-//     Quill.register({
-//       'formats/block-background-color': BlockBackground,
-//       'formats/table': TableCellWithBackground,
-//     }, true);
-//   }
-
-//   constructor(quill: Quill, options: TableUpOptions) {
-//     super(quill, options);
-//     this.options = this.resolveOptions(options || {});
-
-//     const toolbar = this.quill.getModule('toolbar');
-//     const [, select] = (toolbar.controls as [string, HTMLElement][] || []).find(([name]) => name === toolName) || [];
-//     if (select && select.tagName.toLocaleLowerCase() === 'select') {
-//       this.picker = this.quill.theme.pickers.find((picker: any) => picker.select === select);
-//       if (!this.picker) return;
-//       this.picker.label.innerHTML = icons.table;
-//       this.buildCustomSelect(this.options.customSelect);
-//       this.picker.label.addEventListener('mousedown', this.handleInViewport);
-//     }
-
-//     this.selection = new TableSelection(this, this.quill, this.options.selection);
-
-//     this.tdBackgroundPasteHandle();
-//   }
-
-//   tdBackgroundPasteHandle = () => {
-//     const clipboard = this.quill.getModule('clipboard');
-//     clipboard.addMatcher(Node.ELEMENT_NODE, (node: HTMLElement, delta: TypeDelta) => {
-//       if (['td', 'th'].includes(node.tagName.toLocaleLowerCase())) {
-//         const backgroundColor = node.style.backgroundColor;
-//         if (backgroundColor) {
-//           return delta.compose(new Delta().retain(delta.length(), { background: null, [BlockBackground.attrName]: backgroundColor }));
-//         }
-//       }
-//       return delta;
-//     });
-//   };
-
-//   handleInViewport = () => {
-//     const selectRect = this.selector.getBoundingClientRect();
-//     if (selectRect.right >= window.innerWidth) {
-//       const labelRect = this.picker.label.getBoundingClientRect();
-//       this.picker.options.style.transform = `translateX(calc(-100% + ${labelRect.width}px))`;
-//     }
-//     else {
-//       this.picker.options.style.transform = undefined;
-//     }
-//   };
-
-//   resolveOptions = (options: Record<string, any>) => {
-//     return Object.assign({
-//       isCustom: true,
-//       texts: this.resolveTexts(options.texts || {}),
-//       selection: {},
-//     }, options);
-//   };
-
-//   resolveTexts = (options: Record<string, string>) => {
-//     return Object.assign({
-//       customBtn: '自定义行列数',
-//       confirmText: '确认',
-//       cancelText: '取消',
-//       rowText: '行数',
-//       colText: '列数',
-//       notPositiveNumberError: '请输入正整数',
-//     }, options);
-//   };
-
-//   buildCustomSelect = async (customSelect: HTMLElement) => {
-//     const dom = document.createElement('div');
-//     dom.classList.add('ql-custom-select');
-//     this.selector = customSelect && isFunction(customSelect) ? await customSelect(this) : this.createSelect();
-//     dom.appendChild(this.selector);
-//     this.picker.options.appendChild(dom);
-//   };
-
-//   createSelect = () => {
-//     return createSelectBox({
-//       onSelect: (row: number, col: number) => {
-//         this.insertTable(row, col);
-//         this.picker.close();
-//       },
-//       isCustom: this.options.isCustom,
-//       texts: this.options.texts,
-//     });
-//   };
-
-//   setBackgroundColor = (color: string) => {
-//     const range = this.quill.getSelection(true);
-//     if (!range) return;
-//     const cell = this.getTable(range)[2];
-//     if (cell === null) return;
-//     cell.format(BlockBackground.attrName, color);
-//   };
-
-//   insertTable = (rows: number, columns: number) => {
-//     this.quill.focus();
-//     super.insertTable(rows, columns);
-//   };
-// }
-
 import Quill from 'quill';
 import type { Range, Parchment as TypeParchment } from 'quill';
 import type Picker from 'quill/ui/picker';
 import type { TableSelectionOptions } from './utils';
-import { blotName, createSelectBox, debounce, isFunction, randomId } from './utils';
+import { blotName, createSelectBox, debounce, findParentBlot, isFunction, randomId } from './utils';
 import { TableBodyFormat, TableCellFormat, TableCellInnerFormat, TableColFormat, TableColgroupFormat, TableMainFormat, TableRowFormat, TableWrapperFormat } from './formats';
 import { TableSelection } from './modules';
 
@@ -175,7 +40,7 @@ export const isForbidInTable = (current: TypeParchment.Blot): boolean =>
 
 type QuillPicker = Picker & { options: HTMLElement };
 const tabbleToolName = 'table-up-main';
-export class TableUpV2 {
+export class TableUp {
   quill: Quill;
   options: Record<string, any>;
   fixTableByLisenter = debounce(this.balanceTables, 100);
@@ -219,7 +84,7 @@ export class TableUpV2 {
 
   constructor(quill: Quill, options: Record<string, any>) {
     this.quill = quill;
-    this.options = options;
+    this.options = this.resolveOptions(options || {});
 
     const toolbar = this.quill.getModule('toolbar') as any;
     const [, select] = (toolbar.controls as [string, HTMLElement][] || []).find(([name]) => name === tabbleToolName) || [];
@@ -238,11 +103,7 @@ export class TableUpV2 {
         const path = evt.composedPath() as HTMLElement[];
         if (!path || path.length <= 0) return;
 
-        const tableNode = path.find((node) => {
-          return (
-            node.tagName && node.tagName.toUpperCase() === 'TABLE' && node.classList.contains('ql-table')
-          );
-        });
+        const tableNode = path.find(node => node.tagName && node.tagName.toUpperCase() === 'TABLE' && node.classList.contains('ql-table'));
         // 结束位置位处于表格内不显示
         if (tableNode) {
           if (this.table === tableNode) return;
@@ -258,7 +119,7 @@ export class TableUpV2 {
     this.listenBalanceCells();
   }
 
-  resolveOptions = (options: Record<string, any>) => {
+  resolveOptions(options: Record<string, any>) {
     return Object.assign({
       customable: true,
       texts: this.resolveTexts(options.texts || {}),
@@ -267,7 +128,7 @@ export class TableUpV2 {
     }, options);
   };
 
-  resolveTexts = (options: Record<string, string>) => {
+  resolveTexts(options: Record<string, string>) {
     return Object.assign({
       customBtn: '自定义行列数',
       confirmText: '确认',
@@ -281,23 +142,17 @@ export class TableUpV2 {
   showTableTools(table: HTMLElement, quill: Quill, options: TableSelectionOptions) {
     if (table) {
       this.table = table;
-      this.tableSelection = new TableSelection(table, quill, options);
+      this.tableSelection = new TableSelection(this, table, quill, options);
     }
   }
 
   hideTableTools() {
     this.tableSelection && this.tableSelection.destroy();
-    // this.tableOperationMenu && this.tableOperationMenu.destroy();
-    // if (this.quill.theme.TableTooltip) {
-    //   this.quill.theme.TableTooltip.curTableId = null;
-    //   this.quill.theme.TableTooltip.hide();
-    // }
     this.tableSelection = undefined;
-    // this.tableOperationMenu = undefined;
     this.table = undefined;
   }
 
-  buildCustomSelect = async (customSelect: (module: TableUpV2) => HTMLElement | Promise<HTMLElement>) => {
+  async buildCustomSelect(customSelect: (module: TableUp) => HTMLElement | Promise<HTMLElement>) {
     if (!this.picker) return;
     const dom = document.createElement('div');
     dom.classList.add('ql-custom-select');
@@ -484,7 +339,22 @@ export class TableUpV2 {
       },
     );
   }
-}
 
-// export * from './modules';
+  setBackgroundColor(selectedTds: TableCellInnerFormat[], color: string) {
+    if (selectedTds.length === 0) return;
+    for (const td of selectedTds) {
+      td.backgroundColor = color;
+    }
+  }
+
+  deleteTable() {
+    if (!this.tableSelection || this.tableSelection.selectedTds.length === 0) return;
+    const selectedTds = this.tableSelection.selectedTds;
+    const tableBlot = findParentBlot(selectedTds[0], blotName.tableMain);
+    tableBlot && tableBlot.remove();
+    this.hideTableTools();
+  }
+}
+export default TableUp;
+export * from './modules';
 export * from './formats';

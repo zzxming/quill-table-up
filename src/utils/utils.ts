@@ -35,7 +35,7 @@ export function getRelativeRect(targetRect: { x: number;y: number;width: number;
   };
 }
 
-export const findParentBlot = <T>(blot: TypeParchment.Blot, targetBlotName: string): T => {
+export const findParentBlot = <T = TypeParchment.Blot>(blot: TypeParchment.Blot, targetBlotName: string): T => {
   let target = blot.parent;
   while (target && target.statics.blotName !== targetBlotName && target !== blot.scroll) {
     target = target.parent;

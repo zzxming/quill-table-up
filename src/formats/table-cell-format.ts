@@ -12,13 +12,14 @@ export class TableCellFormat extends ContainerFormat {
   __rect?: DOMRect;
 
   static create(value: TableCellValue) {
-    const { tableId, rowId, colId, rowspan, colspan } = value;
+    const { tableId, rowId, colId, rowspan, colspan, backgroundColor } = value;
     const node = super.create() as HTMLElement;
     node.dataset.tableId = tableId;
     node.dataset.rowId = rowId;
     node.dataset.colId = colId;
     node.setAttribute('rowspan', String(rowspan || 1));
     node.setAttribute('colspan', String(colspan || 1));
+    backgroundColor && (node.style.backgroundColor = backgroundColor);
     return node;
   }
 
@@ -56,6 +57,16 @@ export class TableCellFormat extends ContainerFormat {
 
   set colspan(value: number) {
     this.domNode.setAttribute('colspan', String(value));
+  }
+
+  get backgroundColor() {
+    return this.domNode.dataset.backgroundColor || '';
+  }
+
+  set backgroundColor(value: string) {
+    Object.assign(this.domNode.style, {
+      backgroundColor: value,
+    });
   }
 
   getCellInner() {
@@ -100,17 +111,17 @@ export class TableCellFormat extends ContainerFormat {
     super.optimize(context);
   }
 
-  // deleteAt(index: number, length: number) {
-  //   if (index === 0 && length === this.length()) {
-  //     const cell = (this.next || this.prev) as this;
-  //     const cellInner = cell && cell.getCellInner();
-  //     if (cellInner) {
-  //       cellInner.colspan += this.colspan;
-  //     }
-  //     return this.remove();
-  //   }
-  //   this.children.forEachAt(index, length, (child, offset, length) => {
-  //     child.deleteAt(offset, length);
-  //   });
-  // }
+  deleteAt(index: number, length: number) {
+    if (index === 0 && length === this.length()) {
+      const cell = (this.next || this.prev) as this;
+      const cellInner = cell && cell.getCellInner();
+      if (cellInner) {
+        cellInner.colspan += this.colspan;
+      }
+      return this.remove();
+    }
+    this.children.forEachAt(index, length, (child, offset, length) => {
+      child.deleteAt(offset, length);
+    });
+  }
 }

@@ -1,3 +1,2 @@
 export * from './selection';
-
-export * from './block-backgound';
+export * from './table-menu';
