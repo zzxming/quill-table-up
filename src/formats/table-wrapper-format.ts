@@ -37,11 +37,9 @@ export class TableWrapperFormat extends ContainerFormat {
 
   insertBefore(blot: TypeParchment.Blot, ref?: TypeParchment.Blot | null) {
     if (blot.statics.blotName === this.statics.blotName) {
-      // 合并
       super.insertBefore((blot as TypeParchment.ParentBlot).children.head!, ref);
     }
     else if (this.statics.allowedChildren.some((child: TypeParchment.BlotConstructor) => child.blotName === blot.statics.blotName)) {
-      // 允许子 blot
       super.insertBefore(blot, ref);
     }
     else {
