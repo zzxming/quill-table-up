@@ -2,10 +2,9 @@ import Quill from 'quill';
 import type { Module, Range, Parchment as TypeParchment } from 'quill';
 import type Picker from 'quill/ui/picker';
 import type { Context } from 'quill/modules/keyboard';
-import type { TableSelectionOptions } from './utils';
 import { blotName, createSelectBox, debounce, findParentBlot, isFunction, randomId } from './utils';
 import { TableBodyFormat, TableCellFormat, TableCellInnerFormat, TableColFormat, TableColgroupFormat, TableMainFormat, TableRowFormat, TableWrapperFormat } from './formats';
-import { TableSelection } from './modules';
+import { TableResize, TableSelection } from './modules';
 
 const Delta = Quill.import('delta');
 const Break = Quill.import('blots/break') as TypeParchment.BlotConstructor;
@@ -125,6 +124,7 @@ export class TableUp {
   range?: Range | null;
   table?: HTMLElement;
   tableSelection?: TableSelection;
+  tableResizer?: TableResize;
 
   constructor(quill: Quill, options: Record<string, any>) {
     this.quill = quill;
@@ -140,7 +140,6 @@ export class TableUp {
       this.picker.label.addEventListener('mousedown', this.handleInViewport);
     }
 
-    // 绑定 table 的选择事件
     this.quill.root.addEventListener(
       'click',
       (evt: MouseEvent) => {
@@ -148,11 +147,10 @@ export class TableUp {
         if (!path || path.length <= 0) return;
 
         const tableNode = path.find(node => node.tagName && node.tagName.toUpperCase() === 'TABLE' && node.classList.contains('ql-table'));
-        // 结束位置位处于表格内不显示
         if (tableNode) {
           if (this.table === tableNode) return;
           if (this.table) this.hideTableTools();
-          this.showTableTools(tableNode, quill, this.options.selection);
+          this.showTableTools(tableNode, quill);
         }
         else if (this.table) {
           this.hideTableTools();
@@ -183,16 +181,18 @@ export class TableUp {
     }, options);
   };
 
-  showTableTools(table: HTMLElement, quill: Quill, options: TableSelectionOptions) {
+  showTableTools(table: HTMLElement, quill: Quill) {
     if (table) {
       this.table = table;
-      this.tableSelection = new TableSelection(this, table, quill, options);
+      this.tableSelection = new TableSelection(this, table, quill, this.options.selection);
+      this.tableResizer = new TableResize(this, table, quill, this.options.resize);
     }
   }
 
   hideTableTools() {
     this.tableSelection && this.tableSelection.destroy();
     this.tableSelection = undefined;
+    this.tableResizer && this.tableResizer.destroy();
     this.table = undefined;
   }
 

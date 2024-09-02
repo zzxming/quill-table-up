@@ -30,6 +30,9 @@ export interface TableTextOptions {
   colText?: string;
   notPositiveNumberError?: string;
 }
+export interface TableResizeOptions {
+  size: number;
+}
 // export interface TableUpOptions {
 //   customSelect?: (this: TableUp) => HTMLElement;
 //   isCustom?: boolean;
