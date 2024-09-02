@@ -1,6 +1,7 @@
 import Quill from 'quill';
-import type { Range, Parchment as TypeParchment } from 'quill';
+import type { Module, Range, Parchment as TypeParchment } from 'quill';
 import type Picker from 'quill/ui/picker';
+import type { Context } from 'quill/modules/keyboard';
 import type { TableSelectionOptions } from './utils';
 import { blotName, createSelectBox, debounce, findParentBlot, isFunction, randomId } from './utils';
 import { TableBodyFormat, TableCellFormat, TableCellInnerFormat, TableColFormat, TableColgroupFormat, TableMainFormat, TableRowFormat, TableWrapperFormat } from './formats';
@@ -41,14 +42,48 @@ export const isForbidInTable = (current: TypeParchment.Blot): boolean =>
 type QuillPicker = Picker & { options: HTMLElement };
 const tabbleToolName = 'table-up-main';
 export class TableUp {
-  quill: Quill;
-  options: Record<string, any>;
-  fixTableByLisenter = debounce(this.balanceTables, 100);
-  picker?: QuillPicker;
-  selector?: HTMLElement;
-  range?: Range | null;
-  table?: HTMLElement;
-  tableSelection?: TableSelection;
+  static keyboradHandler = {
+    'forbid remove table by backspace': {
+      key: 'Backspace',
+      collapsed: true,
+      offset: 0,
+      handler(this: Module, range: Range, context: Context) {
+        const line = this.quill.getLine(range.index);
+        const blot = line[0] as TypeParchment.BlockBlot;
+        if (blot.prev instanceof TableWrapperFormat) {
+          blot.prev.remove();
+          return true;
+        }
+
+        if (context.format[blotName.tableCellInner]) {
+          const offset = blot.offset(findParentBlot(blot, blotName.tableCellInner));
+          if (offset === 0) {
+            return false;
+          }
+        }
+        return true;
+      },
+    },
+    'forbid remove table by delete': {
+      key: 'Delete',
+      collapsed: true,
+      handler(this: Module, range: Range, context: Context) {
+        const line = this.quill.getLine(range.index);
+        const blot = line[0] as TypeParchment.BlockBlot;
+        const offsetInline = line[1];
+        if (blot.next instanceof TableWrapperFormat && offsetInline === blot.length() - 1) return false;
+
+        if (context.format[blotName.tableCellInner]) {
+          const tableInnerBlot = findParentBlot(blot, blotName.tableCellInner);
+          const offsetInTableInner = blot.offset(tableInnerBlot);
+          if (offsetInTableInner + offsetInline === tableInnerBlot.length() - 1) {
+            return false;
+          }
+        }
+        return true;
+      },
+    },
+  };
 
   static register() {
     TableWrapperFormat.allowedChildren = [TableMainFormat];
@@ -81,6 +116,15 @@ export class TableUp {
       [`formats/${blotName.tableWrapper}`]: TableWrapperFormat,
     }, true);
   }
+
+  quill: Quill;
+  options: Record<string, any>;
+  fixTableByLisenter = debounce(this.balanceTables, 100);
+  picker?: QuillPicker;
+  selector?: HTMLElement;
+  range?: Range | null;
+  table?: HTMLElement;
+  tableSelection?: TableSelection;
 
   constructor(quill: Quill, options: Record<string, any>) {
     this.quill = quill;
