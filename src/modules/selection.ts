@@ -168,7 +168,7 @@ export class TableSelection {
       width: `${this.boundary.width + 1}px`,
       height: `${this.boundary.height + 1}px`,
     });
-    this.tableMenu.update();
+    this.tableMenu.updateTools();
   }
 
   showSelection() {
@@ -191,12 +191,13 @@ export class TableSelection {
     this.boundary = null;
     this.selectedTds = [];
     this.cellSelect && Object.assign(this.cellSelect.style, { display: 'none' });
+    this.tableMenu.hideTools();
     this.clearScrollEvent();
   }
 
   destroy() {
-    this.tableMenu.destroy();
     this.hideSelection();
+    this.tableMenu.destroy();
     this.cellSelect.remove();
     this.clearScrollEvent();
 

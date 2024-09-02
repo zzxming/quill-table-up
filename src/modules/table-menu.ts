@@ -1,11 +1,10 @@
-/* eslint-disable unused-imports/no-unused-imports */
 import type Quill from 'quill';
-import InsertTop from '../svg/insert-top.svg';
-import InsertBottom from '../svg/insert-bottom.svg';
-import InsertLeft from '../svg/insert-left.svg';
-import InsertRight from '../svg/insert-right.svg';
-import RemoveColumn from '../svg/remove-column.svg';
-import RemoveRow from '../svg/remove-row.svg';
+// import InsertTop from '../svg/insert-top.svg';
+// import InsertBottom from '../svg/insert-bottom.svg';
+// import InsertLeft from '../svg/insert-left.svg';
+// import InsertRight from '../svg/insert-right.svg';
+// import RemoveColumn from '../svg/remove-column.svg';
+// import RemoveRow from '../svg/remove-row.svg';
 import RemoveTable from '../svg/remove-table.svg';
 import Color from '../svg/color.svg';
 import { createToolTip, debounce, isArray, isFunction } from '../utils';
@@ -226,8 +225,11 @@ export class TableMenu {
     return toolBox;
   };
 
-  update() {
-    console.log(usedColors);
+  hideTools() {
+    this.menu && Object.assign(this.menu.style, { display: 'none' });
+  }
+
+  updateTools() {
     if (!this.menu || !this.tableModule.tableSelection || !this.tableModule.tableSelection.boundary) return;
     const { boundary, selectedTds } = this.tableModule.tableSelection;
     this.selectedTds = selectedTds;
