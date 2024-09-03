@@ -119,22 +119,6 @@ export class TableCellInnerFormat extends ContainerFormat {
     return table.getColIds().indexOf(this.colId);
   }
 
-  // replaceWith(target: Blot | string, value?: any) {
-  //   console.log('reapl', target, value);
-  //   const replacement = typeof target === 'string' ? this.scroll.create(target, value) : target;
-  //   if (replacement.statics.blotName !== this.statics.blotName) {
-  //     const cloneTarget = replacement.clone() as ContainerBlot;
-  //     (replacement as ContainerBlot).moveChildren(cloneTarget);
-  //     this.appendChild(cloneTarget);
-  //     replacement.parent.insertBefore(this, replacement.next);
-  //     replacement.remove();
-  //     return this;
-  //   }
-  //   else {
-  //     return super.replaceWith(target, value);
-  //   }
-  // }
-
   formats() {
     const { tableId, rowId, colId, rowspan, colspan, backgroundColor } = this;
     const value: Record<string, any> = {
@@ -176,7 +160,7 @@ export class TableCellInnerFormat extends ContainerFormat {
       tableBody.appendChild(tr);
       table.appendChild(tableBody);
       tableWrapper.appendChild(table);
-      tableWrapper.replaceWith(marker);
+      marker.replaceWith(tableWrapper);
     }
 
     super.optimize(context);

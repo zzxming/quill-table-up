@@ -86,16 +86,15 @@ export class TableColFormat extends ContainerFormat {
     if (parent != null && parent.statics.blotName !== blotName.tableColGroup) {
       const marker = this.scroll.create('block');
       this.parent.insertBefore(marker, this.next);
-
-      const tableWrapper = this.scroll.create(blotName.tableWrapper, this.domNode.dataset.tableId) as TypeParchment.ParentBlot;
-      const table = this.scroll.create(blotName.tableMain, this.domNode.dataset.tableId) as TableMainFormat;
+      const tableWrapper = this.scroll.create(blotName.tableWrapper, this.tableId) as TypeParchment.ParentBlot;
+      const table = this.scroll.create(blotName.tableMain, this.tableId) as TableMainFormat;
       this.full && (table.full = true);
       const tableColgroup = this.scroll.create(blotName.tableColGroup) as TypeParchment.ParentBlot; ;
 
       tableColgroup.appendChild(this);
       table.appendChild(tableColgroup);
       tableWrapper.appendChild(table);
-      tableWrapper.replaceWith(marker);
+      marker.replaceWith(tableWrapper);
     }
     super.optimize(context);
   }
