@@ -80,6 +80,112 @@
       }
     }
   }
+
+  .ql-table-resizer {
+    position: absolute;
+    width: calc(100% - 30px);
+    z-index: 100;
+    .ql-table {
+      &-col,
+      &-row {
+        &-wrapper {
+          position: absolute;
+          top: 0px;
+          left: 0px;
+          display: flex;
+          overflow: hidden;
+        }
+        &-header {
+          position: relative;
+          flex-shrink: 0;
+          background-color: #f3f4f5;
+          border: 1px solid #ccc;
+        }
+      }
+      &-col {
+        &-wrapper {
+          width: 100%;
+        }
+        &-header {
+          height: 100%;
+        }
+        &-separator {
+          position: absolute;
+          top: 0px;
+          bottom: 0px;
+          right: -2px;
+          width: 2px;
+          cursor: ew-resize;
+          z-index: 100;
+          &::after {
+            right: -6px;
+          }
+          &::before {
+            left: -6px;
+          }
+          &::after,
+          &::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            display: block;
+            width: 8px;
+            height: 100%;
+            z-index: 101;
+          }
+        }
+      }
+      &-row {
+        &-wrapper {
+          flex-direction: column;
+          height: 100%;
+        }
+        &-header {
+          width: 100%;
+        }
+        &-separator {
+          position: absolute;
+          left: 0px;
+          right: 0px;
+          bottom: -2px;
+          height: 2px;
+          cursor: ns-resize;
+          z-index: 100;
+          &::after {
+            bottom: -6px;
+          }
+          &::before {
+            top: -6px;
+          }
+          &::after,
+          &::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            display: block;
+            width: 100%;
+            height: 8px;
+            z-index: 101;
+          }
+        }
+      }
+    }
+  }
+}
+.ql-table {
+  &-drag-line {
+    position: fixed;
+    background-color: #409eff;
+    z-index: 100;
+    &.col {
+      width: 2px;
+      cursor: ew-resize;
+    }
+    &.row {
+      height: 2px;
+      cursor: ns-resize;
+    }
+  }
 }
 
 .ql-editor {
@@ -96,8 +202,6 @@
       }
       &-wrapper {
         width: 100%;
-        padding-left: 1px;
-        padding-right: 1px;
         overflow: auto;
         &:hover {
           &::-webkit-scrollbar-thumb {

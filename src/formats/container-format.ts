@@ -1,5 +1,6 @@
 import Quill from 'quill';
 import type { Parchment as TypeParchment } from 'quill';
+import type TypeBlock from 'quill/blots/block';
 import { blotName } from '../utils';
 
 const Parchment = Quill.import('parchment');
@@ -15,6 +16,13 @@ export class ContainerFormat extends Container {
   static allowedChildren?: TypeParchment.BlotConstructor[] = [Block, BlockEmbed, Container];
   static requiredContainer: TypeParchment.BlotConstructor;
   static defaultChild?: TypeParchment.BlotConstructor;
+
+  clearDeltaCache() {
+    // eslint-disable-next-line unicorn/no-array-for-each
+    this.children.forEach((child) => {
+      (child as TypeBlock).cache = {};
+    });
+  }
 
   insertBefore(blot: TypeParchment.Blot, ref?: TypeParchment.Blot | null) {
     // when block line remove will merge format. but in TableCellInner will get TableCellInner format

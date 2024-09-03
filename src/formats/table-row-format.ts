@@ -1,5 +1,8 @@
+import type { Parchment as TypeParchment } from 'quill';
 import { blotName } from '../utils';
 import { ContainerFormat } from './container-format';
+import { TableCellInnerFormat } from './table-cell-inner-format';
+import type { TableCellFormat } from './table-cell-format';
 
 export class TableRowFormat extends ContainerFormat {
   static blotName = blotName.tableRow;
@@ -11,6 +14,8 @@ export class TableRowFormat extends ContainerFormat {
     node.dataset.rowId = value;
     return node;
   }
+
+  declare children: TypeParchment.LinkedList<TableCellFormat>;
 
   checkMerge(): boolean {
     const next = this.next;
@@ -25,6 +30,11 @@ export class TableRowFormat extends ContainerFormat {
     return this.domNode.dataset.rowId!;
   }
 
+  setHeight(value: number) {
+    this.foreachCellInner((cellInner) => {
+      cellInner.height = value;
+    });
+  }
   // // insert cell at index
   // // return the minus skip column number
   // // [2, 3]. means next line should skip 2 columns. next next line skip 3 columns
@@ -105,13 +115,14 @@ export class TableRowFormat extends ContainerFormat {
   //   return skip;
   // }
 
-  // foreachCellInner(func) {
-  //   const next = this.children.iterator();
-  //   let i = 0;
-  //   let cur;
-  //   while ((cur = next())) {
-  //     const [tableCell] = cur.descendants(TableCellInnerFormat);
-  //     if (func(tableCell, i++)) break;
-  //   }
-  // }
+  foreachCellInner(func: (tableCell: TableCellInnerFormat, index: number) => boolean | void) {
+    const next = this.children.iterator();
+    let i = 0;
+    let cur = next();
+    while (cur) {
+      const [tableCell] = cur.descendants(TableCellInnerFormat);
+      if (func(tableCell, i++)) break;
+      cur = next();
+    }
+  }
 }

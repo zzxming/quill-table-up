@@ -44,6 +44,7 @@ export class TableColFormat extends ContainerFormat {
   set width(value: string) {
     const width = Number.parseFloat(value);
     this.domNode.setAttribute('width', `${width}${this.full ? '%' : 'px'}`);
+    this.clearDeltaCache();
   }
 
   get tableId() {
@@ -59,13 +60,13 @@ export class TableColFormat extends ContainerFormat {
   }
 
   formats() {
-    const { tableId, colId } = this;
+    const { tableId, colId, width, full } = this;
     return {
       [this.statics.blotName]: {
         tableId,
         colId,
-        width: this.domNode.getAttribute('width'),
-        full: Object.hasOwn(this.domNode.dataset, 'full'),
+        width,
+        full,
       },
     };
   }

@@ -54,6 +54,7 @@ export interface TableCellValue {
   rowspan: number;
   colspan: number;
   backgroundColor?: string;
+  height?: number;
 };
 
 export interface RelactiveRect {

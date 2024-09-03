@@ -4,7 +4,7 @@ import type Picker from 'quill/ui/picker';
 import type BaseTheme from 'quill/themes/base';
 import type { Context } from 'quill/modules/keyboard';
 import type { TableTextOptions, TableUpOptions } from './utils';
-import { blotName, createSelectBox, debounce, findParentBlot, isFunction, randomId } from './utils';
+import { blotName, createSelectBox, debounce, findParentBlot, isFunction, randomId, tabbleToolName } from './utils';
 import { TableBodyFormat, TableCellFormat, TableCellInnerFormat, TableColFormat, TableColgroupFormat, TableMainFormat, TableRowFormat, TableWrapperFormat } from './formats';
 import { TableResize, TableSelection } from './modules';
 
@@ -44,7 +44,6 @@ export type QuillThemePicker = (Picker & { options: HTMLElement });
 export interface QuillTheme extends BaseTheme {
   pickers: QuillThemePicker[];
 }
-const tabbleToolName = 'table-up-main';
 export class TableUp {
   static keyboradHandler = {
     'forbid remove table by backspace': {

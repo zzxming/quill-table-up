@@ -12,7 +12,7 @@ export class TableCellFormat extends ContainerFormat {
   __rect?: DOMRect;
 
   static create(value: TableCellValue) {
-    const { tableId, rowId, colId, rowspan, colspan, backgroundColor } = value;
+    const { tableId, rowId, colId, rowspan, colspan, backgroundColor, height } = value;
     const node = super.create() as HTMLElement;
     node.dataset.tableId = tableId;
     node.dataset.rowId = rowId;
@@ -20,6 +20,7 @@ export class TableCellFormat extends ContainerFormat {
     node.setAttribute('rowspan', String(rowspan || 1));
     node.setAttribute('colspan', String(colspan || 1));
     backgroundColor && (node.style.backgroundColor = backgroundColor);
+    height && (node.setAttribute('height', String(height)));
     return node;
   }
 
@@ -69,6 +70,16 @@ export class TableCellFormat extends ContainerFormat {
     });
   }
 
+  get height(): number {
+    return Number(this.domNode.getAttribute('height')) || 0;
+  }
+
+  set height(value: number) {
+    if (value > 0) {
+      this.domNode.setAttribute('height', String(value));
+    }
+  }
+
   getCellInner() {
     return this.descendants(TableCellInnerFormat)[0];
   }
@@ -85,7 +96,7 @@ export class TableCellFormat extends ContainerFormat {
   }
 
   optimize(context: Record< string, any>) {
-    const { tableId, colId, rowId, colspan, rowspan } = this.domNode.dataset;
+    const { tableId, colId, rowId, colspan, rowspan, height, backgroundColor } = this;
 
     // td need only child tableCellInner. but for MutationObserver. tableCell need allow break
     // make sure tableCellInner is only child
@@ -101,6 +112,8 @@ export class TableCellFormat extends ContainerFormat {
         colId,
         colspan: colspan || 1,
         rowspan: rowspan || 1,
+        height,
+        backgroundColor,
       }) as TypeParchment.ParentBlot;
       const block = this.scroll.create('block') as TypeParchment.ParentBlot;
       block.appendChild(this.scroll.create('break'));

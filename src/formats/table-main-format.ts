@@ -11,7 +11,9 @@ export class TableMainFormat extends ContainerFormat {
   constructor(scroll: TypeParchment.Root, domNode: Node) {
     super(scroll, domNode);
 
-    this.formatTableWidth();
+    setTimeout(() => {
+      this.colWidthFillTable();
+    }, 0);
   }
 
   static create(value: string) {
@@ -27,18 +29,12 @@ export class TableMainFormat extends ContainerFormat {
 
   colWidthFillTable() {
     if (this.full) return;
-    const cols = this.descendants(TableColFormat);
+    const cols = this.getCols();
     if (!cols) return;
     const colsWidth = cols.reduce((sum, col) => col.width + sum, 0);
     if (colsWidth === 0 || Number.isNaN(colsWidth) || this.full) return null;
     this.domNode.style.width = `${colsWidth}px`;
     return colsWidth;
-  }
-
-  formatTableWidth() {
-    setTimeout(() => {
-      this.colWidthFillTable();
-    }, 0);
   }
 
   get tableId() {

@@ -1,6 +1,5 @@
 import Quill from 'quill';
 import type { Parchment as TypeParchment } from 'quill';
-import type TypeBlock from 'quill/blots/block';
 import { blotName, findParentBlot } from '../utils';
 import type { TableCellValue } from '../utils';
 import { ContainerFormat } from './container-format';
@@ -17,16 +16,19 @@ export class TableCellInnerFormat extends ContainerFormat {
   static defaultChild: TypeParchment.BlotConstructor = Block;
 
   static create(value: TableCellValue) {
-    const { tableId, rowId, colId, rowspan, colspan, backgroundColor } = value;
+    const { tableId, rowId, colId, rowspan, colspan, backgroundColor, height } = value;
     const node = super.create() as HTMLElement;
     node.dataset.tableId = tableId;
     node.dataset.rowId = rowId;
     node.dataset.colId = colId;
     node.dataset.rowspan = String(rowspan || 1);
     node.dataset.colspan = String(colspan || 1);
+    height && height > 0 && (node.dataset.height = String(height));
     backgroundColor && (node.dataset.backgroundColor = backgroundColor);
     return node;
   }
+
+  declare parent: TableCellFormat;
 
   constructor(
     public scroll: TypeParchment.Root,
@@ -45,14 +47,7 @@ export class TableCellInnerFormat extends ContainerFormat {
     return super.length() + 1;
   }
 
-  clearDeltaCache() {
-    // eslint-disable-next-line unicorn/no-array-for-each
-    this.children.forEach((child) => {
-      (child as TypeBlock).cache = {};
-    });
-  }
-
-  attributesList: Set<string> = new Set(['table-id', 'row-id', 'col-id', 'rowspan', 'colspan', 'background-color']);
+  attributesList: Set<string> = new Set(['table-id', 'row-id', 'col-id', 'rowspan', 'colspan', 'background-color', 'height']);
   setFormatValue(name: string, value: any) {
     if (!this.attributesList.has(name)) return;
     const attrName = `data-${name}`;
@@ -92,7 +87,7 @@ export class TableCellInnerFormat extends ContainerFormat {
   }
 
   set rowspan(value: number) {
-    this.parent && ((this.parent as TableCellFormat).rowspan = value);
+    this.parent && (this.parent.rowspan = value);
     this.setFormatValue('rowspan', value);
   }
 
@@ -101,7 +96,7 @@ export class TableCellInnerFormat extends ContainerFormat {
   }
 
   set colspan(value: number) {
-    this.parent && ((this.parent as TableCellFormat).colspan = value);
+    this.parent && (this.parent.colspan = value);
     this.setFormatValue('colspan', value);
   }
 
@@ -110,8 +105,17 @@ export class TableCellInnerFormat extends ContainerFormat {
   }
 
   set backgroundColor(value: string) {
-    this.parent && ((this.parent as TableCellFormat).backgroundColor = value);
+    this.parent && (this.parent.backgroundColor = value);
     this.setFormatValue('background-color', value);
+  }
+
+  get height() {
+    return Number(this.domNode.dataset.height) || 0;
+  }
+
+  set height(value: number) {
+    this.parent && (this.parent.height = Number(value));
+    this.setFormatValue('height', value);
   }
 
   getColumnIndex() {
@@ -120,13 +124,14 @@ export class TableCellInnerFormat extends ContainerFormat {
   }
 
   formats() {
-    const { tableId, rowId, colId, rowspan, colspan, backgroundColor } = this;
+    const { tableId, rowId, colId, rowspan, colspan, backgroundColor, height } = this;
     const value: Record<string, any> = {
       tableId,
       rowId,
       colId,
       rowspan,
       colspan,
+      height,
     };
     backgroundColor && (value.backgroundColor = backgroundColor);
     return {
@@ -136,7 +141,7 @@ export class TableCellInnerFormat extends ContainerFormat {
 
   optimize(context: Record< string, any>) {
     const parent = this.parent;
-    const { tableId, colId, rowId, rowspan, colspan, backgroundColor } = this;
+    const { tableId, colId, rowId, rowspan, colspan, backgroundColor, height } = this;
     if (parent !== null && parent.statics.blotName !== blotName.tableCell) {
       // insert a mark blot to make sure table insert index
       const marker = this.scroll.create('block');
@@ -153,6 +158,7 @@ export class TableCellInnerFormat extends ContainerFormat {
         rowspan,
         colspan,
         backgroundColor,
+        height,
       }) as TypeParchment.ParentBlot;
 
       td.appendChild(this);

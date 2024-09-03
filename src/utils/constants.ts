@@ -9,3 +9,8 @@ export const blotName = {
   tableCell: 'table-up-cell',
   tableCellInner: 'table-up-cell-inner',
 };
+
+export const tabbleToolName = 'table-up-main';
+export const tableColMinWidthPre = 3;
+export const tableColMinWidthPx = 26;
+export const tableRowMinWidthPx = 36;
