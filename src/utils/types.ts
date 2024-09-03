@@ -33,12 +33,14 @@ export interface TableTextOptions {
 export interface TableResizeOptions {
   size: number;
 }
-// export interface TableUpOptions {
-//   customSelect?: (this: TableUp) => HTMLElement;
-//   isCustom?: boolean;
-//   texts?: TableTextOptions;
-//   selection?: TableSelectionOptions;
-// }
+export interface TableUpOptions {
+  customSelect?: (this: TableUp) => HTMLElement;
+  full: boolean;
+  isCustom: boolean;
+  texts: TableTextOptions;
+  selection?: TableSelectionOptions;
+  resizer?: TableResizeOptions;
+}
 export interface TableColValue {
   tableId: string;
   colId: string;

@@ -1,7 +1,9 @@
 import Quill from 'quill';
 import type { Module, Range, Parchment as TypeParchment } from 'quill';
 import type Picker from 'quill/ui/picker';
+import type BaseTheme from 'quill/themes/base';
 import type { Context } from 'quill/modules/keyboard';
+import type { TableTextOptions, TableUpOptions } from './utils';
 import { blotName, createSelectBox, debounce, findParentBlot, isFunction, randomId } from './utils';
 import { TableBodyFormat, TableCellFormat, TableCellInnerFormat, TableColFormat, TableColgroupFormat, TableMainFormat, TableRowFormat, TableWrapperFormat } from './formats';
 import { TableResize, TableSelection } from './modules';
@@ -38,7 +40,10 @@ export const isForbidInTable = (current: TypeParchment.Blot): boolean =>
       : isForbidInTable(current.parent)
     : false;
 
-type QuillPicker = Picker & { options: HTMLElement };
+export type QuillThemePicker = (Picker & { options: HTMLElement });
+export interface QuillTheme extends BaseTheme {
+  pickers: QuillThemePicker[];
+}
 const tabbleToolName = 'table-up-main';
 export class TableUp {
   static keyboradHandler = {
@@ -117,23 +122,23 @@ export class TableUp {
   }
 
   quill: Quill;
-  options: Record<string, any>;
+  options: TableUpOptions;
   fixTableByLisenter = debounce(this.balanceTables, 100);
-  picker?: QuillPicker;
   selector?: HTMLElement;
+  picker?: (Picker & { options: HTMLElement });
   range?: Range | null;
   table?: HTMLElement;
   tableSelection?: TableSelection;
   tableResizer?: TableResize;
 
-  constructor(quill: Quill, options: Record<string, any>) {
+  constructor(quill: Quill, options: Partial<TableUpOptions>) {
     this.quill = quill;
     this.options = this.resolveOptions(options || {});
 
     const toolbar = this.quill.getModule('toolbar') as any;
     const [, select] = (toolbar.controls as [string, HTMLElement][] || []).find(([name]) => name === tabbleToolName) || [];
     if (select && select.tagName.toLocaleLowerCase() === 'select') {
-      this.picker = (this.quill.theme as unknown as { pickers: QuillPicker[] }).pickers.find(picker => picker.select === select);
+      this.picker = (this.quill.theme as QuillTheme).pickers.find(picker => picker.select === select);
       if (!this.picker) return;
       this.picker.label.innerHTML = icons.table;
       this.buildCustomSelect(this.options.customSelect);
@@ -161,16 +166,15 @@ export class TableUp {
     this.listenBalanceCells();
   }
 
-  resolveOptions(options: Record<string, any>) {
+  resolveOptions(options: Partial<TableUpOptions>) {
     return Object.assign({
-      customable: true,
+      isCustom: true,
       texts: this.resolveTexts(options.texts || {}),
-      selection: {},
-      customSelect: false,
-    }, options);
+      full: true,
+    } as TableUpOptions, options);
   };
 
-  resolveTexts(options: Record<string, string>) {
+  resolveTexts(options: Partial<TableTextOptions>) {
     return Object.assign({
       customBtn: '自定义行列数',
       confirmText: '确认',
@@ -184,8 +188,8 @@ export class TableUp {
   showTableTools(table: HTMLElement, quill: Quill) {
     if (table) {
       this.table = table;
-      this.tableSelection = new TableSelection(this, table, quill, this.options.selection);
-      this.tableResizer = new TableResize(this, table, quill, this.options.resize);
+      this.tableSelection = new TableSelection(this, table, quill, this.options.selection || {});
+      this.tableResizer = new TableResize(this, table, quill, this.options.resizer || {});
     }
   }
 
@@ -196,7 +200,7 @@ export class TableUp {
     this.table = undefined;
   }
 
-  async buildCustomSelect(customSelect: (module: TableUp) => HTMLElement | Promise<HTMLElement>) {
+  async buildCustomSelect(customSelect?: (module: TableUp) => HTMLElement | Promise<HTMLElement>) {
     if (!this.picker) return;
     const dom = document.createElement('div');
     dom.classList.add('ql-custom-select');
@@ -256,10 +260,10 @@ export class TableUp {
     delta = new Array(columns).fill('\n').reduce((memo, text, i) => {
       memo.insert(text, {
         [blotName.tableCol]: {
-          width: !this.options.fullWidth ? `${Math.floor(width / columns)}px` : `${(1 / columns) * 100}%`,
+          width: !this.options.full ? `${Math.floor(width / columns)}px` : `${(1 / columns) * 100}%`,
           tableId,
           colId: colIds[i],
-          full: this.options.fullWidth,
+          full: this.options.full,
         },
       });
       return memo;
@@ -279,13 +283,10 @@ export class TableUp {
         return memo;
       }, memo);
     }, delta);
-    console.log(delta);
 
     this.quill.updateContents(delta, Quill.sources.USER);
     this.quill.setSelection(range.index + columns + columns * rows + 1, Quill.sources.SILENT);
     this.quill.focus();
-
-    // this.closeSelecte();
   }
 
   // handle unusual delete cell
