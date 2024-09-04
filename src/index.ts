@@ -79,11 +79,14 @@ export class TableUp {
         if (blot.next instanceof TableWrapperFormat && offsetInline === blot.length() - 1) return false;
 
         if (context.format[blotName.tableCellInner]) {
-          const tableInnerBlot = findParentBlot(blot, blotName.tableCellInner);
-          const offsetInTableInner = blot.offset(tableInnerBlot);
-          if (offsetInTableInner + offsetInline === tableInnerBlot.length() - 1) {
+          const tableInnerBlot = findParentBlot<TableCellInnerFormat>(blot, blotName.tableCellInner);
+          if (blot === tableInnerBlot.children.tail && offsetInline === blot.length() - 1) {
             return false;
           }
+          // const offsetInTableInner = blot.offset(tableInnerBlot);
+          // if (offsetInTableInner + offsetInline === tableInnerBlot.length() - 1) {
+          //   return false;
+          // }
         }
         return true;
       },
@@ -260,7 +263,7 @@ export class TableUp {
     const [currentBlot] = this.quill.getLeaf(range.index);
     if (!currentBlot) return;
     if (isForbidInTable(currentBlot)) {
-      throw new Error(`Not supported nesting of ${currentBlot.statics.blotName} type object within a table.`);
+      throw new Error(`Not supported ${currentBlot.statics.blotName} insert into table.`);
     }
 
     const rootStyle = getComputedStyle(this.quill.root);

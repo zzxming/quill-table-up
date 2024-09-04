@@ -7,6 +7,7 @@ import type { TableMainFormat } from './table-main-format';
 import type { TableCellFormat } from './table-cell-format';
 
 const Block = Quill.import('blots/block') as TypeParchment.BlotConstructor;
+const BlockEmbed = Quill.import('blots/block/embed') as TypeParchment.BlotConstructor;
 
 export class TableCellInnerFormat extends ContainerFormat {
   static blotName = blotName.tableCellInner;
@@ -29,13 +30,6 @@ export class TableCellInnerFormat extends ContainerFormat {
   }
 
   declare parent: TableCellFormat;
-
-  constructor(
-    public scroll: TypeParchment.Root,
-    public domNode: HTMLElement,
-  ) {
-    super(scroll, domNode);
-  }
 
   // this issue also effect TableColFormat
   // make sure cell have at least one length. Otherwise will get wrong insert index when table inserting
@@ -149,15 +143,21 @@ export class TableCellInnerFormat extends ContainerFormat {
   optimize(context: Record< string, any>) {
     const parent = this.parent;
     const { tableId, colId, rowId, rowspan, colspan, backgroundColor, height } = this;
+    // handle BlockEmbed to insert tableCellInner when setContents
+    if (this.prev && this.prev instanceof BlockEmbed) {
+      const afterBlock = this.scroll.create('block');
+      this.appendChild(this.prev);
+      this.appendChild(afterBlock);
+    }
     if (parent !== null && parent.statics.blotName !== blotName.tableCell) {
       // insert a mark blot to make sure table insert index
       const marker = this.scroll.create('block');
       parent.insertBefore(marker, this.next);
 
-      const tableWrapper = this.scroll.create(blotName.tableWrapper, tableId) as TypeParchment.ParentBlot;
-      const table = this.scroll.create(blotName.tableMain, tableId) as TypeParchment.ParentBlot;
-      const tableBody = this.scroll.create(blotName.tableBody) as TypeParchment.ParentBlot;
-      const tr = this.scroll.create(blotName.tableRow, rowId) as TypeParchment.ParentBlot;
+      const tableWrapper = this.scroll.create(blotName.tableWrapper, tableId) as ContainerFormat;
+      const table = this.scroll.create(blotName.tableMain, tableId) as ContainerFormat;
+      const tableBody = this.scroll.create(blotName.tableBody) as ContainerFormat;
+      const tr = this.scroll.create(blotName.tableRow, rowId) as ContainerFormat;
       const td = this.scroll.create(blotName.tableCell, {
         tableId,
         rowId,
@@ -166,7 +166,7 @@ export class TableCellInnerFormat extends ContainerFormat {
         colspan,
         backgroundColor,
         height,
-      }) as TypeParchment.ParentBlot;
+      }) as ContainerFormat;
 
       td.appendChild(this);
       tr.appendChild(td);
