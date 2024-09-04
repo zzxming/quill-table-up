@@ -1,4 +1,4 @@
-{ 
+{
   "editor.formatOnSave": true,
   "editor.tabSize": 2,
   "editor.codeActionsOnSave": {
@@ -38,5 +38,5 @@
     "less",
     "scss",
     "postcss"
-  ],
+  ]
 }

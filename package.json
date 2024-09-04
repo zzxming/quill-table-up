@@ -36,6 +36,9 @@
   "peerDependencies": {
     "quill": "^2.0.0"
   },
+  "dependencies": {
+    "parchment": "3.0.0"
+  },
   "devDependencies": {
     "@esbuild-kit/cjs-loader": "^2.4.4",
     "@rollup/plugin-terser": "^0.4.4",
@@ -60,8 +63,5 @@
     "rollup-plugin-svg-import": "^3.0.0",
     "typescript": "^5.5.3",
     "yaml-eslint-parser": "^1.2.3"
-  },
-  "dependencies": {
-    "parchment": "3.0.0"
   }
 }
