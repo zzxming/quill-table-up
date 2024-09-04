@@ -38,5 +38,12 @@
     "less",
     "scss",
     "postcss"
-  ]
+  ],
+  "search.exclude": {
+    "docs/dev*": true,
+    "docs/*.css": true,
+    "**/dist": true,
+    "**/node_modules": true,
+    "**/*.md": true
+  }
 }
