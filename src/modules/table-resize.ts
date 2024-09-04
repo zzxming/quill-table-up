@@ -25,8 +25,6 @@ export class TableResize {
     this.tableWrapper = this.tableMain.parent;
     if (!this.tableWrapper) return;
 
-    this.tableCols = this.tableMain.getCols();
-    this.tableRows = this.tableMain.getRows();
     this.root = this.quill.addContainer('ql-table-resizer');
 
     this.resizeObserver = new ResizeObserver(() => {
@@ -243,6 +241,8 @@ export class TableResize {
   showTool() {
     const tableMain = Quill.find(this.table) as TableMainFormat;
     if (!tableMain) return;
+    this.tableCols = this.tableMain.getCols();
+    this.tableRows = this.tableMain.getRows();
     this.root.innerHTML = '';
     const tableWrapperRect = this.tableWrapper.domNode.getBoundingClientRect();
     const rect = getRelativeRect(tableMain.domNode.getBoundingClientRect(), this.quill.root);

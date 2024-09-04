@@ -177,11 +177,6 @@ export class TableSelection {
     this.addScrollEvent(this.table.parentNode as HTMLElement, () => {
       this.updateSelection();
     });
-    const srcollHide = () => {
-      this.hideSelection();
-      this.quill.root.removeEventListener('scroll', srcollHide);
-    };
-    this.addScrollEvent(this.quill.root, srcollHide);
   }
 
   hideSelection() {

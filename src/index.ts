@@ -83,10 +83,6 @@ export class TableUp {
           if (blot === tableInnerBlot.children.tail && offsetInline === blot.length() - 1) {
             return false;
           }
-          // const offsetInTableInner = blot.offset(tableInnerBlot);
-          // if (offsetInTableInner + offsetInline === tableInnerBlot.length() - 1) {
-          //   return false;
-          // }
         }
         return true;
       },
@@ -168,7 +164,9 @@ export class TableUp {
       },
       false,
     );
-
+    this.quill.root.addEventListener('scroll', () => {
+      this.hideTableTools();
+    });
     this.quill.on(Quill.events.EDITOR_CHANGE, (event: string, range: Range) => {
       if (event === Quill.events.SELECTION_CHANGE && range) {
         const [blot] = this.quill.getLine(range.index);
