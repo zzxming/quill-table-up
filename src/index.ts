@@ -416,6 +416,24 @@ export class TableUp {
     tableBlot && tableBlot.remove();
     this.hideTableTools();
   }
+
+  appendRow(isDown: boolean) {
+    if (!this.tableSelection) return;
+    const selectedTds = this.tableSelection.selectedTds;
+    if (selectedTds.length <= 0) return;
+    // find baseTd and baseTr
+    const baseTd = selectedTds[isDown ? selectedTds.length - 1 : 0];
+    const tableBlot = findParentBlot<TableMainFormat>(baseTd, blotName.tableMain);
+    const [tableBodyBlot] = tableBlot.descendants(TableBodyFormat);
+    if (!tableBodyBlot) return;
+
+    const baseTdParentTr = findParentBlot<TableRowFormat>(baseTd, blotName.tableRow);
+    const tableTrs = tableBlot.getRows();
+    const i = tableTrs.indexOf(baseTdParentTr);
+    const insertRowIndex = i + (isDown ? baseTd.rowspan : 0);
+
+    tableBodyBlot.insertRow(insertRowIndex);
+  }
 }
 export default TableUp;
 export * from './modules';

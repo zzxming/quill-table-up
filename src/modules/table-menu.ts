@@ -1,6 +1,6 @@
 import type Quill from 'quill';
-// import InsertTop from '../svg/insert-top.svg';
-// import InsertBottom from '../svg/insert-bottom.svg';
+import InsertTop from '../svg/insert-top.svg';
+import InsertBottom from '../svg/insert-bottom.svg';
 // import InsertLeft from '../svg/insert-left.svg';
 // import InsertRight from '../svg/insert-right.svg';
 // import RemoveColumn from '../svg/remove-column.svg';
@@ -19,14 +19,15 @@ const parseNum = (num: any) => {
 };
 
 const defaultTools: Tool[] = [
-  // {
-  //   name: 'InsertTop',
-  //   icon: InsertTop,
-  //   tip: '向上插入一行',
-  //   handle: (tableModule) => {
-  //     tableModule.insertRow(0);
-  //   },
-  // },
+  {
+    name: 'InsertTop',
+    icon: InsertTop,
+    tip: '向上插入一行',
+    handle: (tableModule) => {
+      tableModule.appendRow(false);
+      tableModule.tableResizer && tableModule.tableResizer.showTool();
+    },
+  },
   // {
   //   name: 'InsertRight',
   //   icon: InsertRight,
@@ -35,14 +36,15 @@ const defaultTools: Tool[] = [
   //     tableModule.insertColumn(1);
   //   },
   // },
-  // {
-  //   name: 'InsertBottom',
-  //   icon: InsertBottom,
-  //   tip: '向下插入一行',
-  //   handle: (tableModule) => {
-  //     tableModule.insertRow(1);
-  //   },
-  // },
+  {
+    name: 'InsertBottom',
+    icon: InsertBottom,
+    tip: '向下插入一行',
+    handle: (tableModule) => {
+      tableModule.appendRow(true);
+      tableModule.tableResizer && tableModule.tableResizer.showTool();
+    },
+  },
   // {
   //   name: 'InsertLeft',
   //   icon: InsertLeft,
