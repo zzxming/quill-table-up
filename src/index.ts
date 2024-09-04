@@ -165,6 +165,19 @@ export class TableUp {
       },
       false,
     );
+
+    this.quill.on(Quill.events.EDITOR_CHANGE, (event: string, range: Range) => {
+      if (event === Quill.events.SELECTION_CHANGE && range) {
+        const [blot] = this.quill.getLine(range.index);
+        try {
+          findParentBlot(blot!, blotName.tableMain);
+          return;
+        }
+        catch {}
+        this.hideTableTools();
+      }
+    });
+
     this.listenBalanceCells();
   }
 
