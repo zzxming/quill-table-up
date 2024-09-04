@@ -123,6 +123,13 @@ export class TableCellInnerFormat extends ContainerFormat {
     return table.getColIds().indexOf(this.colId);
   }
 
+  formatAt(index: number, length: number, name: string, value: any) {
+    if (this.children.length === 0) {
+      this.appendChild(this.scroll.create(this.statics.defaultChild.blotName));
+    }
+    super.formatAt(index, length, name, value);
+  }
+
   formats() {
     const { tableId, rowId, colId, rowspan, colspan, backgroundColor, height } = this;
     const value: Record<string, any> = {
