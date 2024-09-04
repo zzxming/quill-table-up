@@ -434,6 +434,66 @@ export class TableUp {
 
     tableBodyBlot.insertRow(insertRowIndex);
   }
+
+  appendCol(isRight: boolean) {
+    if (!this.tableSelection) return;
+    const selectedTds = this.tableSelection.selectedTds;
+    if (selectedTds.length <= 0) return;
+
+    // find insert column index in row
+    const [baseTd] = selectedTds.reduce((pre, cur) => {
+      const columnIndex = cur.getColumnIndex();
+      if (!isRight && columnIndex <= pre[1]) {
+        pre = [cur, columnIndex];
+      }
+      else if (isRight && columnIndex >= pre[1]) {
+        pre = [cur, columnIndex];
+      }
+      return pre;
+    }, [selectedTds[0], selectedTds[0].getColumnIndex()]);
+    const columnIndex = baseTd.getColumnIndex() + (isRight ? baseTd.colspan : 0);
+
+    const tableBlot = findParentBlot<TableMainFormat>(baseTd, blotName.tableMain);
+    const tableId = tableBlot.tableId;
+    const newColId = randomId();
+
+    const [colgroup] = tableBlot.descendants(TableColgroupFormat);
+    if (colgroup) {
+      colgroup.insertColByIndex(columnIndex, {
+        tableId,
+        colId: newColId,
+        width: tableBlot.full ? '6%' : '160px',
+        full: tableBlot.full,
+      });
+    }
+
+    // loop tr and insert cell at index
+    // if index is inner cell, skip next `rowspan` line
+    // if there are cells both have column span and row span before index cell, minus `colspan` cell for next line
+    const trs = tableBlot.descendants(TableRowFormat);
+    const spanCols: number[] = [];
+    let skipRowNum = 0;
+    for (const tr of Object.values(trs)) {
+      const spanCol = spanCols.shift() || 0;
+      if (skipRowNum > 0) {
+        skipRowNum -= 1;
+        continue;
+      }
+      const nextSpanCols = tr.insertCell(columnIndex - spanCol, {
+        tableId,
+        rowId: tr.rowId,
+        colId: newColId,
+        rowspan: 1,
+        colspan: 1,
+      });
+      if (nextSpanCols.skipRowNum) {
+        skipRowNum += nextSpanCols.skipRowNum;
+      }
+      for (const [i, n] of nextSpanCols.entries()) {
+        spanCols[i] = (spanCols[i] || 0) + n;
+      }
+    }
+  }
 }
 export default TableUp;
 export * from './modules';

@@ -1,8 +1,8 @@
 import type Quill from 'quill';
 import InsertTop from '../svg/insert-top.svg';
 import InsertBottom from '../svg/insert-bottom.svg';
-// import InsertLeft from '../svg/insert-left.svg';
-// import InsertRight from '../svg/insert-right.svg';
+import InsertLeft from '../svg/insert-left.svg';
+import InsertRight from '../svg/insert-right.svg';
 // import RemoveColumn from '../svg/remove-column.svg';
 // import RemoveRow from '../svg/remove-row.svg';
 import RemoveTable from '../svg/remove-table.svg';
@@ -25,34 +25,36 @@ const defaultTools: Tool[] = [
     tip: '向上插入一行',
     handle: (tableModule) => {
       tableModule.appendRow(false);
-      tableModule.tableResizer && tableModule.tableResizer.showTool();
+      tableModule.hideTableTools();
     },
   },
-  // {
-  //   name: 'InsertRight',
-  //   icon: InsertRight,
-  //   tip: '向右插入一列',
-  //   handle: (tableModule) => {
-  //     tableModule.insertColumn(1);
-  //   },
-  // },
+  {
+    name: 'InsertRight',
+    icon: InsertRight,
+    tip: '向右插入一列',
+    handle: (tableModule) => {
+      tableModule.appendCol(true);
+      tableModule.hideTableTools();
+    },
+  },
   {
     name: 'InsertBottom',
     icon: InsertBottom,
     tip: '向下插入一行',
     handle: (tableModule) => {
       tableModule.appendRow(true);
-      tableModule.tableResizer && tableModule.tableResizer.showTool();
+      tableModule.hideTableTools();
     },
   },
-  // {
-  //   name: 'InsertLeft',
-  //   icon: InsertLeft,
-  //   tip: '向左插入一列',
-  //   handle: (tableModule) => {
-  //     tableModule.insertColumn(0);
-  //   },
-  // },
+  {
+    name: 'InsertLeft',
+    icon: InsertLeft,
+    tip: '向左插入一列',
+    handle: (tableModule) => {
+      tableModule.appendCol(false);
+      tableModule.hideTableTools();
+    },
+  },
   // {
   //   name: 'break',
   // },

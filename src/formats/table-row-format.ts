@@ -1,4 +1,5 @@
 import type { Parchment as TypeParchment } from 'quill';
+import type { TableCellValue } from '../utils';
 import { blotName } from '../utils';
 import { ContainerFormat } from './container-format';
 import { TableCellInnerFormat } from './table-cell-inner-format';
@@ -35,42 +36,43 @@ export class TableRowFormat extends ContainerFormat {
       cellInner.height = value;
     });
   }
-  // // insert cell at index
-  // // return the minus skip column number
-  // // [2, 3]. means next line should skip 2 columns. next next line skip 3 columns
-  // insertCell(targetIndex, value) {
-  //   const skip = [];
-  //   const next = this.children.iterator();
-  //   let index = 0;
-  //   let cur;
-  //   while ((cur = next())) {
-  //     index += cur.colspan;
-  //     if (index > targetIndex) break;
-  //     if (cur.rowspan !== 1) {
-  //       for (let i = 0; i < cur.rowspan - 1; i++) {
-  //         skip[i] = (skip[i] || 0) + cur.colspan;
-  //       }
-  //     }
-  //   }
 
-  //   if (cur && index - cur.colspan < targetIndex) {
-  //     const tableCell = cur.getCellInner();
-  //     tableCell.colspan += 1;
-  //     if (cur.rowspan !== 1) {
-  //       skip.skipRowNum = cur.rowspan - 1;
-  //     }
-  //   }
-  //   else {
-  //     const tableCell = Parchment.create(blotName.tableCell, value);
-  //     const tableCellInner = Parchment.create(blotName.tableCellInner, value);
-  //     const block = Parchment.create('block');
-  //     block.appendChild(Parchment.create('break'));
-  //     tableCellInner.appendChild(block);
-  //     tableCell.appendChild(tableCellInner);
-  //     this.insertBefore(tableCell, cur);
-  //   }
-  //   return skip;
-  // }
+  // insert cell at index
+  // return the minus skip column number
+  // [2, 3]. means next line should skip 2 columns. next next line skip 3 columns
+  insertCell(targetIndex: number, value: TableCellValue) {
+    const skip: number[] & { skipRowNum?: number } = [];
+    const next = this.children.iterator();
+    let index = 0;
+    let cur;
+    while ((cur = next())) {
+      index += cur.colspan;
+      if (index > targetIndex) break;
+      if (cur.rowspan !== 1) {
+        for (let i = 0; i < cur.rowspan - 1; i++) {
+          skip[i] = (skip[i] || 0) + cur.colspan;
+        }
+      }
+    }
+
+    if (cur && index - cur.colspan < targetIndex) {
+      const tableCell = cur.getCellInner();
+      tableCell.colspan += 1;
+      if (cur.rowspan !== 1) {
+        skip.skipRowNum = cur.rowspan - 1;
+      }
+    }
+    else {
+      const tableCell = this.scroll.create(blotName.tableCell, value) as ContainerFormat;
+      const tableCellInner = this.scroll.create(blotName.tableCellInner, value) as ContainerFormat;
+      const block = this.scroll.create('block') as TypeParchment.BlockBlot;
+      block.appendChild(this.scroll.create('break'));
+      tableCellInner.appendChild(block);
+      tableCell.appendChild(tableCellInner);
+      this.insertBefore(tableCell, cur);
+    }
+    return skip;
+  }
 
   // getCellByColumIndex(stopIndex) {
   //   const skip = [];
@@ -118,11 +120,10 @@ export class TableRowFormat extends ContainerFormat {
   foreachCellInner(func: (tableCell: TableCellInnerFormat, index: number) => boolean | void) {
     const next = this.children.iterator();
     let i = 0;
-    let cur = next();
-    while (cur) {
+    let cur: TableCellFormat | null;
+    while ((cur = next())) {
       const [tableCell] = cur.descendants(TableCellInnerFormat);
       if (func(tableCell, i++)) break;
-      cur = next();
     }
   }
 }

@@ -41,8 +41,8 @@ export class TableColFormat extends ContainerFormat {
     return Number.parseFloat(width);
   }
 
-  set width(value: string) {
-    const width = Number.parseFloat(value);
+  set width(value: string | number) {
+    const width = Number.parseFloat(value as string);
     this.domNode.setAttribute('width', `${width}${this.full ? '%' : 'px'}`);
     this.clearDeltaCache();
   }
