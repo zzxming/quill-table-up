@@ -7,3 +7,4 @@ export * from './table-body-format';
 export * from './table-row-format';
 export * from './table-cell-format';
 export * from './table-cell-inner-format';
+export * from './overrides';

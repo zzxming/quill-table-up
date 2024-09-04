@@ -6,7 +6,7 @@ import type { Context } from 'quill/modules/keyboard';
 import type Toolbar from 'quill/modules/toolbar';
 import type { TableTextOptions, TableUpOptions } from './utils';
 import { blotName, createSelectBox, debounce, findParentBlot, isFunction, randomId, tabbleToolName } from './utils';
-import { TableBodyFormat, TableCellFormat, TableCellInnerFormat, TableColFormat, TableColgroupFormat, TableMainFormat, TableRowFormat, TableWrapperFormat } from './formats';
+import { ScrollOverride, TableBodyFormat, TableCellFormat, TableCellInnerFormat, TableColFormat, TableColgroupFormat, TableMainFormat, TableRowFormat, TableWrapperFormat } from './formats';
 import { TableResize, TableSelection } from './modules';
 
 const Delta = Quill.import('delta');
@@ -45,44 +45,7 @@ export type QuillThemePicker = (Picker & { options: HTMLElement });
 export interface QuillTheme extends BaseTheme {
   pickers: QuillThemePicker[];
 }
-const Parchment = Quill.import('parchment');
-const ScrollBlot = Quill.import('blots/scroll') as any;
-class ScrollOverride extends ScrollBlot {
-  // origin private but rewrite to private will have a dts error: 'createBlock' is declared but its value is never read.
-  createBlock(attributes: Record<string, any>, refBlot?: TypeParchment.Blot) {
-    let createBlotName: string | undefined;
-    let formats: Record<string, any> = {};
 
-    for (const [key, value] of Object.entries(attributes)) {
-      const isBlockBlot = this.query(key, Parchment.Scope.BLOCK & Parchment.Scope.BLOT) != null;
-      if (isBlockBlot) {
-        createBlotName = key;
-      }
-      else {
-        formats[key] = value;
-      }
-    }
-    // only add this judgement to merge block blot at table cell
-    if (createBlotName === blotName.tableCellInner) {
-      formats = { ...attributes };
-      delete formats[createBlotName];
-    }
-
-    const block = this.create(
-      createBlotName || this.statics.defaultChild.blotName,
-      createBlotName ? attributes[createBlotName] : undefined,
-    ) as TypeParchment.ParentBlot;
-
-    this.insertBefore(block, refBlot || undefined);
-
-    const length = block.length();
-    for (const [key, value] of Object.entries(formats)) {
-      block.formatAt(0, length, key, value);
-    }
-
-    return block;
-  }
-}
 export class TableUp {
   static keyboradHandler = {
     'forbid remove table by backspace': {
