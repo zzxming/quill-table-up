@@ -15,9 +15,8 @@ export class TableSelection {
   selectedTds: TableCellInnerFormat[] = [];
   cellSelect: HTMLDivElement;
   dragging: boolean = false;
-  selectingHandler = this.mouseDownHandler.bind(this);
   scrollHandler: [HTMLElement, (...args: any[]) => void][] = [];
-  closeHandler: () => void;
+  selectingHandler = this.mouseDownHandler.bind(this);
   tableMenu: TableMenu;
 
   constructor(public tableModule: TableUp, public table: HTMLElement, public quill: Quill, options: Partial<TableSelectionOptions> = {}) {
@@ -29,11 +28,9 @@ export class TableSelection {
     const resizeObserver = new ResizeObserver(() => {
       this.hideSelection();
     });
-    resizeObserver.observe(this.quill.root);
+    resizeObserver.observe(this.table);
 
     this.quill.root.addEventListener('mousedown', this.selectingHandler, false);
-    this.closeHandler = this.hideSelection.bind(this);
-    this.quill.on(Quill.events.TEXT_CHANGE, this.closeHandler);
     this.tableMenu = new TableMenu(this.tableModule, quill, this.options.tableMenu);
   }
 
@@ -202,7 +199,6 @@ export class TableSelection {
     this.clearScrollEvent();
 
     this.quill.root.removeEventListener('mousedown', this.selectingHandler, false);
-    this.quill.off(Quill.events.TEXT_CHANGE, this.closeHandler);
     return null;
   }
 }

@@ -130,12 +130,6 @@ export class TableMenu {
         const colorItem = document.createElement('div');
         colorItem.classList.add('table-color-used-item');
         colorItem.style.backgroundColor = recordColor;
-        colorItem.addEventListener('click', (e) => {
-          e.stopPropagation();
-          if (this.selectedTds.length > 0) {
-            this.tableModule.setBackgroundColor(this.selectedTds, colorItem.style.backgroundColor);
-          }
-        });
         usedColorWrapper.appendChild(colorItem);
       }
     }, 1000);
@@ -186,7 +180,12 @@ export class TableMenu {
           const usedColorWrap = document.createElement('div');
           usedColorWrap.classList.add('table-color-used');
           item.appendChild(usedColorWrap);
-          this.updateUsedColor(item);
+          for (const recordColor of usedColors) {
+            const colorItem = document.createElement('div');
+            colorItem.classList.add('table-color-used-item');
+            colorItem.style.backgroundColor = recordColor;
+            usedColorWrap.appendChild(colorItem);
+          }
           item.addEventListener('mouseenter', () => {
             if (usedColors.size === 0) return;
             Object.assign(usedColorWrap.style, {
@@ -197,6 +196,13 @@ export class TableMenu {
             Object.assign(usedColorWrap.style, {
               display: 'none',
             });
+          });
+          usedColorWrap.addEventListener('click', (e) => {
+            e.preventDefault();
+            const item = e.target as HTMLElement;
+            if (item && item.style.backgroundColor && this.selectedTds.length > 0) {
+              this.tableModule.setBackgroundColor(this.selectedTds, item.style.backgroundColor);
+            }
           });
 
           if (isFunction(handle)) {
