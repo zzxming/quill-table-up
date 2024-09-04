@@ -9,13 +9,11 @@
       }
     }
   }
+  .ql-picker.ql-expanded .ql-picker-options {
+    z-index: 11;
+  }
 
   .ql-table-selection {
-    display: none;
-    position: absolute;
-    z-index: 10;
-    border: 1px solid;
-    pointer-events: none;
     &_line {
       display: none;
       position: absolute;
@@ -84,7 +82,7 @@
   .ql-table-resizer {
     position: absolute;
     width: calc(100% - 30px);
-    z-index: 100;
+    z-index: 10;
     .ql-table {
       &-col,
       &-row {
@@ -116,7 +114,7 @@
           right: -2px;
           width: 2px;
           cursor: ew-resize;
-          z-index: 100;
+          z-index: 10;
           &::after {
             right: -6px;
           }
@@ -131,7 +129,7 @@
             display: block;
             width: 8px;
             height: 100%;
-            z-index: 101;
+            z-index: 11;
           }
         }
       }
@@ -150,7 +148,7 @@
           bottom: -2px;
           height: 2px;
           cursor: ns-resize;
-          z-index: 100;
+          z-index: 10;
           &::after {
             bottom: -6px;
           }
@@ -165,7 +163,7 @@
             display: block;
             width: 100%;
             height: 8px;
-            z-index: 101;
+            z-index: 11;
           }
         }
       }
@@ -176,7 +174,7 @@
   &-drag-line {
     position: fixed;
     background-color: #409eff;
-    z-index: 100;
+    z-index: 10;
     &.col {
       width: 2px;
       cursor: ew-resize;
