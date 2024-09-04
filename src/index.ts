@@ -3,6 +3,7 @@ import type { Module, Range, Parchment as TypeParchment } from 'quill';
 import type Picker from 'quill/ui/picker';
 import type BaseTheme from 'quill/themes/base';
 import type { Context } from 'quill/modules/keyboard';
+import type Toolbar from 'quill/modules/toolbar';
 import type { TableTextOptions, TableUpOptions } from './utils';
 import { blotName, createSelectBox, debounce, findParentBlot, isFunction, randomId, tabbleToolName } from './utils';
 import { TableBodyFormat, TableCellFormat, TableCellInnerFormat, TableColFormat, TableColgroupFormat, TableMainFormat, TableRowFormat, TableWrapperFormat } from './formats';
@@ -173,7 +174,7 @@ export class TableUp {
     this.quill = quill;
     this.options = this.resolveOptions(options || {});
 
-    const toolbar = this.quill.getModule('toolbar') as any;
+    const toolbar = this.quill.getModule('toolbar') as Toolbar;
     const [, select] = (toolbar.controls as [string, HTMLElement][] || []).find(([name]) => name === tabbleToolName) || [];
     if (select && select.tagName.toLocaleLowerCase() === 'select') {
       this.picker = (this.quill.theme as QuillTheme).pickers.find(picker => picker.select === select);
@@ -235,6 +236,7 @@ export class TableUp {
     this.tableSelection && this.tableSelection.destroy();
     this.tableSelection = undefined;
     this.tableResizer && this.tableResizer.destroy();
+    this.tableResizer = undefined;
     this.table = undefined;
   }
 

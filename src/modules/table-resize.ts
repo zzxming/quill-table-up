@@ -10,6 +10,7 @@ export class TableResize {
   root!: HTMLElement;
   tableMain: TableMainFormat;
   tableWrapper!: TypeParchment.Parent;
+  resizeObserver!: ResizeObserver;
   tableCols: TableColFormat[] = [];
   tableRows: TableRowFormat[] = [];
   rowHeadWrapper: HTMLElement | null = null;
@@ -26,9 +27,12 @@ export class TableResize {
 
     this.tableCols = this.tableMain.getCols();
     this.tableRows = this.tableMain.getRows();
-
     this.root = this.quill.addContainer('ql-table-resizer');
-    this.showTool();
+
+    this.resizeObserver = new ResizeObserver(() => {
+      this.showTool();
+    });
+    this.resizeObserver.observe(this.table);
   }
 
   resolveOptions(options: Partial<TableResizeOptions>) {
@@ -239,9 +243,7 @@ export class TableResize {
   showTool() {
     const tableMain = Quill.find(this.table) as TableMainFormat;
     if (!tableMain) return;
-    for (const element of Array.from(this.root.children)) {
-      element.remove();
-    }
+    this.root.innerHTML = '';
     const tableWrapperRect = this.tableWrapper.domNode.getBoundingClientRect();
     const rect = getRelativeRect(tableMain.domNode.getBoundingClientRect(), this.quill.root);
     const tableTop = tableMain.domNode.offsetTop;
@@ -300,6 +302,7 @@ export class TableResize {
 
   destroy() {
     this.hideTool();
+    this.resizeObserver.disconnect();
     for (const [dom, handle] of this.scrollHandler) {
       dom.removeEventListener('scroll', handle);
     }
