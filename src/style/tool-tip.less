@@ -2,6 +2,7 @@
   position: relative;
   display: flex;
   &__text {
+    display: none;
     position: absolute;
     left: 50%;
     top: 100%;
@@ -25,8 +26,23 @@
       border: 8px solid rgba(0, 0, 0, 0);
       border-bottom-color: rgba(0, 0, 0, 0.8);
     }
+    &.block {
+      display: block;
+    }
     &.hidden {
       opacity: 0;
+    }
+    &.right-out {
+      transform: translate(-80%, 6px);
+      &::before {
+        left: 80%;
+      }
+    }
+    &.left-out {
+      transform: translate(-20%, 6px);
+      &::before {
+        left: 20%;
+      }
     }
   }
 }

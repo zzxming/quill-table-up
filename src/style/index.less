@@ -22,7 +22,7 @@
     }
     &-tool {
       position: absolute;
-      z-index: 10;
+      z-index: 11;
       display: none;
       align-items: center;
       justify-content: center;
@@ -73,6 +73,12 @@
             height: 16px;
             margin: 0px 3px;
             border: 1px solid #a3a3a3;
+          }
+          &.right-out {
+            transform: translate(-90%, -100%);
+          }
+          &.left-out {
+            transform: translate(0%, -100%);
           }
         }
       }

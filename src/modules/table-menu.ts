@@ -222,6 +222,21 @@ export class TableMenu {
             Object.assign(usedColorWrap.style, {
               display: 'flex',
             });
+            usedColorWrap.classList.remove('left-out');
+            usedColorWrap.classList.remove('right-out');
+            const rect = usedColorWrap.getBoundingClientRect();
+            if (rect.right > window.innerWidth) {
+              usedColorWrap.classList.add('right-out');
+            }
+            else {
+              usedColorWrap.classList.remove('right-out');
+            }
+            if (rect.left < 0) {
+              usedColorWrap.classList.add('left-out');
+            }
+            else {
+              usedColorWrap.classList.remove('left-out');
+            }
           });
           item.addEventListener('mouseleave', () => {
             Object.assign(usedColorWrap.style, {
@@ -280,10 +295,10 @@ export class TableMenu {
     // limit menu in viewport
     const { paddingLeft, paddingRight } = getComputedStyle(this.quill.root);
     const menuRect = this.menu.getBoundingClientRect();
-    const containerRect = this.quill.container.getBoundingClientRect();
-    if (menuRect.right > containerRect.right - parseNum(paddingRight)) {
+    const rootRect = this.quill.root.getBoundingClientRect();
+    if (menuRect.right > rootRect.right - parseNum(paddingRight)) {
       Object.assign(this.menu.style, {
-        left: `${containerRect.right - containerRect.left - menuRect.width - parseNum(paddingRight) - 1}px`,
+        left: `${rootRect.right - rootRect.left - menuRect.width - parseNum(paddingRight) - 1}px`,
         transform: `translate(0%, 20%)`,
       });
     }

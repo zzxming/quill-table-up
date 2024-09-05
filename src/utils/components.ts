@@ -272,13 +272,34 @@ export const createToolTip = (target: HTMLElement, options: ToolTipOptions = {})
     wrapper.addEventListener('mouseenter', () => {
       if (timer) clearTimeout(timer);
       timer = setTimeout(() => {
+        tip.classList.add('block');
         tip.classList.remove('hidden');
+        tip.classList.remove('right-out');
+        tip.classList.remove('left-out');
+        setTimeout(() => {
+          const rect = tip.getBoundingClientRect();
+          if (rect.right > window.innerWidth) {
+            tip.classList.add('right-out');
+          }
+          else {
+            tip.classList.remove('right-out');
+          }
+          if (rect.left < 0) {
+            tip.classList.add('left-out');
+          }
+          else {
+            tip.classList.remove('left-out');
+          }
+        }, 0);
       }, delay);
     });
     wrapper.addEventListener('mouseleave', () => {
       if (timer) clearTimeout(timer);
       timer = setTimeout(() => {
         tip.classList.add('hidden');
+        tip.addEventListener('transitionend', () => {
+          tip.classList.remove('block');
+        }, { once: true });
         timer = null;
       }, delay);
     });
