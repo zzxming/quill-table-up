@@ -6,7 +6,7 @@ import type { TableColFormat } from './table-col-format';
 import { TableMainFormat } from './table-main-format';
 
 export class TableColgroupFormat extends ContainerFormat {
-  static blotName = blotName.tableColGroup;
+  static blotName = blotName.tableColgroup;
   static tagName = 'colgroup';
   declare children: TypeParchment.LinkedList<TableColFormat>;
 

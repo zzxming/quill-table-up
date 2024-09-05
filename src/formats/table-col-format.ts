@@ -84,13 +84,13 @@ export class TableColFormat extends ContainerFormat {
 
   optimize(context: Record< string, any>) {
     const parent = this.parent;
-    if (parent != null && parent.statics.blotName !== blotName.tableColGroup) {
+    if (parent != null && parent.statics.blotName !== blotName.tableColgroup) {
       const marker = this.scroll.create('block');
       this.parent.insertBefore(marker, this.next);
       const tableWrapper = this.scroll.create(blotName.tableWrapper, this.tableId) as TypeParchment.ParentBlot;
       const table = this.scroll.create(blotName.tableMain, this.tableId) as TableMainFormat;
       this.full && (table.full = true);
-      const tableColgroup = this.scroll.create(blotName.tableColGroup) as TypeParchment.ParentBlot; ;
+      const tableColgroup = this.scroll.create(blotName.tableColgroup) as TypeParchment.ParentBlot;
 
       tableColgroup.appendChild(this);
       table.appendChild(tableColgroup);

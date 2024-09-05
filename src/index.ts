@@ -79,7 +79,7 @@ export class TableUp {
         if (blot.next instanceof TableWrapperFormat && offsetInline === blot.length() - 1) return false;
 
         if (context.format[blotName.tableCellInner]) {
-          const tableInnerBlot = findParentBlot<TableCellInnerFormat>(blot, blotName.tableCellInner);
+          const tableInnerBlot = findParentBlot(blot, blotName.tableCellInner);
           if (blot === tableInnerBlot.children.tail && offsetInline === blot.length() - 1) {
             return false;
           }
@@ -116,7 +116,7 @@ export class TableUp {
       [`formats/${blotName.tableRow}`]: TableRowFormat,
       [`formats/${blotName.tableBody}`]: TableBodyFormat,
       [`formats/${blotName.tableCol}`]: TableColFormat,
-      [`formats/${blotName.tableColGroup}`]: TableColgroupFormat,
+      [`formats/${blotName.tableColgroup}`]: TableColgroupFormat,
       [`formats/${blotName.tableMain}`]: TableMainFormat,
       [`formats/${blotName.tableWrapper}`]: TableWrapperFormat,
     }, true);
@@ -423,11 +423,11 @@ export class TableUp {
     if (selectedTds.length <= 0) return;
     // find baseTd and baseTr
     const baseTd = selectedTds[isDown ? selectedTds.length - 1 : 0];
-    const tableBlot = findParentBlot<TableMainFormat>(baseTd, blotName.tableMain);
+    const tableBlot = findParentBlot(baseTd, blotName.tableMain);
     const [tableBodyBlot] = tableBlot.descendants(TableBodyFormat);
     if (!tableBodyBlot) return;
 
-    const baseTdParentTr = findParentBlot<TableRowFormat>(baseTd, blotName.tableRow);
+    const baseTdParentTr = findParentBlot(baseTd, blotName.tableRow);
     const tableTrs = tableBlot.getRows();
     const i = tableTrs.indexOf(baseTdParentTr);
     const insertRowIndex = i + (isDown ? baseTd.rowspan : 0);
@@ -453,7 +453,7 @@ export class TableUp {
     }, [selectedTds[0], selectedTds[0].getColumnIndex()]);
     const columnIndex = baseTd.getColumnIndex() + (isRight ? baseTd.colspan : 0);
 
-    const tableBlot = findParentBlot<TableMainFormat>(baseTd, blotName.tableMain);
+    const tableBlot = findParentBlot(baseTd, blotName.tableMain);
     const tableId = tableBlot.tableId;
     const newColId = randomId();
 
