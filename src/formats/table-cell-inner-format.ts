@@ -3,7 +3,6 @@ import type { Parchment as TypeParchment } from 'quill';
 import { blotName, findParentBlot } from '../utils';
 import type { TableCellValue } from '../utils';
 import { ContainerFormat } from './container-format';
-import type { TableMainFormat } from './table-main-format';
 import type { TableCellFormat } from './table-cell-format';
 
 const Block = Quill.import('blots/block') as TypeParchment.BlotConstructor;
@@ -113,7 +112,7 @@ export class TableCellInnerFormat extends ContainerFormat {
   }
 
   getColumnIndex() {
-    const table = findParentBlot<TableMainFormat>(this, blotName.tableMain);
+    const table = findParentBlot(this, blotName.tableMain);
     return table.getColIds().indexOf(this.colId);
   }
 

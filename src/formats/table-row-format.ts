@@ -1,10 +1,11 @@
 import type { Parchment as TypeParchment } from 'quill';
 import type { TableCellValue } from '../utils';
-import { blotName } from '../utils';
+import { blotName, findParentBlot } from '../utils';
 import { ContainerFormat } from './container-format';
 import { TableCellInnerFormat } from './table-cell-inner-format';
 import type { TableCellFormat } from './table-cell-format';
 
+export type SkipRowCount = number[] & { skipRowNum?: number };
 export class TableRowFormat extends ContainerFormat {
   static blotName = blotName.tableRow;
   static tagName = 'tr';
@@ -41,7 +42,7 @@ export class TableRowFormat extends ContainerFormat {
   // return the minus skip column number
   // [2, 3]. means next line should skip 2 columns. next next line skip 3 columns
   insertCell(targetIndex: number, value: TableCellValue) {
-    const skip: number[] & { skipRowNum?: number } = [];
+    const skip: SkipRowCount = [];
     const next = this.children.iterator();
     let index = 0;
     let cur;
@@ -74,48 +75,50 @@ export class TableRowFormat extends ContainerFormat {
     return skip;
   }
 
-  // getCellByColumIndex(stopIndex) {
-  //   const skip = [];
-  //   let cur;
-  //   let cellEndIndex = 0;
-  //   if (stopIndex < 0) return [cur, cellEndIndex, skip];
-  //   const next = this.children.iterator();
-  //   while ((cur = next())) {
-  //     cellEndIndex += cur.colspan;
-  //     if (cur.rowspan !== 1) {
-  //       for (let i = 0; i < cur.rowspan - 1; i++) {
-  //         skip[i] = (skip[i] || 0) + cur.colspan;
-  //       }
-  //     }
-  //     if (cellEndIndex > stopIndex) break;
-  //   }
-  //   return [cur, cellEndIndex, skip];
-  // }
+  getCellByColumIndex(stopIndex: number): [null | TableCellFormat, number, number[]] {
+    const skip: number[] = [];
+    let cur: null | TableCellFormat = null;
+    let cellEndIndex = 0;
+    if (stopIndex < 0) return [cur, cellEndIndex, skip];
+    const next = this.children.iterator();
+    while ((cur = next())) {
+      cellEndIndex += cur.colspan;
+      if (cur.rowspan !== 1) {
+        for (let i = 0; i < cur.rowspan - 1; i++) {
+          skip[i] = (skip[i] || 0) + cur.colspan;
+        }
+      }
+      if (cellEndIndex > stopIndex) break;
+    }
+    return [cur, cellEndIndex, skip];
+  }
 
-  // removeCell(targetIndex) {
-  //   if (targetIndex < 0) return [];
-  //   const [cur, index, skip] = this.getCellByColumIndex(targetIndex);
-  //   if (!cur) return skip;
-  //   if (index - cur.colspan < targetIndex || cur.colspan > 1) {
-  //     const [tableCell] = cur.descendants(TableCellInnerFormat);
+  removeCell(targetIndex: number): SkipRowCount {
+    if (targetIndex < 0) return [];
+    const columnIndexData = this.getCellByColumIndex(targetIndex);
+    const [cur, index] = columnIndexData;
+    const skip: SkipRowCount = columnIndexData[2];
+    if (!cur) return skip;
+    if (index - cur.colspan < targetIndex || cur.colspan > 1) {
+      const [tableCell] = cur.descendants(TableCellInnerFormat);
 
-  //     if (cur.colspan !== 1 && targetIndex === index - cur.colspan) {
-  //       // if delete index is cell start index. update cell colId to next colId
-  //       const tableBlot = findParentBlot(this, blotName.table);
-  //       const colIds = tableBlot.getColIds();
-  //       tableCell.colId = colIds[colIds.indexOf(tableCell.colId) + 1];
-  //     }
-  //     if (cur.rowspan !== 1) {
-  //       skip.skipRowNum = cur.rowspan - 1;
-  //     }
+      if (cur.colspan !== 1 && targetIndex === index - cur.colspan) {
+        // if delete index is cell start index. update cell colId to next colId
+        const tableBlot = findParentBlot(this, blotName.tableMain);
+        const colIds = tableBlot.getColIds();
+        tableCell.colId = colIds[colIds.indexOf(tableCell.colId) + 1];
+      }
+      if (cur.rowspan !== 1) {
+        skip.skipRowNum = cur.rowspan - 1;
+      }
 
-  //     tableCell.colspan -= 1;
-  //   }
-  //   else {
-  //     cur.remove();
-  //   }
-  //   return skip;
-  // }
+      tableCell.colspan -= 1;
+    }
+    else {
+      cur.remove();
+    }
+    return skip;
+  }
 
   foreachCellInner(func: (tableCell: TableCellInnerFormat, index: number) => boolean | void) {
     const next = this.children.iterator();

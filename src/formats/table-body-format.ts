@@ -1,7 +1,6 @@
 import type { Parchment as TypeParchment } from 'quill';
 import { blotName, findParentBlot, randomId } from '../utils';
 import { ContainerFormat } from './container-format';
-import type { TableMainFormat } from './table-main-format';
 import { TableRowFormat } from './table-row-format';
 
 export class TableBodyFormat extends ContainerFormat {
@@ -27,7 +26,7 @@ export class TableBodyFormat extends ContainerFormat {
 
   // insert row at index
   insertRow(targetIndex: number) {
-    const tableBlot = findParentBlot<TableMainFormat>(this, blotName.tableMain);
+    const tableBlot = findParentBlot(this, blotName.tableMain);
     if (!tableBlot) return;
     // get all column id. exclude the columns of the target index row with rowspan
     const colIds = tableBlot.getColIds();

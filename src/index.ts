@@ -494,6 +494,184 @@ export class TableUp {
       }
     }
   }
+
+  /**
+   * after insert or remove cell. handle cell colspan and rowspan merge
+   */
+  fixTableByRemove(tableBlot: TableMainFormat) {
+    // calculate all cells
+    // maybe will get empty tr
+    const trBlots = tableBlot.getRows();
+    const tableCols = tableBlot.getCols();
+    const colIdMap = tableCols.reduce((idMap, col) => {
+      idMap[col.colId] = 0;
+      return idMap;
+    }, {} as Record<string, number>);
+      // merge rowspan
+    const reverseTrBlots = [...trBlots].reverse();
+    const removeTr: number[] = [];
+    for (const [index, tr] of reverseTrBlots.entries()) {
+      const i = trBlots.length - index - 1;
+      if (tr.children.length <= 0) {
+        removeTr.push(i);
+      }
+      else {
+        // if have td rowspan across empty tr. minus rowspan
+        tr.foreachCellInner((td) => {
+          const sum = removeTr.reduce((sum, val) => td.rowspan + i > val ? sum + 1 : sum, 0);
+          td.rowspan -= sum;
+          // count exist col
+          colIdMap[td.colId] += 1;
+        });
+      }
+    }
+    // merge colspan
+    let index = 0;
+    for (const count of Object.values(colIdMap)) {
+      if (count === 0) {
+        const spanCols: number[] = [];
+        let skipRowNum = 0;
+        for (const tr of Object.values(trBlots)) {
+          const spanCol = spanCols.shift() || 0;
+          let nextSpanCols = [];
+          if (skipRowNum > 0) {
+            nextSpanCols = tr.getCellByColumIndex(index - spanCol)[2];
+            skipRowNum -= 1;
+          }
+          else {
+            nextSpanCols = tr.removeCell(index - spanCol);
+            if (nextSpanCols.skipRowNum) {
+              skipRowNum += nextSpanCols.skipRowNum;
+            }
+          }
+          for (const [i, n] of nextSpanCols.entries()) {
+            spanCols[i] = (spanCols[i] || 0) + n;
+          }
+        }
+      }
+      else {
+        index += 1;
+      }
+    }
+    // remove col
+    for (const col of tableCols) {
+      if (colIdMap[col.colId] === 0) {
+        if (col.prev) {
+          (col.prev as TableColFormat).width += col.width;
+        }
+        else if (col.next) {
+          (col.next as TableColFormat).width += col.width;
+        }
+        col.remove();
+      }
+    }
+  }
+
+  removeRow() {
+    if (!this.tableSelection) return;
+    const selectedTds = this.tableSelection.selectedTds;
+    if (selectedTds.length <= 0) return;
+    const baseTd = selectedTds[0];
+    const tableBlot = findParentBlot(baseTd, blotName.tableMain);
+    const trs = tableBlot.getRows();
+    let endTrIndex = trs.length;
+    let nextTrIndex = -1;
+    for (const td of selectedTds) {
+      const tr = findParentBlot(td, blotName.tableRow);
+      const index = trs.indexOf(tr);
+      if (index < endTrIndex) {
+        endTrIndex = index;
+      }
+      if (index + td.rowspan > nextTrIndex) {
+        nextTrIndex = index + td.rowspan;
+      }
+    }
+
+    const patchTds: {
+      [key: string]: {
+        rowspan: number;
+        colspan: number;
+        colIndex: number;
+      };
+    } = {};
+    for (let i = endTrIndex; i < Math.min(trs.length, nextTrIndex); i++) {
+      const tr = trs[i];
+      tr.foreachCellInner((td) => {
+        // find cells in rowspan that exceed the deletion range
+        if (td.rowspan + i > nextTrIndex) {
+          patchTds[td.colId] = {
+            rowspan: td.rowspan + i - nextTrIndex,
+            colspan: td.colspan,
+            colIndex: td.getColumnIndex(),
+          };
+        }
+        // only remove td. empty tr to calculate colspan and rowspan
+        td.parent.remove();
+      });
+    }
+
+    if (trs[nextTrIndex]) {
+      const nextTr = trs[nextTrIndex];
+      const tableId = tableBlot.tableId;
+      // insert cell in nextTr to patch exceed cell
+      for (const [colId, { colIndex, colspan, rowspan }] of Object.entries(patchTds)) {
+        nextTr.insertCell(colIndex, {
+          tableId,
+          rowId: nextTr.rowId,
+          colId,
+          colspan,
+          rowspan,
+        });
+      }
+    }
+
+    this.fixTableByRemove(tableBlot);
+  }
+
+  removeCol() {
+    if (!this.tableSelection) return;
+    const selectedTds = this.tableSelection.selectedTds;
+    if (selectedTds.length <= 0) return;
+    const baseTd = selectedTds[0];
+    const tableBlot = findParentBlot(baseTd, blotName.tableMain);
+    const colspanMap: Record<string, number> = {};
+    for (const td of selectedTds) {
+      if (!colspanMap[td.rowId]) colspanMap[td.rowId] = 0;
+      colspanMap[td.rowId] += td.colspan;
+    }
+    const colspanCount = Math.max(...Object.values(colspanMap));
+    const columnIndex = baseTd.getColumnIndex();
+
+    const trs = tableBlot.descendants(TableRowFormat);
+    for (let i = 0; i < colspanCount; i++) {
+      const spanCols: number[] = [];
+      let skipRowNum = 0;
+      for (const tr of Object.values(trs)) {
+        const spanCol = spanCols.shift() || 0;
+        if (skipRowNum > 0) {
+          skipRowNum -= 1;
+          continue;
+        }
+        const nextSpanCols = tr.removeCell(columnIndex - spanCol);
+        if (nextSpanCols.skipRowNum) {
+          skipRowNum += nextSpanCols.skipRowNum;
+        }
+        for (const [i, n] of nextSpanCols.entries()) {
+          spanCols[i] = (spanCols[i] || 0) + n;
+        }
+      }
+    }
+    // delete col need after remove cell. remove cell need all column id
+    // manual delete col. use fixTableByRemove to delete col will delete extra cells
+    const [colgroup] = tableBlot.descendants(TableColgroupFormat);
+    if (colgroup) {
+      for (let i = 0; i < colspanCount; i++) {
+        colgroup.removeColByIndex(columnIndex);
+      }
+    }
+
+    this.fixTableByRemove(tableBlot);
+  }
 }
 export default TableUp;
 export * from './modules';

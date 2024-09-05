@@ -51,18 +51,20 @@ export class TableColgroupFormat extends ContainerFormat {
     this.insertBefore(tableCellInner, col);
   }
 
-  // removeColByIndex(index) {
-  //   const table = this.parent;
-  //   if (!(table instanceof TableFormat)) {
-  //     throw new TypeError('TableColgroupFormat should be child of TableFormat');
-  //   }
-  //   const col = this.findCol(index);
-  //   if (col.next) {
-  //     col.next.width += col.width;
-  //   }
-  //   else if (col.prev) {
-  //     col.prev.width += col.width;
-  //   }
-  //   col.remove();
-  // }
+  removeColByIndex(index: number) {
+    const table = this.parent;
+    if (!(table instanceof TableMainFormat)) {
+      throw new TypeError('TableColgroupFormat should be child of TableMainFormat');
+    }
+    const col = this.findCol(index);
+    if (col) {
+      if (col.next) {
+        (col.next as TableColFormat).width += col.width;
+      }
+      else if (col.prev) {
+        (col.prev as TableColFormat).width += col.width;
+      }
+      col.remove();
+    }
+  }
 }

@@ -3,8 +3,8 @@ import InsertTop from '../svg/insert-top.svg';
 import InsertBottom from '../svg/insert-bottom.svg';
 import InsertLeft from '../svg/insert-left.svg';
 import InsertRight from '../svg/insert-right.svg';
-// import RemoveColumn from '../svg/remove-column.svg';
-// import RemoveRow from '../svg/remove-row.svg';
+import RemoveRow from '../svg/remove-row.svg';
+import RemoveColumn from '../svg/remove-column.svg';
 import RemoveTable from '../svg/remove-table.svg';
 import Color from '../svg/color.svg';
 import { createToolTip, debounce, isArray, isFunction } from '../utils';
@@ -55,25 +55,27 @@ const defaultTools: Tool[] = [
       tableModule.hideTableTools();
     },
   },
-  // {
-  //   name: 'break',
-  // },
-  // {
-  //   name: 'DeleteRow',
-  //   icon: RemoveRow,
-  //   tip: '删除当前行',
-  //   handle: (tableModule) => {
-  //     tableModule.deleteRow();
-  //   },
-  // },
-  // {
-  //   name: 'DeleteColumn',
-  //   icon: RemoveColumn,
-  //   tip: '删除当前列',
-  //   handle: (tableModule) => {
-  //     tableModule.deleteColumn();
-  //   },
-  // },
+  {
+    name: 'break',
+  },
+  {
+    name: 'DeleteRow',
+    icon: RemoveRow,
+    tip: '删除当前行',
+    handle: (tableModule) => {
+      tableModule.removeRow();
+      tableModule.hideTableTools();
+    },
+  },
+  {
+    name: 'DeleteColumn',
+    icon: RemoveColumn,
+    tip: '删除当前列',
+    handle: (tableModule) => {
+      tableModule.removeCol();
+      tableModule.hideTableTools();
+    },
+  },
   {
     name: 'DeleteTable',
     icon: RemoveTable,
