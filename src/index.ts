@@ -672,6 +672,75 @@ export class TableUp {
 
     this.fixTableByRemove(tableBlot);
   }
+
+  mergeCells() {
+    if (!this.tableSelection) return;
+    const selectedTds = this.tableSelection.selectedTds;
+    if (selectedTds.length <= 1) return;
+    const counts = selectedTds.reduce(
+      (pre, selectTd, index) => {
+        // count column span
+        const colId = selectTd.colId;
+        if (!pre[0][colId]) pre[0][colId] = 0;
+        pre[0][colId] += selectTd.rowspan;
+        // count row span
+        const rowId = selectTd.rowId;
+        if (!pre[1][rowId]) pre[1][rowId] = 0;
+        pre[1][rowId] += selectTd.colspan;
+        // merge select cell
+        if (index !== 0) {
+          selectTd.moveChildren(pre[2]);
+          selectTd.parent.remove();
+        }
+        return pre;
+      },
+      [{} as Record<string, number>, {} as Record<string, number>, selectedTds[0]] as const,
+    );
+
+    const rowCount = Math.max(...Object.values(counts[0]));
+    const colCount = Math.max(...Object.values(counts[1]));
+    const baseTd = counts[2];
+    baseTd.colspan = colCount;
+    baseTd.rowspan = rowCount;
+
+    const tableBlot = findParentBlot(baseTd, blotName.tableMain);
+    this.fixTableByRemove(tableBlot);
+  }
+
+  splitCell() {
+    if (!this.tableSelection) return;
+    const selectedTds = this.tableSelection.selectedTds;
+    if (selectedTds.length !== 1) return;
+    const baseTd = selectedTds[0];
+    if (baseTd.colspan === 1 && baseTd.rowspan === 1) return;
+    const baseTr = findParentBlot(baseTd, blotName.tableRow);
+    const tableBlot = findParentBlot(baseTd, blotName.tableMain);
+    const tableId = tableBlot.tableId;
+    const colIndex = baseTd.getColumnIndex();
+    const colIds = tableBlot.getColIds().slice(colIndex, colIndex + baseTd.colspan).reverse();
+
+    let curTr = baseTr;
+    let rowspan = baseTd.rowspan;
+    // reset span first. insertCell need colspan to judge insert position
+    baseTd.colspan = 1;
+    baseTd.rowspan = 1;
+    while (curTr && rowspan > 0) {
+      for (const id of colIds) {
+        // keep baseTd. baseTr should insert at baseTd's column index + 1
+        if (curTr === baseTr && id === baseTd.colId) continue;
+        curTr.insertCell(colIndex + (curTr === baseTr ? 1 : 0), {
+          tableId,
+          rowId: curTr.rowId,
+          colId: id,
+          rowspan: 1,
+          colspan: 1,
+        });
+      }
+
+      rowspan -= 1;
+      curTr = curTr.next as TableRowFormat;
+    }
+  }
 }
 export default TableUp;
 export * from './modules';

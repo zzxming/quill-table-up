@@ -1,4 +1,6 @@
 import type Quill from 'quill';
+import MergeCell from '../svg/merge-cell.svg';
+import SplitCell from '../svg/split-cell.svg';
 import InsertTop from '../svg/insert-top.svg';
 import InsertBottom from '../svg/insert-bottom.svg';
 import InsertLeft from '../svg/insert-left.svg';
@@ -52,6 +54,29 @@ const defaultTools: Tool[] = [
     tip: '向左插入一列',
     handle: (tableModule) => {
       tableModule.appendCol(false);
+      tableModule.hideTableTools();
+    },
+  },
+  {
+    name: 'break',
+  },
+  {
+
+    name: 'MergeCell',
+    icon: MergeCell,
+    tip: '合并单元格',
+    handle: (tableModule) => {
+      tableModule.mergeCells();
+      tableModule.hideTableTools();
+    },
+  },
+  {
+
+    name: 'SplitCell',
+    icon: SplitCell,
+    tip: '拆分单元格',
+    handle: (tableModule) => {
+      tableModule.splitCell();
       tableModule.hideTableTools();
     },
   },
