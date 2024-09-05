@@ -137,13 +137,15 @@ export class TableUp {
     this.options = this.resolveOptions(options || {});
 
     const toolbar = this.quill.getModule('toolbar') as Toolbar;
-    const [, select] = (toolbar.controls as [string, HTMLElement][] || []).find(([name]) => name === tabbleToolName) || [];
-    if (select && select.tagName.toLocaleLowerCase() === 'select') {
-      this.picker = (this.quill.theme as QuillTheme).pickers.find(picker => picker.select === select);
-      if (!this.picker) return;
-      this.picker.label.innerHTML = icons.table;
-      this.buildCustomSelect(this.options.customSelect);
-      this.picker.label.addEventListener('mousedown', this.handleInViewport);
+    if (toolbar) {
+      const [, select] = (toolbar.controls as [string, HTMLElement][] || []).find(([name]) => name === tabbleToolName) || [];
+      if (select && select.tagName.toLocaleLowerCase() === 'select') {
+        this.picker = (this.quill.theme as QuillTheme).pickers.find(picker => picker.select === select);
+        if (!this.picker) return;
+        this.picker.label.innerHTML = icons.table;
+        this.buildCustomSelect(this.options.customSelect);
+        this.picker.label.addEventListener('mousedown', this.handleInViewport);
+      }
     }
 
     this.quill.root.addEventListener(
