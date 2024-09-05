@@ -268,7 +268,7 @@ export const createToolTip = (target: HTMLElement, options: ToolTipOptions = {})
     tip.classList.add('hidden');
     tip.textContent = msg;
     wrapper.appendChild(tip);
-    let timer: number | null = null;
+    let timer: ReturnType<typeof setTimeout> | null;
     wrapper.addEventListener('mouseenter', () => {
       if (timer) clearTimeout(timer);
       timer = setTimeout(() => {

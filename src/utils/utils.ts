@@ -3,12 +3,13 @@ import type { TableBodyFormat, TableCellFormat, TableCellInnerFormat, TableColFo
 import type { RelactiveRect } from './types';
 import type { blotName } from './constants';
 
+// eslint-disable-next-line ts/ban-types
 export const isFunction = (val: any): val is Function => typeof val === 'function';
 export const isArray = Array.isArray;
 
 export const randomId = () => Math.random().toString(36).slice(2);
 export const debounce = <T extends (...args: any[]) => any>(fn: T, delay: number) => {
-  let timestamp: number;
+  let timestamp: ReturnType<typeof setTimeout>;
   return function (this: any, ...args: Parameters<T>) {
     if (timestamp) {
       clearTimeout(timestamp);
