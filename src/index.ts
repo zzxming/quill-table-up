@@ -183,10 +183,31 @@ export class TableUp {
     this.quill.root.addEventListener('scroll', () => {
       this.hideTableTools();
     });
-    this.quill.on(Quill.events.EDITOR_CHANGE, (event: string, range: Range) => {
+    this.quill.on(Quill.events.EDITOR_CHANGE, (event: string, range: Range, oldRange: Range) => {
       if (event === Quill.events.SELECTION_CHANGE && range) {
         const [startBlot] = this.quill.getLine(range.index);
         const [endBlot] = this.quill.getLine(range.index + range.length);
+
+        // if range in col. change range out of col
+        const startInCol = startBlot instanceof TableColFormat;
+        const endInCol = endBlot instanceof TableColFormat;
+        if (startInCol || endInCol) {
+          const { index, length } = range;
+          if (length === 0) {
+            this.quill.setSelection(index + 1);
+          }
+          else {
+            if (endInCol) {
+              this.quill.setSelection(index, length + 1);
+            }
+            else {
+              // oldRange index < range index means select front. so minus index and plus length
+              // else is select backward
+              this.quill.setSelection(index + (oldRange.index > index ? -1 : 1), length + (oldRange.index > index ? 1 : -1));
+            }
+          }
+          return;
+        }
 
         // if range is not in table. hide table tools
         try {
