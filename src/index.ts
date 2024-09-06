@@ -185,9 +185,13 @@ export class TableUp {
     });
     this.quill.on(Quill.events.EDITOR_CHANGE, (event: string, range: Range) => {
       if (event === Quill.events.SELECTION_CHANGE && range) {
-        const [blot] = this.quill.getLine(range.index);
+        const [startBlot] = this.quill.getLine(range.index);
+        const [endBlot] = this.quill.getLine(range.index + range.length);
+
+        // if range is not in table. hide table tools
         try {
-          findParentBlot(blot!, blotName.tableMain);
+          findParentBlot(startBlot!, blotName.tableMain);
+          findParentBlot(endBlot!, blotName.tableMain);
           return;
         }
         catch {}
