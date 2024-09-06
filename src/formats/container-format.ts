@@ -35,4 +35,13 @@ export class ContainerFormat extends Container {
       super.insertBefore(blot, ref);
     }
   }
+
+  insertAt(index: number, value: string, def?: any): void {
+    const [child] = this.children.find(index);
+    if (!child) {
+      const defaultChild = this.scroll.create(this.statics.defaultChild.blotName || 'block');
+      this.appendChild(defaultChild);
+    }
+    super.insertAt(index, value, def);
+  }
 }
