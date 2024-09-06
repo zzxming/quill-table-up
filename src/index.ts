@@ -1,9 +1,10 @@
 import Quill from 'quill';
-import type { Module, Range, Parchment as TypeParchment } from 'quill';
+import type { Range, Parchment as TypeParchment } from 'quill';
 import type Picker from 'quill/ui/picker';
 import type BaseTheme from 'quill/themes/base';
 import type { Context } from 'quill/modules/keyboard';
 import type Toolbar from 'quill/modules/toolbar';
+import type Keyboard from 'quill/modules/keyboard';
 import type { TableTextOptions, TableUpOptions } from './utils';
 import { blotName, createSelectBox, debounce, findParentBlot, isFunction, randomId, tabbleToolName } from './utils';
 import { ScrollOverride, TableBodyFormat, TableCellFormat, TableCellInnerFormat, TableColFormat, TableColgroupFormat, TableMainFormat, TableRowFormat, TableWrapperFormat } from './formats';
@@ -32,7 +33,7 @@ const createCell = (scroll: TypeParchment.ScrollBlot, { tableId, rowId, colId }:
 };
 
 // Blots that cannot be inserted into a table
-export const tableCantInsert = [blotName.tableCell, 'code-block'];
+export const tableCantInsert: string[] = [blotName.tableCell, 'code-block'];
 export const isForbidInTableBlot = (blot: TypeParchment.Blot) => tableCantInsert.includes(blot.statics.blotName);
 export const isForbidInTable = (current: TypeParchment.Blot): boolean =>
   current && current.parent
@@ -49,10 +50,11 @@ export interface QuillTheme extends BaseTheme {
 export class TableUp {
   static keyboradHandler = {
     'forbid remove table by backspace': {
+      bindInHead: true,
       key: 'Backspace',
       collapsed: true,
       offset: 0,
-      handler(this: Module, range: Range, context: Context) {
+      handler(this: { quill: Quill }, range: Range, context: Context) {
         const line = this.quill.getLine(range.index);
         const blot = line[0] as TypeParchment.BlockBlot;
         if (blot.prev instanceof TableWrapperFormat) {
@@ -70,13 +72,14 @@ export class TableUp {
       },
     },
     'forbid remove table by delete': {
+      bindInHead: true,
       key: 'Delete',
       collapsed: true,
-      handler(this: Module, range: Range, context: Context) {
+      handler(this: { quill: Quill }, range: Range, context: Context) {
         const line = this.quill.getLine(range.index);
         const blot = line[0] as TypeParchment.BlockBlot;
         const offsetInline = line[1];
-        if (blot.next instanceof TableWrapperFormat && offsetInline === blot.length() - 1) return false;
+        if ((blot.next instanceof TableWrapperFormat || blot.next instanceof TableColFormat) && offsetInline === blot.length() - 1) return false;
 
         if (context.format[blotName.tableCellInner]) {
           const tableInnerBlot = findParentBlot(blot, blotName.tableCellInner);
@@ -145,6 +148,17 @@ export class TableUp {
         this.picker.label.innerHTML = icons.table;
         this.buildCustomSelect(this.options.customSelect);
         this.picker.label.addEventListener('mousedown', this.handleInViewport);
+      }
+    }
+
+    const keyboard = this.quill.getModule('keyboard') as Keyboard;
+    for (const handle of Object.values(TableUp.keyboradHandler)) {
+      // insert before default key handler
+      if (handle.bindInHead) {
+        keyboard.bindings[handle.key].unshift(handle);
+      }
+      else {
+        keyboard.addBinding(handle.key, handle);
       }
     }
 
