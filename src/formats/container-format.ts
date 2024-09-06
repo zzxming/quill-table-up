@@ -18,10 +18,10 @@ export class ContainerFormat extends Container {
   static defaultChild?: TypeParchment.BlotConstructor;
 
   clearDeltaCache() {
-    // eslint-disable-next-line unicorn/no-array-for-each
-    this.children.forEach((child) => {
+    const blocks = this.descendants(Block, 0);
+    for (const child of blocks) {
       (child as TypeBlock).cache = {};
-    });
+    }
   }
 
   insertBefore(blot: TypeParchment.Blot, ref?: TypeParchment.Blot | null) {
