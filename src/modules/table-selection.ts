@@ -127,9 +127,6 @@ export class TableSelection {
 
     const mouseMoveHandler = (mousemoveEvent: MouseEvent) => {
       const { button, target, clientX, clientY } = mousemoveEvent;
-      if (this.selectedTds.length > 1) {
-        mousemoveEvent.preventDefault();
-      }
       const closestTable = (target as HTMLElement).closest('.ql-table') as HTMLElement;
       if (
         button !== 0
@@ -142,6 +139,9 @@ export class TableSelection {
       this.dragging = true;
       const movePoint = { x: clientX, y: clientY };
       this.selectedTds = this.computeSelectedTds(startPoint, movePoint);
+      if (this.selectedTds.length > 1) {
+        this.quill.blur();
+      }
       this.updateSelection();
     };
     const mouseUpHandler = () => {
