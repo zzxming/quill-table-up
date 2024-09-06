@@ -19,15 +19,15 @@ export class TableWrapperFormat extends ContainerFormat {
       },
       true,
     );
-    // 不允许拖拽进 table
+    // not allow drop content into table
     node.addEventListener('drop', (e) => {
       e.preventDefault();
     });
-    // 修改拖拽进入时的鼠标样式
     node.addEventListener('dragover', (e) => {
       e.preventDefault();
       e.dataTransfer!.dropEffect = 'none';
     });
+    node.setAttribute('contenteditable', 'false');
     return node;
   }
 
@@ -43,7 +43,7 @@ export class TableWrapperFormat extends ContainerFormat {
       super.insertBefore(blot, ref);
     }
     else {
-      // 非允许子 blot, ref 为 null 是插入头, 否则插入尾
+      // TODO: is this necessary?
       if (ref) {
         this.prev ? this.prev.insertBefore(blot, null) : this.parent.insertBefore(blot, this);
       }
