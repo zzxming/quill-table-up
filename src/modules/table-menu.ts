@@ -9,7 +9,7 @@ import RemoveRow from '../svg/remove-row.svg';
 import RemoveColumn from '../svg/remove-column.svg';
 import RemoveTable from '../svg/remove-table.svg';
 import Color from '../svg/color.svg';
-import { createToolTip, debounce, isArray, isFunction } from '../utils';
+import { createToolTip, debounce, isArray, isFunction, randomId } from '../utils';
 import type { TableMenuOptions, Tool, ToolOption } from '../utils';
 import type { TableCellInnerFormat, TableUp } from '..';
 
@@ -127,7 +127,8 @@ export class TableMenu {
   options: TableMenuOptions;
   menu: HTMLElement | null;
   selectedTds: TableCellInnerFormat[] = [];
-  updateUsedColor: (this: any, menuItem: HTMLElement, color?: string) => void;
+  updateUsedColor: (this: any, color?: string) => void;
+  colorItemClass = `color-${randomId()}`;
 
   constructor(public tableModule: TableUp, public quill: Quill, options: Partial<TableMenuOptions>) {
     this.options = this.resolveOptions(options);
@@ -142,7 +143,7 @@ export class TableMenu {
     }
     catch {}
 
-    this.updateUsedColor = debounce((menuItem: HTMLElement, color?: string) => {
+    this.updateUsedColor = debounce((color?: string) => {
       if (color) {
         usedColors.add(color);
       }
@@ -153,15 +154,17 @@ export class TableMenu {
       }
 
       localStorage.setItem(this.options.localstorageKey, JSON.stringify(Array.from(usedColors)));
-      const usedColorWrapper = document.querySelector('.table-color-used');
-      if (!usedColorWrapper) return;
+      const usedColorWrappers = Array.from(document.querySelectorAll(`.${this.colorItemClass}.table-color-used`));
+      for (const usedColorWrapper of usedColorWrappers) {
+        if (!usedColorWrapper) continue;
 
-      usedColorWrapper.innerHTML = '';
-      for (const recordColor of usedColors) {
-        const colorItem = document.createElement('div');
-        colorItem.classList.add('table-color-used-item');
-        colorItem.style.backgroundColor = recordColor;
-        usedColorWrapper.appendChild(colorItem);
+        usedColorWrapper.innerHTML = '';
+        for (const recordColor of usedColors) {
+          const colorItem = document.createElement('div');
+          colorItem.classList.add('table-color-used-item');
+          colorItem.style.backgroundColor = recordColor;
+          usedColorWrapper.appendChild(colorItem);
+        }
       }
     }, 1000);
 
@@ -210,6 +213,7 @@ export class TableMenu {
 
           const usedColorWrap = document.createElement('div');
           usedColorWrap.classList.add('table-color-used');
+          usedColorWrap.classList.add(this.colorItemClass);
           item.appendChild(usedColorWrap);
           for (const recordColor of usedColors) {
             const colorItem = document.createElement('div');
@@ -230,7 +234,7 @@ export class TableMenu {
             item.addEventListener('click', e => e.stopPropagation());
             input.addEventListener('input', () => {
               handle(this.tableModule, this.selectedTds, input.value);
-              this.updateUsedColor(item, input.value);
+              this.updateUsedColor(input.value);
             }, false);
           }
           item.appendChild(input);
