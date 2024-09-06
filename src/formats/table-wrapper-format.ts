@@ -62,10 +62,4 @@ export class TableWrapperFormat extends ContainerFormat {
       && next.domNode.dataset.tableId === this.tableId
     );
   }
-
-  deleteAt(index: number, length: number) {
-    super.deleteAt(index, length);
-    // 删除 table 时隐藏当前 table 的 tooltip
-    document.querySelector(`.ql-table-tooltip[data-table-id="${this.tableId}"]`)?.classList?.add('ql-hidden');
-  }
 }
