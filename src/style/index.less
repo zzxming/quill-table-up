@@ -54,34 +54,6 @@
       &.icon {
         cursor: pointer;
       }
-      .table-color {
-        &-used {
-          position: absolute;
-          top: 0;
-          left: 0px;
-          transform: translate(-50%, -100%);
-          display: none;
-          align-items: center;
-          justify-content: center;
-          flex-direction: row-reverse;
-          padding: 6px 10px;
-          background-color: #ffffff;
-          border-radius: 4px;
-          border: 1px solid #888888;
-          &-item {
-            width: 16px;
-            height: 16px;
-            margin: 0px 3px;
-            border: 1px solid #a3a3a3;
-          }
-          &.right-out {
-            transform: translate(-90%, -100%);
-          }
-          &.left-out {
-            transform: translate(0%, -100%);
-          }
-        }
-      }
     }
   }
 
@@ -175,6 +147,23 @@
     }
   }
 }
+
+.table-color {
+  &-used {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: row-reverse;
+    &-item {
+      width: 16px;
+      height: 16px;
+      margin: 4px;
+      border: 1px solid #a3a3a3;
+      cursor: pointer;
+    }
+  }
+}
+
 .ql-table {
   &-drag-line {
     position: fixed;

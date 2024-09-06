@@ -153,7 +153,7 @@ export class TableMenu {
       }
 
       localStorage.setItem(this.options.localstorageKey, JSON.stringify(Array.from(usedColors)));
-      const usedColorWrapper = menuItem.querySelector('.table-color-used');
+      const usedColorWrapper = document.querySelector('.table-color-used');
       if (!usedColorWrapper) return;
 
       usedColorWrapper.innerHTML = '';
@@ -181,7 +181,7 @@ export class TableMenu {
     const toolBox = this.quill.addContainer('ql-table-selection-tool');
     for (const tool of this.options.tools) {
       const { name, icon, handle, isColorChoose, tip = '' } = tool as ToolOption;
-      let item = document.createElement(isColorChoose ? 'label' : 'span');
+      const item = document.createElement(isColorChoose ? 'label' : 'span');
       item.classList.add('ql-table-selection-item');
       if (name === 'break') {
         item.classList.add('break');
@@ -217,32 +217,6 @@ export class TableMenu {
             colorItem.style.backgroundColor = recordColor;
             usedColorWrap.appendChild(colorItem);
           }
-          item.addEventListener('mouseenter', () => {
-            if (usedColors.size === 0) return;
-            Object.assign(usedColorWrap.style, {
-              display: 'flex',
-            });
-            usedColorWrap.classList.remove('left-out');
-            usedColorWrap.classList.remove('right-out');
-            const rect = usedColorWrap.getBoundingClientRect();
-            if (rect.right > window.innerWidth) {
-              usedColorWrap.classList.add('right-out');
-            }
-            else {
-              usedColorWrap.classList.remove('right-out');
-            }
-            if (rect.left < 0) {
-              usedColorWrap.classList.add('left-out');
-            }
-            else {
-              usedColorWrap.classList.remove('left-out');
-            }
-          });
-          item.addEventListener('mouseleave', () => {
-            Object.assign(usedColorWrap.style, {
-              display: 'none',
-            });
-          });
           usedColorWrap.addEventListener('click', (e) => {
             e.preventDefault();
             const item = e.target as HTMLElement;
@@ -250,6 +224,7 @@ export class TableMenu {
               this.tableModule.setBackgroundColor(this.selectedTds, item.style.backgroundColor);
             }
           });
+          createToolTip(item, { content: usedColorWrap, direction: 'top' });
 
           if (isFunction(handle)) {
             item.addEventListener('click', e => e.stopPropagation());
@@ -269,7 +244,7 @@ export class TableMenu {
 
         const tipText = this.options.tipTexts[name] || tip;
         if (tipText && tip) {
-          item = createToolTip(item, { msg: tipText, delay: 150 });
+          createToolTip(item, { msg: tipText });
         }
       }
       toolBox.appendChild(item);

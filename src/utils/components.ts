@@ -253,57 +253,90 @@ export const createSelectBox = (options: TableSelectOptions = {}) => {
 };
 
 interface ToolTipOptions {
+  direction?: 'top' | 'right' | 'bottom' | 'left';
   msg?: string;
   delay?: number;
+  content?: HTMLElement;
 }
+const DISTANCE = 8;
+let tooltipContainer: HTMLElement;
 export const createToolTip = (target: HTMLElement, options: ToolTipOptions = {}) => {
-  const { msg = '', delay = 0 } = options;
-  const wrapper = document.createElement('div');
-  wrapper.classList.add('tool-tip');
-  wrapper.appendChild(target);
-
-  if (msg) {
-    const tip = document.createElement('div');
-    tip.classList.add('tool-tip__text');
-    tip.classList.add('hidden');
-    tip.textContent = msg;
-    wrapper.appendChild(tip);
+  const { msg = '', delay = 150, content, direction = 'bottom' } = options;
+  if (msg || content) {
+    if (!tooltipContainer) {
+      tooltipContainer = document.createElement('div');
+      document.body.appendChild(tooltipContainer);
+    }
+    const tooltip = document.createElement('div');
+    tooltip.classList.add('tooltip');
+    tooltip.classList.add('hidden');
+    tooltip.classList.add('transparent');
+    if (content) {
+      tooltip.appendChild(content);
+    }
+    else if (msg) {
+      tooltip.textContent = msg;
+    }
+    tooltipContainer.appendChild(tooltip);
     let timer: ReturnType<typeof setTimeout> | null;
-    wrapper.addEventListener('mouseenter', () => {
+
+    const open = () => {
       if (timer) clearTimeout(timer);
       timer = setTimeout(() => {
-        tip.classList.add('block');
-        tip.classList.remove('hidden');
-        tip.classList.remove('right-out');
-        tip.classList.remove('left-out');
-        setTimeout(() => {
-          const rect = tip.getBoundingClientRect();
-          if (rect.right > window.innerWidth) {
-            tip.classList.add('right-out');
-          }
-          else {
-            tip.classList.remove('right-out');
-          }
-          if (rect.left < 0) {
-            tip.classList.add('left-out');
-          }
-          else {
-            tip.classList.remove('left-out');
-          }
-        }, 0);
+        tooltip.classList.remove('hidden');
+        const elRect = target.getBoundingClientRect();
+        const contentRect = tooltip.getBoundingClientRect();
+        const extraPositionMap = {
+          top: {
+            top: -contentRect.height - DISTANCE,
+            left: elRect.width / 2 - contentRect.width / 2,
+          },
+          right: {
+            top: elRect.height / 2 - contentRect.height / 2,
+            left: elRect.width + DISTANCE,
+          },
+          bottom: {
+            top: contentRect.height + DISTANCE,
+            left: elRect.width / 2 - contentRect.width / 2,
+          },
+          left: {
+            top: elRect.height / 2 - contentRect.height / 2,
+            left: -contentRect.width - DISTANCE,
+
+          },
+        } as const;
+        const extra = extraPositionMap[direction];
+        const top = window.scrollY + elRect.top + extra.top;
+        let left = window.scrollX + elRect.left + extra.left;
+        const innerWidth = document.documentElement.clientWidth;
+        if (left + contentRect.width > innerWidth) {
+          left = innerWidth - contentRect.width;
+        }
+        else if (left < 0) {
+          left = 0;
+        }
+        Object.assign(tooltip.style, {
+          top: `${top}px`,
+          left: `${left}px`,
+        });
+        tooltip.classList.remove('transparent');
       }, delay);
-    });
-    wrapper.addEventListener('mouseleave', () => {
+    };
+    const close = () => {
       if (timer) clearTimeout(timer);
       timer = setTimeout(() => {
-        tip.classList.add('hidden');
-        tip.addEventListener('transitionend', () => {
-          tip.classList.remove('block');
+        tooltip.classList.add('transparent');
+        tooltip.addEventListener('transitionend', () => {
+          tooltip.classList.add('hidden');
         }, { once: true });
         timer = null;
       }, delay);
-    });
+    };
+    target.addEventListener('mouseenter', open);
+    target.addEventListener('mouseleave', close);
+    tooltip.addEventListener('mouseenter', open);
+    tooltip.addEventListener('mouseleave', close);
   }
 
-  return wrapper;
+  return target;
 };
