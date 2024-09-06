@@ -131,8 +131,8 @@ export class TableCellInnerFormat extends ContainerFormat {
       colId,
       rowspan,
       colspan,
-      height,
     };
+    height !== 0 && (value.height = height);
     backgroundColor && (value.backgroundColor = backgroundColor);
     return {
       [this.statics.blotName]: value,
