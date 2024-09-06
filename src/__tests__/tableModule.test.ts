@@ -31,7 +31,7 @@ describe('merge and split cell', () => {
         <p>
           <table cellpadding="0" cellspacing="0" data-full>
             <colgroup>
-              ${new Array(3).fill(0).map(() => `<col width="${1 / 3 * 100}%" data-full="true" contenteditable="false" />`).join('\n')}
+              ${new Array(3).fill(0).map(() => `<col width="${1 / 3 * 100}%" data-full="true" />`).join('\n')}
             </colgroup>
             <tbody>
               <tr>
@@ -56,7 +56,7 @@ describe('merge and split cell', () => {
         </p>
         <p><br></p>
       `,
-      { ignoreAttrs: ['class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan'] },
+      { ignoreAttrs: ['class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
     );
   });
 
@@ -77,9 +77,9 @@ describe('merge and split cell', () => {
         <p>
           <table cellpadding="0" cellspacing="0" data-full>
             <colgroup>
-              <col width="20%" data-full="true" contenteditable="false" />
-              <col width="60%" data-full="true" contenteditable="false" />
-              <col width="20%" data-full="true" contenteditable="false" />
+              <col width="20%" data-full="true" />
+              <col width="60%" data-full="true" />
+              <col width="20%" data-full="true" />
             </colgroup>
             <tbody>
               <tr>
@@ -105,7 +105,7 @@ describe('merge and split cell', () => {
         </p>
         <p><br></p>
       `,
-      { ignoreAttrs: ['class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan'] },
+      { ignoreAttrs: ['class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
     );
   });
 
@@ -132,9 +132,9 @@ describe('merge and split cell', () => {
         <p>
           <table cellpadding="0" cellspacing="0" data-full>
             <colgroup>
-              ${new Array(4).fill(0).map(() => `<col width="${1 / 7 * 100}%" data-full="true" contenteditable="false" />`).join('\n')}
-              <col width="${2 / 7 * 100}%" data-full="true" contenteditable="false" />
-              <col width="${1 / 7 * 100}%" data-full="true" contenteditable="false" />
+              ${new Array(4).fill(0).map(() => `<col width="${1 / 7 * 100}%" data-full="true" />`).join('\n')}
+              <col width="${2 / 7 * 100}%" data-full="true" />
+              <col width="${1 / 7 * 100}%" data-full="true" />
             </colgroup>
             <tbody>
               <tr>
@@ -177,7 +177,7 @@ describe('merge and split cell', () => {
         </p>
         <p><br></p>
       `,
-      { ignoreAttrs: ['class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan'] },
+      { ignoreAttrs: ['class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
     );
   });
 
@@ -201,7 +201,7 @@ describe('merge and split cell', () => {
         <p>
           <table cellpadding="0" cellspacing="0" data-full>
             <colgroup>
-              ${new Array(3).fill(0).map(() => `<col width="${1 / 3 * 100}%" data-full="true" contenteditable="false" />`).join('\n')}
+              ${new Array(3).fill(0).map(() => `<col width="${1 / 3 * 100}%" data-full="true" />`).join('\n')}
             </colgroup>
             <tbody>
               <tr>
@@ -228,7 +228,7 @@ describe('merge and split cell', () => {
         </p>
         <p><br></p>
       `,
-      { ignoreAttrs: ['class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan'] },
+      { ignoreAttrs: ['class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
     );
   });
 });
@@ -251,7 +251,7 @@ describe('remove column from table', () => {
         <p>
           <table cellpadding="0" cellspacing="0" data-full>
             <colgroup>
-              <col width="${1 / 3 * 100 * 3}%" data-full="true" contenteditable="false" />
+              <col width="${1 / 3 * 100 * 3}%" data-full="true" />
             </colgroup>
             <tbody>
               ${
@@ -266,7 +266,7 @@ describe('remove column from table', () => {
         </p>
         <p><br></p>
       `,
-      { ignoreAttrs: ['class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan'] },
+      { ignoreAttrs: ['class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
     );
   });
 
@@ -293,8 +293,8 @@ describe('remove column from table', () => {
         <p>
           <table cellpadding="0" cellspacing="0" data-full>
             <colgroup>
-              <col width="25%" data-full="true" contenteditable="false" />
-              <col width="75%" data-full="true" contenteditable="false" />
+              <col width="25%" data-full="true" />
+              <col width="75%" data-full="true" />
             </colgroup>
             <tbody>
               <tr>
@@ -332,7 +332,7 @@ describe('remove column from table', () => {
         </p>
         <p><br></p>
       `,
-      { ignoreAttrs: ['class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan'] },
+      { ignoreAttrs: ['class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
     );
   });
 });
@@ -355,7 +355,7 @@ describe('remove row from table', () => {
         <p>
           <table cellpadding="0" cellspacing="0" data-full>
             <colgroup>
-              ${new Array(3).fill(0).map(() => `<col width="${1 / 3 * 100}%" data-full="true" contenteditable="false" />`).join('\n')}
+              ${new Array(3).fill(0).map(() => `<col width="${1 / 3 * 100}%" data-full="true" />`).join('\n')}
             </colgroup>
             <tbody>
               <tr>
@@ -366,7 +366,7 @@ describe('remove row from table', () => {
         </p>
         <p><br></p>
       `,
-      { ignoreAttrs: ['class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan'] },
+      { ignoreAttrs: ['class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
     );
   });
 
@@ -390,7 +390,7 @@ describe('remove row from table', () => {
         <p>
           <table cellpadding="0" cellspacing="0" data-full>
             <colgroup>
-              ${new Array(3).fill(0).map(() => `<col width="${1 / 3 * 100}%" data-full="true" contenteditable="false" />`).join('\n')}
+              ${new Array(3).fill(0).map(() => `<col width="${1 / 3 * 100}%" data-full="true" />`).join('\n')}
             </colgroup>
             <tbody>
               <tr>
@@ -405,7 +405,7 @@ describe('remove row from table', () => {
         </p>
         <p><br></p>
       `,
-      { ignoreAttrs: ['class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan'] },
+      { ignoreAttrs: ['class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
     );
   });
 });
@@ -422,7 +422,7 @@ describe('insert column into table', () => {
         <p>
           <table cellpadding="0" cellspacing="0" data-full>
             <colgroup>
-              ${new Array(4).fill(0).map(() => `<col width="${100 / 4}%" data-full="true" contenteditable="false" />`).join('\n')}
+              ${new Array(4).fill(0).map(() => `<col width="${100 / 4}%" data-full="true" />`).join('\n')}
             </colgroup>
             <tbody>
               ${
@@ -437,7 +437,7 @@ describe('insert column into table', () => {
         </p>
         <p><br></p>
       `,
-      { ignoreAttrs: ['class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan'] },
+      { ignoreAttrs: ['class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
     );
   });
 
@@ -458,9 +458,9 @@ describe('insert column into table', () => {
         <p>
           <table cellpadding="0" cellspacing="0" data-full>
             <colgroup>
-              <col width="6%" data-full="true" contenteditable="false" />
-              <col width="44%" data-full="true" contenteditable="false" />
-              <col width="50%" data-full="true" contenteditable="false" />
+              <col width="6%" data-full="true" />
+              <col width="44%" data-full="true" />
+              <col width="50%" data-full="true" />
             </colgroup>
             <tbody>
               ${
@@ -475,7 +475,7 @@ describe('insert column into table', () => {
         </p>
         <p><br></p>
       `,
-      { ignoreAttrs: ['class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan'] },
+      { ignoreAttrs: ['class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
     );
   });
 
@@ -499,9 +499,9 @@ describe('insert column into table', () => {
         <p>
           <table cellpadding="0" cellspacing="0" data-full>
             <colgroup>
-              <col width="44%" data-full="true" contenteditable="false" />
-              <col width="6%" data-full="true" contenteditable="false" />
-              <col width="50%" data-full="true" contenteditable="false" />
+              <col width="44%" data-full="true" />
+              <col width="6%" data-full="true" />
+              <col width="50%" data-full="true" />
             </colgroup>
             <tbody>
               <tr>
@@ -520,7 +520,7 @@ describe('insert column into table', () => {
         </p>
         <p><br></p>
       `,
-      { ignoreAttrs: ['class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan'] },
+      { ignoreAttrs: ['class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
     );
   });
 
@@ -541,9 +541,9 @@ describe('insert column into table', () => {
         <p>
           <table cellpadding="0" cellspacing="0" data-full>
             <colgroup>
-              <col width="44%" data-full="true" contenteditable="false" />
-              <col width="50%" data-full="true" contenteditable="false" />
-              <col width="6%" data-full="true" contenteditable="false" />
+              <col width="44%" data-full="true" />
+              <col width="50%" data-full="true" />
+              <col width="6%" data-full="true" />
             </colgroup>
             <tbody>
               ${
@@ -558,7 +558,7 @@ describe('insert column into table', () => {
         </p>
         <p><br></p>
       `,
-      { ignoreAttrs: ['class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan'] },
+      { ignoreAttrs: ['class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
     );
   });
 
@@ -582,9 +582,9 @@ describe('insert column into table', () => {
         <p>
           <table cellpadding="0" cellspacing="0" data-full>
             <colgroup>
-              <col width="44%" data-full="true" contenteditable="false" />
-              <col width="6%" data-full="true" contenteditable="false" />
-              <col width="50%" data-full="true" contenteditable="false" />
+              <col width="44%" data-full="true" />
+              <col width="6%" data-full="true" />
+              <col width="50%" data-full="true" />
             </colgroup>
             <tbody>
               <tr>
@@ -603,7 +603,7 @@ describe('insert column into table', () => {
         </p>
         <p><br></p>
       `,
-      { ignoreAttrs: ['class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan'] },
+      { ignoreAttrs: ['class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
     );
   });
 
@@ -627,9 +627,9 @@ describe('insert column into table', () => {
         <p>
           <table cellpadding="0" cellspacing="0" data-full>
             <colgroup>
-              <col width="44%" data-full="true" contenteditable="false" />
-              <col width="50%" data-full="true" contenteditable="false" />
-              <col width="6%" data-full="true" contenteditable="false" />
+              <col width="44%" data-full="true" />
+              <col width="50%" data-full="true" />
+              <col width="6%" data-full="true" />
             </colgroup>
             <tbody>
               <tr>
@@ -653,7 +653,7 @@ describe('insert column into table', () => {
         </p>
         <p><br></p>
       `,
-      { ignoreAttrs: ['class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan'] },
+      { ignoreAttrs: ['class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
     );
   });
 
@@ -680,10 +680,10 @@ describe('insert column into table', () => {
         <p>
           <table cellpadding="0" cellspacing="0" data-full>
             <colgroup>
-              <col width="${1 / 3 * 100 - 6}%" data-full="true" contenteditable="false" />
-              <col width="6%" data-full="true" contenteditable="false" />
-              <col width="${1 / 3 * 100}%" data-full="true" contenteditable="false" />
-              <col width="${1 / 3 * 100}%" data-full="true" contenteditable="false" />
+              <col width="${1 / 3 * 100 - 6}%" data-full="true" />
+              <col width="6%" data-full="true" />
+              <col width="${1 / 3 * 100}%" data-full="true" />
+              <col width="${1 / 3 * 100}%" data-full="true" />
             </colgroup>
             <tbody>
               <tr>
@@ -723,7 +723,7 @@ describe('insert column into table', () => {
         </p>
         <p><br></p>
       `,
-      { ignoreAttrs: ['class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan'] },
+      { ignoreAttrs: ['class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
     );
   });
 
@@ -747,12 +747,12 @@ describe('insert column into table', () => {
         <p>
           <table cellpadding="0" cellspacing="0" data-full>
             <colgroup>
-              <col width="14%" data-full="true" contenteditable="false" />
-              <col width="20%" data-full="true" contenteditable="false" />
-              <col width="6%" data-full="true" contenteditable="false" />
-              <col width="20%" data-full="true" contenteditable="false" />
-              <col width="20%" data-full="true" contenteditable="false" />
-              <col width="20%" data-full="true" contenteditable="false" />
+              <col width="14%" data-full="true" />
+              <col width="20%" data-full="true" />
+              <col width="6%" data-full="true" />
+              <col width="20%" data-full="true" />
+              <col width="20%" data-full="true" />
+              <col width="20%" data-full="true" />
             </colgroup>
             <tbody>
               <tr>
@@ -791,7 +791,7 @@ describe('insert column into table', () => {
         </p>
         <p><br></p>
       `,
-      { ignoreAttrs: ['class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan'] },
+      { ignoreAttrs: ['class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
     );
   });
 });
@@ -814,8 +814,8 @@ describe('insert row into table', () => {
         <p>
           <table cellpadding="0" cellspacing="0" data-full>
             <colgroup>
-              <col width="50%" data-full="true" contenteditable="false" />
-              <col width="50%" data-full="true" contenteditable="false" />
+              <col width="50%" data-full="true" />
+              <col width="50%" data-full="true" />
             </colgroup>
             <tbody>
               ${
@@ -830,7 +830,7 @@ describe('insert row into table', () => {
         </p>
         <p><br></p>
       `,
-      { ignoreAttrs: ['class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan'] },
+      { ignoreAttrs: ['class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
     );
   });
 
@@ -857,7 +857,7 @@ describe('insert row into table', () => {
         <p>
           <table cellpadding="0" cellspacing="0" data-full>
             <colgroup>
-              ${new Array(5).fill(0).map(() => `<col width="20%" data-full="true" contenteditable="false" />`).join('\n')}
+              ${new Array(5).fill(0).map(() => `<col width="20%" data-full="true" />`).join('\n')}
             </colgroup>
             <tbody>
               <tr>
@@ -898,7 +898,7 @@ describe('insert row into table', () => {
         </p>
         <p><br></p>
       `,
-      { ignoreAttrs: ['class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan'] },
+      { ignoreAttrs: ['class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
     );
   });
 
@@ -919,8 +919,8 @@ describe('insert row into table', () => {
         <p>
           <table cellpadding="0" cellspacing="0" data-full>
             <colgroup>
-              <col width="50%" data-full="true" contenteditable="false" />
-              <col width="50%" data-full="true" contenteditable="false" />
+              <col width="50%" data-full="true" />
+              <col width="50%" data-full="true" />
             </colgroup>
             <tbody>
               ${
@@ -935,7 +935,7 @@ describe('insert row into table', () => {
         </p>
         <p><br></p>
       `,
-      { ignoreAttrs: ['class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan'] },
+      { ignoreAttrs: ['class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
     );
   });
 
@@ -959,9 +959,9 @@ describe('insert row into table', () => {
         <p>
           <table cellpadding="0" cellspacing="0" data-full>
             <colgroup>
-              <col width="20%" data-full="true" contenteditable="false" />
-              <col width="60%" data-full="true" contenteditable="false" />
-              <col width="20%" data-full="true" contenteditable="false" />
+              <col width="20%" data-full="true" />
+              <col width="60%" data-full="true" />
+              <col width="20%" data-full="true" />
             </colgroup>
             <tbody>
               <tr>
@@ -991,7 +991,7 @@ describe('insert row into table', () => {
         </p>
         <p><br></p>
       `,
-      { ignoreAttrs: ['class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan'] },
+      { ignoreAttrs: ['class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
     );
   });
 });
@@ -1018,7 +1018,7 @@ describe('unusual delete', () => {
     await vi.runAllTimersAsync();
     expect(quill.root).toEqualHTML(
       `<p><br></p>`,
-      { ignoreAttrs: ['class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan'] },
+      { ignoreAttrs: ['class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
     );
   });
 
@@ -1047,7 +1047,7 @@ describe('unusual delete', () => {
         <p>
           <table cellpadding="0" cellspacing="0" data-full>
             <colgroup>
-              ${new Array(5).fill(`<col width="20%" data-full="true" contenteditable="false" />`).join('\n')}
+              ${new Array(5).fill(`<col width="20%" data-full="true" />`).join('\n')}
             </colgroup>
             <tbody>
               <tr>
@@ -1084,59 +1084,59 @@ describe('unusual delete', () => {
           </table>
         </p>
       `,
-      { ignoreAttrs: ['class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan'] },
+      { ignoreAttrs: ['class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
     );
   });
 
-  // it('delete inside', async () => {
-  //   const quill = createQuillWithTableModule(`<p><br></p>`);
-  //   const tableModule = quill.getModule('tableUp') as TableUp;
-  //   tableModule.insertTable(5, 5);
-  //   await vi.runAllTimersAsync();
-  //   const table = quill.root.querySelector('table')!;
-  //   tableModule.tableSelection = new TableSelection(tableModule, table, quill);
-  //   const tds = quill.scroll.descendants(TableCellInnerFormat, 0);
-  //   tableModule.tableSelection.selectedTds = [tds[0], tds[1], tds[2], tds[5], tds[6], tds[7], tds[10], tds[11], tds[12]];
-  //   tableModule.mergeCells();
-  //   await vi.runAllTimersAsync();
-  //   tableModule.tableSelection.selectedTds = [tds[4], tds[9], tds[14], tds[19]];
-  //   tableModule.mergeCells();
-  //   await vi.runAllTimersAsync();
-  //   tableModule.tableSelection.selectedTds = [tds[17], tds[18], tds[22], tds[23]];
-  //   tableModule.mergeCells();
-  //   await vi.runAllTimersAsync();
-  //   quill.deleteText(16, 25);
-  //   await vi.runAllTimersAsync();
-  //   expect(quill.root).toEqualHTML(
-  //     `
-  //       <p><br></p>
-  //       <p>
-  //         <table cellpadding="0" cellspacing="0" data-full>
-  //           <colgroup>
-  //             ${new Array(5).fill(`<col width="20%" data-full="true" contenteditable="false" />`).join('\n')}
-  //           </colgroup>
-  //           <tbody>
-  //             <tr>
-  //              <td rowspan="1" colspan="5">
-  //                 <p>
-  //                   <p><br></p>
-  //                   <p><br></p>
-  //                   <p><br></p>
-  //                   <p><br></p>
-  //                   <p><br></p>
-  //                   <p><br></p>
-  //                   <p><br></p>
-  //                   <p><br></p>
-  //                   <p><br></p>
-  //                 </p>
-  //               </td>
-  //             </tr>
-  //           </tbody>
-  //         </table>
-  //       </p>
-  //       <p><br></p>
-  //     `,
-  //     { ignoreAttrs: ['class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan'] },
-  //   );
-  // });
+  it('delete inside', async () => {
+    const quill = createQuillWithTableModule(`<p><br></p>`);
+    const tableModule = quill.getModule('tableUp') as TableUp;
+    tableModule.insertTable(5, 5);
+    await vi.runAllTimersAsync();
+    const table = quill.root.querySelector('table')!;
+    tableModule.tableSelection = new TableSelection(tableModule, table, quill);
+    const tds = quill.scroll.descendants(TableCellInnerFormat, 0);
+    tableModule.tableSelection.selectedTds = [tds[0], tds[1], tds[2], tds[5], tds[6], tds[7], tds[10], tds[11], tds[12]];
+    tableModule.mergeCells();
+    await vi.runAllTimersAsync();
+    tableModule.tableSelection.selectedTds = [tds[4], tds[9], tds[14], tds[19]];
+    tableModule.mergeCells();
+    await vi.runAllTimersAsync();
+    tableModule.tableSelection.selectedTds = [tds[17], tds[18], tds[22], tds[23]];
+    tableModule.mergeCells();
+    await vi.runAllTimersAsync();
+    quill.deleteText(16, 25);
+    await vi.runAllTimersAsync();
+    expect(quill.root).toEqualHTML(
+      `
+        <p><br></p>
+        <p>
+          <table cellpadding="0" cellspacing="0" data-full>
+            <colgroup>
+              ${new Array(5).fill(`<col width="20%" data-full="true" />`).join('\n')}
+            </colgroup>
+            <tbody>
+              <tr>
+               <td rowspan="1" colspan="5">
+                  <p>
+                    <p><br></p>
+                    <p><br></p>
+                    <p><br></p>
+                    <p><br></p>
+                    <p><br></p>
+                    <p><br></p>
+                    <p><br></p>
+                    <p><br></p>
+                    <p><br></p>
+                  </p>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </p>
+        <p><br></p>
+      `,
+      { ignoreAttrs: ['class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
+    );
+  });
 });
