@@ -193,10 +193,13 @@ export class TableResize {
     const handleMouseup = () => {
       const w = Number.parseInt(tipRowBreak!.dataset.w!);
 
-      tableRowHeads[curRowIndex].style.height = `${w}px`;
       this.tableRows[curRowIndex].setHeight(w);
       const tableWrapperRect = this.tableWrapper.domNode.getBoundingClientRect();
       this.rowHeadWrapper!.style.height = `${tableWrapperRect.height}px`;
+      for (const [i, row] of this.tableRows.entries()) {
+        const rect = row.domNode.getBoundingClientRect();
+        tableRowHeads[i].style.height = `${rect.height}px`;
+      }
 
       appendTo.removeChild(tipRowBreak!);
       tipRowBreak = null;
