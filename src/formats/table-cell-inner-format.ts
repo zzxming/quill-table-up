@@ -10,7 +10,7 @@ const BlockEmbed = Quill.import('blots/block/embed') as TypeParchment.BlotConstr
 
 export class TableCellInnerFormat extends ContainerFormat {
   static blotName = blotName.tableCellInner;
-  static tagName = 'p';
+  static tagName = 'div';
   static className = 'ql-table-cell-inner';
 
   static defaultChild: TypeParchment.BlotConstructor = Block;
@@ -30,12 +30,10 @@ export class TableCellInnerFormat extends ContainerFormat {
 
   declare parent: TableCellFormat;
 
-  // this issue also effect TableColFormat
   // make sure cell have at least one length. Otherwise will get wrong insert index when table inserting
   // when inserting cell not have defaultChild. that mean TableCellInnerFormat.length() === 0
   // quill2.x deleted replace method. if not want rewrite method length. need to rewrite method Block.repalceWith
   // rewrite: when replacement instanceof ParentBlot. change moveChildren to wrap
-  // but length() >= 1 maybe have some bugs. if have bug. change Container to Block
   length(): number {
     return super.length() + 1;
   }
@@ -123,7 +121,7 @@ export class TableCellInnerFormat extends ContainerFormat {
     super.formatAt(index, length, name, value);
   }
 
-  formats() {
+  formats(): Record<string, any> {
     const { tableId, rowId, colId, rowspan, colspan, backgroundColor, height } = this;
     const value: Record<string, any> = {
       tableId,
