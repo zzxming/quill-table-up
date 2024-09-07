@@ -30,17 +30,9 @@ export class TableCellInnerFormat extends ContainerFormat {
 
   declare parent: TableCellFormat;
 
-  // make sure cell have at least one length. Otherwise will get wrong insert index when table inserting
-  // when inserting cell not have defaultChild. that mean TableCellInnerFormat.length() === 0
-  // quill2.x deleted replace method. if not want rewrite method length. need to rewrite method Block.repalceWith
-  // rewrite: when replacement instanceof ParentBlot. change moveChildren to wrap
-  length(): number {
-    return super.length() + 1;
-  }
-
-  attributesList: Set<string> = new Set(['table-id', 'row-id', 'col-id', 'rowspan', 'colspan', 'background-color', 'height']);
+  allowDataAttrs: Set<string> = new Set(['table-id', 'row-id', 'col-id', 'rowspan', 'colspan', 'background-color', 'height']);
   setFormatValue(name: string, value: any) {
-    if (!this.attributesList.has(name)) return;
+    if (!this.allowDataAttrs.has(name)) return;
     const attrName = `data-${name}`;
     if (value) {
       this.domNode.setAttribute(attrName, value);
@@ -117,6 +109,8 @@ export class TableCellInnerFormat extends ContainerFormat {
   formatAt(index: number, length: number, name: string, value: any) {
     if (this.children.length === 0) {
       this.appendChild(this.scroll.create(this.statics.defaultChild.blotName));
+      // block min length is 1
+      length += 1;
     }
     super.formatAt(index, length, name, value);
   }

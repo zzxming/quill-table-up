@@ -5,9 +5,10 @@ import type BaseTheme from 'quill/themes/base';
 import type { Context } from 'quill/modules/keyboard';
 import type Toolbar from 'quill/modules/toolbar';
 import type Keyboard from 'quill/modules/keyboard';
-import type { TableTextOptions, TableUpOptions } from './utils';
-import { blotName, createSelectBox, debounce, findParentBlot, isFunction, randomId, tabbleToolName } from './utils';
-import { ScrollOverride, TableBodyFormat, TableCellFormat, TableCellInnerFormat, TableColFormat, TableColgroupFormat, TableMainFormat, TableRowFormat, TableWrapperFormat } from './formats';
+import type { Delta as TypeDelta } from 'quill/core';
+import type { TableColValue, TableTextOptions, TableUpOptions } from './utils';
+import { blotName, createSelectBox, debounce, findParentBlot, isFunction, randomId, tabbleToolName, tableColMinWidthPre, tableColMinWidthPx } from './utils';
+import { BlockOverride, ScrollOverride, TableBodyFormat, TableCellFormat, TableCellInnerFormat, TableColFormat, TableColgroupFormat, TableMainFormat, TableRowFormat, TableWrapperFormat } from './formats';
 import { TableResize, TableSelection } from './modules';
 
 const Delta = Quill.import('delta');
@@ -114,6 +115,7 @@ export class TableUp {
 
     Quill.register({
       'blots/scroll': ScrollOverride,
+      'blots/block': BlockOverride,
       [`formats/${blotName.tableCell}`]: TableCellFormat,
       [`formats/${blotName.tableCellInner}`]: TableCellInnerFormat,
       [`formats/${blotName.tableRow}`]: TableRowFormat,
@@ -188,6 +190,7 @@ export class TableUp {
         const [startBlot] = this.quill.getLine(range.index);
         const [endBlot] = this.quill.getLine(range.index + range.length);
 
+        // TODO: selection only inside table or outside table. can not allow select half table cell
         // if range in col. change range out of col
         const startInCol = startBlot instanceof TableColFormat;
         const endInCol = endBlot instanceof TableColFormat;
@@ -220,6 +223,7 @@ export class TableUp {
       }
     });
 
+    this.pasteTableHandler();
     this.listenBalanceCells();
   }
 
@@ -241,6 +245,152 @@ export class TableUp {
       notPositiveNumberError: '请输入正整数',
     }, options);
   };
+
+  pasteTableHandler() {
+    let tableId = randomId();
+    let rowId = randomId();
+    let colIds: string[] = [];
+    let cellCount = 0;
+    let colCount = 0;
+
+    this.quill.clipboard.addMatcher('table', (node, delta) => {
+      if (delta.ops.length === 0) return delta;
+      let colDelta;
+
+      // paste table have or not col
+      let hasCol = false;
+      if (delta.ops[0] && typeof delta.ops[0].insert !== 'string') {
+        for (let i = 0; i < delta.ops.length; i++) {
+          const { insert, attributes } = delta.ops[i];
+          if (insert && typeof insert !== 'string' && insert[blotName.tableCol]) {
+            hasCol = true;
+            break;
+          }
+          if (attributes && attributes[blotName.tableCellInner]) {
+            break;
+          }
+        }
+        hasCol = !!delta.ops[0].insert?.[blotName.tableCol];
+      }
+      let isFull = this.options.full;
+      if (hasCol) {
+        isFull = !!(delta.ops[0].insert as Record<string, any>)?.[blotName.tableCol]?.full;
+      }
+
+      // computed default col width
+      const editorStyle = window.getComputedStyle(this.quill.root);
+      const editorPaddingLeft = Number.parseFloat(editorStyle.paddingLeft);
+      const editorPaddingRight = Number.parseFloat(editorStyle.paddingRight);
+      const editorInnerWidth = Number.parseFloat(editorStyle.width) - editorPaddingLeft - editorPaddingRight;
+      const defaultColWidth = isFull
+        ? `${Math.max(100 / colIds.length, tableColMinWidthPre)}%`
+        : `${Math.max(editorInnerWidth / colIds.length, tableColMinWidthPx)}px`;
+
+      if (!hasCol) {
+        colDelta = colIds.reduce((colDelta, id) => {
+          colDelta.insert({
+            [blotName.tableCol]: {
+              colId: id,
+              tableId,
+              width: defaultColWidth,
+              full: isFull,
+            },
+          });
+          return colDelta;
+        }, new Delta());
+      }
+      else {
+        for (let i = 0; i < delta.ops.length; i++) {
+          const insert = delta.ops[i].insert;
+          if (!insert || typeof insert === 'string' || !insert[blotName.tableCol]) {
+            if (insert === '\n') {
+              delta.ops.splice(i, 1);
+            }
+            break;
+          }
+          Object.assign(insert[blotName.tableCol]!, {
+            tableId,
+            colId: colIds[i],
+            full: isFull,
+            width: !(insert[blotName.tableCol] as TableColValue).width
+              ? defaultColWidth
+              : Number.parseFloat((insert[blotName.tableCol] as TableColValue).width) + (isFull ? '%' : 'px'),
+          });
+        }
+      }
+      // remove quill origin table format
+      for (let i = 0; i < delta.ops.length; i++) {
+        const attrs = delta.ops[i].attributes;
+        if (attrs && attrs.table) {
+          delete attrs.table;
+        }
+      }
+      tableId = randomId();
+      colIds = [];
+      cellCount = 0;
+      colCount = 0;
+      delta = colDelta ? colDelta.concat(delta) : delta;
+      // insert break line before table and after table
+      delta.ops.unshift({ insert: '\n' });
+      delta.ops.push({ insert: '\n' });
+      return delta;
+    });
+
+    this.quill.clipboard.addMatcher('col', (node) => {
+      colIds[colCount] = randomId();
+      const delta = new Delta().insert({
+        [blotName.tableCol]: {
+          tableId,
+          colId: colIds[colCount],
+          full: Object.hasOwn((node as HTMLElement).dataset, 'full'),
+        },
+      });
+      colCount += 1;
+      return delta;
+    });
+
+    this.quill.clipboard.addMatcher('tr', (node, delta) => {
+      rowId = randomId();
+      cellCount = 0;
+      return delta;
+    });
+
+    const matchCell = (node: Node, delta: TypeDelta) => {
+      const cell = node as HTMLElement;
+      const rowspan = cell.getAttribute('rowspan') || 1;
+      const colspan = cell.getAttribute('colspan') || 1;
+      const height = cell.getAttribute('height') || 1;
+      const backgroundColor = cell.style.backgroundColor || undefined;
+      if (!colIds[cellCount]) {
+        for (let i = cellCount; i >= 0; i--) {
+          if (!colIds[i]) colIds[i] = randomId();
+        }
+      }
+      const colId = colIds[cellCount];
+      cellCount += Number(colspan);
+
+      if (delta.slice(delta.length() - 1).ops[0]?.insert !== '\n') {
+        delta.insert('\n');
+      }
+      // add each insert tableCellInner format
+      return delta.compose(
+        new Delta().retain(delta.length(), {
+          [blotName.tableCellInner]: {
+            tableId,
+            rowId,
+            colId,
+            rowspan,
+            colspan,
+            height,
+            backgroundColor,
+          },
+        }),
+      ); ;
+    };
+
+    this.quill.clipboard.addMatcher('td', matchCell);
+    this.quill.clipboard.addMatcher('th', matchCell);
+  }
 
   showTableTools(table: HTMLElement, quill: Quill) {
     if (table) {
@@ -352,9 +502,10 @@ export class TableUp {
     // calculate all cells
     const trBlots = tableBlot.getRows();
     const tableColIds = tableBlot.getColIds();
-    if (trBlots.length === 0 || tableColIds.length === 0) {
+    if (trBlots.length === 0) {
       return tableBlot.remove();
     }
+    if (tableColIds.length === 0) return;
     // append by col
     const cellSpanMap = new Array(trBlots.length).fill(0).map(() => new Array(tableColIds.length).fill(false));
     const tableId = tableBlot.tableId;
