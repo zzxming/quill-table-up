@@ -30,9 +30,9 @@ describe('insert embed blot', () => {
             <tbody>
               <tr>
                 <td rowspan="1" colspan="1">
-                  <p>
+                  <div>
                     <p><img src="https://live.mdnplay.dev/en-US/docs/Web/HTML/Element/img/favicon144.png" /></p>
-                  </p>
+                  </div>
                 </td>
               </tr>
             </tbody>
@@ -67,11 +67,11 @@ describe('insert block blot', () => {
           <tbody>
             <tr>
               <td rowspan="1" colspan="1">
-                <p>
+                <div>
                   <ol>
                     <li data-list="bullet">text</li>
                   </ol>
-                </p>
+                </div>
               </td>
             </tr>
           </tbody>
@@ -104,9 +104,84 @@ describe('insert block blot', () => {
           <tbody>
             <tr>
               <td rowspan="1" colspan="1">
-                <p>
+                <div>
                   <h2>text</h2>
-                </p>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </p>
+      <p><br></p>
+    `,
+      { ignoreAttrs: ['class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
+    );
+  });
+
+  it('insert blockquote', async () => {
+    const quill = createQuillWithTableModule(`<p><br></p>`);
+    quill.setContents([
+      { insert: '\n' },
+      { insert: { 'table-up-col': { tableId: '1', colId: '1', full: 'true', width: 100 } } },
+      { insert: 'text' },
+      { attributes: { 'blockquote': true, 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '1', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '\n' },
+    ]);
+    await vi.runAllTimersAsync();
+    expect(quill.root).toEqualHTML(
+      `
+      <p><br></p>
+      <p>
+        <table cellpadding="0" cellspacing="0" data-full>
+          <colgroup>
+           <col width="100%" data-full="true" />
+          </colgroup>
+          <tbody>
+            <tr>
+              <td rowspan="1" colspan="1">
+                <div>
+                  <blockquote>text</blockquote>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </p>
+      <p><br></p>
+    `,
+      { ignoreAttrs: ['class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
+    );
+  });
+
+  it('insert code-block', async () => {
+    const quill = createQuillWithTableModule(`<p><br></p>`);
+    quill.setContents([
+      { insert: '\n' },
+      { insert: { 'table-up-col': { tableId: '1', colId: '1', full: 'true', width: 100 } } },
+      { insert: 'text' },
+      { attributes: { 'code-block': 'plain', 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '1', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: 'br' },
+      { attributes: { 'code-block': 'plain', 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '1', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '\n' },
+    ]);
+    await vi.runAllTimersAsync();
+    expect(quill.root).toEqualHTML(
+      `
+      <p><br></p>
+      <p>
+        <table cellpadding="0" cellspacing="0" data-full>
+          <colgroup>
+           <col width="100%" data-full="true" />
+          </colgroup>
+          <tbody>
+            <tr>
+              <td rowspan="1" colspan="1">
+                <div>
+                  <div spellcheck="false">
+                    <div data-language="plain">text</div>
+                    <div data-language="plain">br</div>
+                  </div>
+                </div>
               </td>
             </tr>
           </tbody>
@@ -120,7 +195,7 @@ describe('insert block blot', () => {
 });
 
 describe('insert block embed blot', () => {
-  it('insert image', async () => {
+  it('insert video', async () => {
     const quill = createQuillWithTableModule(`<p><br></p>`);
     quill.setContents([
       { insert: '\n' },
@@ -130,7 +205,6 @@ describe('insert block embed blot', () => {
       { insert: '\n' },
     ]);
     await vi.runAllTimersAsync();
-    // td 中 table-cell-inner 的 p 标签没有识别到开始, 只有结束
     expect(quill.root).toEqualHTML(
       `
       <p><br></p>
@@ -142,11 +216,10 @@ describe('insert block embed blot', () => {
           <tbody>
             <tr>
               <td rowspan="1" colspan="1">
-                  <p>
-                    <iframe src="https://quilljs.com/" frameborder="0" allowfullscreen="true"></iframe>
-                  </p>
+                <div>
+                  <iframe src="https://quilljs.com/" frameborder="0" allowfullscreen="true"></iframe>
                   <p><br></p>
-                </p>
+                </div>
               </td>
             </tr>
           </tbody>

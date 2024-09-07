@@ -35,21 +35,21 @@ describe('merge and split cell', () => {
             </colgroup>
             <tbody>
               <tr>
-                ${new Array(3).fill(0).map(() => `<td rowspan="1" colspan="1"><p><p><br></p></p></td>`).join('\n')}
+                ${new Array(3).fill(0).map(() => `<td rowspan="1" colspan="1"><div><p><br></p></div></td>`).join('\n')}
               </tr>
               <tr>
                 <td rowspan="2" colspan="2">
-                  <p>
+                  <div>
                     <p><br></p>
                     <p><br></p>
                     <p><br></p>
                     <p><br></p>
-                  </p>
+                  </div>
                 </td>
-                <td rowspan="1" colspan="1"><p><p><br></p></p></td>
+                <td rowspan="1" colspan="1"><div><p><br></p></div></td>
               </tr>
               <tr>
-                <td rowspan="1" colspan="1"><p><p><br></p></p></td>
+                <td rowspan="1" colspan="1"><div><p><br></p></div></td>
               </tr>
             </tbody>
           </table>
@@ -83,22 +83,22 @@ describe('merge and split cell', () => {
             </colgroup>
             <tbody>
               <tr>
-                <td rowspan="1" colspan="1"><p><p><br></p></p></td>
+                <td rowspan="1" colspan="1"><div><p><br></p></div></td>
                 <td rowspan="2" colspan="1">
-                  <p>
+                  <div>
                     <p><br></p>
                     <p><br></p>
                     <p><br></p>
                     <p><br></p>
                     <p><br></p>
                     <p><br></p>
-                  </p>
+                  </div>
                 </td>
-                <td rowspan="1" colspan="1"><p><p><br></p></p></td>
+                <td rowspan="1" colspan="1"><div><p><br></p></div></td>
               </tr>
               <tr>
-                <td rowspan="1" colspan="1"><p><p><br></p></p></td>
-                <td rowspan="1" colspan="1"><p><p><br></p></p></td>
+                <td rowspan="1" colspan="1"><div><p><br></p></div></td>
+                <td rowspan="1" colspan="1"><div><p><br></p></div></td>
               </tr>
             </tbody>
           </table>
@@ -138,37 +138,37 @@ describe('merge and split cell', () => {
             </colgroup>
             <tbody>
               <tr>
-                ${new Array(3).fill(0).map(() => `<td rowspan="1" colspan="1"><p><p><br></p></p></td>`).join('\n')}
+                ${new Array(3).fill(0).map(() => `<td rowspan="1" colspan="1"><div><p><br></p></div></td>`).join('\n')}
                 <td rowspan="3" colspan="2">
-                  <p>
+                  <div>
                     ${new Array(9).fill(0).map(() => `<p><br></p>`).join('\n')}
-                  </p>
+                  </div>
                 </td>
-                <td rowspan="1" colspan="1"><p><p><br></p></p></td>
+                <td rowspan="1" colspan="1"><div><p><br></p></div></td>
               </tr>
               <tr>
                 <td rowspan="3" colspan="3">
-                  <p>
+                  <div>
                     ${new Array(9).fill(0).map(() => `<p><br></p>`).join('\n')}
-                  </p>
+                  </div>
                 </td>
-                <td rowspan="1" colspan="1"><p><p><br></p></p></td>
+                <td rowspan="1" colspan="1"><div><p><br></p></div></td>
               </tr>
               <tr>
-                <td rowspan="1" colspan="1"><p><p><br></p></p></td>
+                <td rowspan="1" colspan="1"><div><p><br></p></div></td>
               </tr>
               <tr>
-                <td rowspan="1" colspan="1"><p><p><br></p></p></td>
+                <td rowspan="1" colspan="1"><div><p><br></p></div></td>
                 <td rowspan="3" colspan="2">
-                  <p>
+                  <div>
                     ${new Array(9).fill(0).map(() => `<p><br></p>`).join('\n')}
-                  </p>
+                  </div>
                 </td>
               </tr>
               ${
                 new Array(2).fill(0).map(() => `
                   <tr>
-                    ${new Array(4).fill(0).map(() => `<td rowspan="1" colspan="1"><p><p><br></p></p></td>`).join('\n')}
+                    ${new Array(4).fill(0).map(() => `<td rowspan="1" colspan="1"><div><p><br></p></div></td>`).join('\n')}
                   </tr>
                 `).join('\n')
               }
@@ -206,20 +206,20 @@ describe('merge and split cell', () => {
             <tbody>
               <tr>
                 <td rowspan="1" colspan="1">
-                  <p>
+                  <div>
                     <p><br></p>
                     <p><br></p>
                     <p><br></p>
                     <p><br></p>
-                  </p>
+                  </div>
                 </td>
-                <td rowspan="1" colspan="1"><p><p><br></p></p></td>
-                <td rowspan="1" colspan="1"><p><p><br></p></p></td>
+                <td rowspan="1" colspan="1"><div><p><br></p></div></td>
+                <td rowspan="1" colspan="1"><div><p><br></p></div></td>
               </tr>
               ${
                 new Array(2).fill(0).map(() => `
                   <tr>
-                    ${new Array(3).fill(0).map(() => `<td rowspan="1" colspan="1"><p><p><br></p></p></td>`).join('\n')}
+                    ${new Array(3).fill(0).map(() => `<td rowspan="1" colspan="1"><div><p><br></p></div></td>`).join('\n')}
                   </tr>
                 `).join('\n')
               }
@@ -257,7 +257,7 @@ describe('remove column from table', () => {
               ${
                 new Array(3).fill(0).map(() => `
                   <tr>
-                    <td rowspan="1" colspan="1"><p><p><br></p></p></td>
+                    <td rowspan="1" colspan="1"><div><p><br></p></div></td>
                   </tr>
                 `).join('\n')
               }
@@ -298,33 +298,33 @@ describe('remove column from table', () => {
             </colgroup>
             <tbody>
               <tr>
-                <td rowspan="1" colspan="1"><p><p><br></p></p></td>
-                <td rowspan="1" colspan="1"><p><p><br></p></p></td>
+                <td rowspan="1" colspan="1"><div><p><br></p></div></td>
+                <td rowspan="1" colspan="1"><div><p><br></p></div></td>
               </tr>
               <tr>
                 <td rowspan="2" colspan="1">
-                  <p>
+                  <div>
                     <p><br></p>
                     <p><br></p>
                     <p><br></p>
                     <p><br></p>
                     <p><br></p>
                     <p><br></p>
-                  </p>
+                  </div>
                 </td>
-                <td rowspan="1" colspan="1"><p><p><br></p></p></td>
+                <td rowspan="1" colspan="1"><div><p><br></p></div></td>
               </tr>
               <tr>
-                <td rowspan="1" colspan="1"><p><p><br></p></p></td>
+                <td rowspan="1" colspan="1"><div><p><br></p></div></td>
               </tr>
               <tr>
-                <td rowspan="1" colspan="1"><p><p><br></p></p></td>
+                <td rowspan="1" colspan="1"><div><p><br></p></div></td>
                 <td rowspan="1" colspan="1">
-                  <p>
+                  <div>
                     <p><br></p>
                     <p><br></p>
                     <p><br></p>
-                  </p>
+                  </div>
                 </td>
               </tr>
             </tbody>
@@ -359,7 +359,7 @@ describe('remove row from table', () => {
             </colgroup>
             <tbody>
               <tr>
-                ${new Array(3).fill(0).map(() => `<td rowspan="1" colspan="1"><p><p><br></p></p></td>`).join('\n')}
+                ${new Array(3).fill(0).map(() => `<td rowspan="1" colspan="1"><div><p><br></p></div></td>`).join('\n')}
               </tr>
             </tbody>
           </table>
@@ -394,11 +394,11 @@ describe('remove row from table', () => {
             </colgroup>
             <tbody>
               <tr>
-                <td rowspan="1" colspan="1"><p><p><br></p></p></td>
-                <td rowspan="1" colspan="2"><p><p><br></p></p></td>
+                <td rowspan="1" colspan="1"><div><p><br></p></div></td>
+                <td rowspan="1" colspan="2"><div><p><br></p></div></td>
               </tr>
               <tr>
-                ${new Array(3).fill(0).map(() => `<td rowspan="1" colspan="1"><p><p><br></p></p></td>`).join('\n')}
+                ${new Array(3).fill(0).map(() => `<td rowspan="1" colspan="1"><div><p><br></p></div></td>`).join('\n')}
               </tr>
             </tbody>
           </table>
@@ -428,7 +428,7 @@ describe('insert column into table', () => {
               ${
                 new Array(4).fill(0).map(() => `
                   <tr>
-                    ${new Array(4).fill(0).map(() => `<td rowspan="1" colspan="1"><p><p><br></p></p></td>`).join('\n')}
+                    ${new Array(4).fill(0).map(() => `<td rowspan="1" colspan="1"><div><p><br></p></div></td>`).join('\n')}
                   </tr>
                 `).join('\n')
               }
@@ -466,7 +466,7 @@ describe('insert column into table', () => {
               ${
                 new Array(2).fill(0).map(() => `
                   <tr>
-                    ${new Array(3).fill(0).map(() => `<td rowspan="1" colspan="1"><p><p><br></p></p></td>`).join('\n')}
+                    ${new Array(3).fill(0).map(() => `<td rowspan="1" colspan="1"><div><p><br></p></div></td>`).join('\n')}
                   </tr>
                 `).join('\n')
               }
@@ -505,14 +505,14 @@ describe('insert column into table', () => {
             </colgroup>
             <tbody>
               <tr>
-                ${new Array(3).fill(0).map(() => `<td rowspan="1" colspan="1"><p><p><br></p></p></td>`).join('\n')}
+                ${new Array(3).fill(0).map(() => `<td rowspan="1" colspan="1"><div><p><br></p></div></td>`).join('\n')}
               </tr>
               <tr>
                 <td rowspan="1" colspan="3">
-                  <p>
+                  <div>
                     <p><br></p>
                     <p><br></p>
-                  </p>
+                  </div>
                 </td>
               </tr>
             </tbody>
@@ -549,7 +549,7 @@ describe('insert column into table', () => {
               ${
                 new Array(2).fill(0).map(() => `
                   <tr>
-                    ${new Array(3).fill(0).map(() => `<td rowspan="1" colspan="1"><p><p><br></p></p></td>`).join('\n')}
+                    ${new Array(3).fill(0).map(() => `<td rowspan="1" colspan="1"><div><p><br></p></div></td>`).join('\n')}
                   </tr>
                 `).join('\n')
               }
@@ -588,14 +588,14 @@ describe('insert column into table', () => {
             </colgroup>
             <tbody>
               <tr>
-                ${new Array(3).fill(0).map(() => `<td rowspan="1" colspan="1"><p><p><br></p></p></td>`).join('\n')}
+                ${new Array(3).fill(0).map(() => `<td rowspan="1" colspan="1"><div><p><br></p></div></td>`).join('\n')}
               </tr>
               <tr>
                 <td rowspan="1" colspan="3">
-                  <p>
+                  <div>
                     <p><br></p>
                     <p><br></p>
-                  </p>
+                  </div>
                 </td>
               </tr>
             </tbody>
@@ -634,19 +634,15 @@ describe('insert column into table', () => {
             <tbody>
               <tr>
                 <td rowspan="1" colspan="2">
-                  <p>
+                  <div>
                     <p><br></p>
                     <p><br></p>
-                  </p>
+                  </div>
                 </td>
-                <td rowspan="1" colspan="1">
-                  <p>
-                    <p><br></p>
-                  </p>
-                </td>
+                <td rowspan="1" colspan="1"><div><p><br></p></div></td>
               </tr>
               <tr>
-                ${new Array(3).fill(0).map(() => `<td rowspan="1" colspan="1"><p><p><br></p></p></td>`).join('\n')}
+                ${new Array(3).fill(0).map(() => `<td rowspan="1" colspan="1"><div><p><br></p></div></td>`).join('\n')}
               </tr>
             </tbody>
           </table>
@@ -687,11 +683,11 @@ describe('insert column into table', () => {
             </colgroup>
             <tbody>
               <tr>
-                ${new Array(4).fill(0).map(() => `<td rowspan="1" colspan="1"><p><p><br></p></p></td>`).join('\n')}
+                ${new Array(4).fill(0).map(() => `<td rowspan="1" colspan="1"><div><p><br></p></div></td>`).join('\n')}
               </tr>
               <tr>
                 <td rowspan="1" colspan="4">
-                  <p>
+                  <div>
                     <p><br></p>
                     <p><br></p>
                     <p><br></p>
@@ -701,22 +697,22 @@ describe('insert column into table', () => {
                     <p><br></p>
                     <p><br></p>
                     <p><br></p>
-                  </p>
+                  </div>
                 </td>
               </tr>
               <tr>
                 <td rowspan="2" colspan="3">
-                  <p>
+                  <div>
                     <p><br></p>
                     <p><br></p>
                     <p><br></p>
                     <p><br></p>
-                  </p>
+                  </div>
                 </td>
-                <td rowspan="1" colspan="1"><p><p><br></p></p></td>
+                <td rowspan="1" colspan="1"><div><p><br></p></div></td>
               </tr>
               <tr>
-                <td rowspan="1" colspan="1"><p><p><br></p></p></td>
+                <td rowspan="1" colspan="1"><div><p><br></p></div></td>
               </tr>
             </tbody>
           </table>
@@ -756,11 +752,11 @@ describe('insert column into table', () => {
             </colgroup>
             <tbody>
               <tr>
-                <td rowspan="1" colspan="1"><p><p><br></p></p></td>
-                <td rowspan="1" colspan="1"><p><p><br></p></p></td>
-                <td rowspan="1" colspan="1"><p><p><br></p></p></td>
+                <td rowspan="1" colspan="1"><div><p><br></p></div></td>
+                <td rowspan="1" colspan="1"><div><p><br></p></div></td>
+                <td rowspan="1" colspan="1"><div><p><br></p></div></td>
                 <td rowspan="3" colspan="3">
-                  <p>
+                  <div>
                     <p><br></p>
                     <p><br></p>
                     <p><br></p>
@@ -770,21 +766,21 @@ describe('insert column into table', () => {
                     <p><br></p>
                     <p><br></p>
                     <p><br></p>
-                  </p>
+                  </div>
                 </td>
               </tr>
               <tr>
-                <td rowspan="1" colspan="1"><p><p><br></p></p></td>
-                <td rowspan="1" colspan="1"><p><p><br></p></p></td>
-                <td rowspan="1" colspan="1"><p><p><br></p></p></td>
+                <td rowspan="1" colspan="1"><div><p><br></p></div></td>
+                <td rowspan="1" colspan="1"><div><p><br></p></div></td>
+                <td rowspan="1" colspan="1"><div><p><br></p></div></td>
               </tr>
               <tr>
-                <td rowspan="1" colspan="1"><p><p><br></p></p></td>
-                <td rowspan="1" colspan="1"><p><p><br></p></p></td>
-                <td rowspan="1" colspan="1"><p><p><br></p></p></td>
+                <td rowspan="1" colspan="1"><div><p><br></p></div></td>
+                <td rowspan="1" colspan="1"><div><p><br></p></div></td>
+                <td rowspan="1" colspan="1"><div><p><br></p></div></td>
               </tr>
               <tr>
-                ${new Array(6).fill(0).map(() => `<td rowspan="1" colspan="1"><p><p><br></p></p></td>`).join('\n')}
+                ${new Array(6).fill(0).map(() => `<td rowspan="1" colspan="1"><div><p><br></p></div></td>`).join('\n')}
               </tr>
             </tbody>
           </table>
@@ -821,7 +817,7 @@ describe('insert row into table', () => {
               ${
                 new Array(3).fill(0).map(() => `
                   <tr>
-                    ${new Array(2).fill(0).map(() => `<td rowspan="1" colspan="1"><p><p><br></p></p></td>`).join('\n')}
+                    ${new Array(2).fill(0).map(() => `<td rowspan="1" colspan="1"><div><p><br></p></div></td>`).join('\n')}
                   </tr>
                 `).join('\n')
               }
@@ -862,36 +858,36 @@ describe('insert row into table', () => {
             <tbody>
               <tr>
                 <td rowspan="3" colspan="3">
-                  <p>
+                  <div>
                     <p><br></p>
                     <p><br></p>
                     <p><br></p>
                     <p><br></p>
                     <p><br></p>
                     <p><br></p>
-                  </p>
+                  </div>
                 </td>
-                <td rowspan="1" colspan="1"><p><p><br></p></p></td>
-                <td rowspan="1" colspan="1"><p><p><br></p></p></td>
+                <td rowspan="1" colspan="1"><div><p><br></p></div></td>
+                <td rowspan="1" colspan="1"><div><p><br></p></div></td>
               </tr>
               <tr>
-                <td rowspan="1" colspan="1"><p><p><br></p></p></td>
-                <td rowspan="1" colspan="1"><p><p><br></p></p></td>
+                <td rowspan="1" colspan="1"><div><p><br></p></div></td>
+                <td rowspan="1" colspan="1"><div><p><br></p></div></td>
               </tr>
               <tr>
-                <td rowspan="1" colspan="1"><p><p><br></p></p></td>
+                <td rowspan="1" colspan="1"><div><p><br></p></div></td>
                 <td rowspan="2" colspan="1">
-                  <p>
+                  <div>
                     <p><br></p>
                     <p><br></p>
-                  </p>
+                  </div>
                 </td>
               </tr>
               <tr>
-                <td rowspan="1" colspan="1"><p><p><br></p></p></td>
-                <td rowspan="1" colspan="1"><p><p><br></p></p></td>
-                <td rowspan="1" colspan="1"><p><p><br></p></p></td>
-                <td rowspan="1" colspan="1"><p><p><br></p></p></td>
+                <td rowspan="1" colspan="1"><div><p><br></p></div></td>
+                <td rowspan="1" colspan="1"><div><p><br></p></div></td>
+                <td rowspan="1" colspan="1"><div><p><br></p></div></td>
+                <td rowspan="1" colspan="1"><div><p><br></p></div></td>
               </tr>
             </tbody>
           </table>
@@ -926,7 +922,7 @@ describe('insert row into table', () => {
               ${
                 new Array(3).fill(0).map(() => `
                   <tr>
-                    ${new Array(2).fill(0).map(() => `<td rowspan="1" colspan="1"><p><p><br></p></p></td>`).join('\n')}
+                    ${new Array(2).fill(0).map(() => `<td rowspan="1" colspan="1"><div><p><br></p></div></td>`).join('\n')}
                   </tr>
                 `).join('\n')
               }
@@ -950,6 +946,7 @@ describe('insert row into table', () => {
     tableModule.tableSelection.selectedTds = [tds[1], tds[2], tds[3], tds[6], tds[7], tds[8]];
     tableModule.mergeCells();
     await vi.runAllTimersAsync();
+    tableModule.tableSelection = new TableSelection(tableModule, table, quill);
     tableModule.tableSelection.selectedTds = [tds[0]];
     tableModule.appendRow(true);
     await vi.runAllTimersAsync();
@@ -965,26 +962,26 @@ describe('insert row into table', () => {
             </colgroup>
             <tbody>
               <tr>
-                <td rowspan="1" colspan="1"><p><p><br></p></p></td>
+                <td rowspan="1" colspan="1"><div><p><br></p></div></td>
                 <td rowspan="3" colspan="1">
-                  <p>
+                  <div>
                     <p><br></p>
                     <p><br></p>
                     <p><br></p>
                     <p><br></p>
                     <p><br></p>
                     <p><br></p>
-                  </p>
+                  </div>
                 </td>
-                <td rowspan="1" colspan="1"><p><p><br></p></p></td>
+                <td rowspan="1" colspan="1"><div><p><br></p></div></td>
               </tr>
               <tr>
-                <td rowspan="1" colspan="1"><p><p><br></p></p></td>
-                <td rowspan="1" colspan="1"><p><p><br></p></p></td>
+                <td rowspan="1" colspan="1"><div><p><br></p></div></td>
+                <td rowspan="1" colspan="1"><div><p><br></p></div></td>
               </tr>
               <tr>
-                <td rowspan="1" colspan="1"><p><p><br></p></p></td>
-                <td rowspan="1" colspan="1"><p><p><br></p></p></td>
+                <td rowspan="1" colspan="1"><div><p><br></p></div></td>
+                <td rowspan="1" colspan="1"><div><p><br></p></div></td>
               </tr>
             </tbody>
           </table>
@@ -1008,9 +1005,11 @@ describe('unusual delete', () => {
     tableModule.tableSelection.selectedTds = [tds[0], tds[1], tds[2], tds[5], tds[6], tds[7], tds[10], tds[11], tds[12]];
     tableModule.mergeCells();
     await vi.runAllTimersAsync();
+    tableModule.tableSelection = new TableSelection(tableModule, table, quill);
     tableModule.tableSelection.selectedTds = [tds[4], tds[9], tds[14], tds[19]];
     tableModule.mergeCells();
     await vi.runAllTimersAsync();
+    tableModule.tableSelection = new TableSelection(tableModule, table, quill);
     tableModule.tableSelection.selectedTds = [tds[17], tds[18], tds[22], tds[23]];
     tableModule.mergeCells();
     await vi.runAllTimersAsync();
@@ -1033,13 +1032,15 @@ describe('unusual delete', () => {
     tableModule.tableSelection.selectedTds = [tds[0], tds[1], tds[2], tds[5], tds[6], tds[7], tds[10], tds[11], tds[12]];
     tableModule.mergeCells();
     await vi.runAllTimersAsync();
+    tableModule.tableSelection = new TableSelection(tableModule, table, quill);
     tableModule.tableSelection.selectedTds = [tds[4], tds[9], tds[14], tds[19]];
     tableModule.mergeCells();
     await vi.runAllTimersAsync();
+    tableModule.tableSelection = new TableSelection(tableModule, table, quill);
     tableModule.tableSelection.selectedTds = [tds[17], tds[18], tds[22], tds[23]];
     tableModule.mergeCells();
     await vi.runAllTimersAsync();
-    quill.deleteText(27, 42);
+    quill.deleteText(18, 8);
     await vi.runAllTimersAsync();
     expect(quill.root).toEqualHTML(
       `
@@ -1052,7 +1053,7 @@ describe('unusual delete', () => {
             <tbody>
               <tr>
                <td rowspan="3" colspan="3">
-                  <p>
+                  <div>
                     <p><br></p>
                     <p><br></p>
                     <p><br></p>
@@ -1062,27 +1063,26 @@ describe('unusual delete', () => {
                     <p><br></p>
                     <p><br></p>
                     <p><br></p>
-                  </p>
+                  </div>
                 </td>
-                <td rowspan="1" colspan="1"><p><p><br></p></p></td>
+                <td rowspan="1" colspan="1"><div><p><br></p></div></td>
                 <td rowspan="3" colspan="1">
-                  <p>
+                  <div>
                     <p><br></p>
                     <p><br></p>
-                    <p><br></p>
-                    <p><br></p>
-                  </p>
+                  </div>
                 </td>
               </tr>
               <tr>
-                <td rowspan="1" colspan="1"><p><p><br></p></p></td>
+                <td rowspan="1" colspan="1"><div><p><br></p></div></td>
               </tr>
               <tr>
-                <td rowspan="1" colspan="1"><p><p><br></p></p></td>
+                <td rowspan="1" colspan="1"><div><p><br></p></div></td>
               </tr>
             </tbody>
           </table>
         </p>
+        <p><br></p>
       `,
       { ignoreAttrs: ['class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
     );
@@ -1099,13 +1099,15 @@ describe('unusual delete', () => {
     tableModule.tableSelection.selectedTds = [tds[0], tds[1], tds[2], tds[5], tds[6], tds[7], tds[10], tds[11], tds[12]];
     tableModule.mergeCells();
     await vi.runAllTimersAsync();
+    tableModule.tableSelection = new TableSelection(tableModule, table, quill);
     tableModule.tableSelection.selectedTds = [tds[4], tds[9], tds[14], tds[19]];
     tableModule.mergeCells();
     await vi.runAllTimersAsync();
+    tableModule.tableSelection = new TableSelection(tableModule, table, quill);
     tableModule.tableSelection.selectedTds = [tds[17], tds[18], tds[22], tds[23]];
     tableModule.mergeCells();
     await vi.runAllTimersAsync();
-    quill.deleteText(16, 25);
+    quill.deleteText(21, 3);
     await vi.runAllTimersAsync();
     expect(quill.root).toEqualHTML(
       `
@@ -1117,8 +1119,8 @@ describe('unusual delete', () => {
             </colgroup>
             <tbody>
               <tr>
-               <td rowspan="1" colspan="5">
-                  <p>
+               <td rowspan="3" colspan="3">
+                  <div>
                     <p><br></p>
                     <p><br></p>
                     <p><br></p>
@@ -1128,8 +1130,22 @@ describe('unusual delete', () => {
                     <p><br></p>
                     <p><br></p>
                     <p><br></p>
-                  </p>
+                  </div>
                 </td>
+                <td rowspan="1" colspan="1"><div><p><br></p></div></td>
+                <td rowspan="4" colspan="1">
+                  <div>
+                    <p><br></p>
+                    <p><br></p>
+                    <p><br></p>
+                    <p><br></p>
+                  </div>
+                </td>
+              </tr>
+              <tr><td rowspan="1" colspan="1"><div><p><br></p></div></td></tr>
+              <tr><td rowspan="1" colspan="1"><div><p><br></p></div></td></tr>
+              <tr>
+                ${new Array(4).fill(`<td rowspan="1" colspan="1"><div><p><br></p></div></td>`).join('\n')}
               </tr>
             </tbody>
           </table>
