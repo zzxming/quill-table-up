@@ -336,7 +336,7 @@ export const createToolTip = (target: HTMLElement, options: ToolTipOptions = {})
     target.addEventListener('mouseleave', close);
     tooltip.addEventListener('mouseenter', open);
     tooltip.addEventListener('mouseleave', close);
+    return tooltip;
   }
-
-  return target;
+  return null;
 };

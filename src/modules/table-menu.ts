@@ -129,6 +129,7 @@ export class TableMenu {
   selectedTds: TableCellInnerFormat[] = [];
   updateUsedColor: (this: any, color?: string) => void;
   colorItemClass = `color-${randomId()}`;
+  tooltipItem: HTMLElement[] = [];
 
   constructor(public tableModule: TableUp, public quill: Quill, options: Partial<TableMenuOptions>) {
     this.options = this.resolveOptions(options);
@@ -228,7 +229,8 @@ export class TableMenu {
               this.tableModule.setBackgroundColor(this.selectedTds, item.style.backgroundColor);
             }
           });
-          createToolTip(item, { content: usedColorWrap, direction: 'top' });
+          const tooltipItem = createToolTip(item, { content: usedColorWrap, direction: 'top' });
+          tooltipItem && this.tooltipItem.push(tooltipItem);
 
           if (isFunction(handle)) {
             item.addEventListener('click', e => e.stopPropagation());
@@ -248,7 +250,8 @@ export class TableMenu {
 
         const tipText = this.options.tipTexts[name] || tip;
         if (tipText && tip) {
-          createToolTip(item, { msg: tipText });
+          const tooltipItem = createToolTip(item, { msg: tipText });
+          tooltipItem && this.tooltipItem.push(tooltipItem);
         }
       }
       toolBox.appendChild(item);
@@ -291,6 +294,7 @@ export class TableMenu {
 
   destroy() {
     if (!this.menu) return;
+    for (const tooltip of this.tooltipItem) tooltip.remove();
     this.menu.remove();
     this.menu = null;
   }
