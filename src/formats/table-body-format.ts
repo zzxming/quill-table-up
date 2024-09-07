@@ -7,12 +7,6 @@ export class TableBodyFormat extends ContainerFormat {
   static blotName = blotName.tableBody;
   static tagName = 'tbody';
 
-  static create(value: any) {
-    const node = super.create(value) as HTMLElement;
-    node.setAttribute('contenteditable', 'true');
-    return node;
-  }
-
   checkMerge(): boolean {
     const next = this.next;
     return (
