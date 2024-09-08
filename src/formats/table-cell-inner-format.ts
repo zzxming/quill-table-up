@@ -4,6 +4,7 @@ import { blotName, findParentBlot } from '../utils';
 import type { TableCellValue } from '../utils';
 import { ContainerFormat } from './container-format';
 import type { TableCellFormat } from './table-cell-format';
+import { TableColFormat } from './table-col-format';
 
 const Block = Quill.import('blots/block') as TypeParchment.BlotConstructor;
 const BlockEmbed = Quill.import('blots/block/embed') as TypeParchment.BlotConstructor;
@@ -131,7 +132,7 @@ export class TableCellInnerFormat extends ContainerFormat {
     };
   }
 
-  optimize(context: Record< string, any>) {
+  optimize(context: Record<string, any>) {
     const parent = this.parent;
     const { tableId, colId, rowId, rowspan, colspan, backgroundColor, height } = this;
     // handle BlockEmbed to insert tableCellInner when setContents
@@ -168,5 +169,13 @@ export class TableCellInnerFormat extends ContainerFormat {
     }
 
     super.optimize(context);
+  }
+
+  insertBefore(childBlot: TypeParchment.Blot, refBlot?: TypeParchment.Blot | null | undefined): void {
+    if (childBlot instanceof TableCellInnerFormat || childBlot instanceof TableColFormat) {
+      console.error(`Not supported table insert into table.`);
+      return;
+    }
+    super.insertBefore(childBlot, refBlot);
   }
 }
