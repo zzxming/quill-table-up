@@ -1,23 +1,27 @@
-import type TableUp from '..';
-
-export type AnyClass = new (...arg: any[]) => any;
+import type { TableCellInnerFormat, TableUp } from '..';
 
 export interface ToolOption {
   name: string;
   icon: string | ((tableModule: TableUp) => HTMLElement);
   tip?: string;
-  handle: (tableModule: TableUp, e: MouseEvent) => void;
-};
+  isColorChoose?: boolean;
+  handle: (tableModule: TableUp, selectedTds: TableCellInnerFormat[], e: Event | string) => void;
+}
 export interface ToolOptionBreak {
   name: 'break';
 }
 export type Tool = ToolOption | ToolOptionBreak;
 
+export interface TableMenuOptions {
+  tipText: boolean;
+  tipTexts: Record<string, string>;
+  tools: Tool[];
+  // contextmenu: boolean;
+  localstorageKey: string;
+};
 export interface TableSelectionOptions {
   selectColor: string;
-  tipText: boolean;
-  tools: Tool[];
-  localstorageKey: string;
+  tableMenu: TableMenuOptions;
 }
 export interface TableTextOptions {
   customBtnText?: string;
@@ -27,9 +31,38 @@ export interface TableTextOptions {
   colText?: string;
   notPositiveNumberError?: string;
 }
+export interface TableResizeOptions {
+  size: number;
+}
 export interface TableUpOptions {
-  customSelect?: (this: TableUp) => HTMLElement;
-  isCustom?: boolean;
-  texts?: TableTextOptions;
+  customSelect?: (tableModule: TableUp) => HTMLElement;
+  full: boolean;
+  customBtn: boolean;
+  texts: TableTextOptions;
   selection?: TableSelectionOptions;
+  resizer?: TableResizeOptions;
+}
+export interface TableColValue {
+  tableId: string;
+  colId: string;
+  width: string;
+  full: boolean;
+};
+export interface TableCellValue {
+  tableId: string;
+  rowId: string;
+  colId: string;
+  rowspan: number;
+  colspan: number;
+  backgroundColor?: string;
+  height?: number;
+};
+
+export interface RelactiveRect {
+  x: number;
+  y: number;
+  x1: number;
+  y1: number;
+  width: number;
+  height: number;
 }

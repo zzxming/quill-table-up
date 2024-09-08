@@ -1,4 +1,4 @@
-{ 
+{
   "editor.formatOnSave": true,
   "editor.tabSize": 2,
   "editor.codeActionsOnSave": {
@@ -39,4 +39,11 @@
     "scss",
     "postcss"
   ],
+  "search.exclude": {
+    "docs/dev*": true,
+    "docs/*.css": true,
+    "**/dist": true,
+    "**/node_modules": true,
+    "**/*.md": true
+  }
 }
