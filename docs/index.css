@@ -51,32 +51,6 @@
 .ql-snow .ql-table-selection-item.icon {
   cursor: pointer;
 }
-.ql-snow .ql-table-selection-item .table-color-used {
-  position: absolute;
-  top: 0;
-  left: 0px;
-  transform: translate(-50%, -100%);
-  display: none;
-  align-items: center;
-  justify-content: center;
-  flex-direction: row-reverse;
-  padding: 6px 10px;
-  background-color: #ffffff;
-  border-radius: 4px;
-  border: 1px solid #888888;
-}
-.ql-snow .ql-table-selection-item .table-color-used-item {
-  width: 16px;
-  height: 16px;
-  margin: 0px 3px;
-  border: 1px solid #a3a3a3;
-}
-.ql-snow .ql-table-selection-item .table-color-used.right-out {
-  transform: translate(-90%, -100%);
-}
-.ql-snow .ql-table-selection-item .table-color-used.left-out {
-  transform: translate(0%, -100%);
-}
 .ql-snow .ql-table-resizer {
   position: absolute;
   z-index: 10;
@@ -158,6 +132,19 @@
   width: 100%;
   height: 8px;
   z-index: 11;
+}
+.table-color-used {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: row-reverse;
+}
+.table-color-used-item {
+  width: 1rem;
+  height: 1rem;
+  margin: 0.25rem;
+  border: 0.0625rem solid #a3a3a3;
+  cursor: pointer;
 }
 .ql-table-drag-line {
   position: fixed;
@@ -252,51 +239,20 @@
 .select-box__custom:hover {
   background-color: var(--select-box-bg-hover);
 }
-.tool-tip {
-  position: relative;
-  display: flex;
-}
-.tool-tip__text {
-  display: none;
+.tooltip {
   position: absolute;
-  left: 50%;
-  top: 100%;
-  transform: translate(-50%, 0.375rem);
   z-index: 20;
-  padding: 0.25rem 0.5rem;
+  padding: 0.25rem 0.75rem;
   border-radius: 0.25rem;
-  background-color: rgba(0, 0, 0, 0.8);
   font-size: 0.75rem;
-  text-align: center;
-  white-space: nowrap;
   color: #ffffff;
+  white-space: nowrap;
+  background-color: #303133;
   transition: opacity 0.15s linear;
 }
-.tool-tip__text::before {
-  position: absolute;
-  top: -1rem;
-  left: 50%;
-  z-index: 30;
-  transform: translateX(-50%);
-  content: '';
-  border: 0.5rem solid rgba(0, 0, 0, 0);
-  border-bottom-color: rgba(0, 0, 0, 0.8);
-}
-.tool-tip__text.block {
-  display: block;
-}
-.tool-tip__text.hidden {
+.tooltip.transparent {
   opacity: 0;
 }
-.tool-tip__text.right-out {
-  transform: translate(-80%, 0.375rem);
-}
-.tool-tip__text.right-out::before {
-  left: 80%;
-}
-.tool-tip__text.left-out {
-  transform: translate(-20%, 0.375rem);
-}
-.tool-tip__text.left-out::before {
-  left: 20%;
+.tooltip.hidden {
+  display: none;
 }

@@ -186,7 +186,7 @@
             options.onSelect && options.onSelect(Number(row), Number(col));
         });
         selectDom.appendChild(selectBlock);
-        if (options.isCustom) {
+        if (options.customBtn) {
             const texts = options.texts || {};
             const selectCustom = document.createElement('div');
             selectCustom.classList.add('select-box__custom');
@@ -201,56 +201,87 @@
         }
         return selectDom;
     };
+    const DISTANCE = 8;
+    let tooltipContainer;
     const createToolTip = (target, options = {}) => {
-        const { msg = '', delay = 0 } = options;
-        const wrapper = document.createElement('div');
-        wrapper.classList.add('tool-tip');
-        wrapper.appendChild(target);
-        if (msg) {
-            const tip = document.createElement('div');
-            tip.classList.add('tool-tip__text');
-            tip.classList.add('hidden');
-            tip.textContent = msg;
-            wrapper.appendChild(tip);
+        const { msg = '', delay = 150, content, direction = 'bottom' } = options;
+        if (msg || content) {
+            if (!tooltipContainer) {
+                tooltipContainer = document.createElement('div');
+                document.body.appendChild(tooltipContainer);
+            }
+            const tooltip = document.createElement('div');
+            tooltip.classList.add('tooltip');
+            tooltip.classList.add('hidden');
+            tooltip.classList.add('transparent');
+            if (content) {
+                tooltip.appendChild(content);
+            }
+            else if (msg) {
+                tooltip.textContent = msg;
+            }
+            tooltipContainer.appendChild(tooltip);
             let timer;
-            wrapper.addEventListener('mouseenter', () => {
+            const open = () => {
                 if (timer)
                     clearTimeout(timer);
                 timer = setTimeout(() => {
-                    tip.classList.add('block');
-                    tip.classList.remove('hidden');
-                    tip.classList.remove('right-out');
-                    tip.classList.remove('left-out');
-                    setTimeout(() => {
-                        const rect = tip.getBoundingClientRect();
-                        if (rect.right > window.innerWidth) {
-                            tip.classList.add('right-out');
-                        }
-                        else {
-                            tip.classList.remove('right-out');
-                        }
-                        if (rect.left < 0) {
-                            tip.classList.add('left-out');
-                        }
-                        else {
-                            tip.classList.remove('left-out');
-                        }
-                    }, 0);
+                    tooltip.classList.remove('hidden');
+                    const elRect = target.getBoundingClientRect();
+                    const contentRect = tooltip.getBoundingClientRect();
+                    const extraPositionMap = {
+                        top: {
+                            top: -contentRect.height - DISTANCE,
+                            left: elRect.width / 2 - contentRect.width / 2,
+                        },
+                        right: {
+                            top: elRect.height / 2 - contentRect.height / 2,
+                            left: elRect.width + DISTANCE,
+                        },
+                        bottom: {
+                            top: contentRect.height + DISTANCE,
+                            left: elRect.width / 2 - contentRect.width / 2,
+                        },
+                        left: {
+                            top: elRect.height / 2 - contentRect.height / 2,
+                            left: -contentRect.width - DISTANCE,
+                        },
+                    };
+                    const extra = extraPositionMap[direction];
+                    const top = window.scrollY + elRect.top + extra.top;
+                    let left = window.scrollX + elRect.left + extra.left;
+                    const innerWidth = document.documentElement.clientWidth;
+                    if (left + contentRect.width > innerWidth) {
+                        left = innerWidth - contentRect.width;
+                    }
+                    else if (left < 0) {
+                        left = 0;
+                    }
+                    Object.assign(tooltip.style, {
+                        top: `${top}px`,
+                        left: `${left}px`,
+                    });
+                    tooltip.classList.remove('transparent');
                 }, delay);
-            });
-            wrapper.addEventListener('mouseleave', () => {
+            };
+            const close = () => {
                 if (timer)
                     clearTimeout(timer);
                 timer = setTimeout(() => {
-                    tip.classList.add('hidden');
-                    tip.addEventListener('transitionend', () => {
-                        tip.classList.remove('block');
+                    tooltip.classList.add('transparent');
+                    tooltip.addEventListener('transitionend', () => {
+                        tooltip.classList.add('hidden');
                     }, { once: true });
                     timer = null;
                 }, delay);
-            });
+            };
+            target.addEventListener('mouseenter', open);
+            target.addEventListener('mouseleave', close);
+            tooltip.addEventListener('mouseenter', open);
+            tooltip.addEventListener('mouseleave', close);
+            return tooltip;
         }
-        return wrapper;
+        return null;
     };
 
     // eslint-disable-next-line ts/ban-types
@@ -309,30 +340,30 @@
         tableCellInner: 'table-up-cell-inner',
     };
     const tabbleToolName = 'table-up-main';
-    const tableColMinWidthPre = 3;
+    const tableColMinWidthPre = 5;
     const tableColMinWidthPx = 26;
     const tableRowMinWidthPx = 36;
 
-    const Parchment$1 = Quill.import('parchment');
+    const Parchment$2 = Quill.import('parchment');
     const Container = Quill.import('blots/container');
     const Block$2 = Quill.import('blots/block');
-    const BlockEmbed$1 = Quill.import('blots/block/embed');
+    const BlockEmbed$2 = Quill.import('blots/block/embed');
     class ContainerFormat extends Container {
         static blotName = blotName.container;
         static tagName = 'container';
-        static scope = Parchment$1.Scope.BLOCK_BLOT;
-        static allowedChildren = [Block$2, BlockEmbed$1, Container];
+        static scope = Parchment$2.Scope.BLOCK_BLOT;
+        static allowedChildren = [Block$2, BlockEmbed$2, Container];
         static requiredContainer;
         static defaultChild;
         clearDeltaCache() {
-            // eslint-disable-next-line unicorn/no-array-for-each
-            this.children.forEach((child) => {
+            const blocks = this.descendants(Block$2, 0);
+            for (const child of blocks) {
                 child.cache = {};
-            });
+            }
         }
         insertBefore(blot, ref) {
             // when block line remove will merge format. but in TableCellInner will get TableCellInner format
-            // that will insert a new TableCellInner line but not a Block line
+            // that will insert a new TableCellInner line. not a Block line
             // detail to see Quill module -> Keyboard -> handleBackspace
             if (blot.statics.blotName === this.statics.blotName && blot.children.length > 0) {
                 super.insertBefore(blot.children.head, ref);
@@ -340,6 +371,14 @@
             else {
                 super.insertBefore(blot, ref);
             }
+        }
+        insertAt(index, value, def) {
+            const [child] = this.children.find(index);
+            if (!child) {
+                const defaultChild = this.scroll.create(this.statics.defaultChild.blotName || 'block');
+                this.appendChild(defaultChild);
+            }
+            super.insertAt(index, value, def);
         }
     }
 
@@ -354,11 +393,10 @@
                 e.preventDefault();
                 e.stopPropagation();
             }, true);
-            // 不允许拖拽进 table
+            // not allow drop content into table
             node.addEventListener('drop', (e) => {
                 e.preventDefault();
             });
-            // 修改拖拽进入时的鼠标样式
             node.addEventListener('dragover', (e) => {
                 e.preventDefault();
                 e.dataTransfer.dropEffect = 'none';
@@ -376,7 +414,7 @@
                 super.insertBefore(blot, ref);
             }
             else {
-                // 非允许子 blot, ref 为 null 是插入头, 否则插入尾
+                // TODO: is this necessary?
                 if (ref) {
                     this.prev ? this.prev.insertBefore(blot, null) : this.parent.insertBefore(blot, this);
                 }
@@ -392,10 +430,80 @@
                 && next.domNode.tagName === this.domNode.tagName
                 && next.domNode.dataset.tableId === this.tableId);
         }
-        deleteAt(index, length) {
-            super.deleteAt(index, length);
-            // 删除 table 时隐藏当前 table 的 tooltip
-            document.querySelector(`.ql-table-tooltip[data-table-id="${this.tableId}"]`)?.classList?.add('ql-hidden');
+    }
+
+    const BlockEmbed$1 = Quill.import('blots/block/embed');
+    class TableColFormat extends BlockEmbed$1 {
+        scroll;
+        domNode;
+        static blotName = blotName.tableCol;
+        static tagName = 'col';
+        static create(value) {
+            const { width, tableId, colId, full } = value;
+            const node = super.create();
+            node.setAttribute('width', `${Number.parseFloat(width)}${full ? '%' : 'px'}`);
+            full && (node.dataset.full = String(full));
+            node.dataset.tableId = tableId;
+            node.dataset.colId = colId;
+            node.setAttribute('contenteditable', 'false');
+            return node;
+        }
+        constructor(scroll, domNode) {
+            super(scroll, domNode);
+            this.scroll = scroll;
+            this.domNode = domNode;
+        }
+        get width() {
+            const width = this.domNode.getAttribute('width');
+            return Number.parseFloat(width);
+        }
+        set width(value) {
+            const width = Number.parseFloat(value);
+            this.domNode.setAttribute('width', `${width}${this.full ? '%' : 'px'}`);
+        }
+        get tableId() {
+            return this.domNode.dataset.tableId;
+        }
+        get colId() {
+            return this.domNode.dataset.colId;
+        }
+        get full() {
+            return Object.hasOwn(this.domNode.dataset, 'full');
+        }
+        static value(domNode) {
+            const { tableId, colId, full } = domNode.dataset;
+            const width = domNode.getAttribute('width');
+            const value = {
+                tableId,
+                colId,
+                full,
+            };
+            width && (value.width = Number.parseFloat(width));
+            return value;
+        }
+        checkMerge() {
+            const next = this.next;
+            const { tableId, colId } = this;
+            return (next !== null
+                && next.statics.blotName === this.statics.blotName
+                && next.domNode.dataset.tableId === tableId
+                && next.domNode.dataset.colId === colId);
+        }
+        optimize(context) {
+            const parent = this.parent;
+            if (parent != null && parent.statics.blotName !== blotName.tableColgroup) {
+                const marker = this.scroll.create('block');
+                this.parent.insertBefore(marker, this.next);
+                const tableWrapper = this.scroll.create(blotName.tableWrapper, this.tableId);
+                const table = this.scroll.create(blotName.tableMain, this.tableId);
+                this.full && (table.full = true);
+                const tableColgroup = this.scroll.create(blotName.tableColgroup);
+                tableColgroup.appendChild(this);
+                table.appendChild(tableColgroup);
+                tableWrapper.appendChild(table);
+                marker.replaceWith(tableWrapper);
+            }
+            super.optimize(context);
         }
     }
 
@@ -403,7 +511,7 @@
     const BlockEmbed = Quill.import('blots/block/embed');
     class TableCellInnerFormat extends ContainerFormat {
         static blotName = blotName.tableCellInner;
-        static tagName = 'p';
+        static tagName = 'div';
         static className = 'ql-table-cell-inner';
         static defaultChild = Block$1;
         static create(value) {
@@ -418,18 +526,9 @@
             backgroundColor && (node.dataset.backgroundColor = backgroundColor);
             return node;
         }
-        // this issue also effect TableColFormat
-        // make sure cell have at least one length. Otherwise will get wrong insert index when table inserting
-        // when inserting cell not have defaultChild. that mean TableCellInnerFormat.length() === 0
-        // quill2.x deleted replace method. if not want rewrite method length. need to rewrite method Block.repalceWith
-        // rewrite: when replacement instanceof ParentBlot. change moveChildren to wrap
-        // but length() >= 1 maybe have some bugs. if have bug. change Container to Block
-        length() {
-            return super.length() + 1;
-        }
-        attributesList = new Set(['table-id', 'row-id', 'col-id', 'rowspan', 'colspan', 'background-color', 'height']);
+        allowDataAttrs = new Set(['table-id', 'row-id', 'col-id', 'rowspan', 'colspan', 'background-color', 'height']);
         setFormatValue(name, value) {
-            if (!this.attributesList.has(name))
+            if (!this.allowDataAttrs.has(name))
                 return;
             const attrName = `data-${name}`;
             if (value) {
@@ -492,6 +591,8 @@
         formatAt(index, length, name, value) {
             if (this.children.length === 0) {
                 this.appendChild(this.scroll.create(this.statics.defaultChild.blotName));
+                // block min length is 1
+                length += 1;
             }
             super.formatAt(index, length, name, value);
         }
@@ -503,8 +604,8 @@
                 colId,
                 rowspan,
                 colspan,
-                height,
             };
+            height !== 0 && (value.height = height);
             backgroundColor && (value.backgroundColor = backgroundColor);
             return {
                 [this.statics.blotName]: value,
@@ -544,6 +645,13 @@
                 marker.replaceWith(tableWrapper);
             }
             super.optimize(context);
+        }
+        insertBefore(childBlot, refBlot) {
+            if (childBlot instanceof TableCellInnerFormat || childBlot instanceof TableColFormat) {
+                console.error(`Not supported table insert into table.`);
+                return;
+            }
+            super.insertBefore(childBlot, refBlot);
         }
     }
 
@@ -660,88 +768,6 @@
                 if (func(tableCell, i++))
                     break;
             }
-        }
-    }
-
-    const Block = Quill.import('blots/block');
-    // const BlockEmbed = Quill.import('blots/block/embed') as TypeParchment.BlotConstructor;
-    // if can make sure user won't focus in col. use BlockEmbed is better
-    class TableColFormat extends ContainerFormat {
-        scroll;
-        domNode;
-        static blotName = blotName.tableCol;
-        static tagName = 'col';
-        static defaultChild = Block;
-        length() {
-            return 1;
-        }
-        static create(value) {
-            const { width, tableId, colId, full } = value;
-            const node = super.create();
-            node.setAttribute('width', `${Number.parseFloat(width)}${full ? '%' : 'px'}`);
-            full && (node.dataset.full = String(full));
-            node.dataset.tableId = tableId;
-            node.dataset.colId = colId;
-            node.setAttribute('contenteditable', 'false');
-            return node;
-        }
-        constructor(scroll, domNode) {
-            super(scroll, domNode);
-            this.scroll = scroll;
-            this.domNode = domNode;
-        }
-        get width() {
-            const width = this.domNode.getAttribute('width');
-            return Number.parseFloat(width);
-        }
-        set width(value) {
-            const width = Number.parseFloat(value);
-            this.domNode.setAttribute('width', `${width}${this.full ? '%' : 'px'}`);
-            this.clearDeltaCache();
-        }
-        get tableId() {
-            return this.domNode.dataset.tableId;
-        }
-        get colId() {
-            return this.domNode.dataset.colId;
-        }
-        get full() {
-            return Object.hasOwn(this.domNode.dataset, 'full');
-        }
-        formats() {
-            const { tableId, colId, width, full } = this;
-            return {
-                [this.statics.blotName]: {
-                    tableId,
-                    colId,
-                    width,
-                    full,
-                },
-            };
-        }
-        checkMerge() {
-            const next = this.next;
-            const { tableId, colId } = this;
-            return (next !== null
-                && next.statics.blotName === this.statics.blotName
-                && next.domNode.dataset.tableId === tableId
-                && next.domNode.dataset.colId === colId);
-        }
-        optimize(context) {
-            const parent = this.parent;
-            if (parent != null && parent.statics.blotName !== blotName.tableColgroup) {
-                const marker = this.scroll.create('block');
-                this.parent.insertBefore(marker, this.next);
-                const tableWrapper = this.scroll.create(blotName.tableWrapper, this.tableId);
-                const table = this.scroll.create(blotName.tableMain, this.tableId);
-                this.full && (table.full = true);
-                const tableColgroup = this.scroll.create(blotName.tableColgroup);
-                tableColgroup.appendChild(this);
-                table.appendChild(tableColgroup);
-                tableWrapper.appendChild(table);
-                marker.replaceWith(tableWrapper);
-            }
-            super.optimize(context);
         }
     }
 
@@ -938,6 +964,7 @@
         static blotName = blotName.tableCell;
         static tagName = 'td';
         static className = 'ql-table-cell';
+        // for TableSelection computed selectedTds
         __rect;
         static create(value) {
             const { tableId, rowId, colId, rowspan, colspan, backgroundColor, height } = value;
@@ -1046,7 +1073,7 @@
         }
     }
 
-    const Parchment = Quill.import('parchment');
+    const Parchment$1 = Quill.import('parchment');
     const ScrollBlot = Quill.import('blots/scroll');
     class ScrollOverride extends ScrollBlot {
         createBlock(attributes, refBlot) {
@@ -1054,7 +1081,7 @@
             let formats = {};
             // if attributes have not only one block blot. will save last. that will conflict with list/header in tableCellInner
             for (const [key, value] of Object.entries(attributes)) {
-                const isBlockBlot = this.query(key, Parchment.Scope.BLOCK & Parchment.Scope.BLOT) != null;
+                const isBlockBlot = this.query(key, Parchment$1.Scope.BLOCK & Parchment$1.Scope.BLOT) != null;
                 if (isBlockBlot) {
                     createBlotName = key;
                 }
@@ -1074,6 +1101,33 @@
                 block.formatAt(0, length, key, value);
             }
             return block;
+        }
+    }
+
+    const Parchment = Quill.import('parchment');
+    const Block = Quill.import('blots/block');
+    class BlockOverride extends Block {
+        replaceWith(name, value) {
+            const replacement = typeof name === 'string' ? this.scroll.create(name, value) : name;
+            if (replacement instanceof Parchment.ParentBlot) {
+                // replace block to TableCellInner length is 0 when setContents
+                // that will set text direct in TableCellInner but not in block
+                // so we need to set text in block and block in TableCellInner
+                // wrap with TableCellInner.formatAt when length is 0 will create a new block
+                // that can make sure TableCellInner struct correctly
+                if (replacement.statics.blotName === blotName.tableCellInner) {
+                    return this.wrap(blotName.tableCellInner, replacement.formats()[blotName.tableCellInner]);
+                }
+                else {
+                    this.moveChildren(replacement);
+                }
+            }
+            if (this.parent != null) {
+                this.parent.insertBefore(replacement, this.next || undefined);
+                this.remove();
+            }
+            this.attributes.copy(replacement);
+            return replacement;
         }
     }
 
@@ -1106,7 +1160,7 @@
         {
             name: 'InsertTop',
             icon: InsertTop,
-            tip: '向上插入一行',
+            tip: 'Insert a row above',
             handle: (tableModule) => {
                 tableModule.appendRow(false);
                 tableModule.hideTableTools();
@@ -1115,7 +1169,7 @@
         {
             name: 'InsertRight',
             icon: InsertRight,
-            tip: '向右插入一列',
+            tip: 'Insert a column right',
             handle: (tableModule) => {
                 tableModule.appendCol(true);
                 tableModule.hideTableTools();
@@ -1124,7 +1178,7 @@
         {
             name: 'InsertBottom',
             icon: InsertBottom,
-            tip: '向下插入一行',
+            tip: 'Insert a row below',
             handle: (tableModule) => {
                 tableModule.appendRow(true);
                 tableModule.hideTableTools();
@@ -1133,7 +1187,7 @@
         {
             name: 'InsertLeft',
             icon: InsertLeft,
-            tip: '向左插入一列',
+            tip: 'Insert a column Left',
             handle: (tableModule) => {
                 tableModule.appendCol(false);
                 tableModule.hideTableTools();
@@ -1145,7 +1199,7 @@
         {
             name: 'MergeCell',
             icon: MergeCell,
-            tip: '合并单元格',
+            tip: 'Merge Cell',
             handle: (tableModule) => {
                 tableModule.mergeCells();
                 tableModule.hideTableTools();
@@ -1154,7 +1208,7 @@
         {
             name: 'SplitCell',
             icon: SplitCell,
-            tip: '拆分单元格',
+            tip: 'Split Cell',
             handle: (tableModule) => {
                 tableModule.splitCell();
                 tableModule.hideTableTools();
@@ -1166,7 +1220,7 @@
         {
             name: 'DeleteRow',
             icon: RemoveRow,
-            tip: '删除当前行',
+            tip: 'Delete Row',
             handle: (tableModule) => {
                 tableModule.removeRow();
                 tableModule.hideTableTools();
@@ -1175,7 +1229,7 @@
         {
             name: 'DeleteColumn',
             icon: RemoveColumn,
-            tip: '删除当前列',
+            tip: 'Delete Column',
             handle: (tableModule) => {
                 tableModule.removeCol();
                 tableModule.hideTableTools();
@@ -1184,7 +1238,7 @@
         {
             name: 'DeleteTable',
             icon: RemoveTable,
-            tip: '删除当前表格',
+            tip: 'Delete table',
             handle: (tableModule) => {
                 tableModule.deleteTable();
             },
@@ -1196,7 +1250,7 @@
             name: 'BackgroundColor',
             icon: Color,
             isColorChoose: true,
-            tip: '设置背景颜色',
+            tip: 'Set background color',
             handle: (tableModule, selectedTds, color) => {
                 tableModule.setBackgroundColor(selectedTds, color);
             },
@@ -1209,6 +1263,8 @@
         menu;
         selectedTds = [];
         updateUsedColor;
+        colorItemClass = `color-${randomId()}`;
+        tooltipItem = [];
         constructor(tableModule, quill, options) {
             this.tableModule = tableModule;
             this.quill = quill;
@@ -1222,7 +1278,7 @@
                 colorValue.map((c) => usedColors.add(c));
             }
             catch { }
-            this.updateUsedColor = debounce((menuItem, color) => {
+            this.updateUsedColor = debounce((color) => {
                 if (color) {
                     usedColors.add(color);
                 }
@@ -1232,15 +1288,17 @@
                     saveColors.map(v => usedColors.add(v));
                 }
                 localStorage.setItem(this.options.localstorageKey, JSON.stringify(Array.from(usedColors)));
-                const usedColorWrapper = menuItem.querySelector('.table-color-used');
-                if (!usedColorWrapper)
-                    return;
-                usedColorWrapper.innerHTML = '';
-                for (const recordColor of usedColors) {
-                    const colorItem = document.createElement('div');
-                    colorItem.classList.add('table-color-used-item');
-                    colorItem.style.backgroundColor = recordColor;
-                    usedColorWrapper.appendChild(colorItem);
+                const usedColorWrappers = Array.from(document.querySelectorAll(`.${this.colorItemClass}.table-color-used`));
+                for (const usedColorWrapper of usedColorWrappers) {
+                    if (!usedColorWrapper)
+                        continue;
+                    usedColorWrapper.innerHTML = '';
+                    for (const recordColor of usedColors) {
+                        const colorItem = document.createElement('div');
+                        colorItem.classList.add('table-color-used-item');
+                        colorItem.style.backgroundColor = recordColor;
+                        usedColorWrapper.appendChild(colorItem);
+                    }
                 }
             }, 1000);
             this.menu = this.buildTools();
@@ -1258,7 +1316,7 @@
             const toolBox = this.quill.addContainer('ql-table-selection-tool');
             for (const tool of this.options.tools) {
                 const { name, icon, handle, isColorChoose, tip = '' } = tool;
-                let item = document.createElement(isColorChoose ? 'label' : 'span');
+                const item = document.createElement(isColorChoose ? 'label' : 'span');
                 item.classList.add('ql-table-selection-item');
                 if (name === 'break') {
                     item.classList.add('break');
@@ -1285,6 +1343,7 @@
                         });
                         const usedColorWrap = document.createElement('div');
                         usedColorWrap.classList.add('table-color-used');
+                        usedColorWrap.classList.add(this.colorItemClass);
                         item.appendChild(usedColorWrap);
                         for (const recordColor of usedColors) {
                             const colorItem = document.createElement('div');
@@ -1292,33 +1351,6 @@
                             colorItem.style.backgroundColor = recordColor;
                             usedColorWrap.appendChild(colorItem);
                         }
-                        item.addEventListener('mouseenter', () => {
-                            if (usedColors.size === 0)
-                                return;
-                            Object.assign(usedColorWrap.style, {
-                                display: 'flex',
-                            });
-                            usedColorWrap.classList.remove('left-out');
-                            usedColorWrap.classList.remove('right-out');
-                            const rect = usedColorWrap.getBoundingClientRect();
-                            if (rect.right > window.innerWidth) {
-                                usedColorWrap.classList.add('right-out');
-                            }
-                            else {
-                                usedColorWrap.classList.remove('right-out');
-                            }
-                            if (rect.left < 0) {
-                                usedColorWrap.classList.add('left-out');
-                            }
-                            else {
-                                usedColorWrap.classList.remove('left-out');
-                            }
-                        });
-                        item.addEventListener('mouseleave', () => {
-                            Object.assign(usedColorWrap.style, {
-                                display: 'none',
-                            });
-                        });
                         usedColorWrap.addEventListener('click', (e) => {
                             e.preventDefault();
                             const item = e.target;
@@ -1326,11 +1358,13 @@
                                 this.tableModule.setBackgroundColor(this.selectedTds, item.style.backgroundColor);
                             }
                         });
+                        const tooltipItem = createToolTip(item, { content: usedColorWrap, direction: 'top' });
+                        tooltipItem && this.tooltipItem.push(tooltipItem);
                         if (isFunction(handle)) {
                             item.addEventListener('click', e => e.stopPropagation());
                             input.addEventListener('input', () => {
                                 handle(this.tableModule, this.selectedTds, input.value);
-                                this.updateUsedColor(item, input.value);
+                                this.updateUsedColor(input.value);
                             }, false);
                         }
                         item.appendChild(input);
@@ -1343,7 +1377,8 @@
                     }
                     const tipText = this.options.tipTexts[name] || tip;
                     if (tipText && tip) {
-                        item = createToolTip(item, { msg: tipText, delay: 150 });
+                        const tooltipItem = createToolTip(item, { msg: tipText });
+                        tooltipItem && this.tooltipItem.push(tooltipItem);
                     }
                 }
                 toolBox.appendChild(item);
@@ -1385,6 +1420,8 @@
         destroy() {
             if (!this.menu)
                 return;
+            for (const tooltip of this.tooltipItem)
+                tooltip.remove();
             this.menu.remove();
             this.menu = null;
         }
@@ -1505,9 +1542,6 @@
             this.showSelection();
             const mouseMoveHandler = (mousemoveEvent) => {
                 const { button, target, clientX, clientY } = mousemoveEvent;
-                if (this.selectedTds.length > 1) {
-                    mousemoveEvent.preventDefault();
-                }
                 const closestTable = target.closest('.ql-table');
                 if (button !== 0
                     || !closestTable
@@ -1517,6 +1551,9 @@
                 this.dragging = true;
                 const movePoint = { x: clientX, y: clientY };
                 this.selectedTds = this.computeSelectedTds(startPoint, movePoint);
+                if (this.selectedTds.length > 1) {
+                    this.quill.blur();
+                }
                 this.updateSelection();
             };
             const mouseUpHandler = () => {
@@ -1738,10 +1775,13 @@
             };
             const handleMouseup = () => {
                 const w = Number.parseInt(tipRowBreak.dataset.w);
-                tableRowHeads[curRowIndex].style.height = `${w}px`;
                 this.tableRows[curRowIndex].setHeight(w);
                 const tableWrapperRect = this.tableWrapper.domNode.getBoundingClientRect();
                 this.rowHeadWrapper.style.height = `${tableWrapperRect.height}px`;
+                for (const [i, row] of this.tableRows.entries()) {
+                    const rect = row.domNode.getBoundingClientRect();
+                    tableRowHeads[i].style.height = `${rect.height}px`;
+                }
                 appendTo.removeChild(tipRowBreak);
                 tipRowBreak = null;
                 curRowIndex = -1;
@@ -1876,6 +1916,7 @@
     class TableUp {
         static keyboradHandler = {
             'forbid remove table by backspace': {
+                bindInHead: true,
                 key: 'Backspace',
                 collapsed: true,
                 offset: 0,
@@ -1896,17 +1937,43 @@
                 },
             },
             'forbid remove table by delete': {
+                bindInHead: true,
                 key: 'Delete',
                 collapsed: true,
                 handler(range, context) {
                     const line = this.quill.getLine(range.index);
                     const blot = line[0];
                     const offsetInline = line[1];
-                    if (blot.next instanceof TableWrapperFormat && offsetInline === blot.length() - 1)
+                    if ((blot.next instanceof TableWrapperFormat || blot.next instanceof TableColFormat) && offsetInline === blot.length() - 1)
                         return false;
                     if (context.format[blotName.tableCellInner]) {
                         const tableInnerBlot = findParentBlot(blot, blotName.tableCellInner);
                         if (blot === tableInnerBlot.children.tail && offsetInline === blot.length() - 1) {
+                            return false;
+                        }
+                    }
+                    return true;
+                },
+            },
+            'after table insert new line': {
+                // lick 'code exit'
+                bindInHead: true,
+                key: 'Enter',
+                collapsed: true,
+                format: [blotName.tableCellInner],
+                prefix: /^$/,
+                suffix: /^\s*$/,
+                handler(range) {
+                    // if have tow empty lines in table cell. enter will exit table and add a new line after table
+                    const [line] = this.quill.getLine(range.index);
+                    let numLines = 2;
+                    let cur = line;
+                    while (cur !== null && cur.length() <= 1) {
+                        cur = cur.prev;
+                        numLines -= 1;
+                        if (numLines <= 0) {
+                            this.quill.insertText(range.index + 1, '\n');
+                            this.quill.setSelection(range.index + 1, Quill.sources.SILENT);
                             return false;
                         }
                     }
@@ -1929,6 +1996,7 @@
             TableCellInnerFormat.requiredContainer = TableCellFormat;
             Quill.register({
                 'blots/scroll': ScrollOverride,
+                'blots/block': BlockOverride,
                 [`formats/${blotName.tableCell}`]: TableCellFormat,
                 [`formats/${blotName.tableCellInner}`]: TableCellInnerFormat,
                 [`formats/${blotName.tableRow}`]: TableRowFormat,
@@ -1963,6 +2031,16 @@
                     this.picker.label.addEventListener('mousedown', this.handleInViewport);
                 }
             }
+            const keyboard = this.quill.getModule('keyboard');
+            for (const handle of Object.values(TableUp.keyboradHandler)) {
+                // insert before default key handler
+                if (handle.bindInHead) {
+                    keyboard.bindings[handle.key].unshift(handle);
+                }
+                else {
+                    keyboard.addBinding(handle.key, handle);
+                }
+            }
             this.quill.root.addEventListener('click', (evt) => {
                 const path = evt.composedPath();
                 if (!path || path.length <= 0)
@@ -1984,20 +2062,36 @@
             });
             this.quill.on(Quill.events.EDITOR_CHANGE, (event, range) => {
                 if (event === Quill.events.SELECTION_CHANGE && range) {
-                    const [blot] = this.quill.getLine(range.index);
+                    const [startBlot] = this.quill.getLine(range.index);
+                    const [endBlot] = this.quill.getLine(range.index + range.length);
+                    // not allow to select between TableCol
+                    if (range.length === 0 && startBlot instanceof TableColFormat) {
+                        return this.quill.setSelection(range.index - 1, 0, Quill.sources.SILENT);
+                    }
+                    else {
+                        if (startBlot instanceof TableColFormat) {
+                            return this.quill.setSelection(range.index - 1, range.length + 1, Quill.sources.SILENT);
+                        }
+                        else if (endBlot instanceof TableColFormat) {
+                            return this.quill.setSelection(range.index - 1, range.length - 1, Quill.sources.SILENT);
+                        }
+                    }
+                    // if range is not in table. hide table tools
                     try {
-                        findParentBlot(blot, blotName.tableMain);
+                        findParentBlot(startBlot, blotName.tableMain);
+                        findParentBlot(endBlot, blotName.tableMain);
                         return;
                     }
                     catch { }
                     this.hideTableTools();
                 }
             });
+            this.pasteTableHandler();
             this.listenBalanceCells();
         }
         resolveOptions(options) {
             return Object.assign({
-                isCustom: true,
+                customBtn: true,
                 texts: this.resolveTexts(options.texts || {}),
                 full: true,
             }, options);
@@ -2005,15 +2099,151 @@
         ;
         resolveTexts(options) {
             return Object.assign({
-                customBtn: '自定义行列数',
-                confirmText: '确认',
-                cancelText: '取消',
-                rowText: '行数',
-                colText: '列数',
-                notPositiveNumberError: '请输入正整数',
+                customBtnText: 'Custom',
+                confirmText: 'Confirm',
+                cancelText: 'Cancel',
+                rowText: 'Row',
+                colText: 'Column',
+                notPositiveNumberError: 'Please enter a positive integer',
             }, options);
         }
         ;
+        pasteTableHandler() {
+            let tableId = randomId();
+            let rowId = randomId();
+            let colIds = [];
+            let cellCount = 0;
+            let colCount = 0;
+            this.quill.clipboard.addMatcher('table', (node, delta) => {
+                if (delta.ops.length === 0)
+                    return delta;
+                let colDelta;
+                // paste table have or not col
+                let hasCol = false;
+                if (delta.ops[0] && typeof delta.ops[0].insert !== 'string') {
+                    for (let i = 0; i < delta.ops.length; i++) {
+                        const { insert, attributes } = delta.ops[i];
+                        if (insert && typeof insert !== 'string' && insert[blotName.tableCol]) {
+                            hasCol = true;
+                            break;
+                        }
+                        if (attributes && attributes[blotName.tableCellInner]) {
+                            break;
+                        }
+                    }
+                    hasCol = !!delta.ops[0].insert?.[blotName.tableCol];
+                }
+                let isFull = this.options.full;
+                if (hasCol) {
+                    isFull = !!delta.ops[0].insert?.[blotName.tableCol]?.full;
+                }
+                // computed default col width
+                const editorStyle = window.getComputedStyle(this.quill.root);
+                const editorPaddingLeft = Number.parseFloat(editorStyle.paddingLeft);
+                const editorPaddingRight = Number.parseFloat(editorStyle.paddingRight);
+                const editorInnerWidth = Number.parseFloat(editorStyle.width) - editorPaddingLeft - editorPaddingRight;
+                const defaultColWidth = isFull
+                    ? `${Math.max(100 / colIds.length, tableColMinWidthPre)}%`
+                    : `${Math.max(editorInnerWidth / colIds.length, tableColMinWidthPx)}px`;
+                if (!hasCol) {
+                    colDelta = colIds.reduce((colDelta, id) => {
+                        colDelta.insert({
+                            [blotName.tableCol]: {
+                                colId: id,
+                                tableId,
+                                width: defaultColWidth,
+                                full: isFull,
+                            },
+                        });
+                        return colDelta;
+                    }, new Delta());
+                }
+                else {
+                    for (let i = 0; i < delta.ops.length; i++) {
+                        const insert = delta.ops[i].insert;
+                        if (!insert || typeof insert === 'string' || !insert[blotName.tableCol]) {
+                            if (insert === '\n') {
+                                delta.ops.splice(i, 1);
+                            }
+                            break;
+                        }
+                        Object.assign(insert[blotName.tableCol], {
+                            tableId,
+                            colId: colIds[i],
+                            full: isFull,
+                            width: !insert[blotName.tableCol].width
+                                ? defaultColWidth
+                                : Number.parseFloat(insert[blotName.tableCol].width) + (isFull ? '%' : 'px'),
+                        });
+                    }
+                }
+                // remove quill origin table format
+                for (let i = 0; i < delta.ops.length; i++) {
+                    const attrs = delta.ops[i].attributes;
+                    if (attrs && attrs.table) {
+                        delete attrs.table;
+                    }
+                }
+                tableId = randomId();
+                colIds = [];
+                cellCount = 0;
+                colCount = 0;
+                delta = colDelta ? colDelta.concat(delta) : delta;
+                // insert break line before table and after table
+                delta.ops.unshift({ insert: '\n' });
+                delta.ops.push({ insert: '\n' });
+                return delta;
+            });
+            this.quill.clipboard.addMatcher('col', (node) => {
+                colIds[colCount] = randomId();
+                const delta = new Delta().insert({
+                    [blotName.tableCol]: {
+                        tableId,
+                        colId: colIds[colCount],
+                        full: Object.hasOwn(node.dataset, 'full'),
+                    },
+                });
+                colCount += 1;
+                return delta;
+            });
+            this.quill.clipboard.addMatcher('tr', (node, delta) => {
+                rowId = randomId();
+                cellCount = 0;
+                return delta;
+            });
+            const matchCell = (node, delta) => {
+                const cell = node;
+                const rowspan = cell.getAttribute('rowspan') || 1;
+                const colspan = cell.getAttribute('colspan') || 1;
+                const height = cell.getAttribute('height') || 1;
+                const backgroundColor = cell.style.backgroundColor || undefined;
+                if (!colIds[cellCount]) {
+                    for (let i = cellCount; i >= 0; i--) {
+                        if (!colIds[i])
+                            colIds[i] = randomId();
+                    }
+                }
+                const colId = colIds[cellCount];
+                cellCount += Number(colspan);
+                if (delta.slice(delta.length() - 1).ops[0]?.insert !== '\n') {
+                    delta.insert('\n');
+                }
+                // add each insert tableCellInner format
+                return delta.compose(new Delta().retain(delta.length(), {
+                    [blotName.tableCellInner]: {
+                        tableId,
+                        rowId,
+                        colId,
+                        rowspan,
+                        colspan,
+                        height,
+                        backgroundColor,
+                    },
+                }));
+            };
+            this.quill.clipboard.addMatcher('td', matchCell);
+            this.quill.clipboard.addMatcher('th', matchCell);
+        }
         showTableTools(table, quill) {
             if (table) {
                 this.table = table;
@@ -2042,7 +2272,7 @@
                             this.picker.close();
                         }
                     },
-                    isCustom: this.options.isCustom,
+                    customBtn: this.options.customBtn,
                     texts: this.options.texts,
                 });
             dom.appendChild(this.selector);
@@ -2119,9 +2349,11 @@
             // calculate all cells
             const trBlots = tableBlot.getRows();
             const tableColIds = tableBlot.getColIds();
-            if (trBlots.length === 0 || tableColIds.length === 0) {
+            if (trBlots.length === 0) {
                 return tableBlot.remove();
             }
+            if (tableColIds.length === 0)
+                return;
             // append by col
             const cellSpanMap = new Array(trBlots.length).fill(0).map(() => new Array(tableColIds.length).fill(false));
             const tableId = tableBlot.tableId;
@@ -2524,6 +2756,7 @@
         }
     }
 
+    exports.BlockOverride = BlockOverride;
     exports.ContainerFormat = ContainerFormat;
     exports.ScrollOverride = ScrollOverride;
     exports.TableBodyFormat = TableBodyFormat;
