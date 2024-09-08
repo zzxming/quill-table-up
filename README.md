@@ -4,6 +4,13 @@ Enhancement of quill table module
 
 [demo](https://zzxming.github.io/quill-table-up/)
 
+- [x] complete UI operation process
+- [x] insert/delete row/column/table; merge/split cells
+- [x] support insert header/list/video/image/code-block
+- [x] control cells width/height/background color
+- [x] line break in cells
+- [x] not effect on other formats
+
 ## Usage
 
 ```sh
@@ -14,7 +21,8 @@ npm install quill-table-up
 import Quill from 'quill';
 import TableUp from 'quill-table-up';
 import 'quill-table-up/index.css';
-// import 'quill-table-up/table-creator.css'  // If using the default customSelect option. You need to import this css
+// If using the default customSelect option. You need to import this css
+import 'quill-table-up/table-creator.css';
 
 Quill.register({ 'modules/tableUp': TableUp }, true);
 
@@ -35,14 +43,14 @@ const quill = new Quill('#editor', {
 
 ### TableUp Options
 
-| attribute    | description                                                         | type                                    | default        |
-| ------------ | ------------------------------------------------------------------- | --------------------------------------- | -------------- |
-| full         | if set `true`. width max will be 100%                               | `boolean`                               | `true`         |
-| customBtn    | display a custom button to custom row and column number add a table | `boolean`                               | `false`        |
-| texts        | the text used to create the table                                   | `TableTextOptions`                      | `defaultTexts` |
-| customSelect | display a custom select to custom row and column number add a table | `(tableModule: TableUp) => HTMLElement` | -              |
-| selection    | moduel TableSelection options                                       | `TableSelection`                        | -              |
-| resizer      | moduel TableResize options                                          | `TableResizeOptions`                    | -              |
+| attribute    | description                                                                                                                             | type                                    | default        |
+| ------------ | --------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------- | -------------- |
+| full         | if set `true`. width max will be 100%                                                                                                   | `boolean`                               | `true`         |
+| customBtn    | display a custom button to custom row and column number add a table                                                                     | `boolean`                               | `false`        |
+| texts        | the text used to create the table                                                                                                       | `TableTextOptions`                      | `defaultTexts` |
+| customSelect | display a custom select to custom row and column number add a table. the DOM returned by the function will replace the default selector | `(tableModule: TableUp) => HTMLElement` | -              |
+| selection    | moduel TableSelection options                                                                                                           | `TableSelection`                        | -              |
+| resizer      | moduel TableResize options                                                                                                              | `TableResizeOptions`                    | -              |
 
 <details>
   <summary> default value </summary>
