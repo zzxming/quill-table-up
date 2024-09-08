@@ -280,9 +280,13 @@ export const createToolTip = (target: HTMLElement, options: ToolTipOptions = {})
     tooltipContainer.appendChild(tooltip);
     let timer: ReturnType<typeof setTimeout> | null;
 
+    const transitionendHandler = () => {
+      tooltip.classList.add('hidden');
+    };
     const open = () => {
       if (timer) clearTimeout(timer);
       timer = setTimeout(() => {
+        tooltip.removeEventListener('transitionend', transitionendHandler);
         tooltip.classList.remove('hidden');
         const elRect = target.getBoundingClientRect();
         const contentRect = tooltip.getBoundingClientRect();
@@ -326,10 +330,7 @@ export const createToolTip = (target: HTMLElement, options: ToolTipOptions = {})
       if (timer) clearTimeout(timer);
       timer = setTimeout(() => {
         tooltip.classList.add('transparent');
-        tooltip.addEventListener('transitionend', () => {
-          tooltip.classList.add('hidden');
-        }, { once: true });
-        timer = null;
+        tooltip.addEventListener('transitionend', transitionendHandler, { once: true });
       }, delay);
     };
     target.addEventListener('mouseenter', open);
