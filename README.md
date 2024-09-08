@@ -69,12 +69,13 @@ const defaultTexts = {
 
 ### TableMenu Options
 
-| attribute       | description                        | type                     | default                 |
-| --------------- | ---------------------------------- | ------------------------ | ----------------------- |
-| tipText         | display tip text when hover icon   | `boolean`                | `true`                  |
-| tipTexts        | the text to replace tools tip text | `Record<string, string>` | `{}`                    |
-| localstorageKey | used color save localstorage key   | `string`                 | `__table-bg-used-color` |
-| tools           | display tip text when hover icon   | `Tool[]`                 | `defaultTools`          |
+| attribute       | description                                                                      | type                     | default                 |
+| --------------- | -------------------------------------------------------------------------------- | ------------------------ | ----------------------- |
+| tipText         | display tip text when hover icon                                                 | `boolean`                | `true`                  |
+| tipTexts        | the text to replace tools tip text                                               | `Record<string, string>` | `{}`                    |
+| localstorageKey | used color save localstorage key                                                 | `string`                 | `__table-bg-used-color` |
+| tools           | display tip text when hover icon                                                 | `Tool[]`                 | `defaultTools`          |
+| contextmenu     | table menu will display when selected at least one cell and right click on table | `boolean`                | `false`                 |
 
 <details>
   <summary> types and default value </summary>
