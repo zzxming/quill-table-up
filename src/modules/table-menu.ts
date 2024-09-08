@@ -337,29 +337,28 @@ export class TableMenu {
     }
     else {
       if (!position) {
-        return this.buildTools();
+        return this.hideTools();
       }
       const { x, y } = position;
       const containerRect = this.quill.container.getBoundingClientRect();
-      const resLeft = x - containerRect.left;
-      const resTop = y - containerRect.top;
-
+      let resLeft = x - containerRect.left;
+      let resTop = y - containerRect.top;
       Object.assign(this.menu.style, {
         display: 'flex',
+        left: null,
+        top: null,
+      });
+      const menuRect = this.menu.getBoundingClientRect();
+      if (resLeft + menuRect.width + containerRect.left > containerRect.right) {
+        resLeft = containerRect.width - menuRect.width - 15;
+      }
+      if (resTop + menuRect.height + containerRect.top > containerRect.bottom) {
+        resTop = containerRect.height - menuRect.height - 15;
+      }
+      Object.assign(this.menu.style, {
         left: `${resLeft}px`,
         top: `${resTop}px`,
       });
-      const menuRect = this.menu.getBoundingClientRect();
-      if (menuRect.right > document.body.clientWidth) {
-        Object.assign(this.menu.style, {
-          left: `${resLeft - menuRect.width}px`,
-        });
-      }
-      if (menuRect.bottom > document.body.clientHeight) {
-        Object.assign(this.menu.style, {
-          top: `${resTop - menuRect.height}px`,
-        });
-      }
     }
   }
 
