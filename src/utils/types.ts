@@ -16,7 +16,7 @@ export interface TableMenuOptions {
   tipText: boolean;
   tipTexts: Record<string, string>;
   tools: Tool[];
-  // contextmenu: boolean;
+  contextmenu: boolean;
   localstorageKey: string;
 };
 export interface TableSelectionOptions {
