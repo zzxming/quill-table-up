@@ -4,12 +4,6 @@ Enhancement of quill table module
 
 [demo](https://zzxming.github.io/quill-table-up/)
 
-## Why
-
-Quill2.0 supports table related APIs, but unfortunately it did not complete UI operations, so this module is available to solve this problem.
-
-This module is only an ui extension of the basic table module, without adding any new APIs.
-
 ## Usage
 
 ```sh
