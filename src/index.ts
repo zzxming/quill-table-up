@@ -6,6 +6,8 @@ import type { Context } from 'quill/modules/keyboard';
 import type Toolbar from 'quill/modules/toolbar';
 import type Keyboard from 'quill/modules/keyboard';
 import type { Delta as TypeDelta } from 'quill/core';
+import type { BlockEmbed as TypeBlockEmbed } from 'quill/blots/block';
+import type TypeBlock from 'quill/blots/block';
 import type { TableColValue, TableTextOptions, TableUpOptions } from './utils';
 import { blotName, createSelectBox, debounce, findParentBlot, isFunction, randomId, tabbleToolName, tableColMinWidthPre, tableColMinWidthPx } from './utils';
 import { BlockOverride, ScrollOverride, TableBodyFormat, TableCellFormat, TableCellInnerFormat, TableColFormat, TableColgroupFormat, TableMainFormat, TableRowFormat, TableWrapperFormat } from './formats';
@@ -85,6 +87,31 @@ export class TableUp {
         if (context.format[blotName.tableCellInner]) {
           const tableInnerBlot = findParentBlot(blot, blotName.tableCellInner);
           if (blot === tableInnerBlot.children.tail && offsetInline === blot.length() - 1) {
+            return false;
+          }
+        }
+        return true;
+      },
+    },
+    'after table insert new line': {
+      // lick 'code exit'
+      bindInHead: true,
+      key: 'Enter',
+      collapsed: true,
+      format: [blotName.tableCellInner],
+      prefix: /^$/,
+      suffix: /^\s*$/,
+      handler(this: { quill: Quill }, range: Range) {
+        // if have tow empty lines in table cell. enter will exit table and add a new line after table
+        const [line] = this.quill.getLine(range.index);
+        let numLines = 2;
+        let cur = line;
+        while (cur !== null && cur.length() <= 1) {
+          cur = cur.prev as TypeBlock | TypeBlockEmbed | null;
+          numLines -= 1;
+          if (numLines <= 0) {
+            this.quill.insertText(range.index + 1, '\n');
+            this.quill.setSelection(range.index + 1, Quill.sources.SILENT);
             return false;
           }
         }
