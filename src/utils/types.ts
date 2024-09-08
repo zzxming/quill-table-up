@@ -14,8 +14,9 @@ export type Tool = ToolOption | ToolOptionBreak;
 
 export interface TableMenuOptions {
   tipText: boolean;
-  tipTexts: Record<string, any>;
+  tipTexts: Record<string, string>;
   tools: Tool[];
+  // contextmenu: boolean;
   localstorageKey: string;
 };
 export interface TableSelectionOptions {
@@ -34,9 +35,9 @@ export interface TableResizeOptions {
   size: number;
 }
 export interface TableUpOptions {
-  customSelect?: (this: TableUp) => HTMLElement;
+  customSelect?: (tableModule: TableUp) => HTMLElement;
   full: boolean;
-  isCustom: boolean;
+  customBtn: boolean;
   texts: TableTextOptions;
   selection?: TableSelectionOptions;
   resizer?: TableResizeOptions;

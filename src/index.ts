@@ -247,7 +247,7 @@ export class TableUp {
 
   resolveOptions(options: Partial<TableUpOptions>) {
     return Object.assign({
-      isCustom: true,
+      customBtn: true,
       texts: this.resolveTexts(options.texts || {}),
       full: true,
     } as TableUpOptions, options);
@@ -255,12 +255,12 @@ export class TableUp {
 
   resolveTexts(options: Partial<TableTextOptions>) {
     return Object.assign({
-      customBtn: '自定义行列数',
-      confirmText: '确认',
-      cancelText: '取消',
-      rowText: '行数',
-      colText: '列数',
-      notPositiveNumberError: '请输入正整数',
+      customBtnText: 'Custom',
+      confirmText: 'Confirm',
+      cancelText: 'Cancel',
+      rowText: 'Row',
+      colText: 'Column',
+      notPositiveNumberError: 'Please enter a positive integer',
     }, options);
   };
 
@@ -439,7 +439,7 @@ export class TableUp {
             this.picker.close();
           }
         },
-        isCustom: this.options.isCustom,
+        customBtn: this.options.customBtn,
         texts: this.options.texts,
       });
     dom.appendChild(this.selector);

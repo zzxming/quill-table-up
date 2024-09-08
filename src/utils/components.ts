@@ -177,7 +177,7 @@ interface TableSelectOptions {
   row?: number;
   col?: number;
   onSelect?: (row: number, col: number) => void;
-  isCustom?: boolean;
+  customBtn?: boolean;
   texts?: TableTextOptions;
 }
 export const createSelectBox = (options: TableSelectOptions = {}) => {
@@ -235,7 +235,7 @@ export const createSelectBox = (options: TableSelectOptions = {}) => {
   });
   selectDom.appendChild(selectBlock);
 
-  if (options.isCustom) {
+  if (options.customBtn) {
     const texts = options.texts || {};
     const selectCustom = document.createElement('div');
     selectCustom.classList.add('select-box__custom');

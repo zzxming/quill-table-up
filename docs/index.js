@@ -11,7 +11,7 @@ const quill = new Quill('#editor', {
   modules: {
     toolbar: [
       ['bold', 'italic', 'underline', 'strike'], // toggled buttons
-      ['blockquote', 'code-block'],
+      ['blockquote', 'code-block', 'code'],
       ['link', 'image', 'video', 'formula'],
       [{ header: 1 }, { header: 2 }], // custom button values
       [{ list: 'ordered' }, { list: 'bullet' }, { list: 'check' }],
@@ -28,24 +28,34 @@ const quill = new Quill('#editor', {
       ['clean'],
     ],
     tableUp: {
-      full: true,
+      full: false,
       selection: {
         selectColor: '#f40',
         tableMenu: {
           localstorageKey: 'used-color',
           tipText: true,
-          tipTexts: {
-            BackgroundColor: 'set background color',
-          },
+          // tipTexts: {
+          //   InsertTop: '向上插入一行',
+          //   InsertRight: '向右插入一列',
+          //   InsertBottom: '向下插入一行',
+          //   InsertLeft: '向左插入一列',
+          //   MergeCell: '合并单元格',
+          //   SplitCell: '拆分单元格',
+          //   DeleteRow: '删除当前行',
+          //   DeleteColumn: '删除当前列',
+          //   DeleteTable: '删除当前表格',
+          //   BackgroundColor: '设置背景颜色',
+          // },
+          contextmenu: true,
         },
       },
       texts: {
-        customBtnText: 'Custom',
-        confirmText: 'Confirm',
-        cancelText: 'Cancel',
-        rowText: 'Row',
-        colText: 'Column',
-        notPositiveNumberError: 'Please enter a positive integer',
+        customBtn: '自定义行列数',
+        confirmText: '确认',
+        cancelText: '取消',
+        rowText: '行数',
+        colText: '列数',
+        notPositiveNumberError: '请输入正整数',
       },
     },
   },
@@ -53,47 +63,72 @@ const quill = new Quill('#editor', {
 
 quill.setContents([
   // { insert: '\n' },
-  // { attributes: { 'table-up-col': { tableId: '3f9v65d1jea', colId: 'dm2iv5nk59i', width: '20%', full: true } }, insert: '\n' },
-  // { attributes: { 'table-up-col': { tableId: '3f9v65d1jea', colId: '110vmas75gg', width: '20%', full: true } }, insert: '\n' },
-  // { attributes: { 'table-up-col': { tableId: '3f9v65d1jea', colId: 'xngnqidm9qq', width: '20%', full: true } }, insert: '\n' },
-  // { attributes: { 'table-up-col': { tableId: '3f9v65d1jea', colId: 'uf00txcv6fi', width: '20%', full: true } }, insert: '\n' },
-  // { attributes: { 'table-up-col': { tableId: '3f9v65d1jea', colId: 'n53lvqhi2p', width: '20%', full: true } }, insert: '\n' },
-  // { attributes: { 'table-up-cell-inner': { tableId: '3f9v65d1jea', rowId: 'nmyr8vn3828', colId: 'dm2iv5nk59i', rowspan: 3, colspan: 3 } }, insert: '\n\n\n\n\n' },
-  // { attributes: { 'table-up-cell-inner': { tableId: '3f9v65d1jea', rowId: 'nmyr8vn3828', colId: 'uf00txcv6fi', rowspan: 1, colspan: 1, backgroundColor: '#e44e4e' } }, insert: '\n' },
-  // { attributes: { 'table-up-cell-inner': { tableId: '3f9v65d1jea', rowId: 'nmyr8vn3828', colId: 'n53lvqhi2p', rowspan: 4, colspan: 1 } }, insert: '\n\n\n' },
-  // { attributes: { 'table-up-cell-inner': { tableId: '3f9v65d1jea', rowId: 'oepb5fr3urk', colId: 'uf00txcv6fi', rowspan: 1, colspan: 1, backgroundColor: '#1b6a24' } }, insert: '\n' },
-  // { attributes: { 'table-up-cell-inner': { tableId: '3f9v65d1jea', rowId: 'gt997kxksnc', colId: 'uf00txcv6fi', rowspan: 1, colspan: 1 } }, insert: '\n' },
-  // { attributes: { 'table-up-cell-inner': { tableId: '3f9v65d1jea', rowId: 'umw8jbf0ha', colId: 'dm2iv5nk59i', rowspan: 1, colspan: 1 } }, insert: '\n' },
-  // { attributes: { 'table-up-cell-inner': { tableId: '3f9v65d1jea', rowId: 'umw8jbf0ha', colId: '110vmas75gg', rowspan: 1, colspan: 1 } }, insert: '\n' },
-  // { attributes: { 'table-up-cell-inner': { tableId: '3f9v65d1jea', rowId: 'umw8jbf0ha', colId: 'xngnqidm9qq', rowspan: 2, colspan: 2 } }, insert: '\n\n' },
-  // { attributes: { 'table-up-cell-inner': { tableId: '3f9v65d1jea', rowId: 'cvuztwvj1hl', colId: 'dm2iv5nk59i', rowspan: 1, colspan: 1 } }, insert: '\n' },
-  // { attributes: { 'table-up-cell-inner': { tableId: '3f9v65d1jea', rowId: 'cvuztwvj1hl', colId: '110vmas75gg', rowspan: 1, colspan: 1 } }, insert: '\n' },
-  // { attributes: { 'table-up-cell-inner': { tableId: '3f9v65d1jea', rowId: 'cvuztwvj1hl', colId: 'n53lvqhi2p', rowspan: 1, colspan: 1 } }, insert: '\n' },
+  // { insert: { 'table-up-col': { tableId: 'f7npa0zkd45', colId: 'iq4ith1ugn', width: 277 } } },
+  // { insert: { 'table-up-col': { tableId: 'f7npa0zkd45', colId: 'yqzj85zbeo', width: 277 } } },
+  // { insert: 'qwgwqg' },
+  // { attributes: { code: true }, insert: 'gwqgwqgwqg' },
+  // { attributes: { 'table-up-cell-inner': { tableId: 'f7npa0zkd45', rowId: 'b0dsuobaok4', colId: 'iq4ith1ugn', rowspan: 1, colspan: 1 } }, insert: '\n' },
+  // { insert: 'qwgqwgwqgwqg' },
+  // { attributes: { 'code-block': 'plain', 'table-up-cell-inner': { tableId: 'f7npa0zkd45', rowId: 'b0dsuobaok4', colId: 'yqzj85zbeo', rowspan: 1, colspan: 1 } }, insert: '\n' },
+  // { insert: 'qwh' },
+  // { attributes: { 'code-block': 'plain', 'table-up-cell-inner': { tableId: 'f7npa0zkd45', rowId: 'b0dsuobaok4', colId: 'yqzj85zbeo', rowspan: 1, colspan: 1 } }, insert: '\n' },
+  // { insert: 'f' },
+  // { attributes: { 'code-block': 'plain', 'table-up-cell-inner': { tableId: 'f7npa0zkd45', rowId: 'b0dsuobaok4', colId: 'yqzj85zbeo', rowspan: 1, colspan: 1 } }, insert: '\n\n' },
+  // { insert: 'h' },
+  // { attributes: { 'code-block': 'plain', 'table-up-cell-inner': { tableId: 'f7npa0zkd45', rowId: 'b0dsuobaok4', colId: 'yqzj85zbeo', rowspan: 1, colspan: 1 } }, insert: '\n\n' },
+  // { insert: 'dnj' },
+  // { attributes: { 'code-block': 'plain', 'table-up-cell-inner': { tableId: 'f7npa0zkd45', rowId: 'b0dsuobaok4', colId: 'yqzj85zbeo', rowspan: 1, colspan: 1 } }, insert: '\n' },
   // { insert: '\n' },
 
   { insert: '\n' },
-  { attributes: { 'table-up-col': { tableId: 'hjr9166tp9q', colId: 'f206nc0k1p5', width: 20, full: true } }, insert: '\n' },
-  { attributes: { 'table-up-col': { tableId: 'hjr9166tp9q', colId: 'b9cs6axyak8', width: 20, full: true } }, insert: '\n' },
-  { attributes: { 'table-up-col': { tableId: 'hjr9166tp9q', colId: '7an5x4r4u5y', width: 20, full: true } }, insert: '\n' },
-  { attributes: { 'table-up-col': { tableId: 'hjr9166tp9q', colId: '2mx6frvclp6', width: 20, full: true } }, insert: '\n' },
-  { attributes: { 'table-up-col': { tableId: 'hjr9166tp9q', colId: 'hitkd1yd2g', width: 20, full: true } }, insert: '\n' },
-  { attributes: { 'table-up-cell-inner': { tableId: 'hjr9166tp9q', rowId: '2txhaeyhh8w', colId: 'f206nc0k1p5', rowspan: 3, colspan: 3, height: 0 } }, insert: '\n\n\n\n\n\n\n\n\n' },
-  { attributes: { 'table-up-cell-inner': { tableId: 'hjr9166tp9q', rowId: '2txhaeyhh8w', colId: '2mx6frvclp6', rowspan: 1, colspan: 1, height: 0 } }, insert: '\n' },
-  { attributes: { 'table-up-cell-inner': { tableId: 'hjr9166tp9q', rowId: '2txhaeyhh8w', colId: 'hitkd1yd2g', rowspan: 4, colspan: 1, height: 0 } }, insert: '\n\n\n\n' },
-  { attributes: { 'table-up-cell-inner': { tableId: 'hjr9166tp9q', rowId: '6bvdxvv6006', colId: '2mx6frvclp6', rowspan: 1, colspan: 1, height: 0 } }, insert: '\n' },
-  { attributes: { 'table-up-cell-inner': { tableId: 'hjr9166tp9q', rowId: 'awulj4bjhjh', colId: '2mx6frvclp6', rowspan: 1, colspan: 1, height: 0 } }, insert: '\n' },
-  { attributes: { 'table-up-cell-inner': { tableId: 'hjr9166tp9q', rowId: '8t5z310cs86', colId: 'f206nc0k1p5', rowspan: 1, colspan: 1, height: 0 } }, insert: '\n' },
-  { attributes: { 'table-up-cell-inner': { tableId: 'hjr9166tp9q', rowId: '8t5z310cs86', colId: 'b9cs6axyak8', rowspan: 1, colspan: 1, height: 0 } }, insert: '\n' },
-  { attributes: { 'table-up-cell-inner': { tableId: 'hjr9166tp9q', rowId: '8t5z310cs86', colId: '7an5x4r4u5y', rowspan: 2, colspan: 2, height: 0 } }, insert: '\n\n\n\n' },
-  { attributes: { 'table-up-cell-inner': { tableId: 'hjr9166tp9q', rowId: 'tt9eqwhsz0r', colId: 'f206nc0k1p5', rowspan: 1, colspan: 1, height: 0 } }, insert: '\n' },
-  { attributes: { 'table-up-cell-inner': { tableId: 'hjr9166tp9q', rowId: 'tt9eqwhsz0r', colId: 'b9cs6axyak8', rowspan: 1, colspan: 1, height: 0 } }, insert: '\n' },
-  { attributes: { 'table-up-cell-inner': { tableId: 'hjr9166tp9q', rowId: 'tt9eqwhsz0r', colId: 'hitkd1yd2g', rowspan: 1, colspan: 1, height: 0 } }, insert: '\n' },
+  { insert: { 'table-up-col': { tableId: '6u4kuytbzzh', colId: 'pedy04522cn', width: 20, full: 'true' } } },
+  { insert: { 'table-up-col': { tableId: '6u4kuytbzzh', colId: 'bldcnewj21s', width: 20, full: 'true' } } },
+  { insert: { 'table-up-col': { tableId: '6u4kuytbzzh', colId: 'zyrflypnouc', width: 20, full: 'true' } } },
+  { insert: { 'table-up-col': { tableId: '6u4kuytbzzh', colId: 'm6tip1nl28s', width: 20, full: 'true' } } },
+  { insert: { 'table-up-col': { tableId: '6u4kuytbzzh', colId: 'd05r661z0vp', width: 20, full: 'true' } } },
+  { attributes: { 'table-up-cell-inner': { tableId: '6u4kuytbzzh', rowId: '7k6lukrlm8b', colId: 'pedy04522cn', rowspan: 3, colspan: 3 } }, insert: '\n\n\n\n\n\n\n\n\n' },
+  { attributes: { 'table-up-cell-inner': { tableId: '6u4kuytbzzh', rowId: '7k6lukrlm8b', colId: 'm6tip1nl28s', rowspan: 1, colspan: 1 } }, insert: '\n' },
+  { attributes: { 'table-up-cell-inner': { tableId: '6u4kuytbzzh', rowId: '7k6lukrlm8b', colId: 'd05r661z0vp', rowspan: 4, colspan: 1 } }, insert: '\n\n\n\n' },
+  { attributes: { 'table-up-cell-inner': { tableId: '6u4kuytbzzh', rowId: 'n9whqu82whh', colId: 'm6tip1nl28s', rowspan: 1, colspan: 1 } }, insert: '\n' },
+  { attributes: { 'table-up-cell-inner': { tableId: '6u4kuytbzzh', rowId: 'wpuv02ej5e9', colId: 'm6tip1nl28s', rowspan: 1, colspan: 1 } }, insert: '\n' },
+  { attributes: { 'table-up-cell-inner': { tableId: '6u4kuytbzzh', rowId: '1mqppxcm5mg', colId: 'pedy04522cn', rowspan: 1, colspan: 1 } }, insert: '\n' },
+  { attributes: { 'table-up-cell-inner': { tableId: '6u4kuytbzzh', rowId: '1mqppxcm5mg', colId: 'bldcnewj21s', rowspan: 1, colspan: 1 } }, insert: '\n' },
+  { attributes: { 'table-up-cell-inner': { tableId: '6u4kuytbzzh', rowId: '1mqppxcm5mg', colId: 'zyrflypnouc', rowspan: 2, colspan: 2 } }, insert: '\n\n\n\n' },
+  { attributes: { 'table-up-cell-inner': { tableId: '6u4kuytbzzh', rowId: 'fnpvihdz0a9', colId: 'pedy04522cn', rowspan: 1, colspan: 1 } }, insert: '\n' },
+  { attributes: { 'table-up-cell-inner': { tableId: '6u4kuytbzzh', rowId: 'fnpvihdz0a9', colId: 'bldcnewj21s', rowspan: 1, colspan: 1 } }, insert: '\n' },
+  { attributes: { 'table-up-cell-inner': { tableId: '6u4kuytbzzh', rowId: 'fnpvihdz0a9', colId: 'd05r661z0vp', rowspan: 1, colspan: 1 } }, insert: '\n' },
   { insert: '\n' },
+
+  // { insert: '\n' },
+  // { insert: { 'table-up-col': { tableId: '1', colId: '1', full: 'true', width: 100 } } },
+  // { insert: { video: 'https://quilljs.com/' } },
+  // { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '1', rowspan: 1, colspan: 1 } }, insert: '\n' },
+  // { insert: '\n' },
+  // { insert: '\n' },
+  // { insert: { 'table-up-col': { tableId: '7oymehdtx0k', colId: 'hr7qo4t2dus', full: 'true', width: 100 } } },
+  // { insert: { image: 'https://upload-bbs.miyoushe.com/upload/2024/06/18/5556092/73b7bae28fded7a72d93a35d5559b24c_3979852353547906724.png' } },
+  // { attributes: { 'table-up-cell-inner': { tableId: '7oymehdtx0k', rowId: '69gog08ow04', colId: 'hr7qo4t2dus', rowspan: 1, colspan: 1 } }, insert: '\n' },
+  // { insert: '\n' },
+  // { insert: '\n' },
+  // { insert: { 'table-up-col': { tableId: 'dcxkjqqrkyh', colId: 'xaaktiszroa', width: 100, full: true } } },
+  // { attributes: { background: '#ff9900' }, insert: 'qgwqgwqg' },
+  // { attributes: { 'list': 'bullet', 'table-up-cell-inner': { tableId: 'dcxkjqqrkyh', rowId: 'rjs4sxwojek', colId: 'xaaktiszroa', rowspan: 1, colspan: 1 } }, insert: '\n' },
+  // { insert: '\n' },
+  // { insert: '\n' },
+  // { insert: { 'table-up-col': { tableId: 'jryr10aez6k', colId: 'bpyaloa444v', width: 100, full: true } } },
+  // { insert: 'qwgqwg' },
+  // { attributes: { 'header': 2, 'table-up-cell-inner': { tableId: 'jryr10aez6k', rowId: 'b0wlvrbwf4w', colId: 'bpyaloa444v', rowspan: 1, colspan: 1, backgroundColor: 'rgb(171, 7, 7)' } }, insert: '\n' },
+  // { insert: '\n' },
 ]);
 
-quill.on('selection-change', (range) => {
-  console.log(range);
-});
+// quill.on('editor-change', (name, range) => {
+//   if (name === 'selection-change' && range) {
+//     console.log(range);
+//     console.log(quill.getLine(range.index)[0].domNode);
+//   }
+//   // console.log(quill.getLine(range.index + range.length)[0].domNode);
+// });
+window.quill = quill;
 
 // eslint-disable-next-line no-undef
 btn.addEventListener('click', () => {

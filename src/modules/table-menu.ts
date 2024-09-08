@@ -24,7 +24,7 @@ const defaultTools: Tool[] = [
   {
     name: 'InsertTop',
     icon: InsertTop,
-    tip: '向上插入一行',
+    tip: 'Insert a row above',
     handle: (tableModule) => {
       tableModule.appendRow(false);
       tableModule.hideTableTools();
@@ -33,7 +33,7 @@ const defaultTools: Tool[] = [
   {
     name: 'InsertRight',
     icon: InsertRight,
-    tip: '向右插入一列',
+    tip: 'Insert a column right',
     handle: (tableModule) => {
       tableModule.appendCol(true);
       tableModule.hideTableTools();
@@ -42,7 +42,7 @@ const defaultTools: Tool[] = [
   {
     name: 'InsertBottom',
     icon: InsertBottom,
-    tip: '向下插入一行',
+    tip: 'Insert a row below',
     handle: (tableModule) => {
       tableModule.appendRow(true);
       tableModule.hideTableTools();
@@ -51,7 +51,7 @@ const defaultTools: Tool[] = [
   {
     name: 'InsertLeft',
     icon: InsertLeft,
-    tip: '向左插入一列',
+    tip: 'Insert a column Left',
     handle: (tableModule) => {
       tableModule.appendCol(false);
       tableModule.hideTableTools();
@@ -64,7 +64,7 @@ const defaultTools: Tool[] = [
 
     name: 'MergeCell',
     icon: MergeCell,
-    tip: '合并单元格',
+    tip: 'Merge Cell',
     handle: (tableModule) => {
       tableModule.mergeCells();
       tableModule.hideTableTools();
@@ -74,7 +74,7 @@ const defaultTools: Tool[] = [
 
     name: 'SplitCell',
     icon: SplitCell,
-    tip: '拆分单元格',
+    tip: 'Split Cell',
     handle: (tableModule) => {
       tableModule.splitCell();
       tableModule.hideTableTools();
@@ -86,7 +86,7 @@ const defaultTools: Tool[] = [
   {
     name: 'DeleteRow',
     icon: RemoveRow,
-    tip: '删除当前行',
+    tip: 'Delete Row',
     handle: (tableModule) => {
       tableModule.removeRow();
       tableModule.hideTableTools();
@@ -95,7 +95,7 @@ const defaultTools: Tool[] = [
   {
     name: 'DeleteColumn',
     icon: RemoveColumn,
-    tip: '删除当前列',
+    tip: 'Delete Column',
     handle: (tableModule) => {
       tableModule.removeCol();
       tableModule.hideTableTools();
@@ -104,7 +104,7 @@ const defaultTools: Tool[] = [
   {
     name: 'DeleteTable',
     icon: RemoveTable,
-    tip: '删除当前表格',
+    tip: 'Delete table',
     handle: (tableModule) => {
       tableModule.deleteTable();
     },
@@ -116,7 +116,7 @@ const defaultTools: Tool[] = [
     name: 'BackgroundColor',
     icon: Color,
     isColorChoose: true,
-    tip: '设置背景颜色',
+    tip: 'Set background color',
     handle: (tableModule, selectedTds, color) => {
       tableModule.setBackgroundColor(selectedTds, color as string);
     },
