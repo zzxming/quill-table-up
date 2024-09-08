@@ -222,10 +222,14 @@
             }
             tooltipContainer.appendChild(tooltip);
             let timer;
+            const transitionendHandler = () => {
+                tooltip.classList.add('hidden');
+            };
             const open = () => {
                 if (timer)
                     clearTimeout(timer);
                 timer = setTimeout(() => {
+                    tooltip.removeEventListener('transitionend', transitionendHandler);
                     tooltip.classList.remove('hidden');
                     const elRect = target.getBoundingClientRect();
                     const contentRect = tooltip.getBoundingClientRect();
@@ -269,10 +273,7 @@
                     clearTimeout(timer);
                 timer = setTimeout(() => {
                     tooltip.classList.add('transparent');
-                    tooltip.addEventListener('transitionend', () => {
-                        tooltip.classList.add('hidden');
-                    }, { once: true });
-                    timer = null;
+                    tooltip.addEventListener('transitionend', transitionendHandler, { once: true });
                 }, delay);
             };
             target.addEventListener('mouseenter', open);
@@ -1160,7 +1161,7 @@
         {
             name: 'InsertTop',
             icon: InsertTop,
-            tip: 'Insert a row above',
+            tip: 'Insert row above',
             handle: (tableModule) => {
                 tableModule.appendRow(false);
                 tableModule.hideTableTools();
@@ -1169,7 +1170,7 @@
         {
             name: 'InsertRight',
             icon: InsertRight,
-            tip: 'Insert a column right',
+            tip: 'Insert column right',
             handle: (tableModule) => {
                 tableModule.appendCol(true);
                 tableModule.hideTableTools();
@@ -1178,7 +1179,7 @@
         {
             name: 'InsertBottom',
             icon: InsertBottom,
-            tip: 'Insert a row below',
+            tip: 'Insert row below',
             handle: (tableModule) => {
                 tableModule.appendRow(true);
                 tableModule.hideTableTools();
@@ -1187,7 +1188,7 @@
         {
             name: 'InsertLeft',
             icon: InsertLeft,
-            tip: 'Insert a column Left',
+            tip: 'Insert column Left',
             handle: (tableModule) => {
                 tableModule.appendCol(false);
                 tableModule.hideTableTools();
@@ -1260,7 +1261,7 @@
         tableModule;
         quill;
         options;
-        menu;
+        menu = null;
         selectedTds = [];
         updateUsedColor;
         colorItemClass = `color-${randomId()}`;
@@ -1301,7 +1302,12 @@
                     }
                 }
             }, 1000);
-            this.menu = this.buildTools();
+            if (!this.options.contextmenu) {
+                this.menu = this.buildTools();
+            }
+            else {
+                this.quill.root.addEventListener('contextmenu', this.listenContextmenu);
+            }
         }
         resolveOptions(options) {
             return Object.assign({
@@ -1309,11 +1315,35 @@
                 tipTexts: {},
                 tools: defaultTools,
                 localstorageKey: '__table-bg-used-color',
+                contextmenu: false,
             }, options);
         }
         ;
+        listenContextmenu = (e) => {
+            e.preventDefault();
+            const path = e.composedPath();
+            if (!path || path.length <= 0)
+                return;
+            const tableNode = path.find(node => node.tagName && node.tagName.toUpperCase() === 'TABLE' && node.classList.contains('ql-table'));
+            if (tableNode && this.tableModule.tableSelection?.selectedTds?.length) {
+                if (!this.menu) {
+                    this.menu = this.buildTools();
+                }
+                this.updateTools({ x: e.clientX, y: e.clientY });
+                document.addEventListener('click', () => {
+                    this.hideTools();
+                }, { once: true });
+            }
+            else {
+                this.hideTools();
+            }
+        };
         buildTools() {
             const toolBox = this.quill.addContainer('ql-table-selection-tool');
+            if (this.options.contextmenu) {
+                toolBox.classList.add('contextmenu');
+            }
+            Object.assign(toolBox.style, { display: 'flex' });
             for (const tool of this.options.tools) {
                 const { name, icon, handle, isColorChoose, tip = '' } = tool;
                 const item = document.createElement(isColorChoose ? 'label' : 'span');
@@ -1322,13 +1352,16 @@
                     item.classList.add('break');
                 }
                 else {
-                    item.classList.add('icon');
+                    //  add icon
+                    const iconDom = document.createElement('i');
+                    iconDom.classList.add('icon');
                     if (isFunction(icon)) {
-                        item.appendChild(icon(this.tableModule));
+                        iconDom.appendChild(icon(this.tableModule));
                     }
                     else {
-                        item.innerHTML = icon;
+                        iconDom.innerHTML = icon;
                     }
+                    item.appendChild(iconDom);
                     // color choose handler will trigger when the color input event
                     if (isColorChoose) {
                         const input = document.createElement('input');
@@ -1361,7 +1394,6 @@
                         const tooltipItem = createToolTip(item, { content: usedColorWrap, direction: 'top' });
                         tooltipItem && this.tooltipItem.push(tooltipItem);
                         if (isFunction(handle)) {
-                            item.addEventListener('click', e => e.stopPropagation());
                             input.addEventListener('input', () => {
                                 handle(this.tableModule, this.selectedTds, input.value);
                                 this.updateUsedColor(input.value);
@@ -1375,10 +1407,19 @@
                             handle(this.tableModule, this.selectedTds, e);
                         }, false);
                     }
+                    item.addEventListener('click', e => e.stopPropagation());
+                    // add text
                     const tipText = this.options.tipTexts[name] || tip;
                     if (tipText && tip) {
-                        const tooltipItem = createToolTip(item, { msg: tipText });
-                        tooltipItem && this.tooltipItem.push(tooltipItem);
+                        if (this.options.contextmenu) {
+                            const tipTextDom = document.createElement('span');
+                            tipTextDom.textContent = tipText;
+                            item.appendChild(tipTextDom);
+                        }
+                        else {
+                            const tipTextDom = createToolTip(item, { msg: tipText });
+                            tipTextDom && this.tooltipItem.push(tipTextDom);
+                        }
                     }
                 }
                 toolBox.appendChild(item);
@@ -1389,31 +1430,58 @@
         hideTools() {
             this.menu && Object.assign(this.menu.style, { display: 'none' });
         }
-        updateTools() {
+        updateTools(position) {
             if (!this.menu || !this.tableModule.tableSelection || !this.tableModule.tableSelection.boundary)
                 return;
             const { boundary, selectedTds } = this.tableModule.tableSelection;
             this.selectedTds = selectedTds;
-            Object.assign(this.menu.style, {
-                display: 'flex',
-                left: `${boundary.x + (boundary.width / 2) - 1}px`,
-                top: `${boundary.y + boundary.height}px`,
-                transform: `translate(-50%, 20%)`,
-            });
-            // limit menu in viewport
-            const { paddingLeft, paddingRight } = getComputedStyle(this.quill.root);
-            const menuRect = this.menu.getBoundingClientRect();
-            const rootRect = this.quill.root.getBoundingClientRect();
-            if (menuRect.right > rootRect.right - parseNum(paddingRight)) {
+            if (!this.options.contextmenu) {
                 Object.assign(this.menu.style, {
-                    left: `${rootRect.right - rootRect.left - menuRect.width - parseNum(paddingRight) - 1}px`,
-                    transform: `translate(0%, 20%)`,
+                    display: 'flex',
+                    left: `${boundary.x + (boundary.width / 2) - 1}px`,
+                    top: `${boundary.y + boundary.height}px`,
+                    transform: `translate(-50%, 20%)`,
                 });
+                // limit menu in viewport
+                const { paddingLeft, paddingRight } = getComputedStyle(this.quill.root);
+                const menuRect = this.menu.getBoundingClientRect();
+                const rootRect = this.quill.root.getBoundingClientRect();
+                if (menuRect.right > rootRect.right - parseNum(paddingRight)) {
+                    Object.assign(this.menu.style, {
+                        left: `${rootRect.right - rootRect.left - menuRect.width - parseNum(paddingRight) - 1}px`,
+                        transform: `translate(0%, 20%)`,
+                    });
+                }
+                else if (menuRect.left < parseNum(paddingLeft)) {
+                    Object.assign(this.menu.style, {
+                        left: `${parseNum(paddingLeft) + 1}px`,
+                        transform: `translate(0%, 20%)`,
+                    });
+                }
             }
-            else if (menuRect.left < parseNum(paddingLeft)) {
+            else {
+                if (!position) {
+                    return this.hideTools();
+                }
+                const { x, y } = position;
+                const containerRect = this.quill.container.getBoundingClientRect();
+                let resLeft = x - containerRect.left;
+                let resTop = y - containerRect.top;
                 Object.assign(this.menu.style, {
-                    left: `${parseNum(paddingLeft) + 1}px`,
-                    transform: `translate(0%, 20%)`,
+                    display: 'flex',
+                    left: null,
+                    top: null,
+                });
+                const menuRect = this.menu.getBoundingClientRect();
+                if (resLeft + menuRect.width + containerRect.left > containerRect.right) {
+                    resLeft = containerRect.width - menuRect.width - 15;
+                }
+                if (resTop + menuRect.height + containerRect.top > containerRect.bottom) {
+                    resTop = containerRect.height - menuRect.height - 15;
+                }
+                Object.assign(this.menu.style, {
+                    left: `${resLeft}px`,
+                    top: `${resTop}px`,
                 });
             }
         }
@@ -1422,6 +1490,7 @@
                 return;
             for (const tooltip of this.tooltipItem)
                 tooltip.remove();
+            this.quill.root.removeEventListener('contextmenu', this.listenContextmenu);
             this.menu.remove();
             this.menu = null;
         }
