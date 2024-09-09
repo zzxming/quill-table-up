@@ -36,17 +36,17 @@ const createCell = (scroll: TypeParchment.ScrollBlot, { tableId, rowId, colId }:
 };
 
 // Blots that cannot be inserted into a table
-export const tableCantInsert: string[] = [blotName.tableCell, 'code-block'];
-export const isForbidInTableBlot = (blot: TypeParchment.Blot) => tableCantInsert.includes(blot.statics.blotName);
-export const isForbidInTable = (current: TypeParchment.Blot): boolean =>
+export const tableCantInsert: string[] = [blotName.tableCell];
+const isForbidInTableBlot = (blot: TypeParchment.Blot) => tableCantInsert.includes(blot.statics.blotName);
+const isForbidInTable = (current: TypeParchment.Blot): boolean =>
   current && current.parent
     ? isForbidInTableBlot(current.parent)
       ? true
       : isForbidInTable(current.parent)
     : false;
 
-export type QuillThemePicker = (Picker & { options: HTMLElement });
-export interface QuillTheme extends BaseTheme {
+type QuillThemePicker = (Picker & { options: HTMLElement });
+interface QuillTheme extends BaseTheme {
   pickers: QuillThemePicker[];
 }
 
@@ -955,3 +955,5 @@ export class TableUp {
 export default TableUp;
 export * from './modules';
 export * from './formats';
+export * from './utils/types';
+export { findParentBlot, randomId } from './utils';
