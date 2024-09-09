@@ -24,7 +24,9 @@ import 'quill-table-up/index.css';
 // If using the default customSelect option. You need to import this css
 import 'quill-table-up/table-creator.css';
 
-Quill.register({ 'modules/tableUp': TableUp }, true);
+Quill.register({ [`modules/${TableUp.moduleName}`]: TableUp }, true);
+// or
+// Quill.register({ 'modules/tableUp': TableUp }, true);
 
 const quill = new Quill('#editor', {
   // ...
@@ -32,9 +34,15 @@ const quill = new Quill('#editor', {
     //  ...
     toolbar: [
       // ...
-      [{ 'table-up-main': [] }], // use picker to enable the customSelect option
+      [ // use picker to enable the customSelect option
+        { [TableUp.toolName]: [] }
+        // or
+        // { 'table-up-main': [] }
+      ],
     ],
-    tableUp: {},
+    [TableUp.moduleName]: {},
+    // or
+    // tableUp: {},
   },
 });
 ```
@@ -184,3 +192,17 @@ const defaultTools = [
 | attribute | description             | type     | default |
 | --------- | ----------------------- | -------- | ------- |
 | size      | resizer width or height | `number` | `12`    |
+
+## Overrides
+
+if you need to rewrite quill origin `Block` or `Scroll` blot. you need to import from `quill-table-up`. beacuse module internal rewrite some functions, but those change only effect formats about table.
+
+please read [source code](https://github.com/zzxming/quill-table-up/tree/master/src/formats/overrides) to know those change.
+
+```ts
+import { BlockOverride, ScrollOverride } from 'quill-table-up';
+
+class ScrollBlot extends ScrollOverride {
+  // ...
+}
+```
