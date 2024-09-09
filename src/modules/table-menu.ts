@@ -210,7 +210,7 @@ export class TableMenu {
   };
 
   buildTools() {
-    const toolBox = this.quill.addContainer('ql-table-selection-tool');
+    const toolBox = this.quill.addContainer('ql-table-menu');
     if (this.options.contextmenu) {
       toolBox.classList.add('contextmenu');
     }
@@ -218,7 +218,7 @@ export class TableMenu {
     for (const tool of this.options.tools) {
       const { name, icon, handle, isColorChoose, tip = '' } = tool as ToolOption;
       const item = document.createElement(isColorChoose ? 'label' : 'span');
-      item.classList.add('ql-table-selection-item');
+      item.classList.add('ql-table-menu-item');
       if (name === 'break') {
         item.classList.add('break');
       }
