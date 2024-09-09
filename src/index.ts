@@ -9,7 +9,7 @@ import type { Delta as TypeDelta } from 'quill/core';
 import type { BlockEmbed as TypeBlockEmbed } from 'quill/blots/block';
 import type TypeBlock from 'quill/blots/block';
 import type { TableColValue, TableTextOptions, TableUpOptions } from './utils';
-import { blotName, createSelectBox, debounce, findParentBlot, isFunction, randomId, tabbleToolName, tableColMinWidthPre, tableColMinWidthPx } from './utils';
+import { blotName, createSelectBox, debounce, findParentBlot, isFunction, randomId, tableColMinWidthPre, tableColMinWidthPx } from './utils';
 import { BlockOverride, ScrollOverride, TableBodyFormat, TableCellFormat, TableCellInnerFormat, TableColFormat, TableColgroupFormat, TableMainFormat, TableRowFormat, TableWrapperFormat } from './formats';
 import { TableResize, TableSelection } from './modules';
 
@@ -51,6 +51,8 @@ interface QuillTheme extends BaseTheme {
 }
 
 export class TableUp {
+  static moduleName = 'tableUp';
+  static toolName = blotName.tableMain;
   static keyboradHandler = {
     'forbid remove table by backspace': {
       bindInHead: true,
@@ -170,7 +172,7 @@ export class TableUp {
 
     const toolbar = this.quill.getModule('toolbar') as Toolbar;
     if (toolbar) {
-      const [, select] = (toolbar.controls as [string, HTMLElement][] || []).find(([name]) => name === tabbleToolName) || [];
+      const [, select] = (toolbar.controls as [string, HTMLElement][] || []).find(([name]) => name === TableUp.toolName) || [];
       if (select && select.tagName.toLocaleLowerCase() === 'select') {
         this.picker = (this.quill.theme as QuillTheme).pickers.find(picker => picker.select === select);
         if (!this.picker) return;
