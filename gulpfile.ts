@@ -92,11 +92,17 @@ const buildTheme = async (isDev: boolean = false) => {
   return bunlde.pipe(dest(isDev ? demoBundle : distBundle));
 };
 
-const buildModule = parallel(buildTs.bind(undefined, false), buildDts);
 const dev = () => {
   watch('./src/**/*.ts', parallel(buildTs.bind(undefined, true), buildDts));
   watch('./src/**/*.less', buildTheme.bind(undefined, true));
 };
-
-task('default', parallel(buildModule, buildTheme.bind(undefined, false)));
 task('dev', series(dev));
+
+task('default', parallel(
+  buildTs.bind(undefined, false),
+  buildDts,
+  buildTheme.bind(undefined, false),
+
+  buildTs.bind(undefined, true),
+  buildTheme.bind(undefined, true),
+));

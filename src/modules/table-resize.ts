@@ -1,6 +1,6 @@
 import Quill from 'quill';
 import type { Parchment as TypeParchment } from 'quill';
-import { getRelativeRect, tableColMinWidthPre, tableColMinWidthPx, tableRowMinWidthPx } from '../utils';
+import { tableColMinWidthPre, tableColMinWidthPx, tableRowMinWidthPx } from '../utils';
 import type { TableResizeOptions } from '../utils';
 import type TableUp from '..';
 import type { TableColFormat, TableMainFormat, TableRowFormat } from '..';
@@ -147,11 +147,11 @@ export class TableResize {
       const width = this.tableMain.full ? colWidthAttr / 100 * fullWidth : colWidthAttr;
       divDom.dataset.w = String(width);
 
-      const tableRect = this.tableWrapper.domNode.getBoundingClientRect();
+      const tableMainRect = this.table.getBoundingClientRect();
       Object.assign(divDom.style, {
-        top: `${tableRect.y - this.options.size}px`,
+        top: `${tableMainRect.y - this.options.size}px`,
         left: `${e.clientX}px`,
-        height: `${tableRect.height + this.options.size}px`,
+        height: `${tableMainRect.height + this.options.size}px`,
       });
       appendTo.appendChild(divDom);
 
@@ -194,8 +194,8 @@ export class TableResize {
       const w = Number.parseInt(tipRowBreak!.dataset.w!);
 
       this.tableRows[curRowIndex].setHeight(w);
-      const tableWrapperRect = this.tableWrapper.domNode.getBoundingClientRect();
-      this.rowHeadWrapper!.style.height = `${tableWrapperRect.height}px`;
+      const tableMainRect = this.table.getBoundingClientRect();
+      this.rowHeadWrapper!.style.height = `${tableMainRect.height}px`;
       for (const [i, row] of this.tableRows.entries()) {
         const rect = row.domNode.getBoundingClientRect();
         tableRowHeads[i].style.height = `${rect.height}px`;
@@ -220,11 +220,11 @@ export class TableResize {
       const height = tableRowHeads[curRowIndex].getBoundingClientRect().height;
       divDom.dataset.w = String(height);
 
-      const tableRect = this.tableWrapper.domNode.getBoundingClientRect();
+      const tableMainRect = this.table.getBoundingClientRect();
       Object.assign(divDom.style, {
         top: `${e.clientY}px`,
-        left: `${tableRect.x - this.options.size}px`,
-        width: `${tableRect.width + this.options.size}px`,
+        left: `${tableMainRect.x - this.options.size}px`,
+        width: `${tableMainRect.width + this.options.size}px`,
       });
       appendTo.appendChild(divDom);
 
@@ -247,14 +247,21 @@ export class TableResize {
     this.tableCols = this.tableMain.getCols();
     this.tableRows = this.tableMain.getRows();
     this.root.innerHTML = '';
-    const tableWrapperRect = this.tableWrapper.domNode.getBoundingClientRect();
-    const rect = getRelativeRect(tableMain.domNode.getBoundingClientRect(), this.quill.root);
-    const tableTop = tableMain.domNode.offsetTop;
-    const rootScrollTop = this.quill.root.scrollTop;
+    const tableMainRect = tableMain.domNode.getBoundingClientRect();
+    const rootRect = this.quill.root.getBoundingClientRect();
     Object.assign(this.root.style, {
-      top: `${tableTop - rootScrollTop}px`,
-      left: `${rect.x + this.tableWrapper.domNode.scrollLeft}px`,
+      top: `${tableMainRect.y - rootRect.y}px`,
+      left: `${tableMainRect.x - rootRect.x + this.tableWrapper.domNode.scrollLeft}px`,
     });
+
+    const corner = document.createElement('div');
+    corner.classList.add('ql-table-resizer-corner');
+    Object.assign(corner.style, {
+      width: `${this.options.size}px`,
+      height: `${this.options.size}px`,
+      transform: `translate(-${this.options.size}px, -${this.options.size}px)`,
+    });
+    this.root.appendChild(corner);
 
     let colHeadStr = '';
     for (const col of this.tableCols) {
@@ -263,14 +270,14 @@ export class TableResize {
         width = `${col.domNode.getBoundingClientRect().width}px`;
       }
       colHeadStr += `<div class="ql-table-col-header" style="width: ${width}">
-        <div class="ql-table-col-separator" style="height: ${tableWrapperRect.height + this.options.size - 3}px"></div>
+        <div class="ql-table-col-separator" style="height: ${tableMainRect.height + this.options.size - 3}px"></div>
       </div>`;
     }
     const colHeadWrapper = document.createElement('div');
     colHeadWrapper.classList.add('ql-table-col-wrapper');
     Object.assign(colHeadWrapper.style, {
       transform: `translateY(-${this.options.size}px)`,
-      width: `${tableWrapperRect.width}px`,
+      width: `${tableMainRect.width}px`,
       height: `${this.options.size}px`,
     });
     colHeadWrapper.innerHTML = colHeadStr;
@@ -283,7 +290,7 @@ export class TableResize {
     for (const row of this.tableRows) {
       const height = `${row.domNode.getBoundingClientRect().height}px`;
       rowHeadStr += `<div class="ql-table-row-header" style="height: ${height}">
-        <div class="ql-table-row-separator" style="width: ${tableWrapperRect.width + this.options.size - 3}px"></div>
+        <div class="ql-table-row-separator" style="width: ${tableMainRect.width + this.options.size - 3}px"></div>
       </div>`;
     }
     const rowHeadWrapper = document.createElement('div');
@@ -291,7 +298,7 @@ export class TableResize {
     Object.assign(rowHeadWrapper.style, {
       transform: `translateX(-${this.options.size}px)`,
       width: `${this.options.size}px`,
-      height: `${tableWrapperRect.height}px`,
+      height: `${tableMainRect.height}px`,
     });
     rowHeadWrapper.innerHTML = rowHeadStr;
     this.root.appendChild(rowHeadWrapper);

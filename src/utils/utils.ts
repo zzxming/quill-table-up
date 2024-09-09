@@ -1,6 +1,5 @@
 import type { Parchment as TypeParchment } from 'quill';
 import type { TableBodyFormat, TableCellFormat, TableCellInnerFormat, TableColFormat, TableColgroupFormat, TableMainFormat, TableRowFormat } from '../formats';
-import type { RelactiveRect } from './types';
 import type { blotName } from './constants';
 
 // eslint-disable-next-line ts/ban-types
@@ -19,26 +18,6 @@ export const debounce = <T extends (...args: any[]) => any>(fn: T, delay: number
     }, delay);
   };
 };
-export function isRectanglesIntersect(a: Omit<RelactiveRect, 'width' | 'height'>, b: Omit<RelactiveRect, 'width' | 'height'>, tolerance = 4) {
-  const { x: minAx, y: minAy, x1: maxAx, y1: maxAy } = a;
-  const { x: minBx, y: minBy, x1: maxBx, y1: maxBy } = b;
-  const notOverlapX = maxAx <= minBx + tolerance || minAx + tolerance >= maxBx;
-  const notOverlapY = maxAy <= minBy + tolerance || minAy + tolerance >= maxBy;
-  return !(notOverlapX || notOverlapY);
-}
-
-export function getRelativeRect(targetRect: { x: number;y: number;width: number; height: number }, container: HTMLElement) {
-  const containerRect = container.getBoundingClientRect();
-
-  return {
-    x: targetRect.x - containerRect.x - container.scrollLeft,
-    y: targetRect.y - containerRect.y - container.scrollTop,
-    x1: targetRect.x - containerRect.x - container.scrollLeft + targetRect.width,
-    y1: targetRect.y - containerRect.y - container.scrollTop + targetRect.height,
-    width: targetRect.width,
-    height: targetRect.height,
-  };
-}
 
 interface ParentBlotReturnMap {
   [blotName.tableMain]: TableMainFormat;

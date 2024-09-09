@@ -17,7 +17,7 @@
   border: 2px solid;
   pointer-events: none;
 }
-.ql-snow .ql-table-selection-tool {
+.ql-snow .ql-table-menu {
   position: absolute;
   z-index: 11;
   display: none;
@@ -29,23 +29,23 @@
   background-color: #ffffff;
   font-size: 14px;
 }
-.ql-snow .ql-table-selection-tool.contextmenu {
+.ql-snow .ql-table-menu.contextmenu {
   flex-direction: column;
 }
-.ql-snow .ql-table-selection-tool.contextmenu .ql-table-selection-item {
+.ql-snow .ql-table-menu.contextmenu .ql-table-menu-item {
   width: 100%;
   justify-content: flex-start;
   cursor: pointer;
 }
-.ql-snow .ql-table-selection-tool.contextmenu .break {
+.ql-snow .ql-table-menu.contextmenu .break {
   height: 1px;
   margin: 4px 0px;
   background-color: #a3a3a3;
 }
-.ql-snow .ql-table-selection-tool.contextmenu .icon {
+.ql-snow .ql-table-menu.contextmenu .icon {
   margin-right: 4px;
 }
-.ql-snow .ql-table-selection-item {
+.ql-snow .ql-table-menu-item {
   position: relative;
   display: inline-flex;
   align-items: center;
@@ -54,10 +54,10 @@
   border-radius: 4px;
   cursor: pointer;
 }
-.ql-snow .ql-table-selection-item:hover {
+.ql-snow .ql-table-menu-item:hover {
   background-color: #eeeeee;
 }
-.ql-snow .ql-table-selection-item.break {
+.ql-snow .ql-table-menu-item.break {
   align-self: stretch;
   width: 1px;
   padding: 0px;
@@ -65,7 +65,7 @@
   background-color: #a3a3a3;
   cursor: default;
 }
-.ql-snow .ql-table-selection-item .icon {
+.ql-snow .ql-table-menu-item .icon {
   display: flex;
   flex-shrink: 0;
   font-size: 20px;
@@ -151,6 +151,16 @@
   width: 100%;
   height: 8px;
   z-index: 11;
+}
+.ql-snow .ql-table-resizer-corner {
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  background-color: #f3f4f5;
+  border: 1px solid #ccc;
+  border-right: none;
+  border-bottom: none;
+  border-top-left-radius: 50%;
 }
 .table-color-used {
   display: flex;

@@ -300,24 +300,6 @@
             }, delay);
         };
     };
-    function isRectanglesIntersect(a, b, tolerance = 4) {
-        const { x: minAx, y: minAy, x1: maxAx, y1: maxAy } = a;
-        const { x: minBx, y: minBy, x1: maxBx, y1: maxBy } = b;
-        const notOverlapX = maxAx <= minBx + tolerance || minAx + tolerance >= maxBx;
-        const notOverlapY = maxAy <= minBy + tolerance || minAy + tolerance >= maxBy;
-        return !(notOverlapX || notOverlapY);
-    }
-    function getRelativeRect(targetRect, container) {
-        const containerRect = container.getBoundingClientRect();
-        return {
-            x: targetRect.x - containerRect.x - container.scrollLeft,
-            y: targetRect.y - containerRect.y - container.scrollTop,
-            x1: targetRect.x - containerRect.x - container.scrollLeft + targetRect.width,
-            y1: targetRect.y - containerRect.y - container.scrollTop + targetRect.height,
-            width: targetRect.width,
-            height: targetRect.height,
-        };
-    }
     function findParentBlot(blot, targetBlotName) {
         let target = blot.parent;
         while (target && target.statics.blotName !== targetBlotName && target !== blot.scroll) {
@@ -340,7 +322,6 @@
         tableCell: 'table-up-cell',
         tableCellInner: 'table-up-cell-inner',
     };
-    const tabbleToolName = 'table-up-main';
     const tableColMinWidthPre = 5;
     const tableColMinWidthPx = 26;
     const tableRowMinWidthPx = 36;
@@ -1033,32 +1014,6 @@
                 && next.domNode.dataset.rowId === rowId
                 && next.domNode.dataset.colId === colId);
         }
-        optimize(context) {
-            const { tableId, colId, rowId, colspan, rowspan, height, backgroundColor } = this;
-            // td need only child tableCellInner. but for MutationObserver. tableCell need allow break
-            // make sure tableCellInner is only child
-            const cellInner = this.getCellInner();
-            if (!cellInner) {
-                // eslint-disable-next-line unicorn/no-array-for-each
-                this.children.forEach((child) => {
-                    child.remove();
-                });
-                const tableCellInner = this.scroll.create(blotName.tableCellInner, {
-                    tableId,
-                    rowId,
-                    colId,
-                    colspan: colspan || 1,
-                    rowspan: rowspan || 1,
-                    height,
-                    backgroundColor,
-                });
-                const block = this.scroll.create('block');
-                block.appendChild(this.scroll.create('break'));
-                tableCellInner.appendChild(block);
-                this.appendChild(tableCellInner);
-            }
-            super.optimize(context);
-        }
         deleteAt(index, length) {
             if (index === 0 && length === this.length()) {
                 const cell = (this.next || this.prev);
@@ -1339,7 +1294,7 @@
             }
         };
         buildTools() {
-            const toolBox = this.quill.addContainer('ql-table-selection-tool');
+            const toolBox = this.quill.addContainer('ql-table-menu');
             if (this.options.contextmenu) {
                 toolBox.classList.add('contextmenu');
             }
@@ -1347,7 +1302,7 @@
             for (const tool of this.options.tools) {
                 const { name, icon, handle, isColorChoose, tip = '' } = tool;
                 const item = document.createElement(isColorChoose ? 'label' : 'span');
-                item.classList.add('ql-table-selection-item');
+                item.classList.add('ql-table-menu-item');
                 if (name === 'break') {
                     item.classList.add('break');
                 }
@@ -1670,6 +1625,24 @@
             return null;
         }
     }
+    function isRectanglesIntersect(a, b, tolerance = 4) {
+        const { x: minAx, y: minAy, x1: maxAx, y1: maxAy } = a;
+        const { x: minBx, y: minBy, x1: maxBx, y1: maxBy } = b;
+        const notOverlapX = maxAx <= minBx + tolerance || minAx + tolerance >= maxBx;
+        const notOverlapY = maxAy <= minBy + tolerance || minAy + tolerance >= maxBy;
+        return !(notOverlapX || notOverlapY);
+    }
+    function getRelativeRect(targetRect, container) {
+        const containerRect = container.getBoundingClientRect();
+        return {
+            x: targetRect.x - containerRect.x - container.scrollLeft,
+            y: targetRect.y - containerRect.y - container.scrollTop,
+            x1: targetRect.x - containerRect.x - container.scrollLeft + targetRect.width,
+            y1: targetRect.y - containerRect.y - container.scrollTop + targetRect.height,
+            width: targetRect.width,
+            height: targetRect.height,
+        };
+    }
 
     class TableResize {
         tableModule;
@@ -1805,11 +1778,11 @@
                 const colWidthAttr = Number.parseFloat(tableColHeads[curColIndex].style.width);
                 const width = this.tableMain.full ? colWidthAttr / 100 * fullWidth : colWidthAttr;
                 divDom.dataset.w = String(width);
-                const tableRect = this.tableWrapper.domNode.getBoundingClientRect();
+                const tableMainRect = this.table.getBoundingClientRect();
                 Object.assign(divDom.style, {
-                    top: `${tableRect.y - this.options.size}px`,
+                    top: `${tableMainRect.y - this.options.size}px`,
                     left: `${e.clientX}px`,
-                    height: `${tableRect.height + this.options.size}px`,
+                    height: `${tableMainRect.height + this.options.size}px`,
                 });
                 appendTo.appendChild(divDom);
                 if (tipColBreak)
@@ -1845,8 +1818,8 @@
             const handleMouseup = () => {
                 const w = Number.parseInt(tipRowBreak.dataset.w);
                 this.tableRows[curRowIndex].setHeight(w);
-                const tableWrapperRect = this.tableWrapper.domNode.getBoundingClientRect();
-                this.rowHeadWrapper.style.height = `${tableWrapperRect.height}px`;
+                const tableMainRect = this.table.getBoundingClientRect();
+                this.rowHeadWrapper.style.height = `${tableMainRect.height}px`;
                 for (const [i, row] of this.tableRows.entries()) {
                     const rect = row.domNode.getBoundingClientRect();
                     tableRowHeads[i].style.height = `${rect.height}px`;
@@ -1867,11 +1840,11 @@
                 // set drag init width
                 const height = tableRowHeads[curRowIndex].getBoundingClientRect().height;
                 divDom.dataset.w = String(height);
-                const tableRect = this.tableWrapper.domNode.getBoundingClientRect();
+                const tableMainRect = this.table.getBoundingClientRect();
                 Object.assign(divDom.style, {
                     top: `${e.clientY}px`,
-                    left: `${tableRect.x - this.options.size}px`,
-                    width: `${tableRect.width + this.options.size}px`,
+                    left: `${tableMainRect.x - this.options.size}px`,
+                    width: `${tableMainRect.width + this.options.size}px`,
                 });
                 appendTo.appendChild(divDom);
                 if (tipRowBreak)
@@ -1893,14 +1866,20 @@
             this.tableCols = this.tableMain.getCols();
             this.tableRows = this.tableMain.getRows();
             this.root.innerHTML = '';
-            const tableWrapperRect = this.tableWrapper.domNode.getBoundingClientRect();
-            const rect = getRelativeRect(tableMain.domNode.getBoundingClientRect(), this.quill.root);
-            const tableTop = tableMain.domNode.offsetTop;
-            const rootScrollTop = this.quill.root.scrollTop;
+            const tableMainRect = tableMain.domNode.getBoundingClientRect();
+            const rootRect = this.quill.root.getBoundingClientRect();
             Object.assign(this.root.style, {
-                top: `${tableTop - rootScrollTop}px`,
-                left: `${rect.x + this.tableWrapper.domNode.scrollLeft}px`,
+                top: `${tableMainRect.y - rootRect.y}px`,
+                left: `${tableMainRect.x - rootRect.x + this.tableWrapper.domNode.scrollLeft}px`,
             });
+            const corner = document.createElement('div');
+            corner.classList.add('ql-table-resizer-corner');
+            Object.assign(corner.style, {
+                width: `${this.options.size}px`,
+                height: `${this.options.size}px`,
+                transform: `translate(-${this.options.size}px, -${this.options.size}px)`,
+            });
+            this.root.appendChild(corner);
             let colHeadStr = '';
             for (const col of this.tableCols) {
                 let width = col.width + (tableMain.full ? '%' : 'px');
@@ -1908,14 +1887,14 @@
                     width = `${col.domNode.getBoundingClientRect().width}px`;
                 }
                 colHeadStr += `<div class="ql-table-col-header" style="width: ${width}">
-        <div class="ql-table-col-separator" style="height: ${tableWrapperRect.height + this.options.size - 3}px"></div>
+        <div class="ql-table-col-separator" style="height: ${tableMainRect.height + this.options.size - 3}px"></div>
       </div>`;
             }
             const colHeadWrapper = document.createElement('div');
             colHeadWrapper.classList.add('ql-table-col-wrapper');
             Object.assign(colHeadWrapper.style, {
                 transform: `translateY(-${this.options.size}px)`,
-                width: `${tableWrapperRect.width}px`,
+                width: `${tableMainRect.width}px`,
                 height: `${this.options.size}px`,
             });
             colHeadWrapper.innerHTML = colHeadStr;
@@ -1927,7 +1906,7 @@
             for (const row of this.tableRows) {
                 const height = `${row.domNode.getBoundingClientRect().height}px`;
                 rowHeadStr += `<div class="ql-table-row-header" style="height: ${height}">
-        <div class="ql-table-row-separator" style="width: ${tableWrapperRect.width + this.options.size - 3}px"></div>
+        <div class="ql-table-row-separator" style="width: ${tableMainRect.width + this.options.size - 3}px"></div>
       </div>`;
             }
             const rowHeadWrapper = document.createElement('div');
@@ -1935,7 +1914,7 @@
             Object.assign(rowHeadWrapper.style, {
                 transform: `translateX(-${this.options.size}px)`,
                 width: `${this.options.size}px`,
-                height: `${tableWrapperRect.height}px`,
+                height: `${tableMainRect.height}px`,
             });
             rowHeadWrapper.innerHTML = rowHeadStr;
             this.root.appendChild(rowHeadWrapper);
@@ -1975,7 +1954,7 @@
         return tableCell;
     };
     // Blots that cannot be inserted into a table
-    const tableCantInsert = [blotName.tableCell, 'code-block'];
+    const tableCantInsert = [blotName.tableCell];
     const isForbidInTableBlot = (blot) => tableCantInsert.includes(blot.statics.blotName);
     const isForbidInTable = (current) => current && current.parent
         ? isForbidInTableBlot(current.parent)
@@ -1983,6 +1962,8 @@
             : isForbidInTable(current.parent)
         : false;
     class TableUp {
+        static moduleName = 'tableUp';
+        static toolName = blotName.tableMain;
         static keyboradHandler = {
             'forbid remove table by backspace': {
                 bindInHead: true,
@@ -2090,7 +2071,7 @@
             this.options = this.resolveOptions(options || {});
             const toolbar = this.quill.getModule('toolbar');
             if (toolbar) {
-                const [, select] = (toolbar.controls || []).find(([name]) => name === tabbleToolName) || [];
+                const [, select] = (toolbar.controls || []).find(([name]) => name === TableUp.toolName) || [];
                 if (select && select.tagName.toLocaleLowerCase() === 'select') {
                     this.picker = this.quill.theme.pickers.find(picker => picker.select === select);
                     if (!this.picker)
@@ -2841,8 +2822,10 @@
     exports.TableUp = TableUp;
     exports.TableWrapperFormat = TableWrapperFormat;
     exports.default = TableUp;
-    exports.isForbidInTable = isForbidInTable;
-    exports.isForbidInTableBlot = isForbidInTableBlot;
+    exports.findParentBlot = findParentBlot;
+    exports.getRelativeRect = getRelativeRect;
+    exports.isRectanglesIntersect = isRectanglesIntersect;
+    exports.randomId = randomId;
     exports.tableCantInsert = tableCantInsert;
 
     Object.defineProperty(exports, '__esModule', { value: true });
