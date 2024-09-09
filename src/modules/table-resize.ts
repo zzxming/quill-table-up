@@ -256,6 +256,15 @@ export class TableResize {
       left: `${rect.x + this.tableWrapper.domNode.scrollLeft}px`,
     });
 
+    const corner = document.createElement('div');
+    corner.classList.add('ql-table-resizer-corner');
+    Object.assign(corner.style, {
+      width: `${this.options.size}px`,
+      height: `${this.options.size}px`,
+      transform: `translate(-${this.options.size}px, -${this.options.size}px)`,
+    });
+    this.root.appendChild(corner);
+
     let colHeadStr = '';
     for (const col of this.tableCols) {
       let width = col.width + (tableMain.full ? '%' : 'px');
