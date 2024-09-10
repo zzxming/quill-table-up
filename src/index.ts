@@ -104,8 +104,13 @@ export class TableUp {
       prefix: /^$/,
       suffix: /^\s*$/,
       handler(this: { quill: Quill }, range: Range) {
+        const [line, offset] = this.quill.getLine(range.index);
+        const format = this.quill.getFormat(range.index + offset + 1, 1);
+        // next line still in table. not exit
+        if (format[blotName.tableCellInner]) {
+          return true;
+        }
         // if have tow empty lines in table cell. enter will exit table and add a new line after table
-        const [line] = this.quill.getLine(range.index);
         let numLines = 2;
         let cur = line;
         while (cur !== null && cur.length() <= 1) {
