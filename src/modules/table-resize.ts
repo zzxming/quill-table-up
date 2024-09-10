@@ -254,56 +254,62 @@ export class TableResize {
       left: `${tableMainRect.x - rootRect.x + this.tableWrapper.domNode.scrollLeft}px`,
     });
 
-    const corner = document.createElement('div');
-    corner.classList.add('ql-table-resizer-corner');
-    Object.assign(corner.style, {
-      width: `${this.options.size}px`,
-      height: `${this.options.size}px`,
-      transform: `translate(-${this.options.size}px, -${this.options.size}px)`,
-    });
-    this.root.appendChild(corner);
-
-    let colHeadStr = '';
-    for (const col of this.tableCols) {
-      let width = col.width + (tableMain.full ? '%' : 'px');
-      if (!col.width) {
-        width = `${col.domNode.getBoundingClientRect().width}px`;
-      }
-      colHeadStr += `<div class="ql-table-col-header" style="width: ${width}">
-        <div class="ql-table-col-separator" style="height: ${tableMainRect.height + this.options.size - 3}px"></div>
-      </div>`;
+    if (this.tableCols.length > 0 && this.tableRows.length > 0) {
+      const corner = document.createElement('div');
+      corner.classList.add('ql-table-resizer-corner');
+      Object.assign(corner.style, {
+        width: `${this.options.size}px`,
+        height: `${this.options.size}px`,
+        transform: `translate(-${this.options.size}px, -${this.options.size}px)`,
+      });
+      this.root.appendChild(corner);
     }
-    const colHeadWrapper = document.createElement('div');
-    colHeadWrapper.classList.add('ql-table-col-wrapper');
-    Object.assign(colHeadWrapper.style, {
-      transform: `translateY(-${this.options.size}px)`,
-      width: `${tableMainRect.width}px`,
-      height: `${this.options.size}px`,
-    });
-    colHeadWrapper.innerHTML = colHeadStr;
-    this.root.appendChild(colHeadWrapper);
-    colHeadWrapper.scrollLeft = this.tableWrapper.domNode.scrollLeft;
-    this.colHeadWrapper = colHeadWrapper;
-    this.bindColDragEvent();
 
-    let rowHeadStr = '';
-    for (const row of this.tableRows) {
-      const height = `${row.domNode.getBoundingClientRect().height}px`;
-      rowHeadStr += `<div class="ql-table-row-header" style="height: ${height}">
+    if (this.tableCols.length > 0) {
+      let colHeadStr = '';
+      for (const col of this.tableCols) {
+        let width = col.width + (tableMain.full ? '%' : 'px');
+        if (!col.width) {
+          width = `${col.domNode.getBoundingClientRect().width}px`;
+        }
+        colHeadStr += `<div class="ql-table-col-header" style="width: ${width}">
+          <div class="ql-table-col-separator" style="height: ${tableMainRect.height + this.options.size - 3}px"></div>
+        </div>`;
+      }
+      const colHeadWrapper = document.createElement('div');
+      colHeadWrapper.classList.add('ql-table-col-wrapper');
+      Object.assign(colHeadWrapper.style, {
+        transform: `translateY(-${this.options.size}px)`,
+        width: `${tableMainRect.width}px`,
+        height: `${this.options.size}px`,
+      });
+      colHeadWrapper.innerHTML = colHeadStr;
+      this.root.appendChild(colHeadWrapper);
+      colHeadWrapper.scrollLeft = this.tableWrapper.domNode.scrollLeft;
+      this.colHeadWrapper = colHeadWrapper;
+      this.bindColDragEvent();
+    }
+
+    if (this.tableRows.length > 0) {
+      let rowHeadStr = '';
+      for (const row of this.tableRows) {
+        const height = `${row.domNode.getBoundingClientRect().height}px`;
+        rowHeadStr += `<div class="ql-table-row-header" style="height: ${height}">
         <div class="ql-table-row-separator" style="width: ${tableMainRect.width + this.options.size - 3}px"></div>
       </div>`;
+      }
+      const rowHeadWrapper = document.createElement('div');
+      rowHeadWrapper.classList.add('ql-table-row-wrapper');
+      Object.assign(rowHeadWrapper.style, {
+        transform: `translateX(-${this.options.size}px)`,
+        width: `${this.options.size}px`,
+        height: `${tableMainRect.height}px`,
+      });
+      rowHeadWrapper.innerHTML = rowHeadStr;
+      this.root.appendChild(rowHeadWrapper);
+      this.rowHeadWrapper = rowHeadWrapper;
+      this.bindRowDragEvent();
     }
-    const rowHeadWrapper = document.createElement('div');
-    rowHeadWrapper.classList.add('ql-table-row-wrapper');
-    Object.assign(rowHeadWrapper.style, {
-      transform: `translateX(-${this.options.size}px)`,
-      width: `${this.options.size}px`,
-      height: `${tableMainRect.height}px`,
-    });
-    rowHeadWrapper.innerHTML = rowHeadStr;
-    this.root.appendChild(rowHeadWrapper);
-    this.rowHeadWrapper = rowHeadWrapper;
-    this.bindRowDragEvent();
   }
 
   hideTool() {
