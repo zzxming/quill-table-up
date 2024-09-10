@@ -22,9 +22,9 @@ describe('insert embed blot', () => {
     expect(quill.root).toEqualHTML(
       `
         <p><br></p>
-        <p>
-          <table cellpadding="0" cellspacing="0" data-full>
-            <colgroup>
+        <div>
+          <table cellpadding="0" cellspacing="0" data-full="true">
+            <colgroup data-full="true">
              <col width="100%" data-full="true" />
             </colgroup>
             <tbody>
@@ -37,7 +37,7 @@ describe('insert embed blot', () => {
               </tr>
             </tbody>
           </table>
-        </p>
+        </div>
         <p><br></p>
       `,
       { ignoreAttrs: ['class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
@@ -58,27 +58,27 @@ describe('insert block blot', () => {
     await vi.runAllTimersAsync();
     expect(quill.root).toEqualHTML(
       `
-      <p><br></p>
-      <p>
-        <table cellpadding="0" cellspacing="0" data-full>
-          <colgroup>
-           <col width="100%" data-full="true" />
-          </colgroup>
-          <tbody>
-            <tr>
-              <td rowspan="1" colspan="1">
-                <div>
-                  <ol>
-                    <li data-list="bullet">text</li>
-                  </ol>
-                </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </p>
-      <p><br></p>
-    `,
+        <p><br></p>
+        <div>
+          <table cellpadding="0" cellspacing="0" data-full="true">
+            <colgroup data-full="true">
+            <col width="100%" data-full="true" />
+            </colgroup>
+            <tbody>
+              <tr>
+                <td rowspan="1" colspan="1">
+                  <div>
+                    <ol>
+                      <li data-list="bullet">text</li>
+                    </ol>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p><br></p>
+      `,
       { ignoreAttrs: ['class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
     );
   });
@@ -96,24 +96,24 @@ describe('insert block blot', () => {
     expect(quill.root).toEqualHTML(
       `
       <p><br></p>
-      <p>
-        <table cellpadding="0" cellspacing="0" data-full>
-          <colgroup>
-           <col width="100%" data-full="true" />
-          </colgroup>
-          <tbody>
-            <tr>
-              <td rowspan="1" colspan="1">
-                <div>
-                  <h2>text</h2>
-                </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </p>
-      <p><br></p>
-    `,
+        <div>
+          <table cellpadding="0" cellspacing="0" data-full="true">
+            <colgroup data-full="true">
+            <col width="100%" data-full="true" />
+            </colgroup>
+            <tbody>
+              <tr>
+                <td rowspan="1" colspan="1">
+                  <div>
+                    <h2>text</h2>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p><br></p>
+      `,
       { ignoreAttrs: ['class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
     );
   });
@@ -130,25 +130,25 @@ describe('insert block blot', () => {
     await vi.runAllTimersAsync();
     expect(quill.root).toEqualHTML(
       `
-      <p><br></p>
-      <p>
-        <table cellpadding="0" cellspacing="0" data-full>
-          <colgroup>
-           <col width="100%" data-full="true" />
-          </colgroup>
-          <tbody>
-            <tr>
-              <td rowspan="1" colspan="1">
-                <div>
-                  <blockquote>text</blockquote>
-                </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </p>
-      <p><br></p>
-    `,
+        <p><br></p>
+        <div>
+          <table cellpadding="0" cellspacing="0" data-full="true">
+            <colgroup data-full="true">
+            <col width="100%" data-full="true" />
+            </colgroup>
+            <tbody>
+              <tr>
+                <td rowspan="1" colspan="1">
+                  <div>
+                    <blockquote>text</blockquote>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p><br></p>
+      `,
       { ignoreAttrs: ['class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
     );
   });
@@ -167,28 +167,28 @@ describe('insert block blot', () => {
     await vi.runAllTimersAsync();
     expect(quill.root).toEqualHTML(
       `
-      <p><br></p>
-      <p>
-        <table cellpadding="0" cellspacing="0" data-full>
-          <colgroup>
-           <col width="100%" data-full="true" />
-          </colgroup>
-          <tbody>
-            <tr>
-              <td rowspan="1" colspan="1">
-                <div>
-                  <div spellcheck="false">
-                    <div data-language="plain">text</div>
-                    <div data-language="plain">br</div>
+        <p><br></p>
+        <div>
+          <table cellpadding="0" cellspacing="0" data-full="true">
+            <colgroup data-full="true">
+            <col width="100%" data-full="true" />
+            </colgroup>
+            <tbody>
+              <tr>
+                <td rowspan="1" colspan="1">
+                  <div>
+                    <div spellcheck="false">
+                      <div data-language="plain">text</div>
+                      <div data-language="plain">br</div>
+                    </div>
                   </div>
-                </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </p>
-      <p><br></p>
-    `,
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p><br></p>
+      `,
       { ignoreAttrs: ['class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
     );
   });
@@ -207,26 +207,26 @@ describe('insert block embed blot', () => {
     await vi.runAllTimersAsync();
     expect(quill.root).toEqualHTML(
       `
-      <p><br></p>
-      <p>
-        <table cellpadding="0" cellspacing="0" data-full>
-          <colgroup>
-           <col width="100%" data-full="true" />
-          </colgroup>
-          <tbody>
-            <tr>
-              <td rowspan="1" colspan="1">
-                <div>
-                  <iframe src="https://quilljs.com/" frameborder="0" allowfullscreen="true"></iframe>
-                  <p><br></p>
-                </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </p>
-      <p><br></p>
-    `,
+        <p><br></p>
+        <div>
+          <table cellpadding="0" cellspacing="0" data-full="true">
+            <colgroup data-full="true">
+            <col width="100%" data-full="true" />
+            </colgroup>
+            <tbody>
+              <tr>
+                <td rowspan="1" colspan="1">
+                  <div>
+                    <iframe src="https://quilljs.com/" frameborder="0" allowfullscreen="true"></iframe>
+                    <p><br></p>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p><br></p>
+      `,
       { ignoreAttrs: ['class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
     );
   });
@@ -261,25 +261,25 @@ describe('set contents', () => {
     await vi.runAllTimersAsync();
     expect(quill.root).toEqualHTML(
       `
-      <p><br></p>
-      <p>
-        <table cellpadding="0" cellspacing="0" data-full>
-          <colgroup>
-           <col width="100%" data-full="true" />
-          </colgroup>
-          <tbody>
-            <tr>
-              <td rowspan="1" colspan="1">
-                <div>
-                  ${new Array(9).fill(0).map((_, i) => `<p>${i + 1}</p>`).join('\n')}
-                </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </p>
-      <p><br></p>
-    `,
+        <p><br></p>
+        <div>
+          <table cellpadding="0" cellspacing="0" data-full="true">
+            <colgroup data-full="true">
+            <col width="100%" data-full="true" />
+            </colgroup>
+            <tbody>
+              <tr>
+                <td rowspan="1" colspan="1">
+                  <div>
+                    ${new Array(9).fill(0).map((_, i) => `<p>${i + 1}</p>`).join('\n')}
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p><br></p>
+      `,
       { ignoreAttrs: ['class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
     );
   });

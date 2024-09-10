@@ -1,4 +1,4 @@
-import type { Parchment as TypeParchment } from 'quill';
+import type { TableValue } from '../utils';
 import { blotName } from '../utils';
 import { TableRowFormat } from './table-row-format';
 import { ContainerFormat } from './container-format';
@@ -8,18 +8,11 @@ export class TableMainFormat extends ContainerFormat {
   static blotName = blotName.tableMain;
   static tagName = 'table';
 
-  constructor(scroll: TypeParchment.Root, domNode: Node) {
-    super(scroll, domNode);
-
-    setTimeout(() => {
-      this.colWidthFillTable();
-    }, 0);
-  }
-
-  static create(value: string) {
+  static create(value: TableValue) {
     const node = super.create() as HTMLElement;
-
-    node.dataset.tableId = value;
+    const { tableId, full } = value;
+    node.dataset.tableId = tableId;
+    full && (node.dataset.full = String(full));
     node.classList.add('ql-table');
     node.setAttribute('cellpadding', '0');
     node.setAttribute('cellspacing', '0');
@@ -73,5 +66,18 @@ export class TableMainFormat extends ContainerFormat {
       && next.domNode.tagName === this.domNode.tagName
       && next.domNode.dataset.tableId === this.tableId
     );
+  }
+
+  optimize(context: Record<string, any>) {
+    const parent = this.parent;
+    if (parent !== null && parent.statics.blotName !== blotName.tableWrapper) {
+      this.wrap(blotName.tableWrapper, this.tableId);
+    }
+
+    super.optimize(context);
+
+    setTimeout(() => {
+      this.colWidthFillTable();
+    }, 0);
   }
 }

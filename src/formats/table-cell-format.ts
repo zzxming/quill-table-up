@@ -108,4 +108,15 @@ export class TableCellFormat extends ContainerFormat {
       child.deleteAt(offset, length);
     });
   }
+
+  optimize(context: Record<string, any>) {
+    const parent = this.parent;
+    const { tableId, rowId } = this;
+
+    if (parent !== null && parent.statics.blotName !== blotName.tableRow) {
+      this.wrap(blotName.tableRow, { tableId, rowId });
+    }
+
+    super.optimize(context);
+  }
 }

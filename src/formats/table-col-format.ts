@@ -3,7 +3,6 @@ import type { Parchment as TypeParchment } from 'quill';
 import type { BlockEmbed as TypeBlockEmbed } from 'quill/blots/block';
 import type { TableColValue } from '../utils';
 import { blotName } from '../utils';
-import type { TableMainFormat } from './table-main-format';
 
 const BlockEmbed = Quill.import('blots/block/embed') as typeof TypeBlockEmbed;
 
@@ -77,17 +76,8 @@ export class TableColFormat extends BlockEmbed {
   optimize(context: Record< string, any>) {
     const parent = this.parent;
     if (parent != null && parent.statics.blotName !== blotName.tableColgroup) {
-      const marker = this.scroll.create('block');
-      this.parent.insertBefore(marker, this.next);
-      const tableWrapper = this.scroll.create(blotName.tableWrapper, this.tableId) as TypeParchment.ParentBlot;
-      const table = this.scroll.create(blotName.tableMain, this.tableId) as TableMainFormat;
-      this.full && (table.full = true);
-      const tableColgroup = this.scroll.create(blotName.tableColgroup) as TypeParchment.ParentBlot;
-
-      tableColgroup.appendChild(this);
-      table.appendChild(tableColgroup);
-      tableWrapper.appendChild(table);
-      marker.replaceWith(tableWrapper);
+      const { tableId, full } = this;
+      this.wrap(blotName.tableColgroup, { tableId, full });
     }
     super.optimize(context);
   }

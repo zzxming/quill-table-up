@@ -1,5 +1,5 @@
 import type { Parchment as TypeParchment } from 'quill';
-import type { TableColValue } from '../utils';
+import type { TableColValue, TableValue } from '../utils';
 import { blotName, tableColMinWidthPre } from '../utils';
 import { ContainerFormat } from './container-format';
 import type { TableColFormat } from './table-col-format';
@@ -10,11 +10,19 @@ export class TableColgroupFormat extends ContainerFormat {
   static tagName = 'colgroup';
   declare children: TypeParchment.LinkedList<TableColFormat>;
 
-  deleteAt(index: number, length: number) {
-    if (index === 0 && length === this.length()) {
-      return this.parent.remove();
-    }
-    super.deleteAt(index, length);
+  static create(value: TableValue) {
+    const node = super.create() as HTMLElement;
+    node.dataset.tableId = value.tableId;
+    value.full && (node.dataset.full = String(value.full));
+    return node;
+  }
+
+  get tableId() {
+    return this.domNode.dataset.tableId!;
+  }
+
+  get full() {
+    return Object.hasOwn(this.domNode.dataset, 'full');
   }
 
   findCol(index: number) {
@@ -38,7 +46,7 @@ export class TableColgroupFormat extends ContainerFormat {
     const col = this.findCol(index);
     const tableCellInner = this.scroll.create(blotName.tableCol, value) as TableColFormat;
     if (table.full) {
-    // TODO: first minus column should be near by
+      // TODO: first minus column should be near by
       const next = this.children.iterator();
       let cur: TableColFormat | null;
       while ((cur = next())) {
@@ -66,5 +74,14 @@ export class TableColgroupFormat extends ContainerFormat {
       }
       col.remove();
     }
+  }
+
+  optimize(context: Record< string, any>) {
+    const parent = this.parent;
+    if (parent != null && parent.statics.blotName !== blotName.tableMain) {
+      const { tableId, full } = this;
+      this.wrap(blotName.tableMain, { tableId, full });
+    }
+    super.optimize(context);
   }
 }

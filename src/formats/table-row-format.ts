@@ -1,5 +1,5 @@
 import type { Parchment as TypeParchment } from 'quill';
-import type { TableCellValue } from '../utils';
+import type { TableCellValue, TableRowValue } from '../utils';
 import { blotName, findParentBlot } from '../utils';
 import { ContainerFormat } from './container-format';
 import { TableCellInnerFormat } from './table-cell-inner-format';
@@ -11,9 +11,10 @@ export class TableRowFormat extends ContainerFormat {
   static tagName = 'tr';
   static className = 'ql-table-row';
 
-  static create(value: string) {
+  static create(value: TableRowValue) {
     const node = super.create() as HTMLElement;
-    node.dataset.rowId = value;
+    node.dataset.rowId = value.rowId;
+    node.dataset.tableId = value.tableId;
     return node;
   }
 
@@ -30,6 +31,10 @@ export class TableRowFormat extends ContainerFormat {
 
   get rowId() {
     return this.domNode.dataset.rowId!;
+  }
+
+  get tableId() {
+    return this.domNode.dataset.tableId!;
   }
 
   setHeight(value: number) {
@@ -128,5 +133,16 @@ export class TableRowFormat extends ContainerFormat {
       const [tableCell] = cur.descendants(TableCellInnerFormat);
       if (func(tableCell, i++)) break;
     }
+  }
+
+  optimize(context: Record<string, any>) {
+    const parent = this.parent;
+    const { tableId } = this;
+
+    if (parent !== null && parent.statics.blotName !== blotName.tableBody) {
+      this.wrap(blotName.tableBody, tableId);
+    }
+
+    super.optimize(context);
   }
 }

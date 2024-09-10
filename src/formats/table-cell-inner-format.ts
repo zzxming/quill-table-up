@@ -4,7 +4,6 @@ import { blotName, findParentBlot } from '../utils';
 import type { TableCellValue } from '../utils';
 import { ContainerFormat } from './container-format';
 import type { TableCellFormat } from './table-cell-format';
-import { TableColFormat } from './table-col-format';
 
 const Block = Quill.import('blots/block') as TypeParchment.BlotConstructor;
 const BlockEmbed = Quill.import('blots/block/embed') as TypeParchment.BlotConstructor;
@@ -142,40 +141,9 @@ export class TableCellInnerFormat extends ContainerFormat {
       this.appendChild(afterBlock);
     }
     if (parent !== null && parent.statics.blotName !== blotName.tableCell) {
-      // insert a mark blot to make sure table insert index
-      const marker = this.scroll.create('block');
-      parent.insertBefore(marker, this.next);
-
-      const tableWrapper = this.scroll.create(blotName.tableWrapper, tableId) as ContainerFormat;
-      const table = this.scroll.create(blotName.tableMain, tableId) as ContainerFormat;
-      const tableBody = this.scroll.create(blotName.tableBody) as ContainerFormat;
-      const tr = this.scroll.create(blotName.tableRow, rowId) as ContainerFormat;
-      const td = this.scroll.create(blotName.tableCell, {
-        tableId,
-        rowId,
-        colId,
-        rowspan,
-        colspan,
-        backgroundColor,
-        height,
-      }) as ContainerFormat;
-
-      td.appendChild(this);
-      tr.appendChild(td);
-      tableBody.appendChild(tr);
-      table.appendChild(tableBody);
-      tableWrapper.appendChild(table);
-      marker.replaceWith(tableWrapper);
+      this.wrap(blotName.tableCell, { tableId, colId, rowId, rowspan, colspan, backgroundColor, height });
     }
 
     super.optimize(context);
-  }
-
-  insertBefore(childBlot: TypeParchment.Blot, refBlot?: TypeParchment.Blot | null | undefined): void {
-    if (childBlot instanceof TableCellInnerFormat || childBlot instanceof TableColFormat) {
-      console.error(`Not supported table insert into table.`);
-      return;
-    }
-    super.insertBefore(childBlot, refBlot);
   }
 }
