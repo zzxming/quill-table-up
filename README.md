@@ -8,8 +8,10 @@ Enhancement of quill table module
 - [x] insert/delete row/column/table; merge/split cells
 - [x] support insert header/list/video/image/code-block
 - [x] control cells width/height/background color
+- [x] 100 percent table width or fixed pixel width
 - [x] line break in cells
 - [x] not effect on other formats
+- [ ] redo and undo
 
 ## Usage
 
