@@ -74,26 +74,70 @@ describe('table redo', () => {
     expect(quill.root).toEqualHTML(
       `
       <p><br></p>
-      <div>
-        <table cellpadding="0" cellspacing="0" data-full="true">
-          <colgroup data-full="true">
-            ${new Array(3).fill(0).map((_, i) => `<col width="${1 / 3 * 100}%" data-col-id="${i + 1}" data-full="true" />`).join('\n')}
-          </colgroup>
-          <tbody>
-            ${
-              new Array(3).fill(0).map((_, i) => `
-                <tr data-row-id="${i + 1}">
-                  ${
-                    new Array(3).fill(0).map((_, j) => `<td rowspan="1" colspan="1" data-row-id="${i + 1}" data-col-id="${j + 1}">
-                      <div data-rowspan="1" data-colspan="1" data-row-id="${i + 1}" data-col-id="${j + 1}"><p>${(i * 3) + j + 1}</p></div>
-                    </td>`).join('\n')
-                  }
-                </tr>
-              `).join('\n')
-            }
-          </tbody>
-        </table>
-      </div>
+      ${createTableHTML(3, 3)}
+      <p><br></p>
+    `,
+      { ignoreAttrs: ['class', 'style', 'data-table-id', 'contenteditable'] },
+    );
+  });
+
+  it('merge single column undo', async () => {
+    const quill = await createTable(3, 3);
+    const tableModule = quill.getModule('tableUp') as TableUp;
+    const table = quill.root.querySelector('table')!;
+    tableModule.tableSelection = new TableSelection(tableModule, table, quill);
+    const tds = quill.scroll.descendants(TableCellInnerFormat, 0);
+    tableModule.tableSelection.selectedTds = [tds[0], tds[3], tds[6]];
+    tableModule.mergeCells();
+    await vi.runAllTimersAsync();
+    quill.history.undo();
+    await vi.runAllTimersAsync();
+    expect(quill.root).toEqualHTML(
+      `
+      <p><br></p>
+      ${createTableHTML(3, 3)}
+      <p><br></p>
+    `,
+      { ignoreAttrs: ['class', 'style', 'data-table-id', 'contenteditable'] },
+    );
+  });
+
+  it('merge last column undo', async () => {
+    const quill = await createTable(3, 3);
+    const tableModule = quill.getModule('tableUp') as TableUp;
+    const table = quill.root.querySelector('table')!;
+    tableModule.tableSelection = new TableSelection(tableModule, table, quill);
+    const tds = quill.scroll.descendants(TableCellInnerFormat, 0);
+    tableModule.tableSelection.selectedTds = [tds[2], tds[5], tds[8]];
+    tableModule.mergeCells();
+    await vi.runAllTimersAsync();
+    quill.history.undo();
+    await vi.runAllTimersAsync();
+    expect(quill.root).toEqualHTML(
+      `
+      <p><br></p>
+      ${createTableHTML(3, 3)}
+      <p><br></p>
+    `,
+      { ignoreAttrs: ['class', 'style', 'data-table-id', 'contenteditable'] },
+    );
+  });
+
+  it('merge middle column undo', async () => {
+    const quill = await createTable(4, 4);
+    const tableModule = quill.getModule('tableUp') as TableUp;
+    const table = quill.root.querySelector('table')!;
+    tableModule.tableSelection = new TableSelection(tableModule, table, quill);
+    const tds = quill.scroll.descendants(TableCellInnerFormat, 0);
+    tableModule.tableSelection.selectedTds = [tds[1], tds[2], tds[5], tds[6], tds[9], tds[10], tds[13], tds[14]];
+    tableModule.mergeCells();
+    await vi.runAllTimersAsync();
+    quill.history.undo();
+    await vi.runAllTimersAsync();
+    expect(quill.root).toEqualHTML(
+      `
+      <p><br></p>
+      ${createTableHTML(4, 4)}
       <p><br></p>
     `,
       { ignoreAttrs: ['class', 'style', 'data-table-id', 'contenteditable'] },
