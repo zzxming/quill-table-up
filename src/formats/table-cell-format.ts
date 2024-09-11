@@ -1,8 +1,11 @@
 import type { TableCellValue } from '../utils';
-import { blotName } from '../utils';
+import { blotName, findParentBlot } from '../utils';
 import { TableCellInnerFormat } from './table-cell-inner-format';
 import { ContainerFormat } from './container-format';
+import type { TableRowFormat } from './table-row-format';
 
+let tempOptimizeRowIds: string[] = [];
+let timer: ReturnType<typeof setTimeout>;
 export class TableCellFormat extends ContainerFormat {
   static blotName = blotName.tableCell;
   static tagName = 'td';
@@ -95,28 +98,47 @@ export class TableCellFormat extends ContainerFormat {
     );
   }
 
-  deleteAt(index: number, length: number) {
-    if (index === 0 && length === this.length()) {
-      const cell = (this.next || this.prev) as this;
-      const cellInner = cell && cell.getCellInner();
-      if (cellInner) {
-        cellInner.colspan += this.colspan;
-      }
-      return this.remove();
-    }
-    this.children.forEachAt(index, length, (child, offset, length) => {
-      child.deleteAt(offset, length);
-    });
-  }
-
   optimize(context: Record<string, any>) {
-    const parent = this.parent;
+    const parent = this.parent as TableRowFormat;
     const { tableId, rowId } = this;
 
     if (parent !== null && parent.statics.blotName !== blotName.tableRow) {
       this.wrap(blotName.tableRow, { tableId, rowId });
     }
+    if (parent && parent.statics.blotName === blotName.tableRow && parent.rowId !== this.rowId) {
+      const tableBlot = findParentBlot(this, blotName.tableMain);
+      const colIds = tableBlot.getColIds();
+      if (tempOptimizeRowIds.length === 0) {
+        tempOptimizeRowIds = tableBlot.getRowIds();
+      }
+      const selfColIndex = colIds.indexOf(this.colId);
+      const selfRowIndex = tempOptimizeRowIds.indexOf(this.rowId);
+      const rowBlot = this.wrap(blotName.tableRow, { tableId, rowId });
+      const findInsertBefore = (parent: TableRowFormat | null): TableRowFormat | null => {
+        if (!parent) return parent;
+        const rowIndex = tempOptimizeRowIds.indexOf(parent.rowId);
+        if (selfRowIndex === -1) {
+          // find before optimize start already have row
+          let returnRow: TableRowFormat | null = parent.next as TableRowFormat;
+          while (returnRow && rowIndex > tempOptimizeRowIds.indexOf(returnRow.rowId)) {
+            returnRow = returnRow.next as TableRowFormat | null;
+          }
+          return returnRow;
+        }
+        if (rowIndex === selfRowIndex) {
+          const parentColIndex = colIds.indexOf(parent.children!.head!.colId);
+          return parentColIndex < selfColIndex ? findInsertBefore(parent.next as TableRowFormat) : parent;
+        }
+        return rowIndex < selfRowIndex ? findInsertBefore(parent.next as TableRowFormat) : parent;
+      };
+      const ins = findInsertBefore(parent);
+      parent.parent.insertBefore(rowBlot, ins);
+    }
 
     super.optimize(context);
+    if (timer) clearTimeout(timer);
+    timer = setTimeout(() => {
+      tempOptimizeRowIds = [];
+    }, 0);
   }
 }

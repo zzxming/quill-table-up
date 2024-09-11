@@ -1,9 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import {
-  TableCellInnerFormat,
-} from '../formats';
 import type TableUp from '../index';
-import { TableSelection } from '../index';
+import { TableCellInnerFormat, TableSelection } from '../index';
 import { createQuillWithTableModule } from './utils';
 
 beforeEach(() => {

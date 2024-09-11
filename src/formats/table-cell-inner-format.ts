@@ -146,4 +146,21 @@ export class TableCellInnerFormat extends ContainerFormat {
 
     super.optimize(context);
   }
+
+  insertBefore(blot: TypeParchment.Blot, ref?: TypeParchment.Blot | null) {
+    if (blot.statics.blotName === this.statics.blotName) {
+      const cellInnerBlot = blot as TableCellInnerFormat;
+      const cellInnerBlotValue = cellInnerBlot.formats()[this.statics.blotName];
+      const selfValue = this.formats()[this.statics.blotName];
+      const isSame = Object.entries(selfValue).every(([key, value]) => value === cellInnerBlotValue[key]);
+      if (!isSame) {
+        const selfRow = findParentBlot(this, blotName.tableRow);
+        return selfRow.insertBefore(blot.wrap(blotName.tableCell, cellInnerBlotValue), ref ? this.parent : this.parent.next);
+      }
+      else {
+        cellInnerBlot.moveChildren(this);
+      }
+    }
+    super.insertBefore(blot, ref);
+  }
 }

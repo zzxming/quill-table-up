@@ -2,7 +2,6 @@ import Quill from 'quill';
 import type TypeBlock from 'quill/blots/block';
 import type { Parchment as TypeParchment } from 'quill';
 import { blotName } from '../../utils';
-import type { TableCellInnerFormat } from '../table-cell-inner-format';
 
 const Parchment = Quill.import('parchment');
 const Block = Quill.import('blots/block') as typeof TypeBlock;
@@ -17,7 +16,35 @@ export class BlockOverride extends Block {
       // wrap with TableCellInner.formatAt when length is 0 will create a new block
       // that can make sure TableCellInner struct correctly
       if (replacement.statics.blotName === blotName.tableCellInner) {
-        return this.wrap(blotName.tableCellInner, (replacement as TableCellInnerFormat).formats()[blotName.tableCellInner]);
+        const selfParent = this.parent;
+        if (selfParent.statics.blotName === blotName.tableCellInner) {
+          if (selfParent != null) {
+            selfParent.insertBefore(replacement, this.prev ? null : this.next);
+          }
+          if (this.parent.statics.blotName === blotName.tableCellInner && this.prev) {
+            // eslint-disable-next-line unicorn/no-this-assignment, ts/no-this-alias
+            let block: TypeBlock | null = this;
+            while (block) {
+              const next = block.next as TypeBlock | null;
+              replacement.appendChild(block);
+              block = next;
+            }
+          }
+          else {
+            replacement.appendChild(this);
+          }
+          // remove empty cell. tableCellFormat.optimize need col to compute
+          if (selfParent && selfParent.length() === 0) {
+            selfParent.parent.remove();
+          }
+        }
+        else {
+          if (selfParent != null) {
+            selfParent.insertBefore(replacement, this.next);
+          }
+          replacement.appendChild(this);
+        }
+        return replacement;
       }
       else {
         this.moveChildren(replacement);
