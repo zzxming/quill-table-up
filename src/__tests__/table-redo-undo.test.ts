@@ -11,36 +11,33 @@ afterEach(() => {
 });
 
 describe('table redo', () => {
-  it('merge undo', async () => {
+  const createTable = async (row: number, col: number) => {
     const quill = createQuillWithTableModule(`<p><br></p>`);
-    quill.updateContents([
-      { insert: '\n' },
-      { insert: { 'table-up-col': { tableId: '1', colId: '1', full: 'true', width: 33.333_333_333_333_33 } } },
-      { insert: { 'table-up-col': { tableId: '1', colId: '2', full: 'true', width: 33.333_333_333_333_33 } } },
-      { insert: { 'table-up-col': { tableId: '1', colId: '3', full: 'true', width: 33.333_333_333_333_33 } } },
-      { insert: '1' },
-      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '1', rowspan: 1, colspan: 1 } }, insert: '\n' },
-      { insert: '2' },
-      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '2', rowspan: 1, colspan: 1 } }, insert: '\n' },
-      { insert: '3' },
-      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '3', rowspan: 1, colspan: 1 } }, insert: '\n' },
-      { insert: '4' },
-      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '1', rowspan: 1, colspan: 1 } }, insert: '\n' },
-      { insert: '5' },
-      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '2', rowspan: 1, colspan: 1 } }, insert: '\n' },
-      { insert: '6' },
-      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '3', rowspan: 1, colspan: 1 } }, insert: '\n' },
-      { insert: '7' },
-      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '3', colId: '1', rowspan: 1, colspan: 1 } }, insert: '\n' },
-      { insert: '8' },
-      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '3', colId: '2', rowspan: 1, colspan: 1 } }, insert: '\n' },
-      { insert: '9' },
-      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '3', colId: '3', rowspan: 1, colspan: 1 } }, insert: '\n' },
-      { insert: '\n' },
-    ]);
+    const table: any[] = [{ insert: '\n' }];
+    for (const [i, _] of new Array(col).fill(0).entries()) {
+      table.push({ insert: { 'table-up-col': { tableId: '1', colId: i + 1, full: 'true', width: 1 / col * 100 } } });
+    }
+    for (let i = 0; i < row; i++) {
+      for (let j = 0; j < col; j++) {
+        table.push(
+          { insert: `${i * 3 + j + 1}` },
+          {
+            attributes: { 'table-up-cell-inner': { tableId: '1', rowId: i + 1, colId: j + 1, rowspan: 1, colspan: 1 } },
+            insert: '\n',
+          },
+        );
+      }
+    }
+    table.push({ insert: '\n' });
+    quill.setContents(table);
     // set range for undo won't scrollSelectionIntoView
     quill.setSelection({ index: 0, length: 0 });
     await vi.runAllTimersAsync();
+    return quill;
+  };
+
+  it('merge undo', async () => {
+    const quill = await createTable(3, 3);
     const tableModule = quill.getModule('tableUp') as TableUp;
     const table = quill.root.querySelector('table')!;
     tableModule.tableSelection = new TableSelection(tableModule, table, quill);
@@ -73,7 +70,6 @@ describe('table redo', () => {
           </tbody>
         </table>
       </div>
-      <p><br></p>
       <p><br></p>
     `,
       { ignoreAttrs: ['class', 'style', 'data-table-id', 'contenteditable'] },
