@@ -1,3 +1,4 @@
+/* eslint-disable ts/no-empty-object-type */
 /* eslint-disable unused-imports/no-unused-imports */
 import type { Assertion, AsymmetricMatchersContaining } from 'vitest';
 

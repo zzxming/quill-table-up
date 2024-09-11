@@ -83,7 +83,7 @@ const buildTheme = async (isDev: boolean = false) => {
       cleanCSS({}, (details) => {
         console.log(
           `${details.name}: ${details.stats.originalSize / 1000} KB -> ${
-              details.stats.minifiedSize / 1000
+            details.stats.minifiedSize / 1000
           } KB`,
         );
       }),

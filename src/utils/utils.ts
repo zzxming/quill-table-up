@@ -2,7 +2,6 @@ import type { Parchment as TypeParchment } from 'quill';
 import type { TableBodyFormat, TableCellFormat, TableCellInnerFormat, TableColFormat, TableColgroupFormat, TableMainFormat, TableRowFormat } from '../formats';
 import type { blotName } from './constants';
 
-// eslint-disable-next-line ts/ban-types
 export const isFunction = (val: any): val is Function => typeof val === 'function';
 export const isArray = Array.isArray;
 
