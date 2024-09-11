@@ -14,6 +14,7 @@ export class TableColgroupFormat extends ContainerFormat {
     const node = super.create() as HTMLElement;
     node.dataset.tableId = value.tableId;
     value.full && (node.dataset.full = String(value.full));
+    node.setAttribute('contenteditable', 'false');
     return node;
   }
 

@@ -219,32 +219,46 @@ export class TableUp {
     this.quill.root.addEventListener('scroll', () => {
       this.hideTableTools();
     });
-    this.quill.on(Quill.events.EDITOR_CHANGE, (event: string, range: Range) => {
+    this.quill.on(Quill.events.EDITOR_CHANGE, (event: string, range: Range, oldRange: Range) => {
       if (event === Quill.events.SELECTION_CHANGE && range) {
         const [startBlot] = this.quill.getLine(range.index);
         const [endBlot] = this.quill.getLine(range.index + range.length);
-
-        // not allow to select between TableCol
-        if (range.length === 0 && startBlot instanceof TableColFormat) {
-          return this.quill.setSelection(range.index - 1, 0, Quill.sources.SILENT);
+        let startTableBlot;
+        let endTableBlot;
+        try {
+          startTableBlot = findParentBlot(startBlot!, blotName.tableMain);
         }
-        else {
-          if (startBlot instanceof TableColFormat) {
-            return this.quill.setSelection(range.index - 1, range.length + 1, Quill.sources.SILENT);
+        catch {}
+        try {
+          endTableBlot = findParentBlot(endBlot!, blotName.tableMain);
+        }
+        catch {}
+
+        // only can select inside table or select all table
+        if (startBlot instanceof TableColFormat) {
+          return this.quill.setSelection(
+            range.index + (oldRange.index > range.index ? -1 : 1),
+            range.length + (oldRange.length === range.length ? 0 : oldRange.length > range.length ? -1 : 1),
+            Quill.sources.USER,
+          );
+        }
+        else if (endBlot instanceof TableColFormat) {
+          return this.quill.setSelection(range.index + 1, range.length + 1, Quill.sources.USER);
+        }
+
+        if (range.length > 0) {
+          if (startTableBlot && !endTableBlot) {
+            this.quill.setSelection(range.index - 1, range.length + 1, Quill.sources.USER);
           }
-          else if (endBlot instanceof TableColFormat) {
-            return this.quill.setSelection(range.index - 1, range.length - 1, Quill.sources.SILENT);
+          else if (endTableBlot && !startTableBlot) {
+            this.quill.setSelection(range.index, range.length + 1, Quill.sources.USER);
           }
         }
 
         // if range is not in table. hide table tools
-        try {
-          findParentBlot(startBlot!, blotName.tableMain);
-          findParentBlot(endBlot!, blotName.tableMain);
-          return;
+        if (!startTableBlot || !endTableBlot) {
+          this.hideTableTools();
         }
-        catch {}
-        this.hideTableTools();
       }
     });
 
