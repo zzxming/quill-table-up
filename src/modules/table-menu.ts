@@ -365,9 +365,9 @@ export class TableMenu {
   }
 
   destroy() {
-    if (!this.menu) return;
     for (const tooltip of this.tooltipItem) tooltip.remove();
     this.quill.root.removeEventListener('contextmenu', this.listenContextmenu);
+    if (!this.menu) return;
     this.menu.remove();
     this.menu = null;
   }
