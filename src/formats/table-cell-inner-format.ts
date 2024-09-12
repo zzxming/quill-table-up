@@ -131,7 +131,7 @@ export class TableCellInnerFormat extends ContainerFormat {
     };
   }
 
-  optimize(context: Record<string, any>) {
+  optimize() {
     const parent = this.parent;
     const { tableId, colId, rowId, rowspan, colspan, backgroundColor, height } = this;
     // handle BlockEmbed to insert tableCellInner when setContents
@@ -144,7 +144,10 @@ export class TableCellInnerFormat extends ContainerFormat {
       this.wrap(blotName.tableCell, { tableId, colId, rowId, rowspan, colspan, backgroundColor, height });
     }
 
-    super.optimize(context);
+    if (this.children.length > 0 && this.next != null && this.checkMerge()) {
+      this.next.moveChildren(this);
+      this.next.remove();
+    }
   }
 
   insertBefore(blot: TypeParchment.Blot, ref?: TypeParchment.Blot | null) {
