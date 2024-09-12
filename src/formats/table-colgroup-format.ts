@@ -77,12 +77,13 @@ export class TableColgroupFormat extends ContainerFormat {
     }
   }
 
-  optimize(context: Record< string, any>) {
+  optimize(context: Record<string, any>) {
     const parent = this.parent;
     if (parent != null && parent.statics.blotName !== blotName.tableMain) {
       const { tableId, full } = this;
       this.wrap(blotName.tableMain, { tableId, full });
     }
+
     super.optimize(context);
   }
 }

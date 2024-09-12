@@ -138,7 +138,6 @@ export class TableRowFormat extends ContainerFormat {
   optimize(context: Record<string, any>) {
     const parent = this.parent;
     const { tableId } = this;
-
     if (parent !== null && parent.statics.blotName !== blotName.tableBody) {
       this.wrap(blotName.tableBody, tableId);
     }

@@ -101,10 +101,10 @@ export class TableCellFormat extends ContainerFormat {
   optimize(context: Record<string, any>) {
     const parent = this.parent as TableRowFormat;
     const { tableId, rowId } = this;
-
     if (parent !== null && parent.statics.blotName !== blotName.tableRow) {
       this.wrap(blotName.tableRow, { tableId, rowId });
     }
+
     if (parent && parent.statics.blotName === blotName.tableRow && parent.rowId !== this.rowId) {
       const tableBlot = findParentBlot(this, blotName.tableMain);
       const colIds = tableBlot.getColIds();

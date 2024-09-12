@@ -79,6 +79,7 @@ export class TableColFormat extends BlockEmbed {
       const { tableId, full } = this;
       this.wrap(blotName.tableColgroup, { tableId, full });
     }
+
     super.optimize(context);
   }
 }
