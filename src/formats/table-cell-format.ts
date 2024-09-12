@@ -5,7 +5,7 @@ import { ContainerFormat } from './container-format';
 import type { TableRowFormat } from './table-row-format';
 
 let tempOptimizeRowIds: string[] = [];
-let timer: ReturnType<typeof setTimeout>;
+let timer: ReturnType<typeof setTimeout> | null;
 export class TableCellFormat extends ContainerFormat {
   static blotName = blotName.tableCell;
   static tagName = 'td';
@@ -136,9 +136,11 @@ export class TableCellFormat extends ContainerFormat {
     }
 
     super.optimize(context);
+
     if (timer) clearTimeout(timer);
     timer = setTimeout(() => {
       tempOptimizeRowIds = [];
+      timer = null;
     }, 0);
   }
 }

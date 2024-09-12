@@ -4,6 +4,7 @@ import { TableRowFormat } from './table-row-format';
 import { ContainerFormat } from './container-format';
 import { TableColFormat } from './table-col-format';
 
+let timer: ReturnType<typeof setTimeout> | null;
 export class TableMainFormat extends ContainerFormat {
   static blotName = blotName.tableMain;
   static tagName = 'table';
@@ -76,8 +77,10 @@ export class TableMainFormat extends ContainerFormat {
 
     super.optimize(context);
 
-    setTimeout(() => {
+    if (timer) clearTimeout(timer);
+    timer = setTimeout(() => {
       this.colWidthFillTable();
+      timer = null;
     }, 0);
   }
 }
