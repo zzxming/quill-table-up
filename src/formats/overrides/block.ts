@@ -2,12 +2,13 @@ import Quill from 'quill';
 import type TypeBlock from 'quill/blots/block';
 import type { Parchment as TypeParchment } from 'quill';
 import { blotName } from '../../utils';
+import { TableCellFormat } from '../table-cell-format';
 
 const Parchment = Quill.import('parchment');
 const Block = Quill.import('blots/block') as typeof TypeBlock;
 
 export class BlockOverride extends Block {
-  public replaceWith(name: string | TypeParchment.Blot, value?: any): TypeParchment.Blot {
+  replaceWith(name: string | TypeParchment.Blot, value?: any): TypeParchment.Blot {
     const replacement = typeof name === 'string' ? this.scroll.create(name, value) : name;
     if (replacement instanceof Parchment.ParentBlot) {
       // replace block to TableCellInner length is 0 when setContents
@@ -56,5 +57,20 @@ export class BlockOverride extends Block {
     }
     this.attributes.copy(replacement as TypeParchment.BlockBlot);
     return replacement;
+  }
+
+  format(name: string, value: any): void {
+    if (name === blotName.tableCellInner && this.parent.statics.blotName === name && !value) {
+      // if set tableCellInner null. set block in td. `enforceAllowedChildren` will move block child out of table
+      const tableCellInner = this.parent;
+      const tableCell = tableCellInner.parent;
+      if (tableCell instanceof TableCellFormat) {
+        tableCell.insertBefore(this, tableCellInner);
+        tableCellInner.remove();
+      }
+    }
+    else {
+      super.format(name, value);
+    }
   }
 }
