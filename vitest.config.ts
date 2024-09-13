@@ -14,5 +14,9 @@ export default defineConfig({
       reporter: ['html'],
       enabled: true,
     },
+    typecheck: {
+      include: ['**/__tests__/*.{test,spec}-d.ts'],
+      enabled: true,
+    },
   },
 });
