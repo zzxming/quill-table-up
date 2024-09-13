@@ -1,10 +1,10 @@
+import type { Parchment as TypeParchment } from 'quill';
 import type { TableValue } from '../utils';
 import { blotName } from '../utils';
 import { TableRowFormat } from './table-row-format';
 import { ContainerFormat } from './container-format';
 import { TableColFormat } from './table-col-format';
 
-let timer: ReturnType<typeof setTimeout> | null;
 export class TableMainFormat extends ContainerFormat {
   static blotName = blotName.tableMain;
   static tagName = 'table';
@@ -19,6 +19,14 @@ export class TableMainFormat extends ContainerFormat {
     node.setAttribute('cellspacing', '0');
 
     return node;
+  }
+
+  constructor(scroll: TypeParchment.ScrollBlot, domNode: Node) {
+    super(scroll, domNode);
+
+    setTimeout(() => {
+      this.colWidthFillTable();
+    }, 0);
   }
 
   colWidthFillTable() {
@@ -76,11 +84,5 @@ export class TableMainFormat extends ContainerFormat {
     }
 
     super.optimize(context);
-
-    if (timer) clearTimeout(timer);
-    timer = setTimeout(() => {
-      this.colWidthFillTable();
-      timer = null;
-    }, 0);
   }
 }
