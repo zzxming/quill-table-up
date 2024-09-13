@@ -51,8 +51,9 @@ export class TableColFormat extends BlockEmbed {
   }
 
   static value(domNode: HTMLElement) {
-    const { tableId, colId, full } = domNode.dataset;
+    const { tableId, colId } = domNode.dataset;
     const width = domNode.getAttribute('width');
+    const full = Object.hasOwn(domNode.dataset, 'full');
     const value: Record<string, any> = {
       tableId,
       colId,
