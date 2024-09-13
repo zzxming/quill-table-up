@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type TableUp from '../index';
 import { TableCellInnerFormat, TableSelection } from '../index';
-import { createQuillWithTableModule } from './utils';
+import { createQuillWithTableModule, createTable, createTaleColHTML } from './utils';
 
 beforeEach(() => {
   vi.useFakeTimers();
@@ -226,6 +226,90 @@ describe('merge and split cell', () => {
         <p><br></p>
       `,
       { ignoreAttrs: ['class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
+    );
+  });
+
+  it('merge cells should sort correct colId', async () => {
+    const quill = await createTable(5, 5);
+    const tableModule = quill.getModule('tableUp') as TableUp;
+    const table = quill.root.querySelector('table')!;
+    console.log(quill.root.innerHTML);
+    tableModule.tableSelection = new TableSelection(tableModule, table, quill);
+    const tds = quill.scroll.descendants(TableCellInnerFormat, 0);
+    tableModule.tableSelection.selectedTds = [tds[6], tds[7], tds[11], tds[12]];
+    tableModule.mergeCells();
+    await vi.runAllTimersAsync();
+    tableModule.tableSelection.selectedTds = [tds[5], tds[6], tds[10], tds[15], tds[16], tds[17], tds[20], tds[21], tds[22]];
+    tableModule.mergeCells();
+    await vi.runAllTimersAsync();
+    expect(quill.root).toEqualHTML(
+      `
+        <p><br></p>
+        <div>
+          <table cellpadding="0" cellspacing="0" data-full="true">
+          ${createTaleColHTML(5)}
+            <tbody>
+              <tr data-row-id="1">
+                ${
+                  new Array(5).fill(0).map((_, j) => `<td rowspan="1" colspan="1" data-row-id="1" data-col-id="${j + 1}">
+                    <div data-rowspan="1" data-colspan="1" data-row-id="1" data-col-id="${j + 1}"><p>${j + 1}</p></div>
+                  </td>`).join('\n')
+                }
+              </tr>
+              <tr data-row-id="2">
+                <td rowspan="4" colspan="3" data-row-id="2" data-col-id="1">
+                  <div data-rowspan="4" data-colspan="3" data-row-id="2" data-col-id="1">
+                    <p>6</p>
+                    <p>7</p>
+                    <p>8</p>
+                    <p>12</p>
+                    <p>13</p>
+                    <p>11</p>
+                    <p>16</p>
+                    <p>17</p>
+                    <p>18</p>
+                    <p>21</p>
+                    <p>22</p>
+                    <p>23</p>
+                  </div>
+                </td>
+                <td rowspan="1" colspan="1" data-row-id="2" data-col-id="4">
+                  <div data-rowspan="1" data-colspan="1" data-row-id="2" data-col-id="4"><p>9</p></div>
+                </td>
+                <td rowspan="1" colspan="1" data-row-id="2" data-col-id="5">
+                  <div data-rowspan="1" data-colspan="1" data-row-id="2" data-col-id="5"><p>10</p></div>
+                </td>
+              </tr>
+              <tr data-row-id="3">
+                <td rowspan="1" colspan="1" data-row-id="3" data-col-id="4">
+                  <div data-rowspan="1" data-colspan="1" data-row-id="3" data-col-id="4"><p>14</p></div>
+                </td>
+                <td rowspan="1" colspan="1" data-row-id="3" data-col-id="5">
+                  <div data-rowspan="1" data-colspan="1" data-row-id="3" data-col-id="5"><p>15</p></div>
+                </td>
+              </tr>
+              <tr data-row-id="4">
+                <td rowspan="1" colspan="1" data-row-id="4" data-col-id="4">
+                  <div data-rowspan="1" data-colspan="1" data-row-id="4" data-col-id="4"><p>19</p></div>
+                </td>
+                <td rowspan="1" colspan="1" data-row-id="4" data-col-id="5">
+                  <div data-rowspan="1" data-colspan="1" data-row-id="4" data-col-id="5"><p>20</p></div>
+                </td>
+              </tr>
+              <tr data-row-id="5">
+                <td rowspan="1" colspan="1" data-row-id="5" data-col-id="4">
+                  <div data-rowspan="1" data-colspan="1" data-row-id="5" data-col-id="4"><p>24</p></div>
+                </td>
+                <td rowspan="1" colspan="1" data-row-id="5" data-col-id="5">
+                  <div data-rowspan="1" data-colspan="1" data-row-id="5" data-col-id="5"><p>25</p></div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p><br></p>
+      `,
+      { ignoreAttrs: ['class', 'style', 'data-table-id', 'contenteditable'] },
     );
   });
 });

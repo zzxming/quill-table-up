@@ -1,4 +1,4 @@
-import { expect } from 'vitest';
+import { expect, vi } from 'vitest';
 import Quill from 'quill';
 import TableUp from '../index';
 
@@ -83,3 +83,74 @@ expect.extend({
     };
   },
 });
+
+interface TableColDeltaValue {
+  tableId: string;
+  colId: string;
+  width: number;
+  full?: 'true';
+};
+export const createTable = async (row: number, col: number, full: boolean = true, width: number = 100) => {
+  const quill = createQuillWithTableModule(`<p><br></p>`);
+  const table: any[] = [{ insert: '\n' }];
+  for (const [i, _] of new Array(col).fill(0).entries()) {
+    const value: TableColDeltaValue = { tableId: '1', colId: `${i + 1}`, width: 1 / col * 100 };
+    if (full) {
+      value.full = 'true';
+    }
+    else {
+      value.width = width;
+    }
+    table.push({ insert: { 'table-up-col': value } });
+  }
+  for (let i = 0; i < row; i++) {
+    for (let j = 0; j < col; j++) {
+      table.push(
+        { insert: `${i * row + j + 1}` },
+        {
+          attributes: { 'table-up-cell-inner': { tableId: '1', rowId: i + 1, colId: j + 1, rowspan: 1, colspan: 1 } },
+          insert: '\n',
+        },
+      );
+    }
+  }
+  table.push({ insert: '\n' });
+  quill.setContents(table);
+  // set range for undo won't scrollSelectionIntoView
+  quill.setSelection({ index: 0, length: 0 });
+  await vi.runAllTimersAsync();
+  return quill;
+};
+export const createTaleColHTML = (col: number, full: boolean = true, width: number = 100) => {
+  let colWidth = `${width}px`;
+  if (full) {
+    colWidth = `${1 / col * 100}%`;
+  }
+  return `
+    <colgroup ${full ? 'data-full="true"' : ''}>
+      ${new Array(col).fill(0).map((_, i) => `<col width="${colWidth}" data-col-id="${i + 1}" ${full ? 'data-full="true"' : ''} />`).join('\n')}
+    </colgroup>
+  `;
+};
+export const createTableHTML = (row: number, col: number, full: boolean = true, width: number = 100) => {
+  return `
+    <div>
+      <table cellpadding="0" cellspacing="0" ${full ? 'data-full="true"' : ''}>
+        ${createTaleColHTML(col, full, width)}
+        <tbody>
+          ${
+            new Array(row).fill(0).map((_, i) => `
+              <tr data-row-id="${i + 1}">
+                ${
+                  new Array(col).fill(0).map((_, j) => `<td rowspan="1" colspan="1" data-row-id="${i + 1}" data-col-id="${j + 1}">
+                    <div data-rowspan="1" data-colspan="1" data-row-id="${i + 1}" data-col-id="${j + 1}"><p>${i * row + j + 1}</p></div>
+                  </td>`).join('\n')
+                }
+              </tr>
+            `).join('\n')
+          }
+        </tbody>
+      </table>
+    </div>
+  `;
+};
