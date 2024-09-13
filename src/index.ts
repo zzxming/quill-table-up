@@ -9,7 +9,7 @@ import type { Delta as TypeDelta } from 'quill/core';
 import type { BlockEmbed as TypeBlockEmbed } from 'quill/blots/block';
 import type TypeBlock from 'quill/blots/block';
 import type { TableColValue, TableTextOptions, TableUpOptions } from './utils';
-import { blotName, createSelectBox, debounce, findParentBlot, isFunction, randomId, tableColMinWidthPre, tableColMinWidthPx } from './utils';
+import { blotName, createSelectBox, debounce, findParentBlot, findParentBlots, isFunction, randomId, tableColMinWidthPre, tableColMinWidthPx } from './utils';
 import { BlockOverride, ScrollOverride, TableBodyFormat, TableCellFormat, TableCellInnerFormat, TableColFormat, TableColgroupFormat, TableMainFormat, TableRowFormat, TableWrapperFormat } from './formats';
 import { TableResize, TableSelection } from './modules';
 
@@ -654,11 +654,10 @@ export class TableUp {
     if (selectedTds.length <= 0) return;
     // find baseTd and baseTr
     const baseTd = selectedTds[isDown ? selectedTds.length - 1 : 0];
-    const tableBlot = findParentBlot(baseTd, blotName.tableMain);
+    const [tableBlot, baseTdParentTr] = findParentBlots(baseTd, [blotName.tableMain, blotName.tableRow] as const);
     const [tableBodyBlot] = tableBlot.descendants(TableBodyFormat);
     if (!tableBodyBlot) return;
 
-    const baseTdParentTr = findParentBlot(baseTd, blotName.tableRow);
     const tableTrs = tableBlot.getRows();
     const i = tableTrs.indexOf(baseTdParentTr);
     const insertRowIndex = i + (isDown ? baseTd.rowspan : 0);
@@ -944,8 +943,7 @@ export class TableUp {
     if (selectedTds.length !== 1) return;
     const baseTd = selectedTds[0];
     if (baseTd.colspan === 1 && baseTd.rowspan === 1) return;
-    const baseTr = findParentBlot(baseTd, blotName.tableRow);
-    const tableBlot = findParentBlot(baseTd, blotName.tableMain);
+    const [tableBlot, baseTr] = findParentBlots(baseTd, [blotName.tableMain, blotName.tableRow] as const);
     const tableId = tableBlot.tableId;
     const colIndex = baseTd.getColumnIndex();
     const colIds = tableBlot.getColIds().slice(colIndex, colIndex + baseTd.colspan).reverse();
@@ -977,4 +975,4 @@ export default TableUp;
 export * from './modules';
 export * from './formats';
 export * from './utils/types';
-export { findParentBlot, randomId } from './utils';
+export { findParentBlot, findParentBlots, randomId } from './utils';
