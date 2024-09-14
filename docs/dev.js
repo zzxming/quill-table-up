@@ -285,7 +285,6 @@
         return null;
     };
 
-    // eslint-disable-next-line ts/ban-types
     const isFunction = (val) => typeof val === 'function';
     const isArray = Array.isArray;
     const randomId = () => Math.random().toString(36).slice(2);
@@ -309,6 +308,25 @@
             throw new Error(`${blot.statics.blotName} must be a child of ${targetBlotName}`);
         }
         return target;
+    }
+    function findParentBlots(blot, targetBlotNames) {
+        const resultBlots = new Array(targetBlotNames.length);
+        const blotNameIndexMaps = new Map(targetBlotNames.map((name, i) => [name, i]));
+        let target = blot.parent;
+        while (target && target !== blot.scroll) {
+            if (blotNameIndexMaps.size === 0)
+                break;
+            if (blotNameIndexMaps.has(target.statics.blotName)) {
+                const index = blotNameIndexMaps.get(target.statics.blotName);
+                resultBlots[index] = target;
+                blotNameIndexMaps.delete(target.statics.blotName);
+            }
+            target = target.parent;
+        }
+        if (blotNameIndexMaps.size > 0) {
+            throw new Error(`${blot.statics.blotName} must be a child of ${Array.from(blotNameIndexMaps.keys()).join(', ')}`);
+        }
+        return resultBlots;
     }
 
     const blotName = {
@@ -362,135 +380,25 @@
             }
             super.insertAt(index, value, def);
         }
-    }
-
-    class TableWrapperFormat extends ContainerFormat {
-        static blotName = blotName.tableWrapper;
-        static tagName = 'p';
-        static className = 'ql-table-wrapper';
-        static create(value) {
-            const node = super.create();
-            node.dataset.tableId = value;
-            node.addEventListener('dragstart', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-            }, true);
-            // not allow drop content into table
-            node.addEventListener('drop', (e) => {
-                e.preventDefault();
-            });
-            node.addEventListener('dragover', (e) => {
-                e.preventDefault();
-                e.dataTransfer.dropEffect = 'none';
-            });
-            return node;
-        }
-        get tableId() {
-            return this.domNode.dataset.tableId;
-        }
-        insertBefore(blot, ref) {
-            if (blot.statics.blotName === this.statics.blotName) {
-                super.insertBefore(blot.children.head, ref);
-            }
-            else if (this.statics.allowedChildren.some((child) => child.blotName === blot.statics.blotName)) {
-                super.insertBefore(blot, ref);
-            }
-            else {
-                // TODO: is this necessary?
-                if (ref) {
-                    this.prev ? this.prev.insertBefore(blot, null) : this.parent.insertBefore(blot, this);
+        optimize(_context) {
+            if (this.children.length === 0) {
+                if (this.statics.defaultChild != null) {
+                    const child = this.scroll.create(this.statics.defaultChild.blotName);
+                    this.appendChild(child);
                 }
                 else {
-                    this.next ? this.next.insertBefore(blot, ref) : this.parent.appendChild(blot);
+                    this.remove();
                 }
             }
-        }
-        checkMerge() {
-            const next = this.next;
-            return (next !== null
-                && next.statics.blotName === this.statics.blotName
-                && next.domNode.tagName === this.domNode.tagName
-                && next.domNode.dataset.tableId === this.tableId);
-        }
-    }
-
-    const BlockEmbed$1 = Quill.import('blots/block/embed');
-    class TableColFormat extends BlockEmbed$1 {
-        scroll;
-        domNode;
-        static blotName = blotName.tableCol;
-        static tagName = 'col';
-        static create(value) {
-            const { width, tableId, colId, full } = value;
-            const node = super.create();
-            node.setAttribute('width', `${Number.parseFloat(width)}${full ? '%' : 'px'}`);
-            full && (node.dataset.full = String(full));
-            node.dataset.tableId = tableId;
-            node.dataset.colId = colId;
-            node.setAttribute('contenteditable', 'false');
-            return node;
-        }
-        constructor(scroll, domNode) {
-            super(scroll, domNode);
-            this.scroll = scroll;
-            this.domNode = domNode;
-        }
-        get width() {
-            const width = this.domNode.getAttribute('width');
-            return Number.parseFloat(width);
-        }
-        set width(value) {
-            const width = Number.parseFloat(value);
-            this.domNode.setAttribute('width', `${width}${this.full ? '%' : 'px'}`);
-        }
-        get tableId() {
-            return this.domNode.dataset.tableId;
-        }
-        get colId() {
-            return this.domNode.dataset.colId;
-        }
-        get full() {
-            return Object.hasOwn(this.domNode.dataset, 'full');
-        }
-        static value(domNode) {
-            const { tableId, colId, full } = domNode.dataset;
-            const width = domNode.getAttribute('width');
-            const value = {
-                tableId,
-                colId,
-                full,
-            };
-            width && (value.width = Number.parseFloat(width));
-            return value;
-        }
-        checkMerge() {
-            const next = this.next;
-            const { tableId, colId } = this;
-            return (next !== null
-                && next.statics.blotName === this.statics.blotName
-                && next.domNode.dataset.tableId === tableId
-                && next.domNode.dataset.colId === colId);
-        }
-        optimize(context) {
-            const parent = this.parent;
-            if (parent != null && parent.statics.blotName !== blotName.tableColgroup) {
-                const marker = this.scroll.create('block');
-                this.parent.insertBefore(marker, this.next);
-                const tableWrapper = this.scroll.create(blotName.tableWrapper, this.tableId);
-                const table = this.scroll.create(blotName.tableMain, this.tableId);
-                this.full && (table.full = true);
-                const tableColgroup = this.scroll.create(blotName.tableColgroup);
-                tableColgroup.appendChild(this);
-                table.appendChild(tableColgroup);
-                tableWrapper.appendChild(table);
-                marker.replaceWith(tableWrapper);
+            if (this.children.length > 0 && this.next != null && this.checkMerge()) {
+                this.next.moveChildren(this);
+                this.next.remove();
             }
-            super.optimize(context);
         }
     }
 
     const Block$1 = Quill.import('blots/block');
-    const BlockEmbed = Quill.import('blots/block/embed');
+    const BlockEmbed$1 = Quill.import('blots/block/embed');
     class TableCellInnerFormat extends ContainerFormat {
         static blotName = blotName.tableCellInner;
         static tagName = 'div';
@@ -593,47 +501,46 @@
                 [this.statics.blotName]: value,
             };
         }
-        optimize(context) {
+        optimize() {
             const parent = this.parent;
             const { tableId, colId, rowId, rowspan, colspan, backgroundColor, height } = this;
             // handle BlockEmbed to insert tableCellInner when setContents
-            if (this.prev && this.prev instanceof BlockEmbed) {
+            if (this.prev && this.prev instanceof BlockEmbed$1) {
                 const afterBlock = this.scroll.create('block');
                 this.appendChild(this.prev);
                 this.appendChild(afterBlock);
             }
             if (parent !== null && parent.statics.blotName !== blotName.tableCell) {
-                // insert a mark blot to make sure table insert index
-                const marker = this.scroll.create('block');
-                parent.insertBefore(marker, this.next);
-                const tableWrapper = this.scroll.create(blotName.tableWrapper, tableId);
-                const table = this.scroll.create(blotName.tableMain, tableId);
-                const tableBody = this.scroll.create(blotName.tableBody);
-                const tr = this.scroll.create(blotName.tableRow, rowId);
-                const td = this.scroll.create(blotName.tableCell, {
-                    tableId,
-                    rowId,
-                    colId,
-                    rowspan,
-                    colspan,
-                    backgroundColor,
-                    height,
-                });
-                td.appendChild(this);
-                tr.appendChild(td);
-                tableBody.appendChild(tr);
-                table.appendChild(tableBody);
-                tableWrapper.appendChild(table);
-                marker.replaceWith(tableWrapper);
+                this.wrap(blotName.tableCell, { tableId, colId, rowId, rowspan, colspan, backgroundColor, height });
             }
-            super.optimize(context);
+            if (this.children.length > 0 && this.next != null && this.checkMerge()) {
+                this.next.moveChildren(this);
+                this.next.remove();
+            }
+            // is necessary?
+            // if (this.uiNode != null && this.uiNode !== this.domNode.firstChild) {
+            //   this.domNode.insertBefore(this.uiNode, this.domNode.firstChild);
+            // }
+            // if (this.children.length === 0) {
+            //   // if cellInner doesn't have child then remove it. not insert a block
+            //   this.remove();
+            // }
         }
-        insertBefore(childBlot, refBlot) {
-            if (childBlot instanceof TableCellInnerFormat || childBlot instanceof TableColFormat) {
-                console.error(`Not supported table insert into table.`);
-                return;
+        insertBefore(blot, ref) {
+            if (blot.statics.blotName === this.statics.blotName) {
+                const cellInnerBlot = blot;
+                const cellInnerBlotValue = cellInnerBlot.formats()[this.statics.blotName];
+                const selfValue = this.formats()[this.statics.blotName];
+                const isSame = Object.entries(selfValue).every(([key, value]) => value === cellInnerBlotValue[key]);
+                if (!isSame) {
+                    const selfRow = findParentBlot(this, blotName.tableRow);
+                    return selfRow.insertBefore(blot.wrap(blotName.tableCell, cellInnerBlotValue), ref ? this.parent : this.parent.next);
+                }
+                else {
+                    cellInnerBlot.moveChildren(this);
+                }
             }
-            super.insertBefore(childBlot, refBlot);
+            super.insertBefore(blot, ref);
         }
     }
 
@@ -643,9 +550,11 @@
         static className = 'ql-table-row';
         static create(value) {
             const node = super.create();
-            node.dataset.rowId = value;
+            node.dataset.rowId = value.rowId;
+            node.dataset.tableId = value.tableId;
             return node;
         }
+        resorting = false;
         checkMerge() {
             const next = this.next;
             return (next !== null
@@ -654,6 +563,9 @@
         }
         get rowId() {
             return this.domNode.dataset.rowId;
+        }
+        get tableId() {
+            return this.domNode.dataset.tableId;
         }
         setHeight(value) {
             this.foreachCellInner((cellInner) => {
@@ -751,141 +663,31 @@
                     break;
             }
         }
-    }
-
-    class TableMainFormat extends ContainerFormat {
-        static blotName = blotName.tableMain;
-        static tagName = 'table';
-        constructor(scroll, domNode) {
-            super(scroll, domNode);
-            setTimeout(() => {
-                this.colWidthFillTable();
-            }, 0);
-        }
-        static create(value) {
-            const node = super.create();
-            node.dataset.tableId = value;
-            node.classList.add('ql-table');
-            node.setAttribute('cellpadding', '0');
-            node.setAttribute('cellspacing', '0');
-            return node;
-        }
-        colWidthFillTable() {
-            if (this.full)
-                return;
-            const cols = this.getCols();
-            if (!cols)
-                return;
-            const colsWidth = cols.reduce((sum, col) => col.width + sum, 0);
-            if (colsWidth === 0 || Number.isNaN(colsWidth) || this.full)
-                return null;
-            this.domNode.style.width = `${colsWidth}px`;
-            return colsWidth;
-        }
-        get tableId() {
-            return this.domNode.dataset.tableId;
-        }
-        get full() {
-            return Object.hasOwn(this.domNode.dataset, 'full');
-        }
-        set full(value) {
-            this.domNode[value ? 'setAttribute' : 'removeAttribute']('data-full', '');
-        }
-        getRows() {
-            return this.descendants(TableRowFormat);
-        }
-        getRowIds() {
-            return this.getRows().map(d => d.rowId);
-        }
-        getCols() {
-            return this.descendants(TableColFormat);
-        }
-        getColIds() {
-            return this.getCols().map(d => d.colId);
-        }
-        checkMerge() {
-            const next = this.next;
-            return (next !== null
-                && next.statics.blotName === this.statics.blotName
-                && next.domNode.tagName === this.domNode.tagName
-                && next.domNode.dataset.tableId === this.tableId);
-        }
-    }
-
-    class TableColgroupFormat extends ContainerFormat {
-        static blotName = blotName.tableColgroup;
-        static tagName = 'colgroup';
-        deleteAt(index, length) {
-            if (index === 0 && length === this.length()) {
-                return this.parent.remove();
+        optimize(context) {
+            const parent = this.parent;
+            const { tableId } = this;
+            if (parent !== null && parent.statics.blotName !== blotName.tableBody) {
+                this.wrap(blotName.tableBody, tableId);
             }
-            super.deleteAt(index, length);
-        }
-        findCol(index) {
-            const next = this.children.iterator();
-            let i = 0;
-            let cur;
-            while ((cur = next())) {
-                if (i === index) {
-                    break;
-                }
-                i++;
-            }
-            return cur;
-        }
-        insertColByIndex(index, value) {
-            const table = this.parent;
-            if (!(table instanceof TableMainFormat)) {
-                throw new TypeError('TableColgroupFormat should be child of TableFormat');
-            }
-            const col = this.findCol(index);
-            const tableCellInner = this.scroll.create(blotName.tableCol, value);
-            if (table.full) {
-                // TODO: first minus column should be near by
-                const next = this.children.iterator();
-                let cur;
-                while ((cur = next())) {
-                    if (cur.width - tableCellInner.width >= tableColMinWidthPre) {
-                        cur.width -= tableCellInner.width;
-                        break;
-                    }
-                }
-            }
-            this.insertBefore(tableCellInner, col);
-        }
-        removeColByIndex(index) {
-            const table = this.parent;
-            if (!(table instanceof TableMainFormat)) {
-                throw new TypeError('TableColgroupFormat should be child of TableMainFormat');
-            }
-            const col = this.findCol(index);
-            if (col) {
-                if (col.next) {
-                    col.next.width += col.width;
-                }
-                else if (col.prev) {
-                    col.prev.width += col.width;
-                }
-                col.remove();
-            }
+            super.optimize(context);
         }
     }
 
     class TableBodyFormat extends ContainerFormat {
         static blotName = blotName.tableBody;
         static tagName = 'tbody';
+        static create(value) {
+            const node = super.create();
+            node.dataset.tableId = value;
+            return node;
+        }
+        get tableId() {
+            return this.domNode.dataset.tableId;
+        }
         checkMerge() {
             const next = this.next;
             return (next !== null
                 && next.statics.blotName === this.statics.blotName);
-        }
-        deleteAt(index, length) {
-            if (index === 0 && length === this.length()) {
-                return this.parent.remove();
-            }
-            this.children.forEachAt(index, length, (child, offset, length) => {
-                child.deleteAt(offset, length);
-            });
         }
         // insert row at index
         insertRow(targetIndex) {
@@ -939,6 +741,283 @@
                 tr.appendChild(td);
             }
             this.insertBefore(tr, rows[targetIndex] || null);
+        }
+        optimize(context) {
+            const parent = this.parent;
+            if (parent !== null && parent.statics.blotName !== blotName.tableMain) {
+                const { tableId } = this;
+                this.wrap(blotName.tableMain, { tableId });
+            }
+            super.optimize(context);
+        }
+    }
+
+    const BlockEmbed = Quill.import('blots/block/embed');
+    class TableColFormat extends BlockEmbed {
+        scroll;
+        domNode;
+        static blotName = blotName.tableCol;
+        static tagName = 'col';
+        static create(value) {
+            const { width, tableId, colId, full } = value;
+            const node = super.create();
+            node.setAttribute('width', `${Number.parseFloat(width)}${full ? '%' : 'px'}`);
+            full && (node.dataset.full = String(full));
+            node.dataset.tableId = tableId;
+            node.dataset.colId = colId;
+            node.setAttribute('contenteditable', 'false');
+            return node;
+        }
+        constructor(scroll, domNode) {
+            super(scroll, domNode);
+            this.scroll = scroll;
+            this.domNode = domNode;
+        }
+        get width() {
+            const width = this.domNode.getAttribute('width');
+            return Number.parseFloat(width);
+        }
+        set width(value) {
+            const width = Number.parseFloat(value);
+            this.domNode.setAttribute('width', `${width}${this.full ? '%' : 'px'}`);
+        }
+        get tableId() {
+            return this.domNode.dataset.tableId;
+        }
+        get colId() {
+            return this.domNode.dataset.colId;
+        }
+        get full() {
+            return Object.hasOwn(this.domNode.dataset, 'full');
+        }
+        static value(domNode) {
+            const { tableId, colId } = domNode.dataset;
+            const width = domNode.getAttribute('width');
+            const full = Object.hasOwn(domNode.dataset, 'full');
+            const value = {
+                tableId,
+                colId,
+                full,
+            };
+            width && (value.width = Number.parseFloat(width));
+            return value;
+        }
+        checkMerge() {
+            const next = this.next;
+            const { tableId, colId } = this;
+            return (next !== null
+                && next.statics.blotName === this.statics.blotName
+                && next.domNode.dataset.tableId === tableId
+                && next.domNode.dataset.colId === colId);
+        }
+        optimize(context) {
+            const parent = this.parent;
+            if (parent != null && parent.statics.blotName !== blotName.tableColgroup) {
+                const { tableId, full } = this;
+                this.wrap(blotName.tableColgroup, { tableId, full });
+            }
+            super.optimize(context);
+        }
+    }
+
+    class TableMainFormat extends ContainerFormat {
+        static blotName = blotName.tableMain;
+        static tagName = 'table';
+        static create(value) {
+            const node = super.create();
+            const { tableId, full } = value;
+            node.dataset.tableId = tableId;
+            full && (node.dataset.full = String(full));
+            node.classList.add('ql-table');
+            node.setAttribute('cellpadding', '0');
+            node.setAttribute('cellspacing', '0');
+            return node;
+        }
+        constructor(scroll, domNode) {
+            super(scroll, domNode);
+            setTimeout(() => {
+                this.colWidthFillTable();
+            }, 0);
+        }
+        colWidthFillTable() {
+            if (this.full)
+                return;
+            const cols = this.getCols();
+            if (!cols)
+                return;
+            const colsWidth = cols.reduce((sum, col) => col.width + sum, 0);
+            if (colsWidth === 0 || Number.isNaN(colsWidth) || this.full)
+                return null;
+            this.domNode.style.width = `${colsWidth}px`;
+            return colsWidth;
+        }
+        get tableId() {
+            return this.domNode.dataset.tableId;
+        }
+        get full() {
+            return Object.hasOwn(this.domNode.dataset, 'full');
+        }
+        set full(value) {
+            this.domNode[value ? 'setAttribute' : 'removeAttribute']('data-full', '');
+        }
+        getRows() {
+            return this.descendants(TableRowFormat);
+        }
+        getRowIds() {
+            return this.getRows().map(d => d.rowId);
+        }
+        getCols() {
+            return this.descendants(TableColFormat);
+        }
+        getColIds() {
+            return this.getCols().map(d => d.colId);
+        }
+        checkMerge() {
+            const next = this.next;
+            return (next !== null
+                && next.statics.blotName === this.statics.blotName
+                && next.domNode.tagName === this.domNode.tagName
+                && next.domNode.dataset.tableId === this.tableId);
+        }
+        optimize(context) {
+            const parent = this.parent;
+            if (parent !== null && parent.statics.blotName !== blotName.tableWrapper) {
+                this.wrap(blotName.tableWrapper, this.tableId);
+            }
+            super.optimize(context);
+        }
+    }
+
+    class TableColgroupFormat extends ContainerFormat {
+        static blotName = blotName.tableColgroup;
+        static tagName = 'colgroup';
+        static create(value) {
+            const node = super.create();
+            node.dataset.tableId = value.tableId;
+            value.full && (node.dataset.full = String(value.full));
+            node.setAttribute('contenteditable', 'false');
+            return node;
+        }
+        get tableId() {
+            return this.domNode.dataset.tableId;
+        }
+        get full() {
+            return Object.hasOwn(this.domNode.dataset, 'full');
+        }
+        findCol(index) {
+            const next = this.children.iterator();
+            let i = 0;
+            let cur;
+            while ((cur = next())) {
+                if (i === index) {
+                    break;
+                }
+                i++;
+            }
+            return cur;
+        }
+        insertColByIndex(index, value) {
+            const table = this.parent;
+            if (!(table instanceof TableMainFormat)) {
+                throw new TypeError('TableColgroupFormat should be child of TableFormat');
+            }
+            const col = this.findCol(index);
+            const tableCellInner = this.scroll.create(blotName.tableCol, value);
+            if (table.full) {
+                // TODO: first minus column should be near by
+                const next = this.children.iterator();
+                let cur;
+                while ((cur = next())) {
+                    if (cur.width - tableCellInner.width >= tableColMinWidthPre) {
+                        cur.width -= tableCellInner.width;
+                        break;
+                    }
+                }
+            }
+            this.insertBefore(tableCellInner, col);
+        }
+        removeColByIndex(index) {
+            const table = this.parent;
+            if (!(table instanceof TableMainFormat)) {
+                throw new TypeError('TableColgroupFormat should be child of TableMainFormat');
+            }
+            const col = this.findCol(index);
+            if (col) {
+                if (col.next) {
+                    col.next.width += col.width;
+                }
+                else if (col.prev) {
+                    col.prev.width += col.width;
+                }
+                col.remove();
+            }
+        }
+        optimize(context) {
+            const parent = this.parent;
+            if (parent != null && parent.statics.blotName !== blotName.tableMain) {
+                const { tableId, full } = this;
+                this.wrap(blotName.tableMain, { tableId, full });
+            }
+            super.optimize(context);
+        }
+    }
+
+    class TableWrapperFormat extends ContainerFormat {
+        static blotName = blotName.tableWrapper;
+        static tagName = 'div';
+        static className = 'ql-table-wrapper';
+        static create(value) {
+            const node = super.create();
+            node.dataset.tableId = value;
+            node.addEventListener('dragstart', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+            }, true);
+            // not allow drop content into table
+            node.addEventListener('drop', (e) => {
+                e.preventDefault();
+            });
+            node.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'none';
+            });
+            return node;
+        }
+        get tableId() {
+            return this.domNode.dataset.tableId;
+        }
+        insertBefore(blot, ref) {
+            if (blot.statics.blotName === this.statics.blotName) {
+                super.insertBefore(blot.children.head, ref);
+            }
+            else if (this.statics.allowedChildren.some((child) => child.blotName === blot.statics.blotName)) {
+                super.insertBefore(blot, ref);
+            }
+            else {
+                // TODO: is this necessary?
+                if (ref) {
+                    this.prev ? this.prev.insertBefore(blot, null) : this.parent.insertBefore(blot, this);
+                }
+                else {
+                    this.next ? this.next.insertBefore(blot, ref) : this.parent.appendChild(blot);
+                }
+            }
+        }
+        checkMerge() {
+            const next = this.next;
+            return (next !== null
+                && next.statics.blotName === this.statics.blotName
+                && next.domNode.tagName === this.domNode.tagName
+                && next.domNode.dataset.tableId === this.tableId);
+        }
+        deleteAt(index, length) {
+            super.deleteAt(index, length);
+            setTimeout(() => {
+                const tableBodys = (this.descendants(TableBodyFormat));
+                const tableColgroups = (this.descendants(TableColgroupFormat));
+                if (tableBodys.length === 0 || tableColgroups.length === 0)
+                    this.remove();
+            }, 0);
         }
     }
 
@@ -1014,18 +1093,47 @@
                 && next.domNode.dataset.rowId === rowId
                 && next.domNode.dataset.colId === colId);
         }
-        deleteAt(index, length) {
-            if (index === 0 && length === this.length()) {
-                const cell = (this.next || this.prev);
-                const cellInner = cell && cell.getCellInner();
-                if (cellInner) {
-                    cellInner.colspan += this.colspan;
-                }
-                return this.remove();
+        optimize(context) {
+            const parent = this.parent;
+            const { tableId, rowId } = this;
+            if (parent !== null && parent.statics.blotName !== blotName.tableRow) {
+                this.wrap(blotName.tableRow, { tableId, rowId });
             }
-            this.children.forEachAt(index, length, (child, offset, length) => {
-                child.deleteAt(offset, length);
-            });
+            if (parent && parent.statics.blotName === blotName.tableRow && parent.rowId !== this.rowId) {
+                const tableBlot = findParentBlot(this, blotName.tableMain);
+                const colIds = tableBlot.getColIds();
+                const rowIds = tableBlot.getRowIds();
+                const selfColIndex = colIds.indexOf(this.colId);
+                const selfRowIndex = rowIds.indexOf(this.rowId);
+                const findInsertBefore = (parent) => {
+                    if (!parent)
+                        return parent;
+                    const rowIndex = rowIds.indexOf(parent.rowId);
+                    if (selfRowIndex === -1) {
+                        const firstChildColIndex = colIds.indexOf(parent.children.head.colId);
+                        if (parent.children.head === this || (!this.prev && firstChildColIndex < selfColIndex)) {
+                            return parent;
+                        }
+                        // find before optimize start already have row
+                        let returnRow = parent.next;
+                        while (returnRow && (returnRow.resorting || rowIndex === rowIds.indexOf(returnRow.rowId))) {
+                            returnRow = returnRow.next;
+                        }
+                        return returnRow;
+                    }
+                    if (rowIndex === selfRowIndex) {
+                        const parentColIndex = colIds.indexOf(parent.children.head.colId);
+                        return parentColIndex < selfColIndex ? findInsertBefore(parent.next) : parent;
+                    }
+                    return rowIndex < selfRowIndex ? findInsertBefore(parent.next) : parent;
+                };
+                const insertBeforeRow = findInsertBefore(parent);
+                const rowBlot = this.wrap(blotName.tableRow, { tableId, rowId });
+                // set flag to judge row insert position
+                rowBlot.resorting = true;
+                parent.parent.insertBefore(rowBlot, insertBeforeRow);
+            }
+            super.optimize(context);
         }
     }
 
@@ -1058,6 +1166,14 @@
             }
             return block;
         }
+        optimize(context) {
+            super.optimize(context);
+            // clear flag after all optimizations
+            const blots = this.scroll.descendants(TableRowFormat);
+            for (const row of blots) {
+                row.resorting = false;
+            }
+        }
     }
 
     const Parchment = Quill.import('parchment');
@@ -1072,7 +1188,35 @@
                 // wrap with TableCellInner.formatAt when length is 0 will create a new block
                 // that can make sure TableCellInner struct correctly
                 if (replacement.statics.blotName === blotName.tableCellInner) {
-                    return this.wrap(blotName.tableCellInner, replacement.formats()[blotName.tableCellInner]);
+                    const selfParent = this.parent;
+                    if (selfParent.statics.blotName === blotName.tableCellInner) {
+                        if (selfParent != null) {
+                            selfParent.insertBefore(replacement, this.prev ? null : this.next);
+                        }
+                        if (this.parent.statics.blotName === blotName.tableCellInner && this.prev) {
+                            // eslint-disable-next-line unicorn/no-this-assignment, ts/no-this-alias
+                            let block = this;
+                            while (block) {
+                                const next = block.next;
+                                replacement.appendChild(block);
+                                block = next;
+                            }
+                        }
+                        else {
+                            replacement.appendChild(this);
+                        }
+                        // remove empty cell. tableCellFormat.optimize need col to compute
+                        if (selfParent && selfParent.length() === 0) {
+                            selfParent.parent.remove();
+                        }
+                    }
+                    else {
+                        if (selfParent != null) {
+                            selfParent.insertBefore(replacement, this.next);
+                        }
+                        replacement.appendChild(this);
+                    }
+                    return replacement;
                 }
                 else {
                     this.moveChildren(replacement);
@@ -1084,6 +1228,34 @@
             }
             this.attributes.copy(replacement);
             return replacement;
+        }
+        format(name, value) {
+            if (name === blotName.tableCellInner && this.parent.statics.blotName === name && !value) {
+                // when set tableCellInner null. not only clear current block tableCellInner block and also
+                // need move td/tr after current cell out of current table. like code-block, split into two table
+                const [tableCell, tableRow, tableWrapper] = findParentBlots(this, [blotName.tableCell, blotName.tableRow, blotName.tableWrapper]);
+                const tableNext = tableWrapper.next;
+                let tableRowNext = tableRow.next;
+                let tableCellNext = tableCell.next;
+                // clear cur block
+                tableWrapper.parent.insertBefore(this, tableNext);
+                // only move out of table. `optimize` will generate new table
+                // move table cell
+                while (tableCellNext) {
+                    const next = tableCellNext.next;
+                    tableWrapper.parent.insertBefore(tableCellNext, tableNext);
+                    tableCellNext = next;
+                }
+                // move table row
+                while (tableRowNext) {
+                    const next = tableRowNext.next;
+                    tableWrapper.parent.insertBefore(tableRowNext, tableNext);
+                    tableRowNext = next;
+                }
+            }
+            else {
+                super.format(name, value);
+            }
         }
     }
 
@@ -1307,7 +1479,7 @@
                     item.classList.add('break');
                 }
                 else {
-                    //  add icon
+                    // add icon
                     const iconDom = document.createElement('i');
                     iconDom.classList.add('icon');
                     if (isFunction(icon)) {
@@ -1355,6 +1527,9 @@
                             }, false);
                         }
                         item.appendChild(input);
+                        if (this.options.contextmenu) {
+                            item.addEventListener('click', e => e.stopPropagation());
+                        }
                     }
                     else {
                         isFunction(handle) && item.addEventListener('click', (e) => {
@@ -1362,7 +1537,6 @@
                             handle(this.tableModule, this.selectedTds, e);
                         }, false);
                     }
-                    item.addEventListener('click', e => e.stopPropagation());
                     // add text
                     const tipText = this.options.tipTexts[name] || tip;
                     if (tipText && tip) {
@@ -1441,11 +1615,11 @@
             }
         }
         destroy() {
-            if (!this.menu)
-                return;
             for (const tooltip of this.tooltipItem)
                 tooltip.remove();
             this.quill.root.removeEventListener('contextmenu', this.listenContextmenu);
+            if (!this.menu)
+                return;
             this.menu.remove();
             this.menu = null;
         }
@@ -1507,7 +1681,10 @@
             const tableMain = Quill.find(this.table);
             if (!tableMain)
                 return [];
-            const tableCells = new Set(tableMain.descendants(TableCellFormat));
+            const tableCells = new Set(tableMain.descendants(TableCellFormat).map((cell, i) => {
+                cell.index = i;
+                return cell;
+            }));
             // set boundary to initially mouse move rectangle
             let boundary = {
                 x: Math.min(endPoint.x, startPoint.x),
@@ -1552,7 +1729,10 @@
                 width: boundary.x1 - boundary.x,
                 height: boundary.y1 - boundary.y,
             }, this.quill.root.parentNode);
-            return Array.from(selectedCells).map(cell => cell.getCellInner());
+            return Array.from(selectedCells).sort((a, b) => a.index - b.index).map((cell) => {
+                cell.index = undefined;
+                return cell.getCellInner();
+            });
         }
         mouseDownHandler(mousedownEvent) {
             const { button, target, clientX, clientY } = mousedownEvent;
@@ -1872,54 +2052,60 @@
                 top: `${tableMainRect.y - rootRect.y}px`,
                 left: `${tableMainRect.x - rootRect.x + this.tableWrapper.domNode.scrollLeft}px`,
             });
-            const corner = document.createElement('div');
-            corner.classList.add('ql-table-resizer-corner');
-            Object.assign(corner.style, {
-                width: `${this.options.size}px`,
-                height: `${this.options.size}px`,
-                transform: `translate(-${this.options.size}px, -${this.options.size}px)`,
-            });
-            this.root.appendChild(corner);
-            let colHeadStr = '';
-            for (const col of this.tableCols) {
-                let width = col.width + (tableMain.full ? '%' : 'px');
-                if (!col.width) {
-                    width = `${col.domNode.getBoundingClientRect().width}px`;
-                }
-                colHeadStr += `<div class="ql-table-col-header" style="width: ${width}">
-        <div class="ql-table-col-separator" style="height: ${tableMainRect.height + this.options.size - 3}px"></div>
-      </div>`;
+            if (this.tableCols.length > 0 && this.tableRows.length > 0) {
+                const corner = document.createElement('div');
+                corner.classList.add('ql-table-resizer-corner');
+                Object.assign(corner.style, {
+                    width: `${this.options.size}px`,
+                    height: `${this.options.size}px`,
+                    transform: `translate(-${this.options.size}px, -${this.options.size}px)`,
+                });
+                this.root.appendChild(corner);
             }
-            const colHeadWrapper = document.createElement('div');
-            colHeadWrapper.classList.add('ql-table-col-wrapper');
-            Object.assign(colHeadWrapper.style, {
-                transform: `translateY(-${this.options.size}px)`,
-                width: `${tableMainRect.width}px`,
-                height: `${this.options.size}px`,
-            });
-            colHeadWrapper.innerHTML = colHeadStr;
-            this.root.appendChild(colHeadWrapper);
-            colHeadWrapper.scrollLeft = this.tableWrapper.domNode.scrollLeft;
-            this.colHeadWrapper = colHeadWrapper;
-            this.bindColDragEvent();
-            let rowHeadStr = '';
-            for (const row of this.tableRows) {
-                const height = `${row.domNode.getBoundingClientRect().height}px`;
-                rowHeadStr += `<div class="ql-table-row-header" style="height: ${height}">
+            if (this.tableCols.length > 0) {
+                let colHeadStr = '';
+                for (const col of this.tableCols) {
+                    let width = col.width + (tableMain.full ? '%' : 'px');
+                    if (!col.width) {
+                        width = `${col.domNode.getBoundingClientRect().width}px`;
+                    }
+                    colHeadStr += `<div class="ql-table-col-header" style="width: ${width}">
+          <div class="ql-table-col-separator" style="height: ${tableMainRect.height + this.options.size - 3}px"></div>
+        </div>`;
+                }
+                const colHeadWrapper = document.createElement('div');
+                colHeadWrapper.classList.add('ql-table-col-wrapper');
+                Object.assign(colHeadWrapper.style, {
+                    transform: `translateY(-${this.options.size}px)`,
+                    width: `${tableMainRect.width}px`,
+                    height: `${this.options.size}px`,
+                });
+                colHeadWrapper.innerHTML = colHeadStr;
+                this.root.appendChild(colHeadWrapper);
+                colHeadWrapper.scrollLeft = this.tableWrapper.domNode.scrollLeft;
+                this.colHeadWrapper = colHeadWrapper;
+                this.bindColDragEvent();
+            }
+            if (this.tableRows.length > 0) {
+                let rowHeadStr = '';
+                for (const row of this.tableRows) {
+                    const height = `${row.domNode.getBoundingClientRect().height}px`;
+                    rowHeadStr += `<div class="ql-table-row-header" style="height: ${height}">
         <div class="ql-table-row-separator" style="width: ${tableMainRect.width + this.options.size - 3}px"></div>
       </div>`;
+                }
+                const rowHeadWrapper = document.createElement('div');
+                rowHeadWrapper.classList.add('ql-table-row-wrapper');
+                Object.assign(rowHeadWrapper.style, {
+                    transform: `translateX(-${this.options.size}px)`,
+                    width: `${this.options.size}px`,
+                    height: `${tableMainRect.height}px`,
+                });
+                rowHeadWrapper.innerHTML = rowHeadStr;
+                this.root.appendChild(rowHeadWrapper);
+                this.rowHeadWrapper = rowHeadWrapper;
+                this.bindRowDragEvent();
             }
-            const rowHeadWrapper = document.createElement('div');
-            rowHeadWrapper.classList.add('ql-table-row-wrapper');
-            Object.assign(rowHeadWrapper.style, {
-                transform: `translateX(-${this.options.size}px)`,
-                width: `${this.options.size}px`,
-                height: `${tableMainRect.height}px`,
-            });
-            rowHeadWrapper.innerHTML = rowHeadStr;
-            this.root.appendChild(rowHeadWrapper);
-            this.rowHeadWrapper = rowHeadWrapper;
-            this.bindRowDragEvent();
         }
         hideTool() {
             this.root.classList.add('ql-hidden');
@@ -2014,8 +2200,13 @@
                 prefix: /^$/,
                 suffix: /^\s*$/,
                 handler(range) {
+                    const [line, offset] = this.quill.getLine(range.index);
+                    const format = this.quill.getFormat(range.index + offset + 1, 1);
+                    // next line still in table. not exit
+                    if (format[blotName.tableCellInner]) {
+                        return true;
+                    }
                     // if have tow empty lines in table cell. enter will exit table and add a new line after table
-                    const [line] = this.quill.getLine(range.index);
                     let numLines = 2;
                     let cur = line;
                     while (cur !== null && cur.length() <= 1) {
@@ -2110,30 +2301,39 @@
             this.quill.root.addEventListener('scroll', () => {
                 this.hideTableTools();
             });
-            this.quill.on(Quill.events.EDITOR_CHANGE, (event, range) => {
+            this.quill.on(Quill.events.EDITOR_CHANGE, (event, range, oldRange) => {
                 if (event === Quill.events.SELECTION_CHANGE && range) {
                     const [startBlot] = this.quill.getLine(range.index);
                     const [endBlot] = this.quill.getLine(range.index + range.length);
-                    // not allow to select between TableCol
-                    if (range.length === 0 && startBlot instanceof TableColFormat) {
-                        return this.quill.setSelection(range.index - 1, 0, Quill.sources.SILENT);
+                    let startTableBlot;
+                    let endTableBlot;
+                    try {
+                        startTableBlot = findParentBlot(startBlot, blotName.tableMain);
                     }
-                    else {
-                        if (startBlot instanceof TableColFormat) {
-                            return this.quill.setSelection(range.index - 1, range.length + 1, Quill.sources.SILENT);
+                    catch { }
+                    try {
+                        endTableBlot = findParentBlot(endBlot, blotName.tableMain);
+                    }
+                    catch { }
+                    // only can select inside table or select all table
+                    if (startBlot instanceof TableColFormat) {
+                        return this.quill.setSelection(range.index + (oldRange.index > range.index ? -1 : 1), range.length + (oldRange.length === range.length ? 0 : oldRange.length > range.length ? -1 : 1), Quill.sources.USER);
+                    }
+                    else if (endBlot instanceof TableColFormat) {
+                        return this.quill.setSelection(range.index + 1, range.length + 1, Quill.sources.USER);
+                    }
+                    if (range.length > 0) {
+                        if (startTableBlot && !endTableBlot) {
+                            this.quill.setSelection(range.index - 1, range.length + 1, Quill.sources.USER);
                         }
-                        else if (endBlot instanceof TableColFormat) {
-                            return this.quill.setSelection(range.index - 1, range.length - 1, Quill.sources.SILENT);
+                        else if (endTableBlot && !startTableBlot) {
+                            this.quill.setSelection(range.index, range.length + 1, Quill.sources.USER);
                         }
                     }
                     // if range is not in table. hide table tools
-                    try {
-                        findParentBlot(startBlot, blotName.tableMain);
-                        findParentBlot(endBlot, blotName.tableMain);
-                        return;
+                    if (!startTableBlot || !endTableBlot) {
+                        this.hideTableTools();
                     }
-                    catch { }
-                    this.hideTableTools();
                 }
             });
             this.pasteTableHandler();
@@ -2500,11 +2700,7 @@
                 return;
             // find baseTd and baseTr
             const baseTd = selectedTds[isDown ? selectedTds.length - 1 : 0];
-            const tableBlot = findParentBlot(baseTd, blotName.tableMain);
-            const [tableBodyBlot] = tableBlot.descendants(TableBodyFormat);
-            if (!tableBodyBlot)
-                return;
-            const baseTdParentTr = findParentBlot(baseTd, blotName.tableRow);
+            const [tableBlot, tableBodyBlot, baseTdParentTr] = findParentBlots(baseTd, [blotName.tableMain, blotName.tableBody, blotName.tableRow]);
             const tableTrs = tableBlot.getRows();
             const i = tableTrs.indexOf(baseTdParentTr);
             const insertRowIndex = i + (isDown ? baseTd.rowspan : 0);
@@ -2777,8 +2973,7 @@
             const baseTd = selectedTds[0];
             if (baseTd.colspan === 1 && baseTd.rowspan === 1)
                 return;
-            const baseTr = findParentBlot(baseTd, blotName.tableRow);
-            const tableBlot = findParentBlot(baseTd, blotName.tableMain);
+            const [tableBlot, baseTr] = findParentBlots(baseTd, [blotName.tableMain, blotName.tableRow]);
             const tableId = tableBlot.tableId;
             const colIndex = baseTd.getColumnIndex();
             const colIds = tableBlot.getColIds().slice(colIndex, colIndex + baseTd.colspan).reverse();
@@ -2823,6 +3018,7 @@
     exports.TableWrapperFormat = TableWrapperFormat;
     exports.default = TableUp;
     exports.findParentBlot = findParentBlot;
+    exports.findParentBlots = findParentBlots;
     exports.getRelativeRect = getRelativeRect;
     exports.isRectanglesIntersect = isRectanglesIntersect;
     exports.randomId = randomId;
