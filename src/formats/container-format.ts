@@ -44,4 +44,21 @@ export class ContainerFormat extends Container {
     }
     super.insertAt(index, value, def);
   }
+
+  public optimize(_context: Record<string, any>) {
+    if (this.children.length === 0) {
+      if (this.statics.defaultChild != null) {
+        const child = this.scroll.create(this.statics.defaultChild.blotName);
+        this.appendChild(child);
+      }
+      else {
+        this.remove();
+      }
+    }
+
+    if (this.children.length > 0 && this.next != null && this.checkMerge()) {
+      this.next.moveChildren(this);
+      this.next.remove();
+    }
+  }
 }

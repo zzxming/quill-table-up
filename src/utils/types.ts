@@ -57,6 +57,14 @@ export interface TableCellValue {
   backgroundColor?: string;
   height?: number;
 };
+export interface TableRowValue {
+  tableId: string;
+  rowId: string;
+}
+export interface TableValue {
+  tableId: string;
+  full: boolean;
+};
 
 export interface RelactiveRect {
   x: number;

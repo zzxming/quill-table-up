@@ -223,7 +223,7 @@ export class TableMenu {
         item.classList.add('break');
       }
       else {
-      //  add icon
+        // add icon
         const iconDom = document.createElement('i');
         iconDom.classList.add('icon');
         if (isFunction(icon)) {
@@ -274,6 +274,9 @@ export class TableMenu {
             }, false);
           }
           item.appendChild(input);
+          if (this.options.contextmenu) {
+            item.addEventListener('click', e => e.stopPropagation());
+          }
         }
         else {
           isFunction(handle) && item.addEventListener('click', (e) => {
@@ -281,7 +284,6 @@ export class TableMenu {
             handle(this.tableModule, this.selectedTds, e);
           }, false);
         }
-        item.addEventListener('click', e => e.stopPropagation());
 
         // add text
         const tipText = this.options.tipTexts[name] || tip;
@@ -363,9 +365,9 @@ export class TableMenu {
   }
 
   destroy() {
-    if (!this.menu) return;
     for (const tooltip of this.tooltipItem) tooltip.remove();
     this.quill.root.removeEventListener('contextmenu', this.listenContextmenu);
+    if (!this.menu) return;
     this.menu.remove();
     this.menu = null;
   }

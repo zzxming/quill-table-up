@@ -1,10 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import {
-  TableCellInnerFormat,
-} from '../formats';
 import type TableUp from '../index';
-import { TableSelection } from '../index';
-import { createQuillWithTableModule } from './utils';
+import { TableCellInnerFormat, TableSelection } from '../index';
+import { createQuillWithTableModule, createTable, createTaleColHTML } from './utils';
 
 beforeEach(() => {
   vi.useFakeTimers();
@@ -28,9 +25,9 @@ describe('merge and split cell', () => {
     expect(quill.root).toEqualHTML(
       `
         <p><br></p>
-        <p>
-          <table cellpadding="0" cellspacing="0" data-full>
-            <colgroup>
+        <div>
+          <table cellpadding="0" cellspacing="0" data-full="true">
+            <colgroup data-full="true">
               ${new Array(3).fill(0).map(() => `<col width="${1 / 3 * 100}%" data-full="true" />`).join('\n')}
             </colgroup>
             <tbody>
@@ -53,7 +50,7 @@ describe('merge and split cell', () => {
               </tr>
             </tbody>
           </table>
-        </p>
+        </div>
         <p><br></p>
       `,
       { ignoreAttrs: ['class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
@@ -74,9 +71,9 @@ describe('merge and split cell', () => {
     expect(quill.root).toEqualHTML(
       `
         <p><br></p>
-        <p>
-          <table cellpadding="0" cellspacing="0" data-full>
-            <colgroup>
+        <div>
+          <table cellpadding="0" cellspacing="0" data-full="true">
+            <colgroup data-full="true">
               <col width="20%" data-full="true" />
               <col width="60%" data-full="true" />
               <col width="20%" data-full="true" />
@@ -102,7 +99,7 @@ describe('merge and split cell', () => {
               </tr>
             </tbody>
           </table>
-        </p>
+        </div>
         <p><br></p>
       `,
       { ignoreAttrs: ['class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
@@ -129,9 +126,9 @@ describe('merge and split cell', () => {
     expect(quill.root).toEqualHTML(
       `
         <p><br></p>
-        <p>
-          <table cellpadding="0" cellspacing="0" data-full>
-            <colgroup>
+        <div>
+          <table cellpadding="0" cellspacing="0" data-full="true">
+            <colgroup data-full="true">
               ${new Array(4).fill(0).map(() => `<col width="${1 / 7 * 100}%" data-full="true" />`).join('\n')}
               <col width="${2 / 7 * 100}%" data-full="true" />
               <col width="${1 / 7 * 100}%" data-full="true" />
@@ -174,7 +171,7 @@ describe('merge and split cell', () => {
               }
             </tbody>
           </table>
-        </p>
+        </div>
         <p><br></p>
       `,
       { ignoreAttrs: ['class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
@@ -198,9 +195,9 @@ describe('merge and split cell', () => {
     expect(quill.root).toEqualHTML(
       `
         <p><br></p>
-        <p>
-          <table cellpadding="0" cellspacing="0" data-full>
-            <colgroup>
+        <div>
+          <table cellpadding="0" cellspacing="0" data-full="true">
+            <colgroup data-full="true">
               ${new Array(3).fill(0).map(() => `<col width="${1 / 3 * 100}%" data-full="true" />`).join('\n')}
             </colgroup>
             <tbody>
@@ -225,10 +222,94 @@ describe('merge and split cell', () => {
               }
             </tbody>
           </table>
-        </p>
+        </div>
         <p><br></p>
       `,
       { ignoreAttrs: ['class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
+    );
+  });
+
+  it('merge cells should sort correct colId', async () => {
+    const quill = await createTable(5, 5);
+    const tableModule = quill.getModule('tableUp') as TableUp;
+    const table = quill.root.querySelector('table')!;
+    console.log(quill.root.innerHTML);
+    tableModule.tableSelection = new TableSelection(tableModule, table, quill);
+    const tds = quill.scroll.descendants(TableCellInnerFormat, 0);
+    tableModule.tableSelection.selectedTds = [tds[6], tds[7], tds[11], tds[12]];
+    tableModule.mergeCells();
+    await vi.runAllTimersAsync();
+    tableModule.tableSelection.selectedTds = [tds[5], tds[6], tds[10], tds[15], tds[16], tds[17], tds[20], tds[21], tds[22]];
+    tableModule.mergeCells();
+    await vi.runAllTimersAsync();
+    expect(quill.root).toEqualHTML(
+      `
+        <p><br></p>
+        <div>
+          <table cellpadding="0" cellspacing="0" data-full="true">
+          ${createTaleColHTML(5)}
+            <tbody>
+              <tr data-row-id="1">
+                ${
+                  new Array(5).fill(0).map((_, j) => `<td rowspan="1" colspan="1" data-row-id="1" data-col-id="${j + 1}">
+                    <div data-rowspan="1" data-colspan="1" data-row-id="1" data-col-id="${j + 1}"><p>${j + 1}</p></div>
+                  </td>`).join('\n')
+                }
+              </tr>
+              <tr data-row-id="2">
+                <td rowspan="4" colspan="3" data-row-id="2" data-col-id="1">
+                  <div data-rowspan="4" data-colspan="3" data-row-id="2" data-col-id="1">
+                    <p>6</p>
+                    <p>7</p>
+                    <p>8</p>
+                    <p>12</p>
+                    <p>13</p>
+                    <p>11</p>
+                    <p>16</p>
+                    <p>17</p>
+                    <p>18</p>
+                    <p>21</p>
+                    <p>22</p>
+                    <p>23</p>
+                  </div>
+                </td>
+                <td rowspan="1" colspan="1" data-row-id="2" data-col-id="4">
+                  <div data-rowspan="1" data-colspan="1" data-row-id="2" data-col-id="4"><p>9</p></div>
+                </td>
+                <td rowspan="1" colspan="1" data-row-id="2" data-col-id="5">
+                  <div data-rowspan="1" data-colspan="1" data-row-id="2" data-col-id="5"><p>10</p></div>
+                </td>
+              </tr>
+              <tr data-row-id="3">
+                <td rowspan="1" colspan="1" data-row-id="3" data-col-id="4">
+                  <div data-rowspan="1" data-colspan="1" data-row-id="3" data-col-id="4"><p>14</p></div>
+                </td>
+                <td rowspan="1" colspan="1" data-row-id="3" data-col-id="5">
+                  <div data-rowspan="1" data-colspan="1" data-row-id="3" data-col-id="5"><p>15</p></div>
+                </td>
+              </tr>
+              <tr data-row-id="4">
+                <td rowspan="1" colspan="1" data-row-id="4" data-col-id="4">
+                  <div data-rowspan="1" data-colspan="1" data-row-id="4" data-col-id="4"><p>19</p></div>
+                </td>
+                <td rowspan="1" colspan="1" data-row-id="4" data-col-id="5">
+                  <div data-rowspan="1" data-colspan="1" data-row-id="4" data-col-id="5"><p>20</p></div>
+                </td>
+              </tr>
+              <tr data-row-id="5">
+                <td rowspan="1" colspan="1" data-row-id="5" data-col-id="4">
+                  <div data-rowspan="1" data-colspan="1" data-row-id="5" data-col-id="4"><p>24</p></div>
+                </td>
+                <td rowspan="1" colspan="1" data-row-id="5" data-col-id="5">
+                  <div data-rowspan="1" data-colspan="1" data-row-id="5" data-col-id="5"><p>25</p></div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p><br></p>
+      `,
+      { ignoreAttrs: ['class', 'style', 'data-table-id', 'contenteditable'] },
     );
   });
 });
@@ -248,9 +329,9 @@ describe('remove column from table', () => {
     expect(quill.root).toEqualHTML(
       `
         <p><br></p>
-        <p>
-          <table cellpadding="0" cellspacing="0" data-full>
-            <colgroup>
+        <div>
+          <table cellpadding="0" cellspacing="0" data-full="true">
+            <colgroup data-full="true">
               <col width="${1 / 3 * 100 * 3}%" data-full="true" />
             </colgroup>
             <tbody>
@@ -263,7 +344,7 @@ describe('remove column from table', () => {
               }
             </tbody>
           </table>
-        </p>
+        </div>
         <p><br></p>
       `,
       { ignoreAttrs: ['class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
@@ -290,9 +371,9 @@ describe('remove column from table', () => {
     expect(quill.root).toEqualHTML(
       `
         <p><br></p>
-        <p>
-          <table cellpadding="0" cellspacing="0" data-full>
-            <colgroup>
+        <div>
+          <table cellpadding="0" cellspacing="0" data-full="true">
+            <colgroup data-full="true">
               <col width="25%" data-full="true" />
               <col width="75%" data-full="true" />
             </colgroup>
@@ -329,7 +410,7 @@ describe('remove column from table', () => {
               </tr>
             </tbody>
           </table>
-        </p>
+        </div>
         <p><br></p>
       `,
       { ignoreAttrs: ['class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
@@ -352,9 +433,9 @@ describe('remove row from table', () => {
     expect(quill.root).toEqualHTML(
       `
         <p><br></p>
-        <p>
-          <table cellpadding="0" cellspacing="0" data-full>
-            <colgroup>
+        <div>
+          <table cellpadding="0" cellspacing="0" data-full="true">
+            <colgroup data-full="true">
               ${new Array(3).fill(0).map(() => `<col width="${1 / 3 * 100}%" data-full="true" />`).join('\n')}
             </colgroup>
             <tbody>
@@ -363,7 +444,7 @@ describe('remove row from table', () => {
               </tr>
             </tbody>
           </table>
-        </p>
+        </div>
         <p><br></p>
       `,
       { ignoreAttrs: ['class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
@@ -387,9 +468,9 @@ describe('remove row from table', () => {
     expect(quill.root).toEqualHTML(
       `
         <p><br></p>
-        <p>
-          <table cellpadding="0" cellspacing="0" data-full>
-            <colgroup>
+        <div>
+          <table cellpadding="0" cellspacing="0" data-full="true">
+            <colgroup data-full="true">
               ${new Array(3).fill(0).map(() => `<col width="${1 / 3 * 100}%" data-full="true" />`).join('\n')}
             </colgroup>
             <tbody>
@@ -402,7 +483,7 @@ describe('remove row from table', () => {
               </tr>
             </tbody>
           </table>
-        </p>
+        </div>
         <p><br></p>
       `,
       { ignoreAttrs: ['class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
@@ -419,9 +500,9 @@ describe('insert column into table', () => {
     expect(quill.root).toEqualHTML(
       `
         <p><br></p>
-        <p>
-          <table cellpadding="0" cellspacing="0" data-full>
-            <colgroup>
+        <div>
+          <table cellpadding="0" cellspacing="0" data-full="true">
+            <colgroup data-full="true">
               ${new Array(4).fill(0).map(() => `<col width="${100 / 4}%" data-full="true" />`).join('\n')}
             </colgroup>
             <tbody>
@@ -434,7 +515,7 @@ describe('insert column into table', () => {
               }
             </tbody>
           </table>
-        </p>
+        </div>
         <p><br></p>
       `,
       { ignoreAttrs: ['class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
@@ -455,9 +536,9 @@ describe('insert column into table', () => {
     expect(quill.root).toEqualHTML(
       `
         <p><br></p>
-        <p>
-          <table cellpadding="0" cellspacing="0" data-full>
-            <colgroup>
+        <div>
+          <table cellpadding="0" cellspacing="0" data-full="true">
+            <colgroup data-full="true">
               <col width="6%" data-full="true" />
               <col width="44%" data-full="true" />
               <col width="50%" data-full="true" />
@@ -472,7 +553,7 @@ describe('insert column into table', () => {
               }
             </tbody>
           </table>
-        </p>
+        </div>
         <p><br></p>
       `,
       { ignoreAttrs: ['class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
@@ -496,9 +577,9 @@ describe('insert column into table', () => {
     expect(quill.root).toEqualHTML(
       `
         <p><br></p>
-        <p>
-          <table cellpadding="0" cellspacing="0" data-full>
-            <colgroup>
+        <div>
+          <table cellpadding="0" cellspacing="0" data-full="true">
+            <colgroup data-full="true">
               <col width="44%" data-full="true" />
               <col width="6%" data-full="true" />
               <col width="50%" data-full="true" />
@@ -517,7 +598,7 @@ describe('insert column into table', () => {
               </tr>
             </tbody>
           </table>
-        </p>
+        </div>
         <p><br></p>
       `,
       { ignoreAttrs: ['class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
@@ -538,9 +619,9 @@ describe('insert column into table', () => {
     expect(quill.root).toEqualHTML(
       `
         <p><br></p>
-        <p>
-          <table cellpadding="0" cellspacing="0" data-full>
-            <colgroup>
+        <div>
+          <table cellpadding="0" cellspacing="0" data-full="true">
+            <colgroup data-full="true">
               <col width="44%" data-full="true" />
               <col width="50%" data-full="true" />
               <col width="6%" data-full="true" />
@@ -555,7 +636,7 @@ describe('insert column into table', () => {
               }
             </tbody>
           </table>
-        </p>
+        </div>
         <p><br></p>
       `,
       { ignoreAttrs: ['class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
@@ -579,9 +660,9 @@ describe('insert column into table', () => {
     expect(quill.root).toEqualHTML(
       `
         <p><br></p>
-        <p>
-          <table cellpadding="0" cellspacing="0" data-full>
-            <colgroup>
+        <div>
+          <table cellpadding="0" cellspacing="0" data-full="true">
+            <colgroup data-full="true">
               <col width="44%" data-full="true" />
               <col width="6%" data-full="true" />
               <col width="50%" data-full="true" />
@@ -600,7 +681,7 @@ describe('insert column into table', () => {
               </tr>
             </tbody>
           </table>
-        </p>
+        </div>
         <p><br></p>
       `,
       { ignoreAttrs: ['class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
@@ -624,9 +705,9 @@ describe('insert column into table', () => {
     expect(quill.root).toEqualHTML(
       `
         <p><br></p>
-        <p>
-          <table cellpadding="0" cellspacing="0" data-full>
-            <colgroup>
+        <div>
+          <table cellpadding="0" cellspacing="0" data-full="true">
+            <colgroup data-full="true">
               <col width="44%" data-full="true" />
               <col width="50%" data-full="true" />
               <col width="6%" data-full="true" />
@@ -646,7 +727,7 @@ describe('insert column into table', () => {
               </tr>
             </tbody>
           </table>
-        </p>
+        </div>
         <p><br></p>
       `,
       { ignoreAttrs: ['class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
@@ -673,9 +754,9 @@ describe('insert column into table', () => {
     expect(quill.root).toEqualHTML(
       `
         <p><br></p>
-        <p>
-          <table cellpadding="0" cellspacing="0" data-full>
-            <colgroup>
+        <div>
+          <table cellpadding="0" cellspacing="0" data-full="true">
+            <colgroup data-full="true">
               <col width="${1 / 3 * 100 - 6}%" data-full="true" />
               <col width="6%" data-full="true" />
               <col width="${1 / 3 * 100}%" data-full="true" />
@@ -716,7 +797,7 @@ describe('insert column into table', () => {
               </tr>
             </tbody>
           </table>
-        </p>
+        </div>
         <p><br></p>
       `,
       { ignoreAttrs: ['class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
@@ -740,9 +821,9 @@ describe('insert column into table', () => {
     expect(quill.root).toEqualHTML(
       `
         <p><br></p>
-        <p>
-          <table cellpadding="0" cellspacing="0" data-full>
-            <colgroup>
+        <div>
+          <table cellpadding="0" cellspacing="0" data-full="true">
+            <colgroup data-full="true">
               <col width="14%" data-full="true" />
               <col width="20%" data-full="true" />
               <col width="6%" data-full="true" />
@@ -784,7 +865,7 @@ describe('insert column into table', () => {
               </tr>
             </tbody>
           </table>
-        </p>
+        </div>
         <p><br></p>
       `,
       { ignoreAttrs: ['class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
@@ -807,9 +888,9 @@ describe('insert row into table', () => {
     expect(quill.root).toEqualHTML(
       `
         <p><br></p>
-        <p>
-          <table cellpadding="0" cellspacing="0" data-full>
-            <colgroup>
+        <div>
+          <table cellpadding="0" cellspacing="0" data-full="true">
+            <colgroup data-full="true">
               <col width="50%" data-full="true" />
               <col width="50%" data-full="true" />
             </colgroup>
@@ -823,7 +904,7 @@ describe('insert row into table', () => {
               }
             </tbody>
           </table>
-        </p>
+        </div>
         <p><br></p>
       `,
       { ignoreAttrs: ['class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
@@ -850,9 +931,9 @@ describe('insert row into table', () => {
     expect(quill.root).toEqualHTML(
       `
         <p><br></p>
-        <p>
-          <table cellpadding="0" cellspacing="0" data-full>
-            <colgroup>
+        <div>
+          <table cellpadding="0" cellspacing="0" data-full="true">
+            <colgroup data-full="true">
               ${new Array(5).fill(0).map(() => `<col width="20%" data-full="true" />`).join('\n')}
             </colgroup>
             <tbody>
@@ -891,7 +972,7 @@ describe('insert row into table', () => {
               </tr>
             </tbody>
           </table>
-        </p>
+        </div>
         <p><br></p>
       `,
       { ignoreAttrs: ['class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
@@ -912,9 +993,9 @@ describe('insert row into table', () => {
     expect(quill.root).toEqualHTML(
       `
         <p><br></p>
-        <p>
-          <table cellpadding="0" cellspacing="0" data-full>
-            <colgroup>
+        <div>
+          <table cellpadding="0" cellspacing="0" data-full="true">
+            <colgroup data-full="true">
               <col width="50%" data-full="true" />
               <col width="50%" data-full="true" />
             </colgroup>
@@ -928,7 +1009,7 @@ describe('insert row into table', () => {
               }
             </tbody>
           </table>
-        </p>
+        </div>
         <p><br></p>
       `,
       { ignoreAttrs: ['class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
@@ -953,9 +1034,9 @@ describe('insert row into table', () => {
     expect(quill.root).toEqualHTML(
       `
         <p><br></p>
-        <p>
-          <table cellpadding="0" cellspacing="0" data-full>
-            <colgroup>
+        <div>
+          <table cellpadding="0" cellspacing="0" data-full="true">
+            <colgroup data-full="true">
               <col width="20%" data-full="true" />
               <col width="60%" data-full="true" />
               <col width="20%" data-full="true" />
@@ -985,7 +1066,7 @@ describe('insert row into table', () => {
               </tr>
             </tbody>
           </table>
-        </p>
+        </div>
         <p><br></p>
       `,
       { ignoreAttrs: ['class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
@@ -1045,9 +1126,9 @@ describe('unusual delete', () => {
     expect(quill.root).toEqualHTML(
       `
         <p><br></p>
-        <p>
-          <table cellpadding="0" cellspacing="0" data-full>
-            <colgroup>
+        <div>
+          <table cellpadding="0" cellspacing="0" data-full="true">
+            <colgroup data-full="true">
               ${new Array(5).fill(`<col width="20%" data-full="true" />`).join('\n')}
             </colgroup>
             <tbody>
@@ -1081,7 +1162,7 @@ describe('unusual delete', () => {
               </tr>
             </tbody>
           </table>
-        </p>
+        </div>
         <p><br></p>
       `,
       { ignoreAttrs: ['class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
@@ -1112,9 +1193,9 @@ describe('unusual delete', () => {
     expect(quill.root).toEqualHTML(
       `
         <p><br></p>
-        <p>
-          <table cellpadding="0" cellspacing="0" data-full>
-            <colgroup>
+        <div>
+          <table cellpadding="0" cellspacing="0" data-full="true">
+            <colgroup data-full="true">
               ${new Array(5).fill(`<col width="20%" data-full="true" />`).join('\n')}
             </colgroup>
             <tbody>
@@ -1149,7 +1230,7 @@ describe('unusual delete', () => {
               </tr>
             </tbody>
           </table>
-        </p>
+        </div>
         <p><br></p>
       `,
       { ignoreAttrs: ['class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },

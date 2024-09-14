@@ -9,7 +9,7 @@ import type { Delta as TypeDelta } from 'quill/core';
 import type { BlockEmbed as TypeBlockEmbed } from 'quill/blots/block';
 import type TypeBlock from 'quill/blots/block';
 import type { TableColValue, TableTextOptions, TableUpOptions } from './utils';
-import { blotName, createSelectBox, debounce, findParentBlot, isFunction, randomId, tableColMinWidthPre, tableColMinWidthPx } from './utils';
+import { blotName, createSelectBox, debounce, findParentBlot, findParentBlots, isFunction, randomId, tableColMinWidthPre, tableColMinWidthPx } from './utils';
 import { BlockOverride, ScrollOverride, TableBodyFormat, TableCellFormat, TableCellInnerFormat, TableColFormat, TableColgroupFormat, TableMainFormat, TableRowFormat, TableWrapperFormat } from './formats';
 import { TableResize, TableSelection } from './modules';
 
@@ -104,8 +104,13 @@ export class TableUp {
       prefix: /^$/,
       suffix: /^\s*$/,
       handler(this: { quill: Quill }, range: Range) {
+        const [line, offset] = this.quill.getLine(range.index);
+        const format = this.quill.getFormat(range.index + offset + 1, 1);
+        // next line still in table. not exit
+        if (format[blotName.tableCellInner]) {
+          return true;
+        }
         // if have tow empty lines in table cell. enter will exit table and add a new line after table
-        const [line] = this.quill.getLine(range.index);
         let numLines = 2;
         let cur = line;
         while (cur !== null && cur.length() <= 1) {
@@ -214,32 +219,46 @@ export class TableUp {
     this.quill.root.addEventListener('scroll', () => {
       this.hideTableTools();
     });
-    this.quill.on(Quill.events.EDITOR_CHANGE, (event: string, range: Range) => {
+    this.quill.on(Quill.events.EDITOR_CHANGE, (event: string, range: Range, oldRange: Range) => {
       if (event === Quill.events.SELECTION_CHANGE && range) {
         const [startBlot] = this.quill.getLine(range.index);
         const [endBlot] = this.quill.getLine(range.index + range.length);
-
-        // not allow to select between TableCol
-        if (range.length === 0 && startBlot instanceof TableColFormat) {
-          return this.quill.setSelection(range.index - 1, 0, Quill.sources.SILENT);
+        let startTableBlot;
+        let endTableBlot;
+        try {
+          startTableBlot = findParentBlot(startBlot!, blotName.tableMain);
         }
-        else {
-          if (startBlot instanceof TableColFormat) {
-            return this.quill.setSelection(range.index - 1, range.length + 1, Quill.sources.SILENT);
+        catch {}
+        try {
+          endTableBlot = findParentBlot(endBlot!, blotName.tableMain);
+        }
+        catch {}
+
+        // only can select inside table or select all table
+        if (startBlot instanceof TableColFormat) {
+          return this.quill.setSelection(
+            range.index + (oldRange.index > range.index ? -1 : 1),
+            range.length + (oldRange.length === range.length ? 0 : oldRange.length > range.length ? -1 : 1),
+            Quill.sources.USER,
+          );
+        }
+        else if (endBlot instanceof TableColFormat) {
+          return this.quill.setSelection(range.index + 1, range.length + 1, Quill.sources.USER);
+        }
+
+        if (range.length > 0) {
+          if (startTableBlot && !endTableBlot) {
+            this.quill.setSelection(range.index - 1, range.length + 1, Quill.sources.USER);
           }
-          else if (endBlot instanceof TableColFormat) {
-            return this.quill.setSelection(range.index - 1, range.length - 1, Quill.sources.SILENT);
+          else if (endTableBlot && !startTableBlot) {
+            this.quill.setSelection(range.index, range.length + 1, Quill.sources.USER);
           }
         }
 
         // if range is not in table. hide table tools
-        try {
-          findParentBlot(startBlot!, blotName.tableMain);
-          findParentBlot(endBlot!, blotName.tableMain);
-          return;
+        if (!startTableBlot || !endTableBlot) {
+          this.hideTableTools();
         }
-        catch {}
-        this.hideTableTools();
       }
     });
 
@@ -635,11 +654,7 @@ export class TableUp {
     if (selectedTds.length <= 0) return;
     // find baseTd and baseTr
     const baseTd = selectedTds[isDown ? selectedTds.length - 1 : 0];
-    const tableBlot = findParentBlot(baseTd, blotName.tableMain);
-    const [tableBodyBlot] = tableBlot.descendants(TableBodyFormat);
-    if (!tableBodyBlot) return;
-
-    const baseTdParentTr = findParentBlot(baseTd, blotName.tableRow);
+    const [tableBlot, tableBodyBlot, baseTdParentTr] = findParentBlots(baseTd, [blotName.tableMain, blotName.tableBody, blotName.tableRow] as const);
     const tableTrs = tableBlot.getRows();
     const i = tableTrs.indexOf(baseTdParentTr);
     const insertRowIndex = i + (isDown ? baseTd.rowspan : 0);
@@ -925,8 +940,7 @@ export class TableUp {
     if (selectedTds.length !== 1) return;
     const baseTd = selectedTds[0];
     if (baseTd.colspan === 1 && baseTd.rowspan === 1) return;
-    const baseTr = findParentBlot(baseTd, blotName.tableRow);
-    const tableBlot = findParentBlot(baseTd, blotName.tableMain);
+    const [tableBlot, baseTr] = findParentBlots(baseTd, [blotName.tableMain, blotName.tableRow] as const);
     const tableId = tableBlot.tableId;
     const colIndex = baseTd.getColumnIndex();
     const colIds = tableBlot.getColIds().slice(colIndex, colIndex + baseTd.colspan).reverse();
@@ -958,4 +972,4 @@ export default TableUp;
 export * from './modules';
 export * from './formats';
 export * from './utils/types';
-export { findParentBlot, randomId } from './utils';
+export { findParentBlot, findParentBlots, randomId } from './utils';

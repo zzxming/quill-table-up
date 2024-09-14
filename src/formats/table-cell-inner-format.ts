@@ -4,7 +4,6 @@ import { blotName, findParentBlot } from '../utils';
 import type { TableCellValue } from '../utils';
 import { ContainerFormat } from './container-format';
 import type { TableCellFormat } from './table-cell-format';
-import { TableColFormat } from './table-col-format';
 
 const Block = Quill.import('blots/block') as TypeParchment.BlotConstructor;
 const BlockEmbed = Quill.import('blots/block/embed') as TypeParchment.BlotConstructor;
@@ -132,7 +131,7 @@ export class TableCellInnerFormat extends ContainerFormat {
     };
   }
 
-  optimize(context: Record<string, any>) {
+  optimize() {
     const parent = this.parent;
     const { tableId, colId, rowId, rowspan, colspan, backgroundColor, height } = this;
     // handle BlockEmbed to insert tableCellInner when setContents
@@ -142,40 +141,38 @@ export class TableCellInnerFormat extends ContainerFormat {
       this.appendChild(afterBlock);
     }
     if (parent !== null && parent.statics.blotName !== blotName.tableCell) {
-      // insert a mark blot to make sure table insert index
-      const marker = this.scroll.create('block');
-      parent.insertBefore(marker, this.next);
-
-      const tableWrapper = this.scroll.create(blotName.tableWrapper, tableId) as ContainerFormat;
-      const table = this.scroll.create(blotName.tableMain, tableId) as ContainerFormat;
-      const tableBody = this.scroll.create(blotName.tableBody) as ContainerFormat;
-      const tr = this.scroll.create(blotName.tableRow, rowId) as ContainerFormat;
-      const td = this.scroll.create(blotName.tableCell, {
-        tableId,
-        rowId,
-        colId,
-        rowspan,
-        colspan,
-        backgroundColor,
-        height,
-      }) as ContainerFormat;
-
-      td.appendChild(this);
-      tr.appendChild(td);
-      tableBody.appendChild(tr);
-      table.appendChild(tableBody);
-      tableWrapper.appendChild(table);
-      marker.replaceWith(tableWrapper);
+      this.wrap(blotName.tableCell, { tableId, colId, rowId, rowspan, colspan, backgroundColor, height });
     }
 
-    super.optimize(context);
+    if (this.children.length > 0 && this.next != null && this.checkMerge()) {
+      this.next.moveChildren(this);
+      this.next.remove();
+    }
+    // TODO: uiNode not test, maybe have bug
+    if (this.uiNode != null && this.uiNode !== this.domNode.firstChild) {
+      this.domNode.insertBefore(this.uiNode, this.domNode.firstChild);
+    }
+    // this is necessary when redo or undo. else will delete or insert wrong index
+    if (this.children.length === 0) {
+      // if cellInner doesn't have child then remove it. not insert a block
+      this.remove();
+    }
   }
 
-  insertBefore(childBlot: TypeParchment.Blot, refBlot?: TypeParchment.Blot | null | undefined): void {
-    if (childBlot instanceof TableCellInnerFormat || childBlot instanceof TableColFormat) {
-      console.error(`Not supported table insert into table.`);
-      return;
+  insertBefore(blot: TypeParchment.Blot, ref?: TypeParchment.Blot | null) {
+    if (blot.statics.blotName === this.statics.blotName) {
+      const cellInnerBlot = blot as TableCellInnerFormat;
+      const cellInnerBlotValue = cellInnerBlot.formats()[this.statics.blotName];
+      const selfValue = this.formats()[this.statics.blotName];
+      const isSame = Object.entries(selfValue).every(([key, value]) => value === cellInnerBlotValue[key]);
+      if (!isSame) {
+        const selfRow = findParentBlot(this, blotName.tableRow);
+        return selfRow.insertBefore(blot.wrap(blotName.tableCell, cellInnerBlotValue), ref ? this.parent : this.parent.next);
+      }
+      else {
+        cellInnerBlot.moveChildren(this);
+      }
     }
-    super.insertBefore(childBlot, refBlot);
+    super.insertBefore(blot, ref);
   }
 }

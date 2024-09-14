@@ -60,10 +60,15 @@ export class TableSelection {
   }
 
   computeSelectedTds(startPoint: { x: number; y: number }, endPoint: { x: number; y: number }) {
+    type TempSortedTableCellFormat = TableCellFormat & { index?: number };
+
     // Use TableCell to calculation selected range, because TableCellInner is scrollable, the width will effect calculate
     const tableMain = Quill.find(this.table) as TableMainFormat;
     if (!tableMain) return [];
-    const tableCells = new Set(tableMain.descendants(TableCellFormat));
+    const tableCells = new Set((tableMain.descendants(TableCellFormat) as TempSortedTableCellFormat[]).map((cell, i) => {
+      cell.index = i;
+      return cell;
+    }));
 
     // set boundary to initially mouse move rectangle
     let boundary = {
@@ -73,7 +78,7 @@ export class TableSelection {
       y1: Math.max(endPoint.y, startPoint.y),
     };
 
-    const selectedCells = new Set<TableCellFormat>();
+    const selectedCells = new Set<TempSortedTableCellFormat>();
     let findEnd = true;
     // loop all cells to find correct boundary
     while (findEnd) {
@@ -110,7 +115,10 @@ export class TableSelection {
       width: boundary.x1 - boundary.x,
       height: boundary.y1 - boundary.y,
     }, this.quill.root.parentNode as HTMLElement);
-    return Array.from(selectedCells).map(cell => cell.getCellInner());
+    return Array.from(selectedCells).sort((a, b) => a.index! - b.index!).map((cell) => {
+      cell.index = undefined;
+      return cell.getCellInner();
+    });
   }
 
   mouseDownHandler(mousedownEvent: MouseEvent) {
