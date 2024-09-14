@@ -654,10 +654,7 @@ export class TableUp {
     if (selectedTds.length <= 0) return;
     // find baseTd and baseTr
     const baseTd = selectedTds[isDown ? selectedTds.length - 1 : 0];
-    const [tableBlot, baseTdParentTr] = findParentBlots(baseTd, [blotName.tableMain, blotName.tableRow] as const);
-    const [tableBodyBlot] = tableBlot.descendants(TableBodyFormat);
-    if (!tableBodyBlot) return;
-
+    const [tableBlot, tableBodyBlot, baseTdParentTr] = findParentBlots(baseTd, [blotName.tableMain, blotName.tableBody, blotName.tableRow] as const);
     const tableTrs = tableBlot.getRows();
     const i = tableTrs.indexOf(baseTdParentTr);
     const insertRowIndex = i + (isDown ? baseTd.rowspan : 0);

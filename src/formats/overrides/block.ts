@@ -72,15 +72,15 @@ export class BlockOverride extends Block {
       // only move out of table. `optimize` will generate new table
       // move table cell
       while (tableCellNext) {
-        const next = tableCellNext.next as TypeParchment.ContainerBlot;
+        const next = tableCellNext.next;
         tableWrapper.parent.insertBefore(tableCellNext, tableNext);
-        tableCellNext = next;
+        tableCellNext = next as TypeParchment.ContainerBlot;
       }
       // move table row
       while (tableRowNext) {
-        const next = tableRowNext.next as TypeParchment.ContainerBlot;
+        const next = tableRowNext.next;
         tableWrapper.parent.insertBefore(tableRowNext, tableNext);
-        tableRowNext = next;
+        tableRowNext = next as TypeParchment.ContainerBlot;
       }
     }
     else {
