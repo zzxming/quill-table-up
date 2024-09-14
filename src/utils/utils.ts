@@ -1,5 +1,5 @@
 import type { Parchment as TypeParchment } from 'quill';
-import type { TableBodyFormat, TableCellFormat, TableCellInnerFormat, TableColFormat, TableColgroupFormat, TableMainFormat, TableRowFormat } from '../formats';
+import type { TableBodyFormat, TableCellFormat, TableCellInnerFormat, TableColFormat, TableColgroupFormat, TableMainFormat, TableRowFormat, TableWrapperFormat } from '../formats';
 import type { blotName } from './constants';
 
 export const isFunction = (val: any): val is Function => typeof val === 'function';
@@ -19,6 +19,7 @@ export const debounce = <T extends (...args: any[]) => any>(fn: T, delay: number
 };
 
 interface ParentBlotReturnMap {
+  [blotName.tableWrapper]: TableWrapperFormat;
   [blotName.tableMain]: TableMainFormat;
   [blotName.tableCol]: TableColFormat;
   [blotName.tableColgroup]: TableColgroupFormat;
@@ -27,10 +28,14 @@ interface ParentBlotReturnMap {
   [blotName.tableCell]: TableCellFormat;
   [blotName.tableCellInner]: TableCellInnerFormat;
 };
+type ParentBlotReturn = {
+  [key: string]: TypeParchment.Parent;
+} & ParentBlotReturnMap;
+
 export function findParentBlot<T extends TypeParchment.Parent, U extends string = string>(
   blot: TypeParchment.Blot,
   targetBlotName: U,
-): U extends keyof ParentBlotReturnMap ? ParentBlotReturnMap[U] : T {
+): U extends keyof ParentBlotReturn ? ParentBlotReturn[U] : T {
   let target = blot.parent;
   while (target && target.statics.blotName !== targetBlotName && target !== blot.scroll) {
     target = target.parent;
@@ -39,4 +44,25 @@ export function findParentBlot<T extends TypeParchment.Parent, U extends string 
     throw new Error(`${blot.statics.blotName} must be a child of ${targetBlotName}`);
   }
   return target as any;
+}
+export function findParentBlots<U extends (keyof ParentBlotReturnMap | string)[] = string[]>(
+  blot: TypeParchment.Blot,
+  targetBlotNames: U,
+): { [K in keyof U]: ParentBlotReturn[U[K]] } {
+  const resultBlots: TypeParchment.Parent[] = new Array(targetBlotNames.length);
+  const blotNameIndexMaps = new Map<string, number>(targetBlotNames.map((name, i) => [name, i]));
+  let target = blot.parent;
+  while (target && target !== blot.scroll) {
+    if (blotNameIndexMaps.size === 0) break;
+    if (blotNameIndexMaps.has(target.statics.blotName)) {
+      const index = blotNameIndexMaps.get(target.statics.blotName)!;
+      resultBlots[index] = target;
+      blotNameIndexMaps.delete(target.statics.blotName);
+    }
+    target = target.parent;
+  }
+  if (blotNameIndexMaps.size > 0) {
+    throw new Error(`${blot.statics.blotName} must be a child of ${Array.from(blotNameIndexMaps.keys()).join(', ')}`);
+  }
+  return resultBlots as any;
 }
