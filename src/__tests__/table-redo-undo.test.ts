@@ -498,4 +498,105 @@ describe('table undo', () => {
       { ignoreAttrs: ['class', 'style', 'data-table-id', 'contenteditable'] },
     );
   });
+
+  it('5x5 undo split 4x4 at start 1', async () => {
+    const quill = await createTable(5, 5);
+    const tableModule = quill.getModule('tableUp') as TableUp;
+    const table = quill.root.querySelector('table')!;
+    tableModule.tableSelection = new TableSelection(tableModule, table, quill);
+    const tds = quill.scroll.descendants(TableCellInnerFormat, 0);
+    tableModule.tableSelection.selectedTds = [tds[0], tds[1], tds[2], tds[3], tds[5], tds[6], tds[7], tds[8], tds[10], tds[11], tds[12], tds[13], tds[15], tds[16], tds[17], tds[18]];
+    tableModule.mergeCells();
+    await vi.runAllTimersAsync();
+    tableModule.tableSelection.selectedTds = [tds[0]];
+    tableModule.splitCell();
+    await vi.runAllTimersAsync();
+    quill.history.undo();
+    await vi.runAllTimersAsync();
+    expect(quill.root).toEqualHTML(
+      `
+        <p><br></p>
+        <div>
+          <table cellpadding="0" cellspacing="0" data-full="true">
+            ${createTaleColHTML(5)}
+            <tbody>
+              <tr data-row-id="1">
+                <td rowspan="4" colspan="4" data-col-id="1" data-row-id="1">
+                  <div data-rowspan="4" data-colspan="4" data-row-id="1" data-col-id="1">
+                    <p>1</p>
+                    <p>2</p>
+                    <p>3</p>
+                    <p>4</p>
+                    <p>6</p>
+                    <p>7</p>
+                    <p>8</p>
+                    <p>9</p>
+                    <p>11</p>
+                    <p>12</p>
+                    <p>13</p>
+                    <p>14</p>
+                    <p>16</p>
+                    <p>17</p>
+                    <p>18</p>
+                    <p>19</p>
+                  </div>
+                </td>
+                <td rowspan="1" colspan="1" data-col-id="5" data-row-id="1">
+                  <div data-rowspan="1" data-colspan="1" data-row-id="1" data-col-id="5"><p>5</p></div>
+                </td>
+              </tr>
+              <tr data-row-id="2">
+                ${
+                  [10].map(n => `
+                    <td rowspan="1" colspan="1" data-col-id="5" data-row-id="2">
+                      <div data-rowspan="1" data-colspan="1" data-row-id="2" data-col-id="5"><p>${n}</p></div>
+                    </td>
+                  `).join('\n')
+                }
+              </tr>
+              <tr data-row-id="3">
+                ${
+                  [15].map(n => `
+                    <td rowspan="1" colspan="1" data-col-id="5" data-row-id="3">
+                      <div data-rowspan="1" data-colspan="1" data-row-id="3" data-col-id="5"><p>${n}</p></div>
+                    </td>
+                  `).join('\n')
+                }
+              </tr>
+              <tr data-row-id="4">
+                ${
+                  [20].map(n => `
+                    <td rowspan="1" colspan="1" data-col-id="5" data-row-id="4">
+                      <div data-rowspan="1" data-colspan="1" data-row-id="4" data-col-id="5"><p>${n}</p></div>
+                    </td>
+                  `).join('\n')
+                }
+              </tr>
+              <tr data-row-id="5">
+                ${
+                  [21, 22, 23, 24, 25].map((n, i) => `
+                    <td rowspan="1" colspan="1" data-col-id="${i + 1}" data-row-id="5">
+                      <div data-rowspan="1" data-colspan="1" data-row-id="5" data-col-id="${i + 1}"><p>${n}</p></div>
+                    </td>
+                  `).join('\n')
+                }
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p><br></p>
+      `,
+      { ignoreAttrs: ['class', 'style', 'data-table-id', 'contenteditable'] },
+    );
+    quill.history.undo();
+    await vi.runAllTimersAsync();
+    expect(quill.root).toEqualHTML(
+      `
+        <p><br></p>
+        ${createTableHTML(5, 5)}
+        <p><br></p>
+      `,
+      { ignoreAttrs: ['class', 'style', 'data-table-id', 'contenteditable'] },
+    );
+  });
 });

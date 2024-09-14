@@ -114,7 +114,7 @@ export class TableCellFormat extends ContainerFormat {
         const rowIndex = rowIds.indexOf(parent.rowId);
         if (selfRowIndex === -1) {
           const firstChildColIndex = colIds.indexOf(parent.children.head!.colId);
-          if (parent.children.head === this || firstChildColIndex < selfColIndex) {
+          if (parent.children.head === this || (!this.prev && firstChildColIndex < selfColIndex)) {
             return parent;
           }
           // find before optimize start already have row
