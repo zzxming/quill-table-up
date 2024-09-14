@@ -599,4 +599,98 @@ describe('table undo', () => {
       { ignoreAttrs: ['class', 'style', 'data-table-id', 'contenteditable'] },
     );
   });
+
+  it('5x5 undo insert column at start 1', async () => {
+    const quill = await createTable(5, 5);
+    const tableModule = quill.getModule('tableUp') as TableUp;
+    const table = quill.root.querySelector('table')!;
+    tableModule.tableSelection = new TableSelection(tableModule, table, quill);
+    const tds = quill.scroll.descendants(TableCellInnerFormat, 0);
+    tableModule.tableSelection.selectedTds = [tds[5]];
+    tableModule.appendRow(false);
+    await vi.runAllTimersAsync();
+    tableModule.tableSelection.selectedTds = [tds[3]];
+    tableModule.appendCol(true);
+    await vi.runAllTimersAsync();
+    quill.history.undo();
+    await vi.runAllTimersAsync();
+    expect(quill.root).toEqualHTML(
+      `
+        <p><br></p>
+        <div>
+          <table cellpadding="0" cellspacing="0" data-full="true">
+            ${createTaleColHTML(5)}
+            <tbody>
+              <tr>
+                ${
+                  [1, 2, 3, 4, 5].map(n => `
+                    <td rowspan="1" colspan="1">
+                      <div data-rowspan="1" data-colspan="1"><p>${n}</p></div>
+                    </td>
+                  `).join('\n')
+                }
+              </tr>
+              <tr>
+                ${
+                  new Array(5).fill(0).map(() => `
+                    <td rowspan="1" colspan="1">
+                      <div data-rowspan="1" data-colspan="1"><p><br /></p></div>
+                    </td>
+                  `).join('\n')
+                }
+              </tr>
+              <tr>
+                ${
+                  [6, 7, 8, 9, 10].map(n => `
+                    <td rowspan="1" colspan="1">
+                      <div data-rowspan="1" data-colspan="1"><p>${n}</p></div>
+                    </td>
+                  `).join('\n')
+                }
+              </tr>
+              <tr>
+                ${
+                  [11, 12, 13, 14, 15].map(n => `
+                    <td rowspan="1" colspan="1">
+                      <div data-rowspan="1" data-colspan="1"><p>${n}</p></div>
+                    </td>
+                  `).join('\n')
+                }
+              </tr>
+              <tr>
+                ${
+                  [16, 17, 18, 19, 20].map(n => `
+                    <td rowspan="1" colspan="1">
+                      <div data-rowspan="1" data-colspan="1"><p>${n}</p></div>
+                    </td>
+                  `).join('\n')
+                }
+              </tr>
+              <tr>
+                ${
+                  [21, 22, 23, 24, 25].map(n => `
+                    <td rowspan="1" colspan="1">
+                      <div data-rowspan="1" data-colspan="1"><p>${n}</p></div>
+                    </td>
+                  `).join('\n')
+                }
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p><br></p>
+      `,
+      { ignoreAttrs: ['class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'contenteditable'] },
+    );
+    quill.history.undo();
+    await vi.runAllTimersAsync();
+    expect(quill.root).toEqualHTML(
+      `
+        <p><br></p>
+        ${createTableHTML(5, 5)}
+        <p><br></p>
+      `,
+      { ignoreAttrs: ['class', 'style', 'data-table-id', 'contenteditable'] },
+    );
+  });
 });

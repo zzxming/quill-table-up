@@ -148,14 +148,15 @@ export class TableCellInnerFormat extends ContainerFormat {
       this.next.moveChildren(this);
       this.next.remove();
     }
-    // is necessary?
-    // if (this.uiNode != null && this.uiNode !== this.domNode.firstChild) {
-    //   this.domNode.insertBefore(this.uiNode, this.domNode.firstChild);
-    // }
-    // if (this.children.length === 0) {
-    //   // if cellInner doesn't have child then remove it. not insert a block
-    //   this.remove();
-    // }
+    // TODO: uiNode not test, maybe have bug
+    if (this.uiNode != null && this.uiNode !== this.domNode.firstChild) {
+      this.domNode.insertBefore(this.uiNode, this.domNode.firstChild);
+    }
+    // this is necessary when redo or undo. else will delete or insert wrong index
+    if (this.children.length === 0) {
+      // if cellInner doesn't have child then remove it. not insert a block
+      this.remove();
+    }
   }
 
   insertBefore(blot: TypeParchment.Blot, ref?: TypeParchment.Blot | null) {
