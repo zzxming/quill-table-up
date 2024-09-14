@@ -52,17 +52,19 @@ export class TableBodyFormat extends ContainerFormat {
       index += 1;
     }
     // append new row
+    const tableId = tableBlot.tableId;
     const rowId = randomId();
     const tr = this.scroll.create(blotName.tableRow, rowId) as ContainerFormat;
     for (const colId of insertColIds) {
       const td = this.scroll.create(blotName.tableCell, {
+        tableId,
         rowId,
         colId,
         rowspan: 1,
         colspan: 1,
       }) as ContainerFormat;
       const tdInner = this.scroll.create(blotName.tableCellInner, {
-        tableId: tableBlot.tableId,
+        tableId,
         rowId,
         colId,
         rowspan: 1,
