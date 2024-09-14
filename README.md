@@ -11,7 +11,7 @@ Enhancement of quill table module
 - [x] 100 percent table width or fixed pixel width
 - [x] line break in cells
 - [x] not effect on other formats
-- [ ] redo and undo
+- [x] redo and undo
 
 ## Usage
 
