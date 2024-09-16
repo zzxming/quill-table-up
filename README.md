@@ -4,6 +4,8 @@ Enhancement of quill table module
 
 [demo](https://zzxming.github.io/quill-table-up/)
 
+[quill@1.3.7 table module](https://github.com/zzxming/quill-table)
+
 - [x] complete UI operation process
 - [x] insert/delete row/column/table; merge/split cells
 - [x] support insert header/list/video/image/code-block
