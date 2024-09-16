@@ -176,7 +176,7 @@ export class TableUp {
     this.options = this.resolveOptions(options || {});
 
     const toolbar = this.quill.getModule('toolbar') as Toolbar;
-    if (toolbar) {
+    if (toolbar && (this.quill.theme as QuillTheme).pickers) {
       const [, select] = (toolbar.controls as [string, HTMLElement][] || []).find(([name]) => name === TableUp.toolName) || [];
       if (select && select.tagName.toLocaleLowerCase() === 'select') {
         this.picker = (this.quill.theme as QuillTheme).pickers.find(picker => picker.select === select);
@@ -980,4 +980,4 @@ export default TableUp;
 export * from './modules';
 export * from './formats';
 export * from './utils/types';
-export { findParentBlot, findParentBlots, randomId } from './utils';
+export { blotName, findParentBlot, findParentBlots, randomId } from './utils';
