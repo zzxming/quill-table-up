@@ -11,7 +11,7 @@ import type TypeBlock from 'quill/blots/block';
 import type { TableColValue, TableTextOptions, TableUpOptions } from './utils';
 import { blotName, createSelectBox, debounce, findParentBlot, findParentBlots, isFunction, randomId, tableColMinWidthPre, tableColMinWidthPx } from './utils';
 import { BlockOverride, ScrollOverride, TableBodyFormat, TableCellFormat, TableCellInnerFormat, TableColFormat, TableColgroupFormat, TableMainFormat, TableRowFormat, TableWrapperFormat } from './formats';
-import { TableResize, TableSelection } from './modules';
+import { TableResizeLine, TableSelection } from './modules';
 
 const Delta = Quill.import('delta');
 const Break = Quill.import('blots/break') as TypeParchment.BlotConstructor;
@@ -164,12 +164,12 @@ export class TableUp {
   quill: Quill;
   options: TableUpOptions;
   fixTableByLisenter = debounce(this.balanceTables, 100);
+  resizer: TableResizeLine;
   selector?: HTMLElement;
   picker?: (Picker & { options: HTMLElement });
   range?: Range | null;
   table?: HTMLElement;
   tableSelection?: TableSelection;
-  tableResizer?: TableResize;
 
   constructor(quill: Quill, options: Partial<TableUpOptions>) {
     this.quill = quill;
@@ -180,10 +180,11 @@ export class TableUp {
       const [, select] = (toolbar.controls as [string, HTMLElement][] || []).find(([name]) => name === TableUp.toolName) || [];
       if (select && select.tagName.toLocaleLowerCase() === 'select') {
         this.picker = (this.quill.theme as QuillTheme).pickers.find(picker => picker.select === select);
-        if (!this.picker) return;
-        this.picker.label.innerHTML = icons.table;
-        this.buildCustomSelect(this.options.customSelect);
-        this.picker.label.addEventListener('mousedown', this.handleInViewport);
+        if (this.picker) {
+          this.picker.label.innerHTML = icons.table;
+          this.buildCustomSelect(this.options.customSelect);
+          this.picker.label.addEventListener('mousedown', this.handleInViewport);
+        }
       }
     }
 
@@ -261,6 +262,7 @@ export class TableUp {
         }
       }
     });
+    this.resizer = new TableResizeLine(quill, this.options.resizer || {});
 
     this.pasteTableHandler();
     this.listenBalanceCells();
@@ -444,15 +446,12 @@ export class TableUp {
     if (table) {
       this.table = table;
       this.tableSelection = new TableSelection(this, table, quill, this.options.selection || {});
-      this.tableResizer = new TableResize(this, table, quill, this.options.resizer || {});
     }
   }
 
   hideTableTools() {
     this.tableSelection && this.tableSelection.destroy();
     this.tableSelection = undefined;
-    this.tableResizer && this.tableResizer.destroy();
-    this.tableResizer = undefined;
     this.table = undefined;
   }
 
