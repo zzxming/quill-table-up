@@ -394,14 +394,14 @@ quill2.setContents([
   { insert: '\n' },
 ]);
 
-quill1.on('editor-change', (name, range, oldRange) => {
-  if (name === 'selection-change' && range) {
-    console.log(range);
-    console.log(quill1.getLine(range.index)[0].domNode);
-  }
-  // console.log(quill.getLine(range.index + range.length)[0].domNode);
-  if (name === Quill.events.TEXT_CHANGE) {
-    console.log(range, oldRange);
-    console.log(quill1.history.stack);
-  }
-});
+// quill1.on('editor-change', (name, range, oldRange) => {
+// if (name === 'selection-change' && range) {
+//   console.log(range);
+//   console.log(quill1.getLine(range.index)[0].domNode);
+// }
+// // console.log(quill.getLine(range.index + range.length)[0].domNode);
+// if (name === Quill.events.TEXT_CHANGE) {
+//   console.log(range, oldRange);
+//   console.log(quill1.history.stack);
+// }
+// });
