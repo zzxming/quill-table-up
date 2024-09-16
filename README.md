@@ -60,7 +60,6 @@ const quill = new Quill('#editor', {
 | texts        | the text used to create the table                                                                                                       | `TableTextOptions`                      | `defaultTexts` |
 | customSelect | display a custom select to custom row and column number add a table. the DOM returned by the function will replace the default selector | `(tableModule: TableUp) => HTMLElement` | -              |
 | selection    | moduel TableSelection options                                                                                                           | `TableSelection`                        | -              |
-| resizer      | moduel TableResize options                                                                                                              | `TableResizeOptions`                    | -              |
 
 <details>
   <summary> default value </summary>
@@ -188,12 +187,6 @@ const defaultTools = [
 ```
 
 </details>
-
-### TableResizer Options
-
-| attribute | description             | type     | default |
-| --------- | ----------------------- | -------- | ------- |
-| size      | resizer width or height | `number` | `12`    |
 
 ## Overrides
 
