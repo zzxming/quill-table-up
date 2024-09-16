@@ -391,6 +391,15 @@ export class TableUp {
     this.quill.clipboard.addMatcher('tr', (node, delta) => {
       rowId = randomId();
       cellCount = 0;
+      for (const op of delta.ops) {
+        if (
+          op.attributes && op.attributes.background
+          && op.attributes[blotName.tableCellInner]
+          && !(op.attributes[blotName.tableCellInner] as Record<string, any>).backgroundColor
+        ) {
+          (op.attributes[blotName.tableCellInner] as Record<string, any>).backgroundColor = op.attributes.background;
+        }
+      }
       return delta;
     });
 
