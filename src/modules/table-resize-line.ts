@@ -130,6 +130,7 @@ export class TableResizeLine {
       this.updateColResizer(tableCellBlot);
     };
     const handleMousedown = (e: MouseEvent) => {
+      if (e.button !== 0) return;
       this.dragging = true;
       document.addEventListener('mouseup', handleMouseup);
       document.addEventListener('mousemove', handleMousemove);
@@ -201,6 +202,7 @@ export class TableResizeLine {
       this.updateRowResizer(tableCellBlot);
     };
     const handleMousedown = (e: MouseEvent) => {
+      if (e.button !== 0) return;
       this.dragging = true;
       document.addEventListener('mouseup', handleMouseup);
       document.addEventListener('mousemove', handleMousemove);
