@@ -19,6 +19,7 @@ export class TableResizeLine {
       const tableCellBlot = Quill.find(tableCell) as TableCellFormat;
       if (!tableCellBlot) return;
       if (this.currentTableCell !== tableCell) {
+        this.showResizer();
         this.currentTableCell = tableCell;
         const tableMainBlot = findParentBlot(tableCellBlot, blotName.tableMain);
         if (tableMainBlot.getCols().length > 0) {
@@ -26,6 +27,9 @@ export class TableResizeLine {
         }
         this.updateRowResizer(tableCellBlot);
       }
+    });
+    this.quill.on(Quill.events.TEXT_CHANGE, () => {
+      this.hideResizer();
     });
   }
 
@@ -230,5 +234,16 @@ export class TableResizeLine {
     this.rowResizer.addEventListener('dragstart', (e) => {
       e.preventDefault();
     });
+  }
+
+  showResizer() {
+    Object.assign(this.colResizer.style, { display: null });
+    Object.assign(this.rowResizer.style, { display: null });
+  }
+
+  hideResizer() {
+    this.currentTableCell = undefined;
+    this.rowResizer.style.display = 'none';
+    this.colResizer.style.display = 'none';
   }
 }
