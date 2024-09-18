@@ -328,6 +328,48 @@
         }
         return resultBlots;
     }
+    function mixinProps(target, source) {
+        for (const prop of Object.getOwnPropertyNames(source)) {
+            if (/^constructor$/.test(prop))
+                continue;
+            Object.defineProperty(target, prop, Object.getOwnPropertyDescriptor(source, prop));
+        }
+        return target;
+    }
+    function mixinClass(base, mixins) {
+        const targetClass = class extends base {
+            constructor(...props) {
+                super(...props);
+            }
+        };
+        for (const source of mixins) {
+            mixinProps(targetClass.prototype, source.prototype);
+        }
+        return targetClass;
+    }
+    // const mixinProps = (target: any, source: any) => {
+    //   for (const prop of Object.getOwnPropertyNames(source)) {
+    //     if (/^constructor$/.test(prop)) { continue; }
+    //     Object.defineProperty(target, prop, Object.getOwnPropertyDescriptor(source, prop) as any);
+    //   }
+    // };
+    // export const mixinClass = (base: any, ...mixins: any[]) => {
+    //   let Ctor: any;
+    //   if (base && typeof base === 'function') {
+    //     Ctor = class extends base {
+    //       constructor(...props: any[]) {
+    //         super(...props);
+    //       }
+    //     };
+    //     for (const source of mixins) {
+    //       mixinProps(Ctor.prototype, source.prototype);
+    //     }
+    //   }
+    //   else {
+    //     Ctor = class {};
+    //   }
+    //   return Ctor;
+    // };
 
     const blotName = {
         container: 'container',
@@ -1299,6 +1341,22 @@
         }
     }
 
+    const Header = Quill.import('formats/header');
+    class HeaderOverride extends mixinClass(Header, [BlockOverride]) {
+    }
+
+    const ListItem = Quill.import('formats/list');
+    class ListItemOverride extends mixinClass(ListItem, [BlockOverride]) {
+    }
+
+    const Blockquote = Quill.import('formats/blockquote');
+    class BlockquoteOverride extends mixinClass(Blockquote, [BlockOverride]) {
+    }
+
+    const CodeBlock = Quill.import('formats/code-block');
+    class CodeBlockOverride extends mixinClass(CodeBlock, [BlockOverride]) {
+    }
+
     var MergeCell = "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"1em\" height=\"1em\" viewBox=\"0 0 24 24\"><path fill=\"currentColor\" d=\"M5 10H3V4h8v2H5zm14 8h-6v2h8v-6h-2zM5 18v-4H3v6h8v-2zM21 4h-8v2h6v4h2zM8 13v2l3-3l-3-3v2H3v2zm8-2V9l-3 3l3 3v-2h5v-2z\"/></svg>";
 
     var SplitCell = "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"1em\" height=\"1em\" viewBox=\"0 0 24 24\"><path fill=\"currentColor\" d=\"M19 14h2v6H3v-6h2v4h14zM3 4v6h2V6h14v4h2V4zm8 7v2H8v2l-3-3l3-3v2zm5 0V9l3 3l-3 3v-2h-3v-2z\"/></svg>";
@@ -1886,6 +1944,7 @@
                 if (!tableCellBlot)
                     return;
                 if (this.currentTableCell !== tableCell) {
+                    this.showResizer();
                     this.currentTableCell = tableCell;
                     const tableMainBlot = findParentBlot(tableCellBlot, blotName.tableMain);
                     if (tableMainBlot.getCols().length > 0) {
@@ -1893,6 +1952,9 @@
                     }
                     this.updateRowResizer(tableCellBlot);
                 }
+            });
+            this.quill.on(Quill.events.TEXT_CHANGE, () => {
+                this.hideResizer();
             });
         }
         findTableCell(e) {
@@ -2082,6 +2144,15 @@
                 e.preventDefault();
             });
         }
+        showResizer() {
+            Object.assign(this.colResizer.style, { display: null });
+            Object.assign(this.rowResizer.style, { display: null });
+        }
+        hideResizer() {
+            this.currentTableCell = undefined;
+            this.rowResizer.style.display = 'none';
+            this.colResizer.style.display = 'none';
+        }
     }
 
     const Delta = Quill.import('delta');
@@ -2202,6 +2273,10 @@
             Quill.register({
                 'blots/scroll': ScrollOverride,
                 'blots/block': BlockOverride,
+                'formats/header': HeaderOverride,
+                'formats/list': ListItemOverride,
+                'formats/blockquote': BlockquoteOverride,
+                'formats/code-block': CodeBlockOverride,
                 [`formats/${blotName.tableCell}`]: TableCellFormat,
                 [`formats/${blotName.tableCellInner}`]: TableCellInnerFormat,
                 [`formats/${blotName.tableRow}`]: TableRowFormat,
@@ -2971,7 +3046,11 @@
     }
 
     exports.BlockOverride = BlockOverride;
+    exports.BlockquoteOverride = BlockquoteOverride;
+    exports.CodeBlockOverride = CodeBlockOverride;
     exports.ContainerFormat = ContainerFormat;
+    exports.HeaderOverride = HeaderOverride;
+    exports.ListItemOverride = ListItemOverride;
     exports.ScrollOverride = ScrollOverride;
     exports.TableBodyFormat = TableBodyFormat;
     exports.TableCellFormat = TableCellFormat;
