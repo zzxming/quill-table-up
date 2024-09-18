@@ -19,7 +19,6 @@ export class TableRowFormat extends ContainerFormat {
   }
 
   declare children: TypeParchment.LinkedList<TableCellFormat>;
-  resorting: boolean = false;
 
   checkMerge(): boolean {
     const next = this.next;

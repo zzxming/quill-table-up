@@ -1,7 +1,6 @@
 import Quill from 'quill';
 import type { Parchment as TypeParchment } from 'quill';
 import { blotName } from '../../utils';
-import { TableRowFormat } from '../table-row-format';
 
 const Parchment = Quill.import('parchment');
 const ScrollBlot = Quill.import('blots/scroll') as any;
@@ -39,15 +38,5 @@ export class ScrollOverride extends ScrollBlot {
     }
 
     return block;
-  }
-
-  optimize(context: Record<string, any>) {
-    super.optimize(context);
-
-    // clear flag after all optimizations
-    const blots = this.scroll.descendants(TableRowFormat) as TableRowFormat[];
-    for (const row of blots) {
-      row.resorting = false;
-    }
   }
 }
