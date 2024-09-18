@@ -192,12 +192,19 @@ const defaultTools = [
 
 ## Overrides
 
-if you need to rewrite quill origin `Block` or `Scroll` blot. you need to import from `quill-table-up`. beacuse module internal rewrite some functions, but those change only effect formats about table.
+if you need to rewrite extends from quill `Block` or `Scroll` blot. you need to import it from `quill-table-up`. or use `Quill.import()` after `TableUp` registed. beacuse module internal rewrite some functions, but those change only effect formats about table.
 
 please read [source code](https://github.com/zzxming/quill-table-up/tree/master/src/formats/overrides) to know those change.
 
 ```ts
-import { BlockOverride, ScrollOverride } from 'quill-table-up';
+import {
+  BlockOverride,
+  BlockquoteOverride,
+  CodeBlockOverride,
+  HeaderOverride,
+  ListItemOverride,
+  ScrollOverride,
+} from 'quill-table-up';
 
 class ScrollBlot extends ScrollOverride {
   // ...
