@@ -535,10 +535,30 @@
                 const isSame = Object.entries(selfValue).every(([key, value]) => value === cellInnerBlotValue[key]);
                 if (!isSame) {
                     const selfRow = findParentBlot(this, blotName.tableRow);
+                    //   if (selfValue.rowId !== cellInnerBlotValue.rowId) {
+                    //     console.log('diff');
+                    // const tableBlot = findParentBlot(this, blotName.tableMain);
+                    // const rowIds = tableBlot.getRowIds();
+                    // const selfRowIndex = rowIds.indexOf(this.rowId);
+                    //     if (ref) {
+                    //     const index = this.children.indexOf(ref);
+                    //       this.split(index + 1)
+                    //     }
+                    //   }
+                    // split current cellInner
+                    // if (ref) {
+                    //   const newCellInner = this.scroll.create(blotName.tableCellInner, selfValue) as TypeParchment.Parent;
+                    //   const index = this.children.indexOf(ref);
+                    //   this.children.forEachAt(index + 1, this.length(), (block) => {
+                    //     newCellInner.appendChild(block);
+                    //   });
+                    //   selfRow.insertBefore(newCellInner.wrap(blotName.tableCell, selfValue), this.parent.next);
+                    // }
+                    // return selfRow.insertBefore(blot.wrap(blotName.tableCell, cellInnerBlotValue), this.parent.next);
                     return selfRow.insertBefore(blot.wrap(blotName.tableCell, cellInnerBlotValue), ref ? this.parent : this.parent.next);
                 }
                 else {
-                    cellInnerBlot.moveChildren(this);
+                    return this.parent.insertBefore(blot, this.next);
                 }
             }
             super.insertBefore(blot, ref);
@@ -2184,7 +2204,7 @@
             this.quill = quill;
             this.options = this.resolveOptions(options || {});
             const toolbar = this.quill.getModule('toolbar');
-            if (toolbar) {
+            if (toolbar && this.quill.theme.pickers) {
                 const [, select] = (toolbar.controls || []).find(([name]) => name === TableUp.toolName) || [];
                 if (select && select.tagName.toLocaleLowerCase() === 'select') {
                     this.picker = this.quill.theme.pickers.find(picker => picker.select === select);
@@ -2944,6 +2964,7 @@
     exports.TableSelection = TableSelection;
     exports.TableUp = TableUp;
     exports.TableWrapperFormat = TableWrapperFormat;
+    exports.blotName = blotName;
     exports.default = TableUp;
     exports.findParentBlot = findParentBlot;
     exports.findParentBlots = findParentBlots;
