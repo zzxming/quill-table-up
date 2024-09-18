@@ -705,7 +705,7 @@ export class TableUp {
     // loop tr and insert cell at index
     // if index is inner cell, skip next `rowspan` line
     // if there are cells both have column span and row span before index cell, minus `colspan` cell for next line
-    const trs = tableBlot.descendants(TableRowFormat);
+    const trs = tableBlot.getRows();
     const spanCols: number[] = [];
     let skipRowNum = 0;
     for (const tr of Object.values(trs)) {
@@ -742,7 +742,7 @@ export class TableUp {
       idMap[col.colId] = 0;
       return idMap;
     }, {} as Record<string, number>);
-      // merge rowspan
+    // merge rowspan
     const reverseTrBlots = [...trBlots].reverse();
     const removeTr: number[] = [];
     for (const [index, tr] of reverseTrBlots.entries()) {
