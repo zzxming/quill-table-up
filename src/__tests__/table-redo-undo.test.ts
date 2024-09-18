@@ -600,7 +600,7 @@ describe('table undo', () => {
     );
   });
 
-  it('5x5 undo insert column at start 1', async () => {
+  it('5x5 undo insert column right with before empty row at start 1', async () => {
     const quill = await createTable(5, 5);
     const tableModule = quill.getModule('tableUp') as TableUp;
     const table = quill.root.querySelector('table')!;
@@ -688,6 +688,27 @@ describe('table undo', () => {
       `
         <p><br></p>
         ${createTableHTML(5, 5)}
+        <p><br></p>
+      `,
+      { ignoreAttrs: ['class', 'style', 'data-table-id', 'contenteditable'] },
+    );
+  });
+
+  it('3x3 undo insert column right at start 1. updateContents insert text between col', async () => {
+    const quill = await createTable(3, 3);
+    const tableModule = quill.getModule('tableUp') as TableUp;
+    const table = quill.root.querySelector('table')!;
+    tableModule.tableSelection = new TableSelection(tableModule, table, quill);
+    const tds = quill.scroll.descendants(TableCellInnerFormat, 0);
+    tableModule.tableSelection.selectedTds = [tds[0]];
+    tableModule.appendCol(true);
+    await vi.runAllTimersAsync();
+    quill.history.undo();
+    await vi.runAllTimersAsync();
+    expect(quill.root).toEqualHTML(
+      `
+        <p><br></p>
+        ${createTableHTML(3, 3)}
         <p><br></p>
       `,
       { ignoreAttrs: ['class', 'style', 'data-table-id', 'contenteditable'] },
