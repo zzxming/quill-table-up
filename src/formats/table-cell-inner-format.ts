@@ -1,6 +1,6 @@
 import Quill from 'quill';
 import type { Parchment as TypeParchment } from 'quill';
-import { blotName, findParentBlot } from '../utils';
+import { blotName, findParentBlot, findParentBlots } from '../utils';
 import type { TableCellValue } from '../utils';
 import { ContainerFormat } from './container-format';
 import type { TableCellFormat } from './table-cell-format';
@@ -165,13 +165,46 @@ export class TableCellInnerFormat extends ContainerFormat {
       const cellInnerBlotValue = cellInnerBlot.formats()[this.statics.blotName];
       const selfValue = this.formats()[this.statics.blotName];
       const isSame = Object.entries(selfValue).every(([key, value]) => value === cellInnerBlotValue[key]);
+
       if (!isSame) {
-        const selfRow = findParentBlot(this, blotName.tableRow);
-        return selfRow.insertBefore(blot.wrap(blotName.tableCell, cellInnerBlotValue), ref ? this.parent : this.parent.next);
+        const [selfRow, selfCell] = findParentBlots(this, [blotName.tableRow, blotName.tableCell] as const);
+        // split current cellInner
+        if (ref) {
+          const index = ref.offset();
+          const length = this.length();
+          if (index + 1 < length) {
+            const newCellInner = this.scroll.create(blotName.tableCellInner, selfValue) as TypeParchment.Parent;
+            this.children.forEachAt(index + 1, this.length(), (block) => {
+              newCellInner.appendChild(block);
+            });
+            selfRow.insertBefore(newCellInner.wrap(blotName.tableCell, selfValue), selfCell.next);
+
+            if (this.children.length === 0) {
+              this.remove();
+              if (this.parent.children.length === 0) {
+                this.parent.remove();
+              }
+            }
+          }
+        }
+        // different rowId. split current row. move lines which after ref to next row
+        if (selfValue.rowId !== cellInnerBlotValue.rowId) {
+          if (ref) {
+            const index = ref.offset(selfRow);
+            selfRow.split(index);
+          }
+          else if (selfCell.next) {
+            const index = selfCell.next.offset(selfRow);
+            selfRow.split(index);
+          }
+          const newCell = cellInnerBlot.wrap(blotName.tableCell, cellInnerBlotValue);
+          return selfRow.parent.insertBefore(newCell.wrap(blotName.tableRow, cellInnerBlotValue), selfRow.next);
+        }
+        return selfRow.insertBefore(cellInnerBlot.wrap(blotName.tableCell, cellInnerBlotValue), ref ? selfCell : selfCell.next);
+        // return selfRow.insertBefore(cellInnerBlot.wrap(blotName.tableCell, cellInnerBlotValue), ref ? this.parent : this.parent.next);
       }
       else {
-        // split cellInner
-        return this.parent.insertBefore(blot, this.next);
+        return this.parent.insertBefore(cellInnerBlot, this.next);
       }
     }
     super.insertBefore(blot, ref);

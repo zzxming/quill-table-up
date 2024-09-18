@@ -1,5 +1,5 @@
 import type { TableCellValue } from '../utils';
-import { blotName, findParentBlot } from '../utils';
+import { blotName } from '../utils';
 import { TableCellInnerFormat } from './table-cell-inner-format';
 import { ContainerFormat } from './container-format';
 import type { TableRowFormat } from './table-row-format';
@@ -101,40 +101,6 @@ export class TableCellFormat extends ContainerFormat {
     const { tableId, rowId } = this;
     if (parent !== null && parent.statics.blotName !== blotName.tableRow) {
       this.wrap(blotName.tableRow, { tableId, rowId });
-    }
-
-    if (parent && parent.statics.blotName === blotName.tableRow && parent.rowId !== this.rowId) {
-      const tableBlot = findParentBlot(this, blotName.tableMain);
-      const colIds = tableBlot.getColIds();
-      const rowIds = tableBlot.getRowIds();
-      const selfColIndex = colIds.indexOf(this.colId);
-      const selfRowIndex = rowIds.indexOf(this.rowId);
-      const findInsertBefore = (parent: TableRowFormat | null): TableRowFormat | null => {
-        if (!parent) return parent;
-        const rowIndex = rowIds.indexOf(parent.rowId);
-        if (selfRowIndex === -1) {
-          const firstChildColIndex = colIds.indexOf(parent.children.head!.colId);
-          if (parent.children.head === this || (!this.prev && firstChildColIndex < selfColIndex)) {
-            return parent;
-          }
-          // find before optimize start already have row
-          let returnRow: TableRowFormat | null = parent.next as TableRowFormat;
-          while (returnRow && (returnRow.resorting || rowIndex === rowIds.indexOf(returnRow.rowId))) {
-            returnRow = returnRow.next as TableRowFormat | null;
-          }
-          return returnRow;
-        }
-        if (rowIndex === selfRowIndex) {
-          const parentColIndex = colIds.indexOf(parent.children!.head!.colId);
-          return parentColIndex < selfColIndex ? findInsertBefore(parent.next as TableRowFormat) : parent;
-        }
-        return rowIndex < selfRowIndex ? findInsertBefore(parent.next as TableRowFormat) : parent;
-      };
-      const insertBeforeRow = findInsertBefore(parent);
-      const rowBlot = this.wrap(blotName.tableRow, { tableId, rowId }) as TableRowFormat;
-      // set flag to judge row insert position
-      rowBlot.resorting = true;
-      parent.parent.insertBefore(rowBlot, insertBeforeRow);
     }
 
     super.optimize(context);
