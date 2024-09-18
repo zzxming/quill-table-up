@@ -170,7 +170,8 @@ export class TableCellInnerFormat extends ContainerFormat {
         return selfRow.insertBefore(blot.wrap(blotName.tableCell, cellInnerBlotValue), ref ? this.parent : this.parent.next);
       }
       else {
-        cellInnerBlot.moveChildren(this);
+        // split cellInner
+        return this.parent.insertBefore(blot, this.next);
       }
     }
     super.insertBefore(blot, ref);
