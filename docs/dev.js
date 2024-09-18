@@ -534,31 +534,43 @@
                 const selfValue = this.formats()[this.statics.blotName];
                 const isSame = Object.entries(selfValue).every(([key, value]) => value === cellInnerBlotValue[key]);
                 if (!isSame) {
-                    const selfRow = findParentBlot(this, blotName.tableRow);
-                    //   if (selfValue.rowId !== cellInnerBlotValue.rowId) {
-                    //     console.log('diff');
-                    // const tableBlot = findParentBlot(this, blotName.tableMain);
-                    // const rowIds = tableBlot.getRowIds();
-                    // const selfRowIndex = rowIds.indexOf(this.rowId);
-                    //     if (ref) {
-                    //     const index = this.children.indexOf(ref);
-                    //       this.split(index + 1)
-                    //     }
-                    //   }
+                    const [selfRow, selfCell] = findParentBlots(this, [blotName.tableRow, blotName.tableCell]);
                     // split current cellInner
-                    // if (ref) {
-                    //   const newCellInner = this.scroll.create(blotName.tableCellInner, selfValue) as TypeParchment.Parent;
-                    //   const index = this.children.indexOf(ref);
-                    //   this.children.forEachAt(index + 1, this.length(), (block) => {
-                    //     newCellInner.appendChild(block);
-                    //   });
-                    //   selfRow.insertBefore(newCellInner.wrap(blotName.tableCell, selfValue), this.parent.next);
-                    // }
-                    // return selfRow.insertBefore(blot.wrap(blotName.tableCell, cellInnerBlotValue), this.parent.next);
-                    return selfRow.insertBefore(blot.wrap(blotName.tableCell, cellInnerBlotValue), ref ? this.parent : this.parent.next);
+                    if (ref) {
+                        const index = ref.offset();
+                        const length = this.length();
+                        if (index + 1 < length) {
+                            const newCellInner = this.scroll.create(blotName.tableCellInner, selfValue);
+                            this.children.forEachAt(index + 1, this.length(), (block) => {
+                                newCellInner.appendChild(block);
+                            });
+                            selfRow.insertBefore(newCellInner.wrap(blotName.tableCell, selfValue), selfCell.next);
+                            if (this.children.length === 0) {
+                                this.remove();
+                                if (this.parent.children.length === 0) {
+                                    this.parent.remove();
+                                }
+                            }
+                        }
+                    }
+                    // different rowId. split current row. move lines which after ref to next row
+                    if (selfValue.rowId !== cellInnerBlotValue.rowId) {
+                        if (ref) {
+                            const index = ref.offset(selfRow);
+                            selfRow.split(index);
+                        }
+                        else if (selfCell.next) {
+                            const index = selfCell.next.offset(selfRow);
+                            selfRow.split(index);
+                        }
+                        const newCell = cellInnerBlot.wrap(blotName.tableCell, cellInnerBlotValue);
+                        return selfRow.parent.insertBefore(newCell.wrap(blotName.tableRow, cellInnerBlotValue), selfRow.next);
+                    }
+                    return selfRow.insertBefore(cellInnerBlot.wrap(blotName.tableCell, cellInnerBlotValue), ref ? selfCell : selfCell.next);
+                    // return selfRow.insertBefore(cellInnerBlot.wrap(blotName.tableCell, cellInnerBlotValue), ref ? this.parent : this.parent.next);
                 }
                 else {
-                    return this.parent.insertBefore(blot, this.next);
+                    return this.parent.insertBefore(cellInnerBlot, this.next);
                 }
             }
             super.insertBefore(blot, ref);
@@ -571,11 +583,10 @@
         static className = 'ql-table-row';
         static create(value) {
             const node = super.create();
-            node.dataset.rowId = value.rowId;
             node.dataset.tableId = value.tableId;
+            node.dataset.rowId = value.rowId;
             return node;
         }
-        resorting = false;
         checkMerge() {
             const next = this.next;
             return (next !== null
@@ -741,29 +752,30 @@
             // append new row
             const tableId = tableBlot.tableId;
             const rowId = randomId();
-            const tr = this.scroll.create(blotName.tableRow, rowId);
+            const tableRow = this.scroll.create(blotName.tableRow, {
+                tableId,
+                rowId,
+            });
             for (const colId of insertColIds) {
-                const td = this.scroll.create(blotName.tableCell, {
+                const breakBlot = this.scroll.create('break');
+                const block = breakBlot.wrap('block');
+                const tableCellInner = block.wrap(blotName.tableCellInner, {
                     tableId,
                     rowId,
                     colId,
                     rowspan: 1,
                     colspan: 1,
                 });
-                const tdInner = this.scroll.create(blotName.tableCellInner, {
+                const tableCell = tableCellInner.wrap(blotName.tableCell, {
                     tableId,
                     rowId,
                     colId,
                     rowspan: 1,
                     colspan: 1,
                 });
-                const block = this.scroll.create('block');
-                block.appendChild(this.scroll.create('break'));
-                tdInner.appendChild(block);
-                td.appendChild(tdInner);
-                tr.appendChild(td);
+                tableRow.appendChild(tableCell);
             }
-            this.insertBefore(tr, rows[targetIndex] || null);
+            this.insertBefore(tableRow, rows[targetIndex] || null);
         }
         optimize(context) {
             const parent = this.parent;
@@ -840,6 +852,49 @@
                 this.wrap(blotName.tableColgroup, { tableId, full });
             }
             super.optimize(context);
+        }
+        insertAt(index, value, def) {
+            if (def != null) {
+                super.insertAt(index, value, def);
+                return;
+            }
+            const lines = value.split('\n');
+            const text = lines.pop();
+            const blocks = lines.map((line) => {
+                const block = this.scroll.create('block');
+                block.insertAt(0, line);
+                return block;
+            });
+            const ref = this.split(index);
+            const [tableColgroupBlot, tableMainBlot] = findParentBlots(this, [blotName.tableColgroup, blotName.tableMain]);
+            const tableBodyBlot = tableColgroupBlot.next;
+            if (ref) {
+                const index = ref.offset(tableColgroupBlot);
+                tableColgroupBlot.split(index);
+            }
+            // create tbody
+            let insertBlot = tableMainBlot.parent.parent;
+            let nextBlotRef = tableMainBlot.parent.next;
+            if (tableBodyBlot) {
+                const cellInners = tableBodyBlot.descendants(TableCellInnerFormat);
+                if (cellInners.length > 0) {
+                    const value = cellInners[0].formats()[blotName.tableCellInner];
+                    const newBlock = this.scroll.create('block');
+                    const newTableCellInner = newBlock.wrap(blotName.tableCellInner, value);
+                    const newTableCell = newTableCellInner.wrap(blotName.tableCell, value);
+                    const newTableRow = newTableCell.wrap(blotName.tableRow, value);
+                    const newTableBody = newTableRow.wrap(blotName.tableBody, value.tableId);
+                    tableColgroupBlot.parent.insertBefore(newTableBody, tableColgroupBlot.next);
+                    insertBlot = newBlock;
+                    nextBlotRef = newBlock.next;
+                }
+            }
+            for (const block of blocks) {
+                insertBlot.insertBefore(block, nextBlotRef);
+            }
+            if (text) {
+                insertBlot.insertBefore(this.scroll.create('text', text), nextBlotRef);
+            }
         }
     }
 
@@ -1122,40 +1177,6 @@
             if (parent !== null && parent.statics.blotName !== blotName.tableRow) {
                 this.wrap(blotName.tableRow, { tableId, rowId });
             }
-            if (parent && parent.statics.blotName === blotName.tableRow && parent.rowId !== this.rowId) {
-                const tableBlot = findParentBlot(this, blotName.tableMain);
-                const colIds = tableBlot.getColIds();
-                const rowIds = tableBlot.getRowIds();
-                const selfColIndex = colIds.indexOf(this.colId);
-                const selfRowIndex = rowIds.indexOf(this.rowId);
-                const findInsertBefore = (parent) => {
-                    if (!parent)
-                        return parent;
-                    const rowIndex = rowIds.indexOf(parent.rowId);
-                    if (selfRowIndex === -1) {
-                        const firstChildColIndex = colIds.indexOf(parent.children.head.colId);
-                        if (parent.children.head === this || (!this.prev && firstChildColIndex < selfColIndex)) {
-                            return parent;
-                        }
-                        // find before optimize start already have row
-                        let returnRow = parent.next;
-                        while (returnRow && (returnRow.resorting || rowIndex === rowIds.indexOf(returnRow.rowId))) {
-                            returnRow = returnRow.next;
-                        }
-                        return returnRow;
-                    }
-                    if (rowIndex === selfRowIndex) {
-                        const parentColIndex = colIds.indexOf(parent.children.head.colId);
-                        return parentColIndex < selfColIndex ? findInsertBefore(parent.next) : parent;
-                    }
-                    return rowIndex < selfRowIndex ? findInsertBefore(parent.next) : parent;
-                };
-                const insertBeforeRow = findInsertBefore(parent);
-                const rowBlot = this.wrap(blotName.tableRow, { tableId, rowId });
-                // set flag to judge row insert position
-                rowBlot.resorting = true;
-                parent.parent.insertBefore(rowBlot, insertBeforeRow);
-            }
             super.optimize(context);
         }
     }
@@ -1188,14 +1209,6 @@
                 block.formatAt(0, length, key, value);
             }
             return block;
-        }
-        optimize(context) {
-            super.optimize(context);
-            // clear flag after all optimizations
-            const blots = this.scroll.descendants(TableRowFormat);
-            for (const row of blots) {
-                row.resorting = false;
-            }
         }
     }
 
@@ -1231,6 +1244,10 @@
                         // remove empty cell. tableCellFormat.optimize need col to compute
                         if (selfParent && selfParent.length() === 0) {
                             selfParent.parent.remove();
+                            const selfRow = selfParent.parent.parent;
+                            if (selfRow.statics.blotName === blotName.tableRow && selfRow.children.length === 0) {
+                                selfRow.remove();
+                            }
                         }
                     }
                     else {
@@ -1972,6 +1989,8 @@
                 this.updateColResizer(tableCellBlot);
             };
             const handleMousedown = (e) => {
+                if (e.button !== 0)
+                    return;
                 this.dragging = true;
                 document.addEventListener('mouseup', handleMouseup);
                 document.addEventListener('mousemove', handleMousemove);
@@ -2036,6 +2055,8 @@
                 this.updateRowResizer(tableCellBlot);
             };
             const handleMousedown = (e) => {
+                if (e.button !== 0)
+                    return;
                 this.dragging = true;
                 document.addEventListener('mouseup', handleMouseup);
                 document.addEventListener('mousemove', handleMousemove);
@@ -2687,7 +2708,7 @@
             // loop tr and insert cell at index
             // if index is inner cell, skip next `rowspan` line
             // if there are cells both have column span and row span before index cell, minus `colspan` cell for next line
-            const trs = tableBlot.descendants(TableRowFormat);
+            const trs = tableBlot.getRows();
             const spanCols = [];
             let skipRowNum = 0;
             for (const tr of Object.values(trs)) {
