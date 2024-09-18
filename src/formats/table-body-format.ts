@@ -1,4 +1,3 @@
-import type { Parchment as TypeParchment } from 'quill';
 import { blotName, findParentBlot, randomId } from '../utils';
 import { ContainerFormat } from './container-format';
 import { TableRowFormat } from './table-row-format';
@@ -54,29 +53,30 @@ export class TableBodyFormat extends ContainerFormat {
     // append new row
     const tableId = tableBlot.tableId;
     const rowId = randomId();
-    const tr = this.scroll.create(blotName.tableRow, rowId) as ContainerFormat;
+    const tableRow = this.scroll.create(blotName.tableRow, {
+      tableId,
+      rowId,
+    }) as ContainerFormat;
     for (const colId of insertColIds) {
-      const td = this.scroll.create(blotName.tableCell, {
+      const breakBlot = this.scroll.create('break');
+      const block = breakBlot.wrap('block');
+      const tableCellInner = block.wrap(blotName.tableCellInner, {
         tableId,
         rowId,
         colId,
         rowspan: 1,
         colspan: 1,
-      }) as ContainerFormat;
-      const tdInner = this.scroll.create(blotName.tableCellInner, {
+      });
+      const tableCell = tableCellInner.wrap(blotName.tableCell, {
         tableId,
         rowId,
         colId,
         rowspan: 1,
         colspan: 1,
-      }) as ContainerFormat;
-      const block = this.scroll.create('block') as TypeParchment.BlockBlot;
-      block.appendChild(this.scroll.create('break'));
-      tdInner.appendChild(block);
-      td.appendChild(tdInner);
-      tr.appendChild(td);
+      });
+      tableRow.appendChild(tableCell);
     }
-    this.insertBefore(tr, rows[targetIndex] || null);
+    this.insertBefore(tableRow, rows[targetIndex] || null);
   }
 
   optimize(context: Record<string, any>) {

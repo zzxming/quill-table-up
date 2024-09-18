@@ -13,8 +13,8 @@ export class TableRowFormat extends ContainerFormat {
 
   static create(value: TableRowValue) {
     const node = super.create() as HTMLElement;
-    node.dataset.rowId = value.rowId;
     node.dataset.tableId = value.tableId;
+    node.dataset.rowId = value.rowId;
     return node;
   }
 
