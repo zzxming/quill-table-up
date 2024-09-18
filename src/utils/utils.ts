@@ -1,6 +1,7 @@
 import type { Parchment as TypeParchment } from 'quill';
 import type { TableBodyFormat, TableCellFormat, TableCellInnerFormat, TableColFormat, TableColgroupFormat, TableMainFormat, TableRowFormat, TableWrapperFormat } from '../formats';
 import type { blotName } from './constants';
+import type { Constructor } from './types';
 
 export const isFunction = (val: any): val is Function => typeof val === 'function';
 export const isArray = Array.isArray;
@@ -67,3 +68,53 @@ export function findParentBlots<T extends (keyof ParentBlotReturnMap | string)[]
   }
   return resultBlots as any;
 }
+
+function mixinProps<T = any, U = any>(target: T, source: U) {
+  for (const prop of Object.getOwnPropertyNames(source)) {
+    if (/^constructor$/.test(prop)) continue;
+    Object.defineProperty(target, prop, Object.getOwnPropertyDescriptor(source, prop)!);
+  }
+  return target as typeof target & Omit<typeof source, 'constructor'>;
+};
+export function mixinClass<
+  T extends Constructor,
+  U extends Constructor[],
+>(
+  base: T,
+  mixins: U,
+): T & Omit<U[number], 'constructor' | keyof InstanceType<T>> {
+  const targetClass: any = class extends base {
+    constructor(...props: any[]) {
+      super(...props);
+    }
+  };
+  for (const source of mixins) {
+    mixinProps<typeof targetClass.prototype, typeof source.prototype>(targetClass.prototype, source.prototype);
+  }
+
+  return targetClass;
+};
+
+// const mixinProps = (target: any, source: any) => {
+//   for (const prop of Object.getOwnPropertyNames(source)) {
+//     if (/^constructor$/.test(prop)) { continue; }
+//     Object.defineProperty(target, prop, Object.getOwnPropertyDescriptor(source, prop) as any);
+//   }
+// };
+// export const mixinClass = (base: any, ...mixins: any[]) => {
+//   let Ctor: any;
+//   if (base && typeof base === 'function') {
+//     Ctor = class extends base {
+//       constructor(...props: any[]) {
+//         super(...props);
+//       }
+//     };
+//     for (const source of mixins) {
+//       mixinProps(Ctor.prototype, source.prototype);
+//     }
+//   }
+//   else {
+//     Ctor = class {};
+//   }
+//   return Ctor;
+// };

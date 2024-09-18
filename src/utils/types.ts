@@ -74,3 +74,5 @@ export interface RelactiveRect {
   width: number;
   height: number;
 }
+
+export type Constructor<T = any, U extends Array<any> = any[]> = new (...args: U) => T;

@@ -10,7 +10,7 @@ import type { BlockEmbed as TypeBlockEmbed } from 'quill/blots/block';
 import type TypeBlock from 'quill/blots/block';
 import type { TableColValue, TableTextOptions, TableUpOptions } from './utils';
 import { blotName, createSelectBox, debounce, findParentBlot, findParentBlots, isFunction, randomId, tableColMinWidthPre, tableColMinWidthPx } from './utils';
-import { BlockOverride, ScrollOverride, TableBodyFormat, TableCellFormat, TableCellInnerFormat, TableColFormat, TableColgroupFormat, TableMainFormat, TableRowFormat, TableWrapperFormat } from './formats';
+import { BlockOverride, BlockquoteOverride, CodeBlockOverride, HeaderOverride, ListItemOverride, ScrollOverride, TableBodyFormat, TableCellFormat, TableCellInnerFormat, TableColFormat, TableColgroupFormat, TableMainFormat, TableRowFormat, TableWrapperFormat } from './formats';
 import { TableResizeLine, TableSelection } from './modules';
 
 const Delta = Quill.import('delta');
@@ -150,6 +150,10 @@ export class TableUp {
     Quill.register({
       'blots/scroll': ScrollOverride,
       'blots/block': BlockOverride,
+      'formats/header': HeaderOverride,
+      'formats/list': ListItemOverride,
+      'formats/blockquote': BlockquoteOverride,
+      'formats/code-block': CodeBlockOverride,
       [`formats/${blotName.tableCell}`]: TableCellFormat,
       [`formats/${blotName.tableCellInner}`]: TableCellInnerFormat,
       [`formats/${blotName.tableRow}`]: TableRowFormat,
