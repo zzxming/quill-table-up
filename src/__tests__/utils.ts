@@ -90,8 +90,8 @@ interface TableColDeltaValue {
   width: number;
   full?: 'true';
 };
-export const createTable = async (row: number, col: number, full: boolean = true, width: number = 100) => {
-  const quill = createQuillWithTableModule(`<p><br></p>`);
+
+export const createTableDeltaOps = (row: number, col: number, full: boolean = true, width: number = 100) => {
   const table: any[] = [{ insert: '\n' }];
   for (const [i, _] of new Array(col).fill(0).entries()) {
     const value: TableColDeltaValue = { tableId: '1', colId: `${i + 1}`, width: 1 / col * 100 };
@@ -115,7 +115,11 @@ export const createTable = async (row: number, col: number, full: boolean = true
     }
   }
   table.push({ insert: '\n' });
-  quill.setContents(table);
+  return table;
+};
+export const createTable = async (row: number, col: number, full: boolean = true, width: number = 100) => {
+  const quill = createQuillWithTableModule(`<p><br></p>`);
+  quill.setContents(createTableDeltaOps(row, col, full, width));
   // set range for undo won't scrollSelectionIntoView
   quill.setSelection({ index: 0, length: 0 });
   await vi.runAllTimersAsync();

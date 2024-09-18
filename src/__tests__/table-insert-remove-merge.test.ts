@@ -233,7 +233,6 @@ describe('merge and split cell', () => {
     const quill = await createTable(5, 5);
     const tableModule = quill.getModule('tableUp') as TableUp;
     const table = quill.root.querySelector('table')!;
-    console.log(quill.root.innerHTML);
     tableModule.tableSelection = new TableSelection(tableModule, table, quill);
     const tds = quill.scroll.descendants(TableCellInnerFormat, 0);
     tableModule.tableSelection.selectedTds = [tds[6], tds[7], tds[11], tds[12]];
