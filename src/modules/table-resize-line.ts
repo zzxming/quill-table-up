@@ -1,4 +1,5 @@
 import Quill from 'quill';
+import type { TableResizeLineOptions } from '../utils';
 import { blotName, findParentBlot, findParentBlots, tableColMinWidthPre, tableColMinWidthPx, tableRowMinWidthPx } from '../utils';
 import { type TableCellFormat, TableRowFormat } from '../formats';
 
@@ -7,8 +8,10 @@ export class TableResizeLine {
   rowResizer: HTMLElement;
   currentTableCell?: HTMLElement;
   dragging = false;
+  options: TableResizeLineOptions;
 
-  constructor(public quill: Quill, public options: any) {
+  constructor(public quill: Quill, options: Partial<TableResizeLineOptions>) {
+    this.options = this.resolveOptions(options);
     this.colResizer = this.quill.addContainer('ql-table-resize-line-col');
     this.rowResizer = this.quill.addContainer('ql-table-resize-line-row');
 
@@ -31,6 +34,10 @@ export class TableResizeLine {
     this.quill.on(Quill.events.TEXT_CHANGE, () => {
       this.hideResizer();
     });
+  }
+
+  resolveOptions(options: Partial<TableResizeLineOptions>) {
+    return Object.assign({}, options);
   }
 
   findTableCell(e: MouseEvent) {

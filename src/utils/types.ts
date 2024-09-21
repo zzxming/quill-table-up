@@ -34,13 +34,17 @@ export interface TableTextOptions {
 export interface TableResizeOptions {
   size: number;
 }
+// eslint-disable-next-line ts/no-empty-object-type
+export interface TableResizeLineOptions {
+}
 export interface TableUpOptions {
   customSelect?: (tableModule: TableUp) => HTMLElement;
   full: boolean;
   customBtn: boolean;
   texts: TableTextOptions;
   selection?: TableSelectionOptions;
-  resizer?: TableResizeOptions;
+  resizer?: TableResizeOptions ;
+  resizeLine?: TableResizeLineOptions;
 }
 export interface TableColValue {
   tableId: string;
