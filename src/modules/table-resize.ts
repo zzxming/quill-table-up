@@ -131,6 +131,7 @@ export class TableResize {
       curColIndex = -1;
       document.removeEventListener('mouseup', handleMouseup);
       document.removeEventListener('mousemove', handleMousemove);
+      this.quill.emitter.emit('after-table-resize');
     };
     const handleMousedown = (i: number, e: MouseEvent) => {
       document.addEventListener('mouseup', handleMouseup);
@@ -206,6 +207,7 @@ export class TableResize {
       curRowIndex = -1;
       document.removeEventListener('mouseup', handleMouseup);
       document.removeEventListener('mousemove', handleMousemove);
+      this.quill.emitter.emit('after-table-resize');
     };
     const handleMousedown = (i: number, e: MouseEvent) => {
       document.addEventListener('mouseup', handleMouseup);

@@ -11,7 +11,7 @@ import type TypeBlock from 'quill/blots/block';
 import type { TableColValue, TableTextOptions, TableUpOptions } from './utils';
 import { blotName, createSelectBox, debounce, findParentBlot, findParentBlots, isFunction, randomId, tableColMinWidthPre, tableColMinWidthPx } from './utils';
 import { BlockOverride, BlockquoteOverride, CodeBlockOverride, HeaderOverride, ListItemOverride, ScrollOverride, TableBodyFormat, TableCellFormat, TableCellInnerFormat, TableColFormat, TableColgroupFormat, TableMainFormat, TableRowFormat, TableWrapperFormat } from './formats';
-import { TableResizeLine, TableSelection } from './modules';
+import { TableResize, TableResizeLine, TableSelection } from './modules';
 
 const Delta = Quill.import('delta');
 const Break = Quill.import('blots/break') as TypeParchment.BlotConstructor;
@@ -168,12 +168,13 @@ export class TableUp {
   quill: Quill;
   options: TableUpOptions;
   fixTableByLisenter = debounce(this.balanceTables, 100);
-  resizer: TableResizeLine;
   selector?: HTMLElement;
   picker?: (Picker & { options: HTMLElement });
   range?: Range | null;
   table?: HTMLElement;
   tableSelection?: TableSelection;
+  tableResizer?: TableResize;
+  tableResizerLine?: TableResizeLine;
 
   constructor(quill: Quill, options: Partial<TableUpOptions>) {
     this.quill = quill;
@@ -211,7 +212,10 @@ export class TableUp {
 
         const tableNode = path.find(node => node.tagName && node.tagName.toUpperCase() === 'TABLE' && node.classList.contains('ql-table'));
         if (tableNode) {
-          if (this.table === tableNode) return;
+          if (this.table === tableNode) {
+            this.tableSelection && this.tableSelection?.showSelection();
+            return;
+          }
           if (this.table) this.hideTableTools();
           this.showTableTools(tableNode, quill);
         }
@@ -266,7 +270,12 @@ export class TableUp {
         }
       }
     });
-    this.resizer = new TableResizeLine(quill, this.options.resizer || {});
+    if (!this.options.resizerSetOuter) {
+      this.tableResizerLine = new TableResizeLine(quill, this.options.resizeLine || {});
+    }
+    this.quill.on('after-table-resize', () => {
+      this.tableSelection && this.tableSelection.hideSelection();
+    });
 
     this.pasteTableHandler();
     this.listenBalanceCells();
@@ -277,6 +286,7 @@ export class TableUp {
       customBtn: true,
       texts: this.resolveTexts(options.texts || {}),
       full: true,
+      resizerSetOuter: false,
     } as TableUpOptions, options);
   };
 
@@ -450,6 +460,9 @@ export class TableUp {
     if (table) {
       this.table = table;
       this.tableSelection = new TableSelection(this, table, quill, this.options.selection || {});
+      if (this.options.resizerSetOuter) {
+        this.tableResizer = new TableResize(this, table, quill, this.options.resizer || {});
+      }
     }
   }
 
@@ -457,6 +470,10 @@ export class TableUp {
     this.tableSelection && this.tableSelection.destroy();
     this.tableSelection = undefined;
     this.table = undefined;
+    if (this.options.resizerSetOuter) {
+      this.tableResizer && this.tableResizer.destroy();
+      this.tableResizer = undefined;
+    }
   }
 
   async buildCustomSelect(customSelect?: (module: TableUp) => HTMLElement | Promise<HTMLElement>) {

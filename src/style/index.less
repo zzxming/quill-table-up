@@ -116,106 +116,105 @@
     }
   }
 
-  // // deprecated
-  // .ql-table-resizer {
-  //   position: absolute;
-  //   z-index: 10;
-  //   .ql-table {
-  //     &-col,
-  //     &-row {
-  //       &-wrapper {
-  //         position: absolute;
-  //         top: 0px;
-  //         left: 0px;
-  //         display: flex;
-  //         overflow: hidden;
-  //       }
-  //       &-header {
-  //         position: relative;
-  //         flex-shrink: 0;
-  //         background-color: #f3f4f5;
-  //         border: 1px solid #ccc;
-  //       }
-  //     }
-  //     &-col {
-  //       &-wrapper {
-  //         width: 100%;
-  //       }
-  //       &-header {
-  //         height: 100%;
-  //       }
-  //       &-separator {
-  //         position: absolute;
-  //         top: 0px;
-  //         bottom: 0px;
-  //         right: -2px;
-  //         width: 2px;
-  //         cursor: ew-resize;
-  //         z-index: 10;
-  //         &::after {
-  //           right: -6px;
-  //         }
-  //         &::before {
-  //           left: -6px;
-  //         }
-  //         &::after,
-  //         &::before {
-  //           content: '';
-  //           position: absolute;
-  //           top: 0;
-  //           display: block;
-  //           width: 8px;
-  //           height: 100%;
-  //           z-index: 11;
-  //         }
-  //       }
-  //     }
-  //     &-row {
-  //       &-wrapper {
-  //         flex-direction: column;
-  //         height: 100%;
-  //       }
-  //       &-header {
-  //         width: 100%;
-  //       }
-  //       &-separator {
-  //         position: absolute;
-  //         left: 0px;
-  //         right: 0px;
-  //         bottom: -2px;
-  //         height: 2px;
-  //         cursor: ns-resize;
-  //         z-index: 10;
-  //         &::after {
-  //           bottom: -6px;
-  //         }
-  //         &::before {
-  //           top: -6px;
-  //         }
-  //         &::after,
-  //         &::before {
-  //           content: '';
-  //           position: absolute;
-  //           left: 0;
-  //           display: block;
-  //           width: 100%;
-  //           height: 8px;
-  //           z-index: 11;
-  //         }
-  //       }
-  //     }
-  //   }
-  //   &-corner {
-  //     position: absolute;
-  //     top: 0px;
-  //     left: 0px;
-  //     background-color: #f3f4f5;
-  //     border: 1px solid #ccc;
-  //     border-right: none;
-  //     border-bottom: none;
-  //     border-top-left-radius: 50%;
-  //   }
-  // }
+  .ql-table-resizer {
+    position: absolute;
+    z-index: 10;
+    .ql-table {
+      &-col,
+      &-row {
+        &-wrapper {
+          position: absolute;
+          top: 0px;
+          left: 0px;
+          display: flex;
+          overflow: hidden;
+        }
+        &-header {
+          position: relative;
+          flex-shrink: 0;
+          background-color: #f3f4f5;
+          border: 1px solid #ccc;
+        }
+      }
+      &-col {
+        &-wrapper {
+          width: 100%;
+        }
+        &-header {
+          height: 100%;
+        }
+        &-separator {
+          position: absolute;
+          top: 0px;
+          bottom: 0px;
+          right: -2px;
+          width: 2px;
+          cursor: ew-resize;
+          z-index: 10;
+          &::after {
+            right: -6px;
+          }
+          &::before {
+            left: -6px;
+          }
+          &::after,
+          &::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            display: block;
+            width: 8px;
+            height: 100%;
+            z-index: 11;
+          }
+        }
+      }
+      &-row {
+        &-wrapper {
+          flex-direction: column;
+          height: 100%;
+        }
+        &-header {
+          width: 100%;
+        }
+        &-separator {
+          position: absolute;
+          left: 0px;
+          right: 0px;
+          bottom: -2px;
+          height: 2px;
+          cursor: ns-resize;
+          z-index: 10;
+          &::after {
+            bottom: -6px;
+          }
+          &::before {
+            top: -6px;
+          }
+          &::after,
+          &::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            display: block;
+            width: 100%;
+            height: 8px;
+            z-index: 11;
+          }
+        }
+      }
+    }
+    &-corner {
+      position: absolute;
+      top: 0px;
+      left: 0px;
+      background-color: #f3f4f5;
+      border: 1px solid #ccc;
+      border-right: none;
+      border-bottom: none;
+      border-top-left-radius: 50%;
+    }
+  }
 }
 
 .ql-table-drag-line {
