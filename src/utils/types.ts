@@ -42,6 +42,7 @@ export interface TableUpOptions {
   full: boolean;
   customBtn: boolean;
   texts: TableTextOptions;
+  resizerSetOuter: boolean;
   selection?: TableSelectionOptions;
   resizer?: TableResizeOptions ;
   resizeLine?: TableResizeLineOptions;
