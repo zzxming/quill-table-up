@@ -55,13 +55,14 @@ const quill = new Quill('#editor', {
 
 ### TableUp Options
 
-| attribute    | description                                                                                                                             | type                                    | default        |
-| ------------ | --------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------- | -------------- |
-| full         | if set `true`. width max will be 100%                                                                                                   | `boolean`                               | `true`         |
-| customBtn    | display a custom button to custom row and column number add a table                                                                     | `boolean`                               | `false`        |
-| texts        | the text used to create the table                                                                                                       | `TableTextOptions`                      | `defaultTexts` |
-| customSelect | display a custom select to custom row and column number add a table. the DOM returned by the function will replace the default selector | `(tableModule: TableUp) => HTMLElement` | -              |
-| selection    | moduel TableSelection options                                                                                                           | `TableSelection`                        | -              |
+| attribute       | description                                                                                                                             | type                                    | default        |
+| --------------- | --------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------- | -------------- |
+| full            | if set `true`. width max will be 100%                                                                                                   | `boolean`                               | `true`         |
+| customBtn       | display a custom button to custom row and column number add a table                                                                     | `boolean`                               | `false`        |
+| resizerSetOuter | if set `true`. table cell resize will be border around table                                                                            | `boolean`                               | `false`        |
+| texts           | the text used to create the table                                                                                                       | `TableTextOptions`                      | `defaultTexts` |
+| customSelect    | display a custom select to custom row and column number add a table. the DOM returned by the function will replace the default selector | `(tableModule: TableUp) => HTMLElement` | -              |
+| selection       | moduel TableSelection options                                                                                                           | `TableSelection`                        | -              |
 
 <details>
   <summary> default value </summary>
