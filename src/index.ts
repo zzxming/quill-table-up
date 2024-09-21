@@ -212,7 +212,10 @@ export class TableUp {
 
         const tableNode = path.find(node => node.tagName && node.tagName.toUpperCase() === 'TABLE' && node.classList.contains('ql-table'));
         if (tableNode) {
-          if (this.table === tableNode) return;
+          if (this.table === tableNode) {
+            this.tableSelection && this.tableSelection?.showSelection();
+            return;
+          }
           if (this.table) this.hideTableTools();
           this.showTableTools(tableNode, quill);
         }
@@ -270,6 +273,9 @@ export class TableUp {
     if (!this.options.resizerSetOuter) {
       this.tableResizerLine = new TableResizeLine(quill, this.options.resizeLine || {});
     }
+    this.quill.on('after-table-resize', () => {
+      this.tableSelection && this.tableSelection.hideSelection();
+    });
 
     this.pasteTableHandler();
     this.listenBalanceCells();
