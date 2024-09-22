@@ -8,8 +8,8 @@ import type Keyboard from 'quill/modules/keyboard';
 import type { Delta as TypeDelta } from 'quill/core';
 import type { BlockEmbed as TypeBlockEmbed } from 'quill/blots/block';
 import type TypeBlock from 'quill/blots/block';
-import type { TableColValue, TableTextOptions, TableUpOptions } from './utils';
-import { blotName, createSelectBox, debounce, findParentBlot, findParentBlots, isFunction, randomId, tableColMinWidthPre, tableColMinWidthPx } from './utils';
+import type { TableCellValue, TableColValue, TableTextOptions, TableUpOptions } from './utils';
+import { AFTER_TABLE_RESIZE, blotName, createSelectBox, debounce, findParentBlot, findParentBlots, isFunction, randomId, tableColMinWidthPre, tableColMinWidthPx } from './utils';
 import { BlockOverride, BlockquoteOverride, CodeBlockOverride, HeaderOverride, ListItemOverride, ScrollOverride, TableBodyFormat, TableCellFormat, TableCellInnerFormat, TableColFormat, TableColgroupFormat, TableMainFormat, TableRowFormat, TableWrapperFormat } from './formats';
 import { TableResize, TableResizeLine, TableSelection } from './modules';
 
@@ -273,7 +273,7 @@ export class TableUp {
     if (!this.options.resizerSetOuter) {
       this.tableResizerLine = new TableResizeLine(quill, this.options.resizeLine || {});
     }
-    this.quill.on('after-table-resize', () => {
+    this.quill.on(AFTER_TABLE_RESIZE, () => {
       this.tableSelection && this.tableSelection.hideSelection();
     });
 
@@ -421,10 +421,10 @@ export class TableUp {
 
     const matchCell = (node: Node, delta: TypeDelta) => {
       const cell = node as HTMLElement;
-      const rowspan = cell.getAttribute('rowspan') || 1;
-      const colspan = cell.getAttribute('colspan') || 1;
-      const height = cell.getAttribute('height') || 1;
-      const backgroundColor = cell.style.backgroundColor || undefined;
+      const rowspan = Number(cell.getAttribute('rowspan')) || 1;
+      const colspan = Number(cell.getAttribute('colspan')) || 1;
+      const height = cell.style.height;
+      const backgroundColor = cell.style.backgroundColor;
       if (!colIds[cellCount]) {
         for (let i = cellCount; i >= 0; i--) {
           if (!colIds[i]) colIds[i] = randomId();
@@ -437,17 +437,18 @@ export class TableUp {
         delta.insert('\n');
       }
       // add each insert tableCellInner format
+      const value: TableCellValue = {
+        tableId,
+        rowId,
+        colId,
+        rowspan: Number.isNaN(rowspan) ? 1 : rowspan,
+        colspan: Number.isNaN(colspan) ? 1 : colspan,
+      };
+      height && (value.height = height);
+      backgroundColor && (value.backgroundColor = backgroundColor);
       return delta.compose(
         new Delta().retain(delta.length(), {
-          [blotName.tableCellInner]: {
-            tableId,
-            rowId,
-            colId,
-            rowspan,
-            colspan,
-            height,
-            backgroundColor,
-          },
+          [blotName.tableCellInner]: value,
         }),
       ); ;
     };
@@ -1001,4 +1002,4 @@ export default TableUp;
 export * from './modules';
 export * from './formats';
 export * from './utils/types';
-export { blotName, findParentBlot, findParentBlots, randomId } from './utils';
+export { blotName, AFTER_TABLE_RESIZE, findParentBlot, findParentBlots, randomId } from './utils';

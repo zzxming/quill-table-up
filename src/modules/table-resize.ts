@@ -1,6 +1,6 @@
 import Quill from 'quill';
 import type { Parchment as TypeParchment } from 'quill';
-import { tableColMinWidthPre, tableColMinWidthPx, tableRowMinWidthPx } from '../utils';
+import { AFTER_TABLE_RESIZE, tableColMinWidthPre, tableColMinWidthPx, tableRowMinWidthPx } from '../utils';
 import type { TableResizeOptions } from '../utils';
 import type TableUp from '..';
 import type { TableColFormat, TableMainFormat, TableRowFormat } from '..';
@@ -44,7 +44,20 @@ export class TableResize {
     this.scrollHandler.push([dom, handle]);
   }
 
-  bindColDragEvent() {
+  handleResizerHeader = (isX: boolean, e: MouseEvent) => {
+    const { clientX, clientY } = e;
+    const tableRect = this.table.getBoundingClientRect();
+    if (this.tableModule.tableSelection) {
+      const tableSelection = this.tableModule.tableSelection;
+      tableSelection.selectedTds = tableSelection.computeSelectedTds(
+        { x: clientX, y: clientY },
+        { x: isX ? tableRect.right : clientX, y: isX ? clientY : tableRect.bottom },
+      );
+      tableSelection.showSelection();
+    }
+  };
+
+  bindColEvents() {
     let tipColBreak: HTMLElement | null = null;
     let curColIndex = -1;
     const tableColHeads = Array.from(this.root.getElementsByClassName('ql-table-col-header')) as HTMLElement[];
@@ -131,7 +144,7 @@ export class TableResize {
       curColIndex = -1;
       document.removeEventListener('mouseup', handleMouseup);
       document.removeEventListener('mousemove', handleMousemove);
-      this.quill.emitter.emit('after-table-resize');
+      this.quill.emitter.emit(AFTER_TABLE_RESIZE);
     };
     const handleMousedown = (i: number, e: MouseEvent) => {
       document.addEventListener('mouseup', handleMouseup);
@@ -167,6 +180,9 @@ export class TableResize {
       },
     );
 
+    for (const el of tableColHeads) {
+      el.addEventListener('click', this.handleResizerHeader.bind(this, false));
+    }
     for (const [i, el] of tableColHeadSeparators.entries()) {
       el.addEventListener('mousedown', handleMousedown.bind(this, i));
       // prevent drag
@@ -176,7 +192,7 @@ export class TableResize {
     }
   }
 
-  bindRowDragEvent() {
+  bindRowEvents() {
     let tipRowBreak: HTMLElement | null = null;
     let curRowIndex = -1;
     const tableRowHeads = Array.from(this.root.getElementsByClassName('ql-table-row-header')) as HTMLElement[];
@@ -207,7 +223,7 @@ export class TableResize {
       curRowIndex = -1;
       document.removeEventListener('mouseup', handleMouseup);
       document.removeEventListener('mousemove', handleMousemove);
-      this.quill.emitter.emit('after-table-resize');
+      this.quill.emitter.emit(AFTER_TABLE_RESIZE);
     };
     const handleMousedown = (i: number, e: MouseEvent) => {
       document.addEventListener('mouseup', handleMouseup);
@@ -234,12 +250,13 @@ export class TableResize {
       tipRowBreak = divDom;
     };
 
+    for (const el of tableRowHeads) {
+      el.addEventListener('click', this.handleResizerHeader.bind(this, true));
+    }
     for (const [i, el] of tableRowHeadSeparators.entries()) {
       el.addEventListener('mousedown', handleMousedown.bind(this, i));
       // prevent drag
-      el.addEventListener('dragstart', (e) => {
-        e.preventDefault();
-      });
+      el.addEventListener('dragstart', e => e.preventDefault());
     }
   }
 
@@ -289,7 +306,7 @@ export class TableResize {
       this.root.appendChild(colHeadWrapper);
       colHeadWrapper.scrollLeft = this.tableWrapper.domNode.scrollLeft;
       this.colHeadWrapper = colHeadWrapper;
-      this.bindColDragEvent();
+      this.bindColEvents();
     }
 
     if (this.tableRows.length > 0) {
@@ -310,7 +327,7 @@ export class TableResize {
       rowHeadWrapper.innerHTML = rowHeadStr;
       this.root.appendChild(rowHeadWrapper);
       this.rowHeadWrapper = rowHeadWrapper;
-      this.bindRowDragEvent();
+      this.bindRowEvents();
     }
   }
 

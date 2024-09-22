@@ -13,3 +13,5 @@ export const blotName = {
 export const tableColMinWidthPre = 5;
 export const tableColMinWidthPx = 26;
 export const tableRowMinWidthPx = 36;
+
+export const AFTER_TABLE_RESIZE = 'after-table-resize';
