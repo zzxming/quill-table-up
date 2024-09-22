@@ -1,6 +1,6 @@
 import Quill from 'quill';
 import type { Parchment as TypeParchment } from 'quill';
-import { tableColMinWidthPre, tableColMinWidthPx, tableRowMinWidthPx } from '../utils';
+import { AFTER_TABLE_RESIZE, tableColMinWidthPre, tableColMinWidthPx, tableRowMinWidthPx } from '../utils';
 import type { TableResizeOptions } from '../utils';
 import type TableUp from '..';
 import type { TableColFormat, TableMainFormat, TableRowFormat } from '..';
@@ -131,7 +131,7 @@ export class TableResize {
       curColIndex = -1;
       document.removeEventListener('mouseup', handleMouseup);
       document.removeEventListener('mousemove', handleMousemove);
-      this.quill.emitter.emit('after-table-resize');
+      this.quill.emitter.emit(AFTER_TABLE_RESIZE);
     };
     const handleMousedown = (i: number, e: MouseEvent) => {
       document.addEventListener('mouseup', handleMouseup);
@@ -207,7 +207,7 @@ export class TableResize {
       curRowIndex = -1;
       document.removeEventListener('mouseup', handleMouseup);
       document.removeEventListener('mousemove', handleMousemove);
-      this.quill.emitter.emit('after-table-resize');
+      this.quill.emitter.emit(AFTER_TABLE_RESIZE);
     };
     const handleMousedown = (i: number, e: MouseEvent) => {
       document.addEventListener('mouseup', handleMouseup);

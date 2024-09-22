@@ -9,7 +9,7 @@ import type { Delta as TypeDelta } from 'quill/core';
 import type { BlockEmbed as TypeBlockEmbed } from 'quill/blots/block';
 import type TypeBlock from 'quill/blots/block';
 import type { TableColValue, TableTextOptions, TableUpOptions } from './utils';
-import { blotName, createSelectBox, debounce, findParentBlot, findParentBlots, isFunction, randomId, tableColMinWidthPre, tableColMinWidthPx } from './utils';
+import { AFTER_TABLE_RESIZE, blotName, createSelectBox, debounce, findParentBlot, findParentBlots, isFunction, randomId, tableColMinWidthPre, tableColMinWidthPx } from './utils';
 import { BlockOverride, BlockquoteOverride, CodeBlockOverride, HeaderOverride, ListItemOverride, ScrollOverride, TableBodyFormat, TableCellFormat, TableCellInnerFormat, TableColFormat, TableColgroupFormat, TableMainFormat, TableRowFormat, TableWrapperFormat } from './formats';
 import { TableResize, TableResizeLine, TableSelection } from './modules';
 
@@ -273,7 +273,7 @@ export class TableUp {
     if (!this.options.resizerSetOuter) {
       this.tableResizerLine = new TableResizeLine(quill, this.options.resizeLine || {});
     }
-    this.quill.on('after-table-resize', () => {
+    this.quill.on(AFTER_TABLE_RESIZE, () => {
       this.tableSelection && this.tableSelection.hideSelection();
     });
 
@@ -1001,4 +1001,4 @@ export default TableUp;
 export * from './modules';
 export * from './formats';
 export * from './utils/types';
-export { blotName, findParentBlot, findParentBlots, randomId } from './utils';
+export { blotName, AFTER_TABLE_RESIZE, findParentBlot, findParentBlots, randomId } from './utils';

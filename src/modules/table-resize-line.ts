@@ -1,6 +1,6 @@
 import Quill from 'quill';
 import type { TableResizeLineOptions } from '../utils';
-import { blotName, findParentBlot, findParentBlots, tableColMinWidthPre, tableColMinWidthPx, tableRowMinWidthPx } from '../utils';
+import { AFTER_TABLE_RESIZE, blotName, findParentBlot, findParentBlots, tableColMinWidthPre, tableColMinWidthPx, tableRowMinWidthPx } from '../utils';
 import { type TableCellFormat, TableRowFormat } from '../formats';
 
 export class TableResizeLine {
@@ -139,7 +139,7 @@ export class TableResizeLine {
       document.removeEventListener('mousemove', handleMousemove);
       this.dragging = false;
       this.updateColResizer(tableCellBlot);
-      this.quill.emitter.emit('after-table-resize');
+      this.quill.emitter.emit(AFTER_TABLE_RESIZE);
     };
     const handleMousedown = (e: MouseEvent) => {
       if (e.button !== 0) return;
@@ -212,7 +212,7 @@ export class TableResizeLine {
       document.removeEventListener('mousemove', handleMousemove);
       this.dragging = false;
       this.updateRowResizer(tableCellBlot);
-      this.quill.emitter.emit('after-table-resize');
+      this.quill.emitter.emit(AFTER_TABLE_RESIZE);
     };
     const handleMousedown = (e: MouseEvent) => {
       if (e.button !== 0) return;
