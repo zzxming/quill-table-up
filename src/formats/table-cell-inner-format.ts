@@ -23,7 +23,7 @@ export class TableCellInnerFormat extends ContainerFormat {
     node.dataset.colId = colId;
     node.dataset.rowspan = String(rowspan || 1);
     node.dataset.colspan = String(colspan || 1);
-    height && height > 0 && (node.dataset.height = String(height));
+    height && (node.dataset.height = height);
     backgroundColor && (node.dataset.backgroundColor = backgroundColor);
     return node;
   }
@@ -52,7 +52,7 @@ export class TableCellInnerFormat extends ContainerFormat {
   }
 
   set rowId(value) {
-    this.parent && ((this.parent as any).rowId = value);
+    this.parent && (this.parent.rowId = value);
     this.setFormatValue('row-id', value);
   }
 
@@ -61,7 +61,7 @@ export class TableCellInnerFormat extends ContainerFormat {
   }
 
   set colId(value) {
-    this.parent && ((this.parent as any).colId = value);
+    this.parent && (this.parent.colId = value);
     this.setFormatValue('col-id', value);
   }
 
@@ -93,11 +93,11 @@ export class TableCellInnerFormat extends ContainerFormat {
   }
 
   get height() {
-    return Number(this.domNode.dataset.height) || 0;
+    return this.domNode.dataset.height || '';
   }
 
-  set height(value: number) {
-    this.parent && (this.parent.height = Number(value));
+  set height(value: string) {
+    this.parent && (this.parent.height = value);
     this.setFormatValue('height', value);
   }
 
@@ -124,7 +124,7 @@ export class TableCellInnerFormat extends ContainerFormat {
       rowspan,
       colspan,
     };
-    height !== 0 && (value.height = height);
+    height && (value.height = height);
     backgroundColor && (value.backgroundColor = backgroundColor);
     return {
       [this.statics.blotName]: value,

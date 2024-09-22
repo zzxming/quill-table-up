@@ -60,7 +60,7 @@ export interface TableCellValue {
   rowspan: number;
   colspan: number;
   backgroundColor?: string;
-  height?: number;
+  height?: string;
 };
 export interface TableRowValue {
   tableId: string;

@@ -21,7 +21,7 @@ export class TableCellFormat extends ContainerFormat {
     node.setAttribute('rowspan', String(rowspan || 1));
     node.setAttribute('colspan', String(colspan || 1));
     backgroundColor && (node.style.backgroundColor = backgroundColor);
-    height && (node.setAttribute('height', String(height)));
+    height && (node.style.height = height);
     return node;
   }
 
@@ -71,13 +71,13 @@ export class TableCellFormat extends ContainerFormat {
     });
   }
 
-  get height(): number {
-    return Number(this.domNode.getAttribute('height')) || 0;
+  get height() {
+    return this.domNode.style.height;
   }
 
-  set height(value: number) {
-    if (value > 0) {
-      this.domNode.setAttribute('height', String(value));
+  set height(value: string) {
+    if (value) {
+      this.domNode.style.height = value;
     }
   }
 
