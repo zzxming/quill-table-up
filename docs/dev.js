@@ -385,6 +385,7 @@
     const tableColMinWidthPre = 5;
     const tableColMinWidthPx = 26;
     const tableRowMinWidthPx = 36;
+    const AFTER_TABLE_RESIZE = 'after-table-resize';
 
     const Parchment$2 = Quill.import('parchment');
     const Container = Quill.import('blots/container');
@@ -454,7 +455,7 @@
             node.dataset.colId = colId;
             node.dataset.rowspan = String(rowspan || 1);
             node.dataset.colspan = String(colspan || 1);
-            height && height > 0 && (node.dataset.height = String(height));
+            height && (node.dataset.height = height);
             backgroundColor && (node.dataset.backgroundColor = backgroundColor);
             return node;
         }
@@ -510,10 +511,10 @@
             this.setFormatValue('background-color', value);
         }
         get height() {
-            return Number(this.domNode.dataset.height) || 0;
+            return this.domNode.dataset.height || '';
         }
         set height(value) {
-            this.parent && (this.parent.height = Number(value));
+            this.parent && (this.parent.height = value);
             this.setFormatValue('height', value);
         }
         getColumnIndex() {
@@ -537,7 +538,7 @@
                 rowspan,
                 colspan,
             };
-            height !== 0 && (value.height = height);
+            height && (value.height = height);
             backgroundColor && (value.backgroundColor = backgroundColor);
             return {
                 [this.statics.blotName]: value,
@@ -1156,7 +1157,7 @@
             node.setAttribute('rowspan', String(rowspan || 1));
             node.setAttribute('colspan', String(colspan || 1));
             backgroundColor && (node.style.backgroundColor = backgroundColor);
-            height && (node.setAttribute('height', String(height)));
+            height && (node.style.height = height);
             return node;
         }
         get tableId() {
@@ -1195,11 +1196,11 @@
             });
         }
         get height() {
-            return Number(this.domNode.getAttribute('height')) || 0;
+            return this.domNode.style.height;
         }
         set height(value) {
-            if (value > 0) {
-                this.domNode.setAttribute('height', String(value));
+            if (value) {
+                this.domNode.style.height = value;
             }
         }
         getCellInner() {
@@ -1783,12 +1784,13 @@
                 cell.index = i;
                 return cell;
             }));
+            const tableRect = this.table.getBoundingClientRect();
             // set boundary to initially mouse move rectangle
             let boundary = {
-                x: Math.min(endPoint.x, startPoint.x),
-                y: Math.min(endPoint.y, startPoint.y),
-                x1: Math.max(endPoint.x, startPoint.x),
-                y1: Math.max(endPoint.y, startPoint.y),
+                x: Math.max(tableRect.left, Math.min(endPoint.x, startPoint.x)),
+                y: Math.max(tableRect.top, Math.min(endPoint.y, startPoint.y)),
+                x1: Math.min(tableRect.right, Math.max(endPoint.x, startPoint.x)),
+                y1: Math.min(tableRect.bottom, Math.max(endPoint.y, startPoint.y)),
             };
             const selectedCells = new Set();
             let findEnd = true;
@@ -1924,14 +1926,14 @@
 
     class TableResizeLine {
         quill;
-        options;
         colResizer;
         rowResizer;
         currentTableCell;
         dragging = false;
+        options;
         constructor(quill, options) {
             this.quill = quill;
-            this.options = options;
+            this.options = this.resolveOptions(options);
             this.colResizer = this.quill.addContainer('ql-table-resize-line-col');
             this.rowResizer = this.quill.addContainer('ql-table-resize-line-row');
             this.quill.root.addEventListener('mousemove', (e) => {
@@ -1956,6 +1958,9 @@
             this.quill.on(Quill.events.TEXT_CHANGE, () => {
                 this.hideResizer();
             });
+        }
+        resolveOptions(options) {
+            return Object.assign({}, options);
         }
         findTableCell(e) {
             for (const el of e.composedPath()) {
@@ -2049,6 +2054,7 @@
                 document.removeEventListener('mousemove', handleMousemove);
                 this.dragging = false;
                 this.updateColResizer(tableCellBlot);
+                this.quill.emitter.emit(AFTER_TABLE_RESIZE);
             };
             const handleMousedown = (e) => {
                 if (e.button !== 0)
@@ -2107,7 +2113,7 @@
                 tipRowBreak.dataset.w = String(resY - rect.y);
             };
             const handleMouseup = () => {
-                const w = Number.parseInt(tipRowBreak.dataset.w);
+                const w = `${tipRowBreak.dataset.w}px`;
                 tableCellBlot.parent.setHeight(w);
                 document.body.removeChild(tipRowBreak);
                 tipRowBreak = null;
@@ -2115,6 +2121,7 @@
                 document.removeEventListener('mousemove', handleMousemove);
                 this.dragging = false;
                 this.updateRowResizer(tableCellBlot);
+                this.quill.emitter.emit(AFTER_TABLE_RESIZE);
             };
             const handleMousedown = (e) => {
                 if (e.button !== 0)
@@ -2152,6 +2159,317 @@
             this.currentTableCell = undefined;
             this.rowResizer.style.display = 'none';
             this.colResizer.style.display = 'none';
+        }
+    }
+
+    class TableResize {
+        tableModule;
+        table;
+        quill;
+        options;
+        root;
+        tableMain;
+        tableWrapper;
+        resizeObserver;
+        tableCols = [];
+        tableRows = [];
+        rowHeadWrapper = null;
+        colHeadWrapper = null;
+        scrollHandler = [];
+        constructor(tableModule, table, quill, options) {
+            this.tableModule = tableModule;
+            this.table = table;
+            this.quill = quill;
+            this.options = this.resolveOptions(options);
+            this.tableMain = Quill.find(this.table);
+            if (!this.tableMain)
+                return;
+            this.tableWrapper = this.tableMain.parent;
+            if (!this.tableWrapper)
+                return;
+            this.root = this.quill.addContainer('ql-table-resizer');
+            this.resizeObserver = new ResizeObserver(() => {
+                this.showTool();
+            });
+            this.resizeObserver.observe(this.table);
+        }
+        resolveOptions(options) {
+            return Object.assign({
+                size: 12,
+            }, options);
+        }
+        addScrollEvent(dom, handle) {
+            dom.addEventListener('scroll', handle);
+            this.scrollHandler.push([dom, handle]);
+        }
+        handleResizerHeader = (isX, e) => {
+            const { clientX, clientY } = e;
+            const tableRect = this.table.getBoundingClientRect();
+            if (this.tableModule.tableSelection) {
+                const tableSelection = this.tableModule.tableSelection;
+                tableSelection.selectedTds = tableSelection.computeSelectedTds({ x: clientX, y: clientY }, { x: isX ? tableRect.right : clientX, y: isX ? clientY : tableRect.bottom });
+                tableSelection.showSelection();
+            }
+        };
+        bindColEvents() {
+            let tipColBreak = null;
+            let curColIndex = -1;
+            const tableColHeads = Array.from(this.root.getElementsByClassName('ql-table-col-header'));
+            const tableColHeadSeparators = Array.from(this.root.getElementsByClassName('ql-table-col-separator'));
+            const appendTo = document.body;
+            const handleMousemove = (e) => {
+                const rect = tableColHeads[curColIndex].getBoundingClientRect();
+                const tableWidth = this.tableMain.domNode.getBoundingClientRect().width;
+                let resX = e.clientX;
+                if (this.tableMain.full) {
+                    // max width = current col.width + next col.width
+                    // if current col is last. max width = current col.width
+                    const minWidth = (tableColMinWidthPre / 100) * tableWidth;
+                    const maxRange = resX > rect.right
+                        ? tableColHeads[curColIndex + 1]
+                            ? tableColHeads[curColIndex + 1].getBoundingClientRect().right - minWidth
+                            : rect.right - minWidth
+                        : Infinity;
+                    const minRange = rect.x + minWidth;
+                    resX = Math.min(Math.max(resX, minRange), maxRange);
+                }
+                else {
+                    if (resX - rect.x < tableColMinWidthPx) {
+                        resX = rect.x + tableColMinWidthPx;
+                    }
+                }
+                tipColBreak.style.left = `${resX}px`;
+                tipColBreak.dataset.w = String(resX - rect.x);
+            };
+            const handleMouseup = () => {
+                const w = Number.parseInt(tipColBreak.dataset.w);
+                if (this.tableMain.full) {
+                    let pre = (w / this.tableMain.domNode.getBoundingClientRect().width) * 100;
+                    const oldWidthPre = this.tableCols[curColIndex].width;
+                    if (pre < oldWidthPre) {
+                        // minus
+                        // if not the last col. add the reduced amount to the next col
+                        // if is the last col. add the reduced amount to the pre col
+                        pre = Math.max(tableColMinWidthPre, pre);
+                        const last = oldWidthPre - pre;
+                        if (this.tableCols[curColIndex + 1]) {
+                            tableColHeads[curColIndex + 1].style.width = `${this.tableCols[curColIndex + 1].width + last}%`;
+                            this.tableCols[curColIndex + 1].width = `${this.tableCols[curColIndex + 1].width + last}%`;
+                        }
+                        else if (this.tableCols[curColIndex - 1]) {
+                            tableColHeads[curColIndex - 1].style.width = `${this.tableCols[curColIndex - 1].width + last}%`;
+                            this.tableCols[curColIndex - 1].width = `${this.tableCols[curColIndex - 1].width + last}%`;
+                        }
+                        else {
+                            pre = 100;
+                        }
+                        tableColHeads[curColIndex].style.width = `${pre}%`;
+                        this.tableCols[curColIndex].width = `${pre}%`;
+                    }
+                    else {
+                        // magnify col
+                        // the last col can't magnify. control last but one minus to magnify last col
+                        if (this.tableCols[curColIndex + 1]) {
+                            const totalWidthNextPre = oldWidthPre + this.tableCols[curColIndex + 1].width;
+                            pre = Math.min(totalWidthNextPre - tableColMinWidthPre, pre);
+                            this.tableCols[curColIndex].width = `${pre}%`;
+                            this.tableCols[curColIndex + 1].width = `${totalWidthNextPre - pre}%`;
+                            tableColHeads[curColIndex].style.width = `${pre}%`;
+                            tableColHeads[curColIndex + 1].style.width = `${totalWidthNextPre - pre}%`;
+                        }
+                    }
+                }
+                else {
+                    this.tableMain.domNode.style.width = `${Number.parseFloat(this.tableMain.domNode.style.width)
+                    - Number.parseFloat(tableColHeads[curColIndex].style.width)
+                    + w}px`;
+                    tableColHeads[curColIndex].style.width = `${w}px`;
+                    this.tableCols[curColIndex].width = `${w}px`;
+                    this.colHeadWrapper.style.width = `${this.tableMain.colWidthFillTable()}px`;
+                }
+                appendTo.removeChild(tipColBreak);
+                tipColBreak = null;
+                curColIndex = -1;
+                document.removeEventListener('mouseup', handleMouseup);
+                document.removeEventListener('mousemove', handleMousemove);
+                this.quill.emitter.emit(AFTER_TABLE_RESIZE);
+            };
+            const handleMousedown = (i, e) => {
+                document.addEventListener('mouseup', handleMouseup);
+                document.addEventListener('mousemove', handleMousemove);
+                curColIndex = i;
+                const divDom = document.createElement('div');
+                divDom.classList.add('ql-table-drag-line');
+                divDom.classList.add('col');
+                // set drag init width
+                const fullWidth = this.tableMain.domNode.getBoundingClientRect().width;
+                const colWidthAttr = Number.parseFloat(tableColHeads[curColIndex].style.width);
+                const width = this.tableMain.full ? colWidthAttr / 100 * fullWidth : colWidthAttr;
+                divDom.dataset.w = String(width);
+                const tableMainRect = this.table.getBoundingClientRect();
+                Object.assign(divDom.style, {
+                    top: `${tableMainRect.y - this.options.size}px`,
+                    left: `${e.clientX}px`,
+                    height: `${tableMainRect.height + this.options.size}px`,
+                });
+                appendTo.appendChild(divDom);
+                if (tipColBreak)
+                    appendTo.removeChild(tipColBreak);
+                tipColBreak = divDom;
+            };
+            this.addScrollEvent(this.tableWrapper.domNode, () => {
+                this.colHeadWrapper.scrollLeft = this.tableWrapper.domNode.scrollLeft;
+            });
+            for (const el of tableColHeads) {
+                el.addEventListener('click', this.handleResizerHeader.bind(this, false));
+            }
+            for (const [i, el] of tableColHeadSeparators.entries()) {
+                el.addEventListener('mousedown', handleMousedown.bind(this, i));
+                // prevent drag
+                el.addEventListener('dragstart', (e) => {
+                    e.preventDefault();
+                });
+            }
+        }
+        bindRowEvents() {
+            let tipRowBreak = null;
+            let curRowIndex = -1;
+            const tableRowHeads = Array.from(this.root.getElementsByClassName('ql-table-row-header'));
+            const tableRowHeadSeparators = Array.from(this.root.getElementsByClassName('ql-table-row-separator'));
+            const appendTo = document.body;
+            const handleMousemove = (e) => {
+                const rect = tableRowHeads[curRowIndex].getBoundingClientRect();
+                let resY = e.clientY;
+                if (resY - rect.y < tableRowMinWidthPx) {
+                    resY = rect.y + tableRowMinWidthPx;
+                }
+                tipRowBreak.style.top = `${resY}px`;
+                tipRowBreak.dataset.w = String(resY - rect.y);
+            };
+            const handleMouseup = () => {
+                const w = `${tipRowBreak.dataset.w}px`;
+                this.tableRows[curRowIndex].setHeight(w);
+                const tableMainRect = this.table.getBoundingClientRect();
+                this.rowHeadWrapper.style.height = `${tableMainRect.height}px`;
+                for (const [i, row] of this.tableRows.entries()) {
+                    const rect = row.domNode.getBoundingClientRect();
+                    tableRowHeads[i].style.height = `${rect.height}px`;
+                }
+                appendTo.removeChild(tipRowBreak);
+                tipRowBreak = null;
+                curRowIndex = -1;
+                document.removeEventListener('mouseup', handleMouseup);
+                document.removeEventListener('mousemove', handleMousemove);
+                this.quill.emitter.emit(AFTER_TABLE_RESIZE);
+            };
+            const handleMousedown = (i, e) => {
+                document.addEventListener('mouseup', handleMouseup);
+                document.addEventListener('mousemove', handleMousemove);
+                curRowIndex = i;
+                const divDom = document.createElement('div');
+                divDom.classList.add('ql-table-drag-line');
+                divDom.classList.add('row');
+                // set drag init width
+                const height = tableRowHeads[curRowIndex].getBoundingClientRect().height;
+                divDom.dataset.w = String(height);
+                const tableMainRect = this.table.getBoundingClientRect();
+                Object.assign(divDom.style, {
+                    top: `${e.clientY}px`,
+                    left: `${tableMainRect.x - this.options.size}px`,
+                    width: `${tableMainRect.width + this.options.size}px`,
+                });
+                appendTo.appendChild(divDom);
+                if (tipRowBreak)
+                    appendTo.removeChild(tipRowBreak);
+                tipRowBreak = divDom;
+            };
+            for (const el of tableRowHeads) {
+                el.addEventListener('click', this.handleResizerHeader.bind(this, true));
+            }
+            for (const [i, el] of tableRowHeadSeparators.entries()) {
+                el.addEventListener('mousedown', handleMousedown.bind(this, i));
+                // prevent drag
+                el.addEventListener('dragstart', e => e.preventDefault());
+            }
+        }
+        showTool() {
+            const tableMain = Quill.find(this.table);
+            if (!tableMain)
+                return;
+            this.tableCols = this.tableMain.getCols();
+            this.tableRows = this.tableMain.getRows();
+            this.root.innerHTML = '';
+            const tableMainRect = tableMain.domNode.getBoundingClientRect();
+            const rootRect = this.quill.root.getBoundingClientRect();
+            Object.assign(this.root.style, {
+                top: `${tableMainRect.y - rootRect.y}px`,
+                left: `${tableMainRect.x - rootRect.x + this.tableWrapper.domNode.scrollLeft}px`,
+            });
+            if (this.tableCols.length > 0 && this.tableRows.length > 0) {
+                const corner = document.createElement('div');
+                corner.classList.add('ql-table-resizer-corner');
+                Object.assign(corner.style, {
+                    width: `${this.options.size}px`,
+                    height: `${this.options.size}px`,
+                    transform: `translate(-${this.options.size}px, -${this.options.size}px)`,
+                });
+                this.root.appendChild(corner);
+            }
+            if (this.tableCols.length > 0) {
+                let colHeadStr = '';
+                for (const col of this.tableCols) {
+                    let width = col.width + (tableMain.full ? '%' : 'px');
+                    if (!col.width) {
+                        width = `${col.domNode.getBoundingClientRect().width}px`;
+                    }
+                    colHeadStr += `<div class="ql-table-col-header" style="width: ${width}">
+          <div class="ql-table-col-separator" style="height: ${tableMainRect.height + this.options.size - 3}px"></div>
+        </div>`;
+                }
+                const colHeadWrapper = document.createElement('div');
+                colHeadWrapper.classList.add('ql-table-col-wrapper');
+                Object.assign(colHeadWrapper.style, {
+                    transform: `translateY(-${this.options.size}px)`,
+                    width: `${tableMainRect.width}px`,
+                    height: `${this.options.size}px`,
+                });
+                colHeadWrapper.innerHTML = colHeadStr;
+                this.root.appendChild(colHeadWrapper);
+                colHeadWrapper.scrollLeft = this.tableWrapper.domNode.scrollLeft;
+                this.colHeadWrapper = colHeadWrapper;
+                this.bindColEvents();
+            }
+            if (this.tableRows.length > 0) {
+                let rowHeadStr = '';
+                for (const row of this.tableRows) {
+                    const height = `${row.domNode.getBoundingClientRect().height}px`;
+                    rowHeadStr += `<div class="ql-table-row-header" style="height: ${height}">
+        <div class="ql-table-row-separator" style="width: ${tableMainRect.width + this.options.size - 3}px"></div>
+      </div>`;
+                }
+                const rowHeadWrapper = document.createElement('div');
+                rowHeadWrapper.classList.add('ql-table-row-wrapper');
+                Object.assign(rowHeadWrapper.style, {
+                    transform: `translateX(-${this.options.size}px)`,
+                    width: `${this.options.size}px`,
+                    height: `${tableMainRect.height}px`,
+                });
+                rowHeadWrapper.innerHTML = rowHeadStr;
+                this.root.appendChild(rowHeadWrapper);
+                this.rowHeadWrapper = rowHeadWrapper;
+                this.bindRowEvents();
+            }
+        }
+        hideTool() {
+            this.root.classList.add('ql-hidden');
+        }
+        destroy() {
+            this.hideTool();
+            this.resizeObserver.disconnect();
+            for (const [dom, handle] of this.scrollHandler) {
+                dom.removeEventListener('scroll', handle);
+            }
+            this.root.remove();
         }
     }
 
@@ -2290,12 +2608,13 @@
         quill;
         options;
         fixTableByLisenter = debounce(this.balanceTables, 100);
-        resizer;
         selector;
         picker;
         range;
         table;
         tableSelection;
+        tableResizer;
+        tableResizerLine;
         constructor(quill, options) {
             this.quill = quill;
             this.options = this.resolveOptions(options || {});
@@ -2327,8 +2646,10 @@
                     return;
                 const tableNode = path.find(node => node.tagName && node.tagName.toUpperCase() === 'TABLE' && node.classList.contains('ql-table'));
                 if (tableNode) {
-                    if (this.table === tableNode)
+                    if (this.table === tableNode) {
+                        this.tableSelection && this.tableSelection?.showSelection();
                         return;
+                    }
                     if (this.table)
                         this.hideTableTools();
                     this.showTableTools(tableNode, quill);
@@ -2375,7 +2696,12 @@
                     }
                 }
             });
-            this.resizer = new TableResizeLine(quill, this.options.resizer || {});
+            if (!this.options.resizerSetOuter) {
+                this.tableResizerLine = new TableResizeLine(quill, this.options.resizeLine || {});
+            }
+            this.quill.on(AFTER_TABLE_RESIZE, () => {
+                this.tableSelection && this.tableSelection.hideSelection();
+            });
             this.pasteTableHandler();
             this.listenBalanceCells();
         }
@@ -2384,6 +2710,7 @@
                 customBtn: true,
                 texts: this.resolveTexts(options.texts || {}),
                 full: true,
+                resizerSetOuter: false,
             }, options);
         }
         ;
@@ -2510,10 +2837,10 @@
             });
             const matchCell = (node, delta) => {
                 const cell = node;
-                const rowspan = cell.getAttribute('rowspan') || 1;
-                const colspan = cell.getAttribute('colspan') || 1;
-                const height = cell.getAttribute('height') || 1;
-                const backgroundColor = cell.style.backgroundColor || undefined;
+                const rowspan = Number(cell.getAttribute('rowspan')) || 1;
+                const colspan = Number(cell.getAttribute('colspan')) || 1;
+                const height = cell.style.height;
+                const backgroundColor = cell.style.backgroundColor;
                 if (!colIds[cellCount]) {
                     for (let i = cellCount; i >= 0; i--) {
                         if (!colIds[i])
@@ -2526,16 +2853,17 @@
                     delta.insert('\n');
                 }
                 // add each insert tableCellInner format
+                const value = {
+                    tableId,
+                    rowId,
+                    colId,
+                    rowspan: Number.isNaN(rowspan) ? 1 : rowspan,
+                    colspan: Number.isNaN(colspan) ? 1 : colspan,
+                };
+                height && (value.height = height);
+                backgroundColor && (value.backgroundColor = backgroundColor);
                 return delta.compose(new Delta().retain(delta.length(), {
-                    [blotName.tableCellInner]: {
-                        tableId,
-                        rowId,
-                        colId,
-                        rowspan,
-                        colspan,
-                        height,
-                        backgroundColor,
-                    },
+                    [blotName.tableCellInner]: value,
                 }));
             };
             this.quill.clipboard.addMatcher('td', matchCell);
@@ -2545,12 +2873,19 @@
             if (table) {
                 this.table = table;
                 this.tableSelection = new TableSelection(this, table, quill, this.options.selection || {});
+                if (this.options.resizerSetOuter) {
+                    this.tableResizer = new TableResize(this, table, quill, this.options.resizer || {});
+                }
             }
         }
         hideTableTools() {
             this.tableSelection && this.tableSelection.destroy();
             this.tableSelection = undefined;
             this.table = undefined;
+            if (this.options.resizerSetOuter) {
+                this.tableResizer && this.tableResizer.destroy();
+                this.tableResizer = undefined;
+            }
         }
         async buildCustomSelect(customSelect) {
             if (!this.picker)
@@ -3045,6 +3380,7 @@
         }
     }
 
+    exports.AFTER_TABLE_RESIZE = AFTER_TABLE_RESIZE;
     exports.BlockOverride = BlockOverride;
     exports.BlockquoteOverride = BlockquoteOverride;
     exports.CodeBlockOverride = CodeBlockOverride;
@@ -3059,6 +3395,7 @@
     exports.TableColgroupFormat = TableColgroupFormat;
     exports.TableMainFormat = TableMainFormat;
     exports.TableMenu = TableMenu;
+    exports.TableResize = TableResize;
     exports.TableResizeLine = TableResizeLine;
     exports.TableRowFormat = TableRowFormat;
     exports.TableSelection = TableSelection;

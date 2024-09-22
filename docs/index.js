@@ -29,11 +29,13 @@ const quill1 = new Quill('#editor1', {
     ],
     tableUp: {
       full: false,
+      resizerSetOuter: true,
       selection: {
         selectColor: '#f40',
         tableMenu: {
           localstorageKey: 'used-color',
           tipText: true,
+          contextmenu: true,
           // tipTexts: {
           //   InsertTop: '向上插入一行',
           //   InsertRight: '向右插入一列',
@@ -46,7 +48,6 @@ const quill1 = new Quill('#editor1', {
           //   DeleteTable: '删除当前表格',
           //   BackgroundColor: '设置背景颜色',
           // },
-          contextmenu: true,
         },
       },
       // texts: {
@@ -85,11 +86,13 @@ const quill2 = new Quill('#editor2', {
     ],
     tableUp: {
       full: true,
+      resizerSetOuter: false,
       selection: {
         selectColor: '#04f',
         tableMenu: {
           localstorageKey: 'used-color',
           tipText: true,
+          contextmenu: false,
           tipTexts: {
             InsertTop: '向上插入一行',
             InsertRight: '向右插入一列',
@@ -102,7 +105,6 @@ const quill2 = new Quill('#editor2', {
             DeleteTable: '删除当前表格',
             BackgroundColor: '设置背景颜色',
           },
-          contextmenu: false,
         },
       },
       texts: {
