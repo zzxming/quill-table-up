@@ -208,7 +208,7 @@ export class TableResize {
       tipRowBreak!.dataset.w = String(resY - rect.y);
     };
     const handleMouseup = () => {
-      const w = Number.parseInt(tipRowBreak!.dataset.w!);
+      const w = `${tipRowBreak!.dataset.w!}px`;
 
       this.tableRows[curRowIndex].setHeight(w);
       const tableMainRect = this.table.getBoundingClientRect();

@@ -37,7 +37,7 @@ export class TableRowFormat extends ContainerFormat {
     return this.domNode.dataset.tableId!;
   }
 
-  setHeight(value: number) {
+  setHeight(value: string) {
     this.foreachCellInner((cellInner) => {
       cellInner.height = value;
     });

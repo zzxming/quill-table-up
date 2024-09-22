@@ -203,7 +203,7 @@ export class TableResizeLine {
       tipRowBreak!.dataset.w = String(resY - rect.y);
     };
     const handleMouseup = () => {
-      const w = Number.parseInt(tipRowBreak!.dataset.w!);
+      const w = `${tipRowBreak!.dataset.w!}px`;
       (tableCellBlot.parent as TableRowFormat).setHeight(w);
 
       document.body.removeChild(tipRowBreak!);
