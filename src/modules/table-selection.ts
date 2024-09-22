@@ -70,12 +70,13 @@ export class TableSelection {
       return cell;
     }));
 
+    const tableRect = this.table.getBoundingClientRect();
     // set boundary to initially mouse move rectangle
     let boundary = {
-      x: Math.min(endPoint.x, startPoint.x),
-      y: Math.min(endPoint.y, startPoint.y),
-      x1: Math.max(endPoint.x, startPoint.x),
-      y1: Math.max(endPoint.y, startPoint.y),
+      x: Math.max(tableRect.left, Math.min(endPoint.x, startPoint.x)),
+      y: Math.max(tableRect.top, Math.min(endPoint.y, startPoint.y)),
+      x1: Math.min(tableRect.right, Math.max(endPoint.x, startPoint.x)),
+      y1: Math.min(tableRect.bottom, Math.max(endPoint.y, startPoint.y)),
     };
 
     const selectedCells = new Set<TempSortedTableCellFormat>();
