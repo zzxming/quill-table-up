@@ -94,27 +94,3 @@ export function mixinClass<
 
   return targetClass;
 };
-
-// const mixinProps = (target: any, source: any) => {
-//   for (const prop of Object.getOwnPropertyNames(source)) {
-//     if (/^constructor$/.test(prop)) { continue; }
-//     Object.defineProperty(target, prop, Object.getOwnPropertyDescriptor(source, prop) as any);
-//   }
-// };
-// export const mixinClass = (base: any, ...mixins: any[]) => {
-//   let Ctor: any;
-//   if (base && typeof base === 'function') {
-//     Ctor = class extends base {
-//       constructor(...props: any[]) {
-//         super(...props);
-//       }
-//     };
-//     for (const source of mixins) {
-//       mixinProps(Ctor.prototype, source.prototype);
-//     }
-//   }
-//   else {
-//     Ctor = class {};
-//   }
-//   return Ctor;
-// };

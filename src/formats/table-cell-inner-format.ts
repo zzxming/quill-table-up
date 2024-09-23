@@ -201,7 +201,6 @@ export class TableCellInnerFormat extends ContainerFormat {
           return selfRow.parent.insertBefore(newCell.wrap(blotName.tableRow, cellInnerBlotValue), selfRow.next);
         }
         return selfRow.insertBefore(cellInnerBlot.wrap(blotName.tableCell, cellInnerBlotValue), ref ? selfCell : selfCell.next);
-        // return selfRow.insertBefore(cellInnerBlot.wrap(blotName.tableCell, cellInnerBlotValue), ref ? this.parent : this.parent.next);
       }
       else {
         return this.parent.insertBefore(cellInnerBlot, this.next);

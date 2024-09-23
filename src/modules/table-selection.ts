@@ -117,7 +117,7 @@ export class TableSelection {
       height: boundary.y1 - boundary.y,
     }, this.quill.root.parentNode as HTMLElement);
     return Array.from(selectedCells).sort((a, b) => a.index! - b.index!).map((cell) => {
-      cell.index = undefined;
+      delete cell.index;
       return cell.getCellInner();
     });
   }
@@ -214,7 +214,7 @@ export function isRectanglesIntersect(a: Omit<RelactiveRect, 'width' | 'height'>
   return !(notOverlapX || notOverlapY);
 }
 
-export function getRelativeRect(targetRect: { x: number;y: number;width: number; height: number }, container: HTMLElement) {
+export function getRelativeRect(targetRect: Omit<RelactiveRect, 'x1' | 'y1'>, container: HTMLElement) {
   const containerRect = container.getBoundingClientRect();
 
   return {
