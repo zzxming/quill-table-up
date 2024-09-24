@@ -2,6 +2,7 @@
   "name": "quill-table-up",
   "type": "module",
   "version": "1.1.0",
+  "packageManager": "pnpm@9.9.0",
   "description": "A table module for quill2.x",
   "author": "zzxming",
   "license": "MIT",
@@ -31,7 +32,7 @@
     "lint": "eslint . --cache",
     "lint:fix": "eslint . --fix",
     "build": "gulp --require @esbuild-kit/cjs-loader",
-    "dev": "gulp --require  @esbuild-kit/cjs-loader dev",
+    "dev": "gulp --require @esbuild-kit/cjs-loader dev",
     "test": "vitest",
     "test:cover": "vitest --coverage"
   },
