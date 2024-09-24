@@ -1,16 +1,16 @@
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { dest, parallel, series, src, task, watch } from 'gulp';
-import postcss from 'gulp-postcss';
-import less from 'gulp-less';
-import cleanCSS from 'gulp-clean-css';
-import pxtorem from 'postcss-pxtorem';
-import autoprefixer from 'autoprefixer';
-import { rollup } from 'rollup';
+import terser from '@rollup/plugin-terser';
 import typescript from '@rollup/plugin-typescript';
+import autoprefixer from 'autoprefixer';
+import { dest, parallel, series, src, task, watch } from 'gulp';
+import cleanCSS from 'gulp-clean-css';
+import less from 'gulp-less';
+import postcss from 'gulp-postcss';
+import pxtorem from 'postcss-pxtorem';
+import { rollup } from 'rollup';
 import { dts } from 'rollup-plugin-dts';
 import svg from 'rollup-plugin-svg-import';
-import terser from '@rollup/plugin-terser';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const distBundle = resolve(__dirname, './dist');

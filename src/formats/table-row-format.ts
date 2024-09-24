@@ -1,9 +1,9 @@
 import type { Parchment as TypeParchment } from 'quill';
 import type { TableCellValue, TableRowValue } from '../utils';
+import type { TableCellFormat } from './table-cell-format';
 import { blotName, findParentBlot } from '../utils';
 import { ContainerFormat } from './container-format';
 import { TableCellInnerFormat } from './table-cell-inner-format';
-import type { TableCellFormat } from './table-cell-format';
 
 export type SkipRowCount = number[] & { skipRowNum?: number };
 export class TableRowFormat extends ContainerFormat {

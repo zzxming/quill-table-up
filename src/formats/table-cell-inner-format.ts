@@ -1,9 +1,9 @@
-import Quill from 'quill';
 import type { Parchment as TypeParchment } from 'quill';
-import { blotName, findParentBlot, findParentBlots } from '../utils';
 import type { TableCellValue } from '../utils';
-import { ContainerFormat } from './container-format';
 import type { TableCellFormat } from './table-cell-format';
+import Quill from 'quill';
+import { blotName, findParentBlot, findParentBlots } from '../utils';
+import { ContainerFormat } from './container-format';
 
 const Block = Quill.import('blots/block') as TypeParchment.BlotConstructor;
 const BlockEmbed = Quill.import('blots/block/embed') as TypeParchment.BlotConstructor;

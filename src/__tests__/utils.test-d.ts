@@ -1,5 +1,5 @@
-import { afterEach, beforeEach, describe, expectTypeOf, it, vi } from 'vitest';
 import type { TableBodyFormat, TableCellFormat, TableMainFormat, TableRowFormat, TableWrapperFormat } from '../formats';
+import { afterEach, beforeEach, describe, expectTypeOf, it, vi } from 'vitest';
 import { TableCellInnerFormat } from '../formats';
 import { blotName, findParentBlot, findParentBlots } from '../utils';
 import { createTable } from './utils';

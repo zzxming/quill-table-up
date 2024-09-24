@@ -1,5 +1,5 @@
-import Quill from 'quill';
 import type TypeBlockquote from 'quill/formats/blockquote';
+import Quill from 'quill';
 import { mixinClass } from '../../utils';
 import { BlockOverride } from './block';
 

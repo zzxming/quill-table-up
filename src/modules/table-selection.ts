@@ -1,8 +1,8 @@
-import Quill from 'quill';
-import type { RelactiveRect, TableSelectionOptions } from '../utils';
-import { TableCellFormat } from '../formats';
-import type { TableCellInnerFormat, TableMainFormat } from '../formats';
 import type { TableUp } from '..';
+import type { TableCellInnerFormat, TableMainFormat } from '../formats';
+import type { RelactiveRect, TableSelectionOptions } from '../utils';
+import Quill from 'quill';
+import { TableCellFormat } from '../formats';
 import { TableMenu } from './table-menu';
 
 const ERROR_LIMIT = 2;

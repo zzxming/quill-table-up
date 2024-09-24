@@ -1,9 +1,9 @@
 import type { Parchment as TypeParchment } from 'quill';
 import type { TableValue } from '../utils';
 import { blotName } from '../utils';
-import { TableRowFormat } from './table-row-format';
 import { ContainerFormat } from './container-format';
 import { TableColFormat } from './table-col-format';
+import { TableRowFormat } from './table-row-format';
 
 export class TableMainFormat extends ContainerFormat {
   static blotName = blotName.tableMain;

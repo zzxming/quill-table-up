@@ -1,5 +1,5 @@
-import { expect, vi } from 'vitest';
 import Quill from 'quill';
+import { expect, vi } from 'vitest';
 import TableUp from '../index';
 
 // eslint-disable-next-line unicorn/prefer-string-replace-all

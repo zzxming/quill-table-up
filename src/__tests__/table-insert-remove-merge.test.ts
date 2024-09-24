@@ -1,5 +1,5 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type TableUp from '../index';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { TableCellInnerFormat, TableSelection } from '../index';
 import { createQuillWithTableModule, createTable, createTaleColHTML } from './utils';
 

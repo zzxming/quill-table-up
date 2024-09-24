@@ -1,8 +1,8 @@
 import type { Parchment as TypeParchment } from 'quill';
 import type { TableColValue, TableValue } from '../utils';
+import type { TableColFormat } from './table-col-format';
 import { blotName, tableColMinWidthPre } from '../utils';
 import { ContainerFormat } from './container-format';
-import type { TableColFormat } from './table-col-format';
 import { TableMainFormat } from './table-main-format';
 
 export class TableColgroupFormat extends ContainerFormat {

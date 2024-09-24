@@ -1,17 +1,17 @@
 import type Quill from 'quill';
-import MergeCell from '../svg/merge-cell.svg';
-import SplitCell from '../svg/split-cell.svg';
-import InsertTop from '../svg/insert-top.svg';
+import type { TableCellInnerFormat, TableUp } from '..';
+import type { TableMenuOptions, Tool, ToolOption } from '../utils';
+import Color from '../svg/color.svg';
 import InsertBottom from '../svg/insert-bottom.svg';
 import InsertLeft from '../svg/insert-left.svg';
 import InsertRight from '../svg/insert-right.svg';
-import RemoveRow from '../svg/remove-row.svg';
+import InsertTop from '../svg/insert-top.svg';
+import MergeCell from '../svg/merge-cell.svg';
 import RemoveColumn from '../svg/remove-column.svg';
+import RemoveRow from '../svg/remove-row.svg';
 import RemoveTable from '../svg/remove-table.svg';
-import Color from '../svg/color.svg';
+import SplitCell from '../svg/split-cell.svg';
 import { createToolTip, debounce, isArray, isFunction, randomId } from '../utils';
-import type { TableMenuOptions, Tool, ToolOption } from '../utils';
-import type { TableCellInnerFormat, TableUp } from '..';
 
 const usedColors = new Set<string>();
 

@@ -1,9 +1,9 @@
-import Quill from 'quill';
 import type { Parchment as TypeParchment } from 'quill';
-import { AFTER_TABLE_RESIZE, tableColMinWidthPre, tableColMinWidthPx, tableRowMinWidthPx } from '../utils';
-import type { TableResizeOptions } from '../utils';
 import type TableUp from '..';
 import type { TableColFormat, TableMainFormat, TableRowFormat } from '..';
+import type { TableResizeOptions } from '../utils';
+import Quill from 'quill';
+import { AFTER_TABLE_RESIZE, tableColMinWidthPre, tableColMinWidthPx, tableRowMinWidthPx } from '../utils';
 
 export class TableResize {
   options: TableResizeOptions;

@@ -1,6 +1,6 @@
-import Quill from 'quill';
-import type TypeBlock from 'quill/blots/block';
 import type { Parchment as TypeParchment } from 'quill';
+import type TypeBlock from 'quill/blots/block';
+import Quill from 'quill';
 import { blotName, findParentBlots } from '../../utils';
 
 const Parchment = Quill.import('parchment');

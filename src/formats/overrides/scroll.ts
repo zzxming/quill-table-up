@@ -1,5 +1,5 @@
-import Quill from 'quill';
 import type { Parchment as TypeParchment } from 'quill';
+import Quill from 'quill';
 import { blotName } from '../../utils';
 
 const Parchment = Quill.import('parchment');

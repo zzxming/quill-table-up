@@ -1,5 +1,5 @@
-import Quill from 'quill';
 import type TypeHeader from 'quill/formats/header';
+import Quill from 'quill';
 import { mixinClass } from '../../utils';
 import { BlockOverride } from './block';
 

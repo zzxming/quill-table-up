@@ -1,17 +1,17 @@
-import Quill from 'quill';
 import type { Range, Parchment as TypeParchment } from 'quill';
-import type Picker from 'quill/ui/picker';
-import type BaseTheme from 'quill/themes/base';
-import type { Context } from 'quill/modules/keyboard';
-import type Toolbar from 'quill/modules/toolbar';
-import type Keyboard from 'quill/modules/keyboard';
-import type { Delta as TypeDelta } from 'quill/core';
 import type { BlockEmbed as TypeBlockEmbed } from 'quill/blots/block';
 import type TypeBlock from 'quill/blots/block';
+import type { Delta as TypeDelta } from 'quill/core';
+import type { Context } from 'quill/modules/keyboard';
+import type Keyboard from 'quill/modules/keyboard';
+import type Toolbar from 'quill/modules/toolbar';
+import type BaseTheme from 'quill/themes/base';
+import type Picker from 'quill/ui/picker';
 import type { TableCellValue, TableColValue, TableTextOptions, TableUpOptions } from './utils';
-import { AFTER_TABLE_RESIZE, blotName, createSelectBox, debounce, findParentBlot, findParentBlots, isFunction, randomId, tableColMinWidthPre, tableColMinWidthPx } from './utils';
+import Quill from 'quill';
 import { BlockOverride, BlockquoteOverride, CodeBlockOverride, HeaderOverride, ListItemOverride, ScrollOverride, TableBodyFormat, TableCellFormat, TableCellInnerFormat, TableColFormat, TableColgroupFormat, TableMainFormat, TableRowFormat, TableWrapperFormat } from './formats';
 import { TableResize, TableResizeLine, TableSelection } from './modules';
+import { AFTER_TABLE_RESIZE, blotName, createSelectBox, debounce, findParentBlot, findParentBlots, isFunction, randomId, tableColMinWidthPre, tableColMinWidthPx } from './utils';
 
 const Delta = Quill.import('delta');
 const Break = Quill.import('blots/break') as TypeParchment.BlotConstructor;
@@ -1002,7 +1002,7 @@ export class TableUp {
   }
 }
 export default TableUp;
-export * from './modules';
 export * from './formats';
+export * from './modules';
+export { AFTER_TABLE_RESIZE, blotName, findParentBlot, findParentBlots, randomId } from './utils';
 export * from './utils/types';
-export { blotName, AFTER_TABLE_RESIZE, findParentBlot, findParentBlots, randomId } from './utils';

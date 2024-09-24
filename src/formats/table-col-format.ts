@@ -1,7 +1,7 @@
-import Quill from 'quill';
 import type { Parchment as TypeParchment } from 'quill';
 import type { BlockEmbed as TypeBlockEmbed } from 'quill/blots/block';
 import type { TableColValue } from '../utils';
+import Quill from 'quill';
 import { blotName, findParentBlots } from '../utils';
 import { TableCellInnerFormat } from './table-cell-inner-format';
 

@@ -1,7 +1,7 @@
-import Quill from 'quill';
 import type { TableResizeLineOptions } from '../utils';
-import { AFTER_TABLE_RESIZE, blotName, findParentBlot, findParentBlots, tableColMinWidthPre, tableColMinWidthPx, tableRowMinWidthPx } from '../utils';
+import Quill from 'quill';
 import { type TableCellFormat, TableRowFormat } from '../formats';
+import { AFTER_TABLE_RESIZE, blotName, findParentBlot, findParentBlots, tableColMinWidthPre, tableColMinWidthPx, tableRowMinWidthPx } from '../utils';
 
 export class TableResizeLine {
   colResizer: HTMLElement;

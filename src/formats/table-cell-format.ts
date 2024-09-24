@@ -1,8 +1,8 @@
 import type { TableCellValue } from '../utils';
-import { blotName } from '../utils';
-import { TableCellInnerFormat } from './table-cell-inner-format';
-import { ContainerFormat } from './container-format';
 import type { TableRowFormat } from './table-row-format';
+import { blotName } from '../utils';
+import { ContainerFormat } from './container-format';
+import { TableCellInnerFormat } from './table-cell-inner-format';
 
 export class TableCellFormat extends ContainerFormat {
   static blotName = blotName.tableCell;
