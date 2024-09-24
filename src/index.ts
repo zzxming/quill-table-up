@@ -175,6 +175,9 @@ export class TableUp {
   tableSelection?: TableSelection;
   tableResizer?: TableResize;
   tableResizerLine?: TableResizeLine;
+  get statics(): any {
+    return this.constructor;
+  }
 
   constructor(quill: Quill, options: Partial<TableUpOptions>) {
     this.quill = quill;
@@ -182,7 +185,7 @@ export class TableUp {
 
     const toolbar = this.quill.getModule('toolbar') as Toolbar;
     if (toolbar && (this.quill.theme as QuillTheme).pickers) {
-      const [, select] = (toolbar.controls as [string, HTMLElement][] || []).find(([name]) => name === TableUp.toolName) || [];
+      const [, select] = (toolbar.controls as [string, HTMLElement][] || []).find(([name]) => name === this.statics.toolName) || [];
       if (select && select.tagName.toLocaleLowerCase() === 'select') {
         this.picker = (this.quill.theme as QuillTheme).pickers.find(picker => picker.select === select);
         if (this.picker) {
