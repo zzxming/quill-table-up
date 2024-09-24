@@ -184,6 +184,80 @@ export class TableMenu {
       tools: defaultTools,
       localstorageKey: '__table-bg-used-color',
       contextmenu: false,
+      defaultColorMap: [
+        [
+          'rgb(255, 255, 255)',
+          'rgb(0, 0, 0)',
+          'rgb(72, 83, 104)',
+          'rgb(41, 114, 244)',
+          'rgb(0, 163, 245)',
+          'rgb(49, 155, 98)',
+          'rgb(222, 60, 54)',
+          'rgb(248, 136, 37)',
+          'rgb(245, 196, 0)',
+          'rgb(153, 56, 215)',
+        ],
+        [
+          'rgb(242, 242, 242)',
+          'rgb(127, 127, 127)',
+          'rgb(243, 245, 247)',
+          'rgb(229, 239, 255)',
+          'rgb(229, 246, 255)',
+          'rgb(234, 250, 241)',
+          'rgb(254, 233, 232)',
+          'rgb(254, 243, 235)',
+          'rgb(254, 249, 227)',
+          'rgb(253, 235, 255)',
+        ],
+        [
+          'rgb(216, 216, 216)',
+          'rgb(89, 89, 89)',
+          'rgb(197, 202, 211)',
+          'rgb(199, 220, 255)',
+          'rgb(199, 236, 255)',
+          'rgb(195, 234, 213)',
+          'rgb(255, 201, 199)',
+          'rgb(255, 220, 196)',
+          'rgb(255, 238, 173)',
+          'rgb(242, 199, 255)',
+        ],
+        [
+          'rgb(191, 191, 191)',
+          'rgb(63, 63, 63)',
+          'rgb(128, 139, 158)',
+          'rgb(153, 190, 255)',
+          'rgb(153, 221, 255)',
+          'rgb(152, 215, 182)',
+          'rgb(255, 156, 153)',
+          'rgb(255, 186, 132)',
+          'rgb(255, 226, 112)',
+          'rgb(213, 142, 255)',
+        ],
+        [
+          'rgb(165, 165, 165)',
+          'rgb(38, 38, 38)',
+          'rgb(53, 59, 69)',
+          'rgb(20, 80, 184)',
+          'rgb(18, 116, 165)',
+          'rgb(39, 124, 79)',
+          'rgb(158, 30, 26)',
+          'rgb(184, 96, 20)',
+          'rgb(163, 130, 0)',
+          'rgb(94, 34, 129)',
+        ],
+        [
+          'rgb(147, 147, 147)',
+          'rgb(13, 13, 13)',
+          'rgb(36, 39, 46)',
+          'rgb(12, 48, 110)',
+          'rgb(10, 65, 92)',
+          'rgb(24, 78, 50)',
+          'rgb(88, 17, 14)',
+          'rgb(92, 48, 10)',
+          'rgb(102, 82, 0)',
+          'rgb(59, 21, 81)',
+        ],
+      ],
     }, options);
   };
 
@@ -217,7 +291,7 @@ export class TableMenu {
     Object.assign(toolBox.style, { display: 'flex' });
     for (const tool of this.options.tools) {
       const { name, icon, handle, isColorChoose, tip = '' } = tool as ToolOption;
-      const item = document.createElement(isColorChoose ? 'label' : 'span');
+      const item = document.createElement('span');
       item.classList.add('ql-table-menu-item');
       if (name === 'break') {
         item.classList.add('break');
@@ -236,44 +310,82 @@ export class TableMenu {
 
         // color choose handler will trigger when the color input event
         if (isColorChoose) {
+          const colorSelectWrapper = document.createElement('div');
+          colorSelectWrapper.classList.add('table-color-select-wrapper');
+
+          if (this.options.defaultColorMap.length > 0) {
+            const colorMap = document.createElement('div');
+            colorMap.classList.add('table-color-map');
+            for (const colors of this.options.defaultColorMap) {
+              const colorMapRow = document.createElement('div');
+              colorMapRow.classList.add('table-color-map-row');
+              for (const color of colors) {
+                const colorItem = document.createElement('div');
+                colorItem.classList.add('table-color-item');
+                colorItem.style.backgroundColor = color;
+                colorMapRow.appendChild(colorItem);
+              }
+              colorMap.appendChild(colorMapRow);
+            }
+            colorSelectWrapper.appendChild(colorMap);
+          }
+
+          const clearColor = document.createElement('button');
+          clearColor.textContent = 'Clear';
+          Object.assign(clearColor.style, {
+            flex: '0 0 50%',
+            height: '24px',
+            padding: '0px 4px',
+          });
+          clearColor.addEventListener('click', () => {
+            handle(this.tableModule, this.selectedTds, null);
+          });
+          const colorMapRow = document.createElement('div');
+          colorMapRow.classList.add('table-color-map-row');
+          Object.assign(colorMapRow.style, {
+            marginTop: '4px',
+          });
           const input = document.createElement('input');
           input.type = 'color';
           Object.assign(input.style, {
-            width: 0,
-            height: 0,
-            padding: 0,
-            border: 0,
-            outline: 'none',
-            opacity: 0,
+            flex: '0 0 50%',
+            height: '24px',
+            padding: '0px 4px',
           });
+          input.addEventListener('input', () => {
+            handle(this.tableModule, this.selectedTds, input.value);
+            this.updateUsedColor(input.value);
+          }, false);
+          colorMapRow.appendChild(clearColor);
+          colorMapRow.appendChild(input);
+          colorSelectWrapper.appendChild(colorMapRow);
 
-          const usedColorWrap = document.createElement('div');
-          usedColorWrap.classList.add('table-color-used');
-          usedColorWrap.classList.add(this.colorItemClass);
-          item.appendChild(usedColorWrap);
-          for (const recordColor of usedColors) {
-            const colorItem = document.createElement('div');
-            colorItem.classList.add('table-color-used-item');
-            colorItem.style.backgroundColor = recordColor;
-            usedColorWrap.appendChild(colorItem);
+          if (usedColors.size > 0) {
+            const usedColorWrap = document.createElement('div');
+            usedColorWrap.classList.add('table-color-used');
+            usedColorWrap.classList.add(this.colorItemClass);
+            item.appendChild(usedColorWrap);
+            for (const recordColor of usedColors) {
+              const colorItem = document.createElement('div');
+              colorItem.classList.add('table-color-item');
+              colorItem.style.backgroundColor = recordColor;
+              usedColorWrap.appendChild(colorItem);
+            }
+            colorSelectWrapper.appendChild(usedColorWrap);
           }
-          usedColorWrap.addEventListener('click', (e) => {
+
+          colorSelectWrapper.addEventListener('click', (e) => {
             e.preventDefault();
             const item = e.target as HTMLElement;
-            if (item && item.style.backgroundColor && this.selectedTds.length > 0) {
-              this.tableModule.setBackgroundColor(this.selectedTds, item.style.backgroundColor);
+            const color = item.style.backgroundColor;
+            if (item && color && this.selectedTds.length > 0) {
+              this.tableModule.setBackgroundColor(this.selectedTds, color);
+              this.updateUsedColor(color);
             }
           });
-          const tooltipItem = createToolTip(item, { content: usedColorWrap, direction: 'top' });
+          const tooltipItem = createToolTip(item, { content: colorSelectWrapper, direction: 'top' });
           tooltipItem && this.tooltipItem.push(tooltipItem);
 
-          if (isFunction(handle)) {
-            input.addEventListener('input', () => {
-              handle(this.tableModule, this.selectedTds, input.value);
-              this.updateUsedColor(input.value);
-            }, false);
-          }
-          item.appendChild(input);
           if (this.options.contextmenu) {
             item.addEventListener('click', e => e.stopPropagation());
           }

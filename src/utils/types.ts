@@ -5,7 +5,7 @@ export interface ToolOption {
   icon: string | ((tableModule: TableUp) => HTMLElement);
   tip?: string;
   isColorChoose?: boolean;
-  handle: (tableModule: TableUp, selectedTds: TableCellInnerFormat[], e: Event | string) => void;
+  handle: (tableModule: TableUp, selectedTds: TableCellInnerFormat[], e: Event | string | null) => void;
 }
 export interface ToolOptionBreak {
   name: 'break';
@@ -18,6 +18,7 @@ export interface TableMenuOptions {
   tools: Tool[];
   contextmenu: boolean;
   localstorageKey: string;
+  defaultColorMap: string[];
 };
 export interface TableSelectionOptions {
   selectColor: string;
