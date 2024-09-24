@@ -41,7 +41,7 @@ const quill = new Quill('#editor', {
       [ // use picker to enable the customSelect option
         { [TableUp.toolName]: [] }
         // or
-        // { 'table-up-main': [] }
+        // { 'table-up': [] }
       ],
     ],
     [TableUp.moduleName]: {},

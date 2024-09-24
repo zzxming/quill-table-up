@@ -1,6 +1,6 @@
 export const blotName = {
   container: 'container',
-  tableWrapper: 'table-up-wrapper',
+  tableWrapper: 'table-up',
   tableMain: 'table-up-main',
   tableColgroup: 'table-up-colgroup',
   tableCol: 'table-up-col',

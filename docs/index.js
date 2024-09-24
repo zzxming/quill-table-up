@@ -24,7 +24,7 @@ const quill1 = new Quill('#editor1', {
       [{ color: [] }, { background: [] }], // dropdown with defaults from theme
       [{ font: [] }],
       [{ align: [] }],
-      [{ 'table-up-main': [] }],
+      [{ [TableUp.toolName]: [] }],
       ['clean'],
     ],
     tableUp: {
@@ -81,7 +81,7 @@ const quill2 = new Quill('#editor2', {
       [{ color: [] }, { background: [] }], // dropdown with defaults from theme
       [{ font: [] }],
       [{ align: [] }],
-      [{ 'table-up-main': [] }],
+      [{ 'table-up': [] }],
       ['clean'],
     ],
     tableUp: {
