@@ -285,6 +285,22 @@
         return null;
     };
 
+    const blotName = {
+        container: 'container',
+        tableWrapper: 'table-up',
+        tableMain: 'table-up-main',
+        tableColgroup: 'table-up-colgroup',
+        tableCol: 'table-up-col',
+        tableBody: 'table-up-body',
+        tableRow: 'table-up-row',
+        tableCell: 'table-up-cell',
+        tableCellInner: 'table-up-cell-inner',
+    };
+    const tableColMinWidthPre = 5;
+    const tableColMinWidthPx = 26;
+    const tableRowMinWidthPx = 36;
+    const AFTER_TABLE_RESIZE = 'after-table-resize';
+
     const isFunction = (val) => typeof val === 'function';
     const isArray = Array.isArray;
     const randomId = () => Math.random().toString(36).slice(2);
@@ -347,45 +363,6 @@
         }
         return targetClass;
     }
-    // const mixinProps = (target: any, source: any) => {
-    //   for (const prop of Object.getOwnPropertyNames(source)) {
-    //     if (/^constructor$/.test(prop)) { continue; }
-    //     Object.defineProperty(target, prop, Object.getOwnPropertyDescriptor(source, prop) as any);
-    //   }
-    // };
-    // export const mixinClass = (base: any, ...mixins: any[]) => {
-    //   let Ctor: any;
-    //   if (base && typeof base === 'function') {
-    //     Ctor = class extends base {
-    //       constructor(...props: any[]) {
-    //         super(...props);
-    //       }
-    //     };
-    //     for (const source of mixins) {
-    //       mixinProps(Ctor.prototype, source.prototype);
-    //     }
-    //   }
-    //   else {
-    //     Ctor = class {};
-    //   }
-    //   return Ctor;
-    // };
-
-    const blotName = {
-        container: 'container',
-        tableWrapper: 'table-up-wrapper',
-        tableMain: 'table-up-main',
-        tableColgroup: 'table-up-colgroup',
-        tableCol: 'table-up-col',
-        tableBody: 'table-up-body',
-        tableRow: 'table-up-row',
-        tableCell: 'table-up-cell',
-        tableCellInner: 'table-up-cell-inner',
-    };
-    const tableColMinWidthPre = 5;
-    const tableColMinWidthPx = 26;
-    const tableRowMinWidthPx = 36;
-    const AFTER_TABLE_RESIZE = 'after-table-resize';
 
     const Parchment$2 = Quill.import('parchment');
     const Container = Quill.import('blots/container');
@@ -440,13 +417,147 @@
         }
     }
 
+    const Parchment$1 = Quill.import('parchment');
     const Block$1 = Quill.import('blots/block');
+    class BlockOverride extends Block$1 {
+        replaceWith(name, value) {
+            const replacement = typeof name === 'string' ? this.scroll.create(name, value) : name;
+            if (replacement instanceof Parchment$1.ParentBlot) {
+                // replace block to TableCellInner length is 0 when setContents
+                // that will set text direct in TableCellInner but not in block
+                // so we need to set text in block and block in TableCellInner
+                // wrap with TableCellInner.formatAt when length is 0 will create a new block
+                // that can make sure TableCellInner struct correctly
+                if (replacement.statics.blotName === blotName.tableCellInner) {
+                    const selfParent = this.parent;
+                    if (selfParent.statics.blotName === blotName.tableCellInner) {
+                        if (selfParent != null) {
+                            selfParent.insertBefore(replacement, this.prev ? null : this.next);
+                        }
+                        if (this.parent.statics.blotName === blotName.tableCellInner && this.prev) {
+                            // eslint-disable-next-line unicorn/no-this-assignment, ts/no-this-alias
+                            let block = this;
+                            while (block) {
+                                const next = block.next;
+                                replacement.appendChild(block);
+                                block = next;
+                            }
+                        }
+                        else {
+                            replacement.appendChild(this);
+                        }
+                        // remove empty cell. tableCellFormat.optimize need col to compute
+                        if (selfParent && selfParent.length() === 0) {
+                            selfParent.parent.remove();
+                            const selfRow = selfParent.parent.parent;
+                            if (selfRow.statics.blotName === blotName.tableRow && selfRow.children.length === 0) {
+                                selfRow.remove();
+                            }
+                        }
+                    }
+                    else {
+                        if (selfParent != null) {
+                            selfParent.insertBefore(replacement, this.next);
+                        }
+                        replacement.appendChild(this);
+                    }
+                    return replacement;
+                }
+                else {
+                    this.moveChildren(replacement);
+                }
+            }
+            if (this.parent != null) {
+                this.parent.insertBefore(replacement, this.next || undefined);
+                this.remove();
+            }
+            this.attributes.copy(replacement);
+            return replacement;
+        }
+        format(name, value) {
+            if (name === blotName.tableCellInner && this.parent.statics.blotName === name && !value) {
+                // when set tableCellInner null. not only clear current block tableCellInner block and also
+                // need move td/tr after current cell out of current table. like code-block, split into two table
+                const [tableCell, tableRow, tableWrapper] = findParentBlots(this, [blotName.tableCell, blotName.tableRow, blotName.tableWrapper]);
+                const tableNext = tableWrapper.next;
+                let tableRowNext = tableRow.next;
+                let tableCellNext = tableCell.next;
+                // clear cur block
+                tableWrapper.parent.insertBefore(this, tableNext);
+                // only move out of table. `optimize` will generate new table
+                // move table cell
+                while (tableCellNext) {
+                    const next = tableCellNext.next;
+                    tableWrapper.parent.insertBefore(tableCellNext, tableNext);
+                    tableCellNext = next;
+                }
+                // move table row
+                while (tableRowNext) {
+                    const next = tableRowNext.next;
+                    tableWrapper.parent.insertBefore(tableRowNext, tableNext);
+                    tableRowNext = next;
+                }
+            }
+            else {
+                super.format(name, value);
+            }
+        }
+    }
+
+    const Blockquote = Quill.import('formats/blockquote');
+    class BlockquoteOverride extends mixinClass(Blockquote, [BlockOverride]) {
+    }
+
+    const CodeBlock = Quill.import('formats/code-block');
+    class CodeBlockOverride extends mixinClass(CodeBlock, [BlockOverride]) {
+    }
+
+    const Header = Quill.import('formats/header');
+    class HeaderOverride extends mixinClass(Header, [BlockOverride]) {
+    }
+
+    const ListItem = Quill.import('formats/list');
+    class ListItemOverride extends mixinClass(ListItem, [BlockOverride]) {
+    }
+
+    const Parchment = Quill.import('parchment');
+    const ScrollBlot = Quill.import('blots/scroll');
+    class ScrollOverride extends ScrollBlot {
+        createBlock(attributes, refBlot) {
+            let createBlotName;
+            let formats = {};
+            // if attributes have not only one block blot. will save last. that will conflict with list/header in tableCellInner
+            for (const [key, value] of Object.entries(attributes)) {
+                const isBlockBlot = this.query(key, Parchment.Scope.BLOCK & Parchment.Scope.BLOT) != null;
+                if (isBlockBlot) {
+                    createBlotName = key;
+                }
+                else {
+                    formats[key] = value;
+                }
+            }
+            // only add this judgement to merge block blot at table cell
+            if (createBlotName === blotName.tableCellInner) {
+                formats = { ...attributes };
+                delete formats[createBlotName];
+            }
+            const block = this.create(createBlotName || this.statics.defaultChild.blotName, createBlotName ? attributes[createBlotName] : undefined);
+            this.insertBefore(block, refBlot || undefined);
+            const length = block.length();
+            for (const [key, value] of Object.entries(formats)) {
+                block.formatAt(0, length, key, value);
+            }
+            return block;
+        }
+    }
+
+    const Block = Quill.import('blots/block');
     const BlockEmbed$1 = Quill.import('blots/block/embed');
     class TableCellInnerFormat extends ContainerFormat {
         static blotName = blotName.tableCellInner;
         static tagName = 'div';
         static className = 'ql-table-cell-inner';
-        static defaultChild = Block$1;
+        static defaultChild = Block;
         static create(value) {
             const { tableId, rowId, colId, rowspan, colspan, backgroundColor, height } = value;
             const node = super.create();
@@ -610,7 +721,6 @@
                         return selfRow.parent.insertBefore(newCell.wrap(blotName.tableRow, cellInnerBlotValue), selfRow.next);
                     }
                     return selfRow.insertBefore(cellInnerBlot.wrap(blotName.tableCell, cellInnerBlotValue), ref ? selfCell : selfCell.next);
-                    // return selfRow.insertBefore(cellInnerBlot.wrap(blotName.tableCell, cellInnerBlotValue), ref ? this.parent : this.parent.next);
                 }
                 else {
                     return this.parent.insertBefore(cellInnerBlot, this.next);
@@ -825,6 +935,88 @@
             if (parent !== null && parent.statics.blotName !== blotName.tableMain) {
                 const { tableId } = this;
                 this.wrap(blotName.tableMain, { tableId });
+            }
+            super.optimize(context);
+        }
+    }
+
+    class TableCellFormat extends ContainerFormat {
+        static blotName = blotName.tableCell;
+        static tagName = 'td';
+        static className = 'ql-table-cell';
+        // for TableSelection computed selectedTds
+        __rect;
+        static create(value) {
+            const { tableId, rowId, colId, rowspan, colspan, backgroundColor, height } = value;
+            const node = super.create();
+            node.dataset.tableId = tableId;
+            node.dataset.rowId = rowId;
+            node.dataset.colId = colId;
+            node.setAttribute('rowspan', String(rowspan || 1));
+            node.setAttribute('colspan', String(colspan || 1));
+            backgroundColor && (node.style.backgroundColor = backgroundColor);
+            height && (node.style.height = height);
+            return node;
+        }
+        get tableId() {
+            return this.domNode.dataset.tableId;
+        }
+        get rowId() {
+            return this.domNode.dataset.rowId;
+        }
+        set rowId(value) {
+            this.domNode.dataset.rowId = value;
+        }
+        get colId() {
+            return this.domNode.dataset.colId;
+        }
+        set colId(value) {
+            this.domNode.dataset.colId = value;
+        }
+        get rowspan() {
+            return Number(this.domNode.getAttribute('rowspan'));
+        }
+        set rowspan(value) {
+            this.domNode.setAttribute('rowspan', String(value));
+        }
+        get colspan() {
+            return Number(this.domNode.getAttribute('colspan'));
+        }
+        set colspan(value) {
+            this.domNode.setAttribute('colspan', String(value));
+        }
+        get backgroundColor() {
+            return this.domNode.dataset.backgroundColor || '';
+        }
+        set backgroundColor(value) {
+            Object.assign(this.domNode.style, {
+                backgroundColor: value,
+            });
+        }
+        get height() {
+            return this.domNode.style.height;
+        }
+        set height(value) {
+            if (value) {
+                this.domNode.style.height = value;
+            }
+        }
+        getCellInner() {
+            return this.descendants(TableCellInnerFormat)[0];
+        }
+        checkMerge() {
+            const { colId, rowId } = this.domNode.dataset;
+            const next = this.next;
+            return (next !== null
+                && next.statics.blotName === this.statics.blotName
+                && next.domNode.dataset.rowId === rowId
+                && next.domNode.dataset.colId === colId);
+        }
+        optimize(context) {
+            const parent = this.parent;
+            const { tableId, rowId } = this;
+            if (parent !== null && parent.statics.blotName !== blotName.tableRow) {
+                this.wrap(blotName.tableRow, { tableId, rowId });
             }
             super.optimize(context);
         }
@@ -1142,227 +1334,7 @@
         }
     }
 
-    class TableCellFormat extends ContainerFormat {
-        static blotName = blotName.tableCell;
-        static tagName = 'td';
-        static className = 'ql-table-cell';
-        // for TableSelection computed selectedTds
-        __rect;
-        static create(value) {
-            const { tableId, rowId, colId, rowspan, colspan, backgroundColor, height } = value;
-            const node = super.create();
-            node.dataset.tableId = tableId;
-            node.dataset.rowId = rowId;
-            node.dataset.colId = colId;
-            node.setAttribute('rowspan', String(rowspan || 1));
-            node.setAttribute('colspan', String(colspan || 1));
-            backgroundColor && (node.style.backgroundColor = backgroundColor);
-            height && (node.style.height = height);
-            return node;
-        }
-        get tableId() {
-            return this.domNode.dataset.tableId;
-        }
-        get rowId() {
-            return this.domNode.dataset.rowId;
-        }
-        set rowId(value) {
-            this.domNode.dataset.rowId = value;
-        }
-        get colId() {
-            return this.domNode.dataset.colId;
-        }
-        set colId(value) {
-            this.domNode.dataset.colId = value;
-        }
-        get rowspan() {
-            return Number(this.domNode.getAttribute('rowspan'));
-        }
-        set rowspan(value) {
-            this.domNode.setAttribute('rowspan', String(value));
-        }
-        get colspan() {
-            return Number(this.domNode.getAttribute('colspan'));
-        }
-        set colspan(value) {
-            this.domNode.setAttribute('colspan', String(value));
-        }
-        get backgroundColor() {
-            return this.domNode.dataset.backgroundColor || '';
-        }
-        set backgroundColor(value) {
-            Object.assign(this.domNode.style, {
-                backgroundColor: value,
-            });
-        }
-        get height() {
-            return this.domNode.style.height;
-        }
-        set height(value) {
-            if (value) {
-                this.domNode.style.height = value;
-            }
-        }
-        getCellInner() {
-            return this.descendants(TableCellInnerFormat)[0];
-        }
-        checkMerge() {
-            const { colId, rowId } = this.domNode.dataset;
-            const next = this.next;
-            return (next !== null
-                && next.statics.blotName === this.statics.blotName
-                && next.domNode.dataset.rowId === rowId
-                && next.domNode.dataset.colId === colId);
-        }
-        optimize(context) {
-            const parent = this.parent;
-            const { tableId, rowId } = this;
-            if (parent !== null && parent.statics.blotName !== blotName.tableRow) {
-                this.wrap(blotName.tableRow, { tableId, rowId });
-            }
-            super.optimize(context);
-        }
-    }
-
-    const Parchment$1 = Quill.import('parchment');
-    const ScrollBlot = Quill.import('blots/scroll');
-    class ScrollOverride extends ScrollBlot {
-        createBlock(attributes, refBlot) {
-            let createBlotName;
-            let formats = {};
-            // if attributes have not only one block blot. will save last. that will conflict with list/header in tableCellInner
-            for (const [key, value] of Object.entries(attributes)) {
-                const isBlockBlot = this.query(key, Parchment$1.Scope.BLOCK & Parchment$1.Scope.BLOT) != null;
-                if (isBlockBlot) {
-                    createBlotName = key;
-                }
-                else {
-                    formats[key] = value;
-                }
-            }
-            // only add this judgement to merge block blot at table cell
-            if (createBlotName === blotName.tableCellInner) {
-                formats = { ...attributes };
-                delete formats[createBlotName];
-            }
-            const block = this.create(createBlotName || this.statics.defaultChild.blotName, createBlotName ? attributes[createBlotName] : undefined);
-            this.insertBefore(block, refBlot || undefined);
-            const length = block.length();
-            for (const [key, value] of Object.entries(formats)) {
-                block.formatAt(0, length, key, value);
-            }
-            return block;
-        }
-    }
-
-    const Parchment = Quill.import('parchment');
-    const Block = Quill.import('blots/block');
-    class BlockOverride extends Block {
-        replaceWith(name, value) {
-            const replacement = typeof name === 'string' ? this.scroll.create(name, value) : name;
-            if (replacement instanceof Parchment.ParentBlot) {
-                // replace block to TableCellInner length is 0 when setContents
-                // that will set text direct in TableCellInner but not in block
-                // so we need to set text in block and block in TableCellInner
-                // wrap with TableCellInner.formatAt when length is 0 will create a new block
-                // that can make sure TableCellInner struct correctly
-                if (replacement.statics.blotName === blotName.tableCellInner) {
-                    const selfParent = this.parent;
-                    if (selfParent.statics.blotName === blotName.tableCellInner) {
-                        if (selfParent != null) {
-                            selfParent.insertBefore(replacement, this.prev ? null : this.next);
-                        }
-                        if (this.parent.statics.blotName === blotName.tableCellInner && this.prev) {
-                            // eslint-disable-next-line unicorn/no-this-assignment, ts/no-this-alias
-                            let block = this;
-                            while (block) {
-                                const next = block.next;
-                                replacement.appendChild(block);
-                                block = next;
-                            }
-                        }
-                        else {
-                            replacement.appendChild(this);
-                        }
-                        // remove empty cell. tableCellFormat.optimize need col to compute
-                        if (selfParent && selfParent.length() === 0) {
-                            selfParent.parent.remove();
-                            const selfRow = selfParent.parent.parent;
-                            if (selfRow.statics.blotName === blotName.tableRow && selfRow.children.length === 0) {
-                                selfRow.remove();
-                            }
-                        }
-                    }
-                    else {
-                        if (selfParent != null) {
-                            selfParent.insertBefore(replacement, this.next);
-                        }
-                        replacement.appendChild(this);
-                    }
-                    return replacement;
-                }
-                else {
-                    this.moveChildren(replacement);
-                }
-            }
-            if (this.parent != null) {
-                this.parent.insertBefore(replacement, this.next || undefined);
-                this.remove();
-            }
-            this.attributes.copy(replacement);
-            return replacement;
-        }
-        format(name, value) {
-            if (name === blotName.tableCellInner && this.parent.statics.blotName === name && !value) {
-                // when set tableCellInner null. not only clear current block tableCellInner block and also
-                // need move td/tr after current cell out of current table. like code-block, split into two table
-                const [tableCell, tableRow, tableWrapper] = findParentBlots(this, [blotName.tableCell, blotName.tableRow, blotName.tableWrapper]);
-                const tableNext = tableWrapper.next;
-                let tableRowNext = tableRow.next;
-                let tableCellNext = tableCell.next;
-                // clear cur block
-                tableWrapper.parent.insertBefore(this, tableNext);
-                // only move out of table. `optimize` will generate new table
-                // move table cell
-                while (tableCellNext) {
-                    const next = tableCellNext.next;
-                    tableWrapper.parent.insertBefore(tableCellNext, tableNext);
-                    tableCellNext = next;
-                }
-                // move table row
-                while (tableRowNext) {
-                    const next = tableRowNext.next;
-                    tableWrapper.parent.insertBefore(tableRowNext, tableNext);
-                    tableRowNext = next;
-                }
-            }
-            else {
-                super.format(name, value);
-            }
-        }
-    }
-
-    const Header = Quill.import('formats/header');
-    class HeaderOverride extends mixinClass(Header, [BlockOverride]) {
-    }
-
-    const ListItem = Quill.import('formats/list');
-    class ListItemOverride extends mixinClass(ListItem, [BlockOverride]) {
-    }
-
-    const Blockquote = Quill.import('formats/blockquote');
-    class BlockquoteOverride extends mixinClass(Blockquote, [BlockOverride]) {
-    }
-
-    const CodeBlock = Quill.import('formats/code-block');
-    class CodeBlockOverride extends mixinClass(CodeBlock, [BlockOverride]) {
-    }
-
-    var MergeCell = "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"1em\" height=\"1em\" viewBox=\"0 0 24 24\"><path fill=\"currentColor\" d=\"M5 10H3V4h8v2H5zm14 8h-6v2h8v-6h-2zM5 18v-4H3v6h8v-2zM21 4h-8v2h6v4h2zM8 13v2l3-3l-3-3v2H3v2zm8-2V9l-3 3l3 3v-2h5v-2z\"/></svg>";
-
-    var SplitCell = "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"1em\" height=\"1em\" viewBox=\"0 0 24 24\"><path fill=\"currentColor\" d=\"M19 14h2v6H3v-6h2v4h14zM3 4v6h2V6h14v4h2V4zm8 7v2H8v2l-3-3l3-3v2zm5 0V9l3 3l-3 3v-2h-3v-2z\"/></svg>";
-
-    var InsertTop = "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"1em\" height=\"1em\" viewBox=\"0 0 24 24\"><path fill=\"currentColor\" d=\"M4 3h14a2 2 0 0 1 2 2v7.08a6 6 0 0 0-4.32.92H12v4h1.08c-.11.68-.11 1.35 0 2H4a2 2 0 0 1-2-2V5c0-1.1.9-2 2-2m0 4v4h6V7zm8 0v4h6V7zm-8 6v4h6v-4zm17.94 4.5h-2v4h-2v-4h-2l3-3z\"/></svg>";
+    var Color = "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"1em\" height=\"1em\" viewBox=\"0 0 24 24\"><path fill=\"none\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"m11 7l6 6M4 16L15.7 4.3a1 1 0 0 1 1.4 0l2.6 2.6a1 1 0 0 1 0 1.4L8 20H4z\"/></svg>";
 
     var InsertBottom = "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"1em\" height=\"1em\" viewBox=\"0 0 24 24\"><path fill=\"currentColor\" d=\"M4 3h14a2 2 0 0 1 2 2v7.08a6 6 0 0 0-4.32.92H12v4h1.08c-.11.68-.11 1.35 0 2H4a2 2 0 0 1-2-2V5c0-1.1.9-2 2-2m0 4v4h6V7zm8 0v4h6V7zm-8 6v4h6v-4zm11.94 5.5h2v-4h2v4h2l-3 3z\"/></svg>";
 
@@ -1370,13 +1342,17 @@
 
     var InsertRight = "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"1em\" height=\"1em\" viewBox=\"0 0 24 24\"><path fill=\"currentColor\" d=\"M4 3h14a2 2 0 0 1 2 2v7.08a6 6 0 0 0-4.32.92H12v4h1.08c-.11.68-.11 1.35 0 2H4a2 2 0 0 1-2-2V5c0-1.1.9-2 2-2m0 4v4h6V7zm8 0v4h6V7zm-8 6v4h6v-4zm15.44 8v-2h-4v-2h4v-2l3 3z\"/></svg>";
 
-    var RemoveRow = "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"1em\" height=\"1em\" viewBox=\"0 0 24 24\"><path fill=\"currentColor\" d=\"M9.41 13L12 15.59L14.59 13L16 14.41L13.41 17L16 19.59L14.59 21L12 18.41L9.41 21L8 19.59L10.59 17L8 14.41zM22 9a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2zM4 9h4V6H4zm6 0h4V6h-4zm6 0h4V6h-4z\"/></svg>";
+    var InsertTop = "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"1em\" height=\"1em\" viewBox=\"0 0 24 24\"><path fill=\"currentColor\" d=\"M4 3h14a2 2 0 0 1 2 2v7.08a6 6 0 0 0-4.32.92H12v4h1.08c-.11.68-.11 1.35 0 2H4a2 2 0 0 1-2-2V5c0-1.1.9-2 2-2m0 4v4h6V7zm8 0v4h6V7zm-8 6v4h6v-4zm17.94 4.5h-2v4h-2v-4h-2l3-3z\"/></svg>";
+
+    var MergeCell = "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"1em\" height=\"1em\" viewBox=\"0 0 24 24\"><path fill=\"currentColor\" d=\"M5 10H3V4h8v2H5zm14 8h-6v2h8v-6h-2zM5 18v-4H3v6h8v-2zM21 4h-8v2h6v4h2zM8 13v2l3-3l-3-3v2H3v2zm8-2V9l-3 3l3 3v-2h5v-2z\"/></svg>";
 
     var RemoveColumn = "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"1em\" height=\"1em\" viewBox=\"0 0 24 24\"><path fill=\"currentColor\" d=\"M4 2h7a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2m0 8v4h7v-4zm0 6v4h7v-4zM4 4v4h7V4zm13.59 8L15 9.41L16.41 8L19 10.59L21.59 8L23 9.41L20.41 12L23 14.59L21.59 16L19 13.41L16.41 16L15 14.59z\"/></svg>";
 
+    var RemoveRow = "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"1em\" height=\"1em\" viewBox=\"0 0 24 24\"><path fill=\"currentColor\" d=\"M9.41 13L12 15.59L14.59 13L16 14.41L13.41 17L16 19.59L14.59 21L12 18.41L9.41 21L8 19.59L10.59 17L8 14.41zM22 9a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2zM4 9h4V6H4zm6 0h4V6h-4zm6 0h4V6h-4z\"/></svg>";
+
     var RemoveTable = "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"1em\" height=\"1em\" viewBox=\"0 0 24 24\"><path fill=\"currentColor\" d=\"m15.46 15.88l1.42-1.42L19 16.59l2.12-2.13l1.42 1.42L20.41 18l2.13 2.12l-1.42 1.42L19 19.41l-2.12 2.13l-1.42-1.42L17.59 18zM4 3h14a2 2 0 0 1 2 2v7.08a6 6 0 0 0-4.32.92H12v4h1.08c-.11.68-.11 1.35 0 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2m0 4v4h6V7zm8 0v4h6V7zm-8 6v4h6v-4z\"/></svg>";
 
-    var Color = "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"1em\" height=\"1em\" viewBox=\"0 0 24 24\"><path fill=\"none\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"m11 7l6 6M4 16L15.7 4.3a1 1 0 0 1 1.4 0l2.6 2.6a1 1 0 0 1 0 1.4L8 20H4z\"/></svg>";
+    var SplitCell = "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"1em\" height=\"1em\" viewBox=\"0 0 24 24\"><path fill=\"currentColor\" d=\"M19 14h2v6H3v-6h2v4h14zM3 4v6h2V6h14v4h2V4zm8 7v2H8v2l-3-3l3-3v2zm5 0V9l3 3l-3 3v-2h-3v-2z\"/></svg>";
 
     const usedColors = new Set();
     const parseNum = (num) => {
@@ -1522,7 +1498,7 @@
                     usedColorWrapper.innerHTML = '';
                     for (const recordColor of usedColors) {
                         const colorItem = document.createElement('div');
-                        colorItem.classList.add('table-color-used-item');
+                        colorItem.classList.add('table-color-item');
                         colorItem.style.backgroundColor = recordColor;
                         usedColorWrapper.appendChild(colorItem);
                     }
@@ -1542,6 +1518,80 @@
                 tools: defaultTools,
                 localstorageKey: '__table-bg-used-color',
                 contextmenu: false,
+                defaultColorMap: [
+                    [
+                        'rgb(255, 255, 255)',
+                        'rgb(0, 0, 0)',
+                        'rgb(72, 83, 104)',
+                        'rgb(41, 114, 244)',
+                        'rgb(0, 163, 245)',
+                        'rgb(49, 155, 98)',
+                        'rgb(222, 60, 54)',
+                        'rgb(248, 136, 37)',
+                        'rgb(245, 196, 0)',
+                        'rgb(153, 56, 215)',
+                    ],
+                    [
+                        'rgb(242, 242, 242)',
+                        'rgb(127, 127, 127)',
+                        'rgb(243, 245, 247)',
+                        'rgb(229, 239, 255)',
+                        'rgb(229, 246, 255)',
+                        'rgb(234, 250, 241)',
+                        'rgb(254, 233, 232)',
+                        'rgb(254, 243, 235)',
+                        'rgb(254, 249, 227)',
+                        'rgb(253, 235, 255)',
+                    ],
+                    [
+                        'rgb(216, 216, 216)',
+                        'rgb(89, 89, 89)',
+                        'rgb(197, 202, 211)',
+                        'rgb(199, 220, 255)',
+                        'rgb(199, 236, 255)',
+                        'rgb(195, 234, 213)',
+                        'rgb(255, 201, 199)',
+                        'rgb(255, 220, 196)',
+                        'rgb(255, 238, 173)',
+                        'rgb(242, 199, 255)',
+                    ],
+                    [
+                        'rgb(191, 191, 191)',
+                        'rgb(63, 63, 63)',
+                        'rgb(128, 139, 158)',
+                        'rgb(153, 190, 255)',
+                        'rgb(153, 221, 255)',
+                        'rgb(152, 215, 182)',
+                        'rgb(255, 156, 153)',
+                        'rgb(255, 186, 132)',
+                        'rgb(255, 226, 112)',
+                        'rgb(213, 142, 255)',
+                    ],
+                    [
+                        'rgb(165, 165, 165)',
+                        'rgb(38, 38, 38)',
+                        'rgb(53, 59, 69)',
+                        'rgb(20, 80, 184)',
+                        'rgb(18, 116, 165)',
+                        'rgb(39, 124, 79)',
+                        'rgb(158, 30, 26)',
+                        'rgb(184, 96, 20)',
+                        'rgb(163, 130, 0)',
+                        'rgb(94, 34, 129)',
+                    ],
+                    [
+                        'rgb(147, 147, 147)',
+                        'rgb(13, 13, 13)',
+                        'rgb(36, 39, 46)',
+                        'rgb(12, 48, 110)',
+                        'rgb(10, 65, 92)',
+                        'rgb(24, 78, 50)',
+                        'rgb(88, 17, 14)',
+                        'rgb(92, 48, 10)',
+                        'rgb(102, 82, 0)',
+                        'rgb(59, 21, 81)',
+                    ],
+                ],
             }, options);
         }
         ;
@@ -1572,7 +1622,7 @@
             Object.assign(toolBox.style, { display: 'flex' });
             for (const tool of this.options.tools) {
                 const { name, icon, handle, isColorChoose, tip = '' } = tool;
-                const item = document.createElement(isColorChoose ? 'label' : 'span');
+                const item = document.createElement('span');
                 item.classList.add('ql-table-menu-item');
                 if (name === 'break') {
                     item.classList.add('break');
@@ -1590,6 +1640,37 @@
                     item.appendChild(iconDom);
                     // color choose handler will trigger when the color input event
                     if (isColorChoose) {
+                        const colorSelectWrapper = document.createElement('div');
+                        colorSelectWrapper.classList.add('table-color-select-wrapper');
+                        if (this.options.defaultColorMap.length > 0) {
+                            const colorMap = document.createElement('div');
+                            colorMap.classList.add('table-color-map');
+                            for (const colors of this.options.defaultColorMap) {
+                                const colorMapRow = document.createElement('div');
+                                colorMapRow.classList.add('table-color-map-row');
+                                for (const color of colors) {
+                                    const colorItem = document.createElement('div');
+                                    colorItem.classList.add('table-color-item');
+                                    colorItem.style.backgroundColor = color;
+                                    colorMapRow.appendChild(colorItem);
+                                }
+                                colorMap.appendChild(colorMapRow);
+                            }
+                            colorSelectWrapper.appendChild(colorMap);
+                        }
+                        const colorMapRow = document.createElement('div');
+                        colorMapRow.classList.add('table-color-map-row');
+                        Object.assign(colorMapRow.style, {
+                            marginTop: '4px',
+                        });
+                        const clearColor = document.createElement('div');
+                        clearColor.textContent = 'Clear';
+                        clearColor.addEventListener('click', () => {
+                            handle(this.tableModule, this.selectedTds, null);
+                        });
+                        const label = document.createElement('label');
+                        const customColor = document.createElement('span');
+                        customColor.textContent = 'Custom';
                         const input = document.createElement('input');
                         input.type = 'color';
                         Object.assign(input.style, {
@@ -1600,32 +1681,40 @@
                             outline: 'none',
                             opacity: 0,
                         });
-                        const usedColorWrap = document.createElement('div');
-                        usedColorWrap.classList.add('table-color-used');
-                        usedColorWrap.classList.add(this.colorItemClass);
-                        item.appendChild(usedColorWrap);
-                        for (const recordColor of usedColors) {
-                            const colorItem = document.createElement('div');
-                            colorItem.classList.add('table-color-used-item');
-                            colorItem.style.backgroundColor = recordColor;
-                            usedColorWrap.appendChild(colorItem);
+                        input.addEventListener('input', () => {
+                            handle(this.tableModule, this.selectedTds, input.value);
+                            this.updateUsedColor(input.value);
+                        }, false);
+                        label.appendChild(customColor);
+                        label.appendChild(input);
+                        clearColor.classList.add('table-color-clear');
+                        label.classList.add('table-color-custom');
+                        colorMapRow.appendChild(clearColor);
+                        colorMapRow.appendChild(label);
+                        colorSelectWrapper.appendChild(colorMapRow);
+                        if (usedColors.size > 0) {
+                            const usedColorWrap = document.createElement('div');
+                            usedColorWrap.classList.add('table-color-used');
+                            usedColorWrap.classList.add(this.colorItemClass);
+                            item.appendChild(usedColorWrap);
+                            for (const recordColor of usedColors) {
+                                const colorItem = document.createElement('div');
+                                colorItem.classList.add('table-color-item');
+                                colorItem.style.backgroundColor = recordColor;
+                                usedColorWrap.appendChild(colorItem);
+                            }
+                            colorSelectWrapper.appendChild(usedColorWrap);
                         }
-                        usedColorWrap.addEventListener('click', (e) => {
-                            e.preventDefault();
+                        colorSelectWrapper.addEventListener('click', (e) => {
                             const item = e.target;
-                            if (item && item.style.backgroundColor && this.selectedTds.length > 0) {
-                                this.tableModule.setBackgroundColor(this.selectedTds, item.style.backgroundColor);
+                            const color = item.style.backgroundColor;
+                            if (item && color && this.selectedTds.length > 0) {
+                                this.tableModule.setBackgroundColor(this.selectedTds, color);
+                                this.updateUsedColor(color);
                             }
                         });
-                        const tooltipItem = createToolTip(item, { content: usedColorWrap, direction: 'top' });
+                        const tooltipItem = createToolTip(item, { content: colorSelectWrapper, direction: 'top' });
                         tooltipItem && this.tooltipItem.push(tooltipItem);
-                        if (isFunction(handle)) {
-                            input.addEventListener('input', () => {
-                                handle(this.tableModule, this.selectedTds, input.value);
-                                this.updateUsedColor(input.value);
-                            }, false);
-                        }
-                        item.appendChild(input);
                         if (this.options.contextmenu) {
                             item.addEventListener('click', e => e.stopPropagation());
                         }
@@ -1721,444 +1810,6 @@
                 return;
             this.menu.remove();
             this.menu = null;
-        }
-    }
-
-    const ERROR_LIMIT = 2;
-    class TableSelection {
-        tableModule;
-        table;
-        quill;
-        options;
-        boundary = null;
-        startScrollX = 0;
-        selectedTds = [];
-        cellSelect;
-        dragging = false;
-        scrollHandler = [];
-        selectingHandler = this.mouseDownHandler.bind(this);
-        tableMenu;
-        constructor(tableModule, table, quill, options = {}) {
-            this.tableModule = tableModule;
-            this.table = table;
-            this.quill = quill;
-            this.options = this.resolveOptions(options);
-            this.cellSelect = this.quill.addContainer('ql-table-selection_line');
-            this.helpLinesInitial();
-            const resizeObserver = new ResizeObserver(() => {
-                this.hideSelection();
-            });
-            resizeObserver.observe(this.table);
-            this.quill.root.addEventListener('mousedown', this.selectingHandler, false);
-            this.tableMenu = new TableMenu(this.tableModule, quill, this.options.tableMenu);
-        }
-        resolveOptions(options) {
-            return Object.assign({
-                selectColor: '#0589f3',
-                tableMenu: {},
-            }, options);
-        }
-        ;
-        addScrollEvent(dom, handle) {
-            dom.addEventListener('scroll', handle);
-            this.scrollHandler.push([dom, handle]);
-        }
-        clearScrollEvent() {
-            for (let i = 0; i < this.scrollHandler.length; i++) {
-                const [dom, handle] = this.scrollHandler[i];
-                dom.removeEventListener('scroll', handle);
-            }
-            this.scrollHandler = [];
-        }
-        helpLinesInitial() {
-            Object.assign(this.cellSelect.style, {
-                'border-color': this.options.selectColor,
-            });
-        }
-        computeSelectedTds(startPoint, endPoint) {
-            // Use TableCell to calculation selected range, because TableCellInner is scrollable, the width will effect calculate
-            const tableMain = Quill.find(this.table);
-            if (!tableMain)
-                return [];
-            const tableCells = new Set(tableMain.descendants(TableCellFormat).map((cell, i) => {
-                cell.index = i;
-                return cell;
-            }));
-            const tableRect = this.table.getBoundingClientRect();
-            // set boundary to initially mouse move rectangle
-            let boundary = {
-                x: Math.max(tableRect.left, Math.min(endPoint.x, startPoint.x)),
-                y: Math.max(tableRect.top, Math.min(endPoint.y, startPoint.y)),
-                x1: Math.min(tableRect.right, Math.max(endPoint.x, startPoint.x)),
-                y1: Math.min(tableRect.bottom, Math.max(endPoint.y, startPoint.y)),
-            };
-            const selectedCells = new Set();
-            let findEnd = true;
-            // loop all cells to find correct boundary
-            while (findEnd) {
-                findEnd = false;
-                for (const cell of tableCells) {
-                    if (!cell.__rect) {
-                        cell.__rect = cell.domNode.getBoundingClientRect();
-                    }
-                    // Determine whether the cell intersects with the current boundary
-                    const { x, y, right, bottom } = cell.__rect;
-                    if (isRectanglesIntersect(boundary, { x, y, x1: right, y1: bottom }, ERROR_LIMIT)) {
-                        // add cell to selected
-                        selectedCells.add(cell);
-                        tableCells.delete(cell);
-                        // update boundary
-                        boundary = {
-                            x: Math.min(boundary.x, x),
-                            y: Math.min(boundary.y, y),
-                            x1: Math.max(boundary.x1, right),
-                            y1: Math.max(boundary.y1, bottom),
-                        };
-                        // recalculate boundary last cells
-                        findEnd = true;
-                        break;
-                    }
-                }
-            }
-            for (const cell of [...selectedCells, ...tableCells]) {
-                delete cell.__rect;
-            }
-            // save result boundary relative to the editor
-            this.boundary = getRelativeRect({
-                ...boundary,
-                width: boundary.x1 - boundary.x,
-                height: boundary.y1 - boundary.y,
-            }, this.quill.root.parentNode);
-            return Array.from(selectedCells).sort((a, b) => a.index - b.index).map((cell) => {
-                cell.index = undefined;
-                return cell.getCellInner();
-            });
-        }
-        mouseDownHandler(mousedownEvent) {
-            const { button, target, clientX, clientY } = mousedownEvent;
-            const closestTable = target.closest('.ql-table');
-            if (button !== 0 || !closestTable)
-                return;
-            const startTableId = closestTable.dataset.tableId;
-            const startPoint = { x: clientX, y: clientY };
-            this.startScrollX = this.table.parentNode.scrollLeft;
-            this.selectedTds = this.computeSelectedTds(startPoint, startPoint);
-            this.showSelection();
-            const mouseMoveHandler = (mousemoveEvent) => {
-                const { button, target, clientX, clientY } = mousemoveEvent;
-                const closestTable = target.closest('.ql-table');
-                if (button !== 0
-                    || !closestTable
-                    || closestTable.dataset.tableId !== startTableId) {
-                    return;
-                }
-                this.dragging = true;
-                const movePoint = { x: clientX, y: clientY };
-                this.selectedTds = this.computeSelectedTds(startPoint, movePoint);
-                if (this.selectedTds.length > 1) {
-                    this.quill.blur();
-                }
-                this.updateSelection();
-            };
-            const mouseUpHandler = () => {
-                document.body.removeEventListener('mousemove', mouseMoveHandler, false);
-                document.body.removeEventListener('mouseup', mouseUpHandler, false);
-                this.dragging = false;
-            };
-            document.body.addEventListener('mousemove', mouseMoveHandler, false);
-            document.body.addEventListener('mouseup', mouseUpHandler, false);
-        }
-        updateSelection() {
-            if (this.selectedTds.length === 0 || !this.boundary)
-                return;
-            const tableViewScrollLeft = this.table.parentNode.scrollLeft;
-            const scrollTop = this.quill.root.parentNode.scrollTop;
-            Object.assign(this.cellSelect.style, {
-                left: `${this.boundary.x + (this.startScrollX - tableViewScrollLeft) - 1}px`,
-                top: `${scrollTop * 2 + this.boundary.y}px`,
-                width: `${this.boundary.width + 1}px`,
-                height: `${this.boundary.height + 1}px`,
-            });
-            this.tableMenu.updateTools();
-        }
-        showSelection() {
-            this.clearScrollEvent();
-            Object.assign(this.cellSelect.style, { display: 'block' });
-            this.updateSelection();
-            this.addScrollEvent(this.table.parentNode, () => {
-                this.updateSelection();
-            });
-        }
-        hideSelection() {
-            this.boundary = null;
-            this.selectedTds = [];
-            this.cellSelect && Object.assign(this.cellSelect.style, { display: 'none' });
-            this.tableMenu.hideTools();
-            this.clearScrollEvent();
-        }
-        destroy() {
-            this.hideSelection();
-            this.tableMenu.destroy();
-            this.cellSelect.remove();
-            this.clearScrollEvent();
-            this.quill.root.removeEventListener('mousedown', this.selectingHandler, false);
-            return null;
-        }
-    }
-    function isRectanglesIntersect(a, b, tolerance = 4) {
-        const { x: minAx, y: minAy, x1: maxAx, y1: maxAy } = a;
-        const { x: minBx, y: minBy, x1: maxBx, y1: maxBy } = b;
-        const notOverlapX = maxAx <= minBx + tolerance || minAx + tolerance >= maxBx;
-        const notOverlapY = maxAy <= minBy + tolerance || minAy + tolerance >= maxBy;
-        return !(notOverlapX || notOverlapY);
-    }
-    function getRelativeRect(targetRect, container) {
-        const containerRect = container.getBoundingClientRect();
-        return {
-            x: targetRect.x - containerRect.x - container.scrollLeft,
-            y: targetRect.y - containerRect.y - container.scrollTop,
-            x1: targetRect.x - containerRect.x - container.scrollLeft + targetRect.width,
-            y1: targetRect.y - containerRect.y - container.scrollTop + targetRect.height,
-            width: targetRect.width,
-            height: targetRect.height,
-        };
-    }
-
-    class TableResizeLine {
-        quill;
-        colResizer;
-        rowResizer;
-        currentTableCell;
-        dragging = false;
-        options;
-        constructor(quill, options) {
-            this.quill = quill;
-            this.options = this.resolveOptions(options);
-            this.colResizer = this.quill.addContainer('ql-table-resize-line-col');
-            this.rowResizer = this.quill.addContainer('ql-table-resize-line-row');
-            this.quill.root.addEventListener('mousemove', (e) => {
-                if (this.dragging)
-                    return;
-                const tableCell = this.findTableCell(e);
-                if (!tableCell)
-                    return;
-                const tableCellBlot = Quill.find(tableCell);
-                if (!tableCellBlot)
-                    return;
-                if (this.currentTableCell !== tableCell) {
-                    this.showResizer();
-                    this.currentTableCell = tableCell;
-                    const tableMainBlot = findParentBlot(tableCellBlot, blotName.tableMain);
-                    if (tableMainBlot.getCols().length > 0) {
-                        this.updateColResizer(tableCellBlot);
-                    }
-                    this.updateRowResizer(tableCellBlot);
-                }
-            });
-            this.quill.on(Quill.events.TEXT_CHANGE, () => {
-                this.hideResizer();
-            });
-        }
-        resolveOptions(options) {
-            return Object.assign({}, options);
-        }
-        findTableCell(e) {
-            for (const el of e.composedPath()) {
-                if (el instanceof HTMLElement && el.tagName === 'TD') {
-                    return el;
-                }
-            }
-            return null;
-        }
-        updateColResizer(tableCellBlot) {
-            this.quill.container.removeChild(this.colResizer);
-            this.colResizer = this.quill.addContainer('ql-table-resize-line-col');
-            const [tableBodyBlot, tableMainBlot] = findParentBlots(tableCellBlot, [blotName.tableBody, blotName.tableMain]);
-            const tableBodyect = tableBodyBlot.domNode.getBoundingClientRect();
-            const tableCellRect = tableCellBlot.domNode.getBoundingClientRect();
-            const rootRect = this.quill.root.getBoundingClientRect();
-            Object.assign(this.colResizer.style, {
-                top: `${tableBodyect.y - rootRect.y}px`,
-                left: `${tableCellRect.right - rootRect.x}px`,
-                height: `${tableBodyect.height}px`,
-            });
-            const cols = tableMainBlot.getCols();
-            const curColIndex = cols.findIndex(col => col.colId === tableCellBlot.colId);
-            let tipColBreak;
-            const handleMousemove = (e) => {
-                const rect = cols[curColIndex].domNode.getBoundingClientRect();
-                const tableWidth = tableMainBlot.domNode.getBoundingClientRect().width;
-                let resX = e.clientX;
-                if (tableMainBlot.full) {
-                    // max width = current col.width + next col.width
-                    // if current col is last. max width = current col.width
-                    const minWidth = (tableColMinWidthPre / 100) * tableWidth;
-                    const maxRange = resX > rect.right
-                        ? cols[curColIndex + 1]
-                            ? cols[curColIndex + 1].domNode.getBoundingClientRect().right - minWidth
-                            : rect.right - minWidth
-                        : Infinity;
-                    const minRange = rect.x + minWidth;
-                    resX = Math.min(Math.max(resX, minRange), maxRange);
-                }
-                else {
-                    if (resX - rect.x < tableColMinWidthPx) {
-                        resX = rect.x + tableColMinWidthPx;
-                    }
-                }
-                tipColBreak.style.left = `${resX}px`;
-                tipColBreak.dataset.w = String(resX - rect.x);
-            };
-            const handleMouseup = () => {
-                const w = Number.parseInt(tipColBreak.dataset.w);
-                if (tableMainBlot.full) {
-                    let pre = (w / tableMainBlot.domNode.getBoundingClientRect().width) * 100;
-                    const oldWidthPre = cols[curColIndex].width;
-                    if (pre < oldWidthPre) {
-                        // minus
-                        // if not the last col. add the reduced amount to the next col
-                        // if is the last col. add the reduced amount to the pre col
-                        pre = Math.max(tableColMinWidthPre, pre);
-                        const last = oldWidthPre - pre;
-                        if (cols[curColIndex + 1]) {
-                            cols[curColIndex + 1].width = `${cols[curColIndex + 1].width + last}%`;
-                        }
-                        else if (cols[curColIndex - 1]) {
-                            cols[curColIndex - 1].width = `${cols[curColIndex - 1].width + last}%`;
-                        }
-                        else {
-                            pre = 100;
-                        }
-                        cols[curColIndex].width = `${pre}%`;
-                    }
-                    else {
-                        // magnify col
-                        // the last col can't magnify. control last but one minus to magnify last col
-                        if (cols[curColIndex + 1]) {
-                            const totalWidthNextPre = oldWidthPre + cols[curColIndex + 1].width;
-                            pre = Math.min(totalWidthNextPre - tableColMinWidthPre, pre);
-                            cols[curColIndex].width = `${pre}%`;
-                            cols[curColIndex + 1].width = `${totalWidthNextPre - pre}%`;
-                        }
-                    }
-                }
-                else {
-                    tableMainBlot.domNode.style.width = `${Number.parseFloat(tableMainBlot.domNode.style.width)
-                    - cols[curColIndex].domNode.getBoundingClientRect().width
-                    + w}px`;
-                    cols[curColIndex].width = `${w}px`;
-                }
-                document.body.removeChild(tipColBreak);
-                tipColBreak = null;
-                document.removeEventListener('mouseup', handleMouseup);
-                document.removeEventListener('mousemove', handleMousemove);
-                this.dragging = false;
-                this.updateColResizer(tableCellBlot);
-                this.quill.emitter.emit(AFTER_TABLE_RESIZE);
-            };
-            const handleMousedown = (e) => {
-                if (e.button !== 0)
-                    return;
-                this.dragging = true;
-                document.addEventListener('mouseup', handleMouseup);
-                document.addEventListener('mousemove', handleMousemove);
-                const divDom = document.createElement('div');
-                divDom.classList.add('ql-table-drag-line');
-                divDom.classList.add('col');
-                // set drag init width
-                const tableMainRect = tableMainBlot.domNode.getBoundingClientRect();
-                const fullWidth = tableMainRect.width;
-                const colWidthAttr = cols[curColIndex].width;
-                const width = tableMainBlot.full ? colWidthAttr / 100 * fullWidth : colWidthAttr;
-                divDom.dataset.w = String(width);
-                Object.assign(divDom.style, {
-                    top: `${tableMainRect.y}px`,
-                    left: `${e.clientX}px`,
-                    height: `${tableMainRect.height}px`,
-                });
-                document.body.appendChild(divDom);
-                if (tipColBreak)
-                    document.body.removeChild(tipColBreak);
-                tipColBreak = divDom;
-            };
-            this.colResizer.addEventListener('mousedown', handleMousedown);
-            this.colResizer.addEventListener('dragstart', (e) => {
-                e.preventDefault();
-            });
-        }
-        updateRowResizer(tableCellBlot) {
-            this.quill.container.removeChild(this.rowResizer);
-            this.rowResizer = this.quill.addContainer('ql-table-resize-line-row');
-            const row = tableCellBlot.parent;
-            if (!(row instanceof TableRowFormat)) {
-                return;
-            }
-            const [tableBodyBlot, tableMainBlot] = findParentBlots(tableCellBlot, [blotName.tableBody, blotName.tableMain]);
-            const tableBodynRect = tableBodyBlot.domNode.getBoundingClientRect();
-            const tableCellRect = tableCellBlot.domNode.getBoundingClientRect();
-            const rootRect = this.quill.root.getBoundingClientRect();
-            Object.assign(this.rowResizer.style, {
-                top: `${tableCellRect.bottom - rootRect.y}px`,
-                left: `${tableBodynRect.x - rootRect.x}px`,
-                width: `${tableBodynRect.width}px`,
-            });
-            let tipRowBreak;
-            const handleMousemove = (e) => {
-                const rect = tableCellBlot.parent.domNode.getBoundingClientRect();
-                let resY = e.clientY;
-                if (resY - rect.y < tableRowMinWidthPx) {
-                    resY = rect.y + tableRowMinWidthPx;
-                }
-                tipRowBreak.style.top = `${resY}px`;
-                tipRowBreak.dataset.w = String(resY - rect.y);
-            };
-            const handleMouseup = () => {
-                const w = `${tipRowBreak.dataset.w}px`;
-                tableCellBlot.parent.setHeight(w);
-                document.body.removeChild(tipRowBreak);
-                tipRowBreak = null;
-                document.removeEventListener('mouseup', handleMouseup);
-                document.removeEventListener('mousemove', handleMousemove);
-                this.dragging = false;
-                this.updateRowResizer(tableCellBlot);
-                this.quill.emitter.emit(AFTER_TABLE_RESIZE);
-            };
-            const handleMousedown = (e) => {
-                if (e.button !== 0)
-                    return;
-                this.dragging = true;
-                document.addEventListener('mouseup', handleMouseup);
-                document.addEventListener('mousemove', handleMousemove);
-                const divDom = document.createElement('div');
-                divDom.classList.add('ql-table-drag-line');
-                divDom.classList.add('row');
-                // set drag init height
-                const height = tableCellBlot.parent.domNode.getBoundingClientRect().height;
-                divDom.dataset.w = String(height);
-                const tableMainRect = tableMainBlot.domNode.getBoundingClientRect();
-                Object.assign(divDom.style, {
-                    top: `${e.clientY}px`,
-                    left: `${tableMainRect.x}px`,
-                    width: `${tableMainRect.width}px`,
-                });
-                document.body.appendChild(divDom);
-                if (tipRowBreak)
-                    document.body.removeChild(tipRowBreak);
-                tipRowBreak = divDom;
-            };
-            this.rowResizer.addEventListener('mousedown', handleMousedown);
-            this.rowResizer.addEventListener('dragstart', (e) => {
-                e.preventDefault();
-            });
-        }
-        showResizer() {
-            Object.assign(this.colResizer.style, { display: null });
-            Object.assign(this.rowResizer.style, { display: null });
-        }
-        hideResizer() {
-            this.currentTableCell = undefined;
-            this.rowResizer.style.display = 'none';
-            this.colResizer.style.display = 'none';
         }
     }
 
@@ -2473,6 +2124,444 @@
         }
     }
 
+    class TableResizeLine {
+        quill;
+        colResizer;
+        rowResizer;
+        currentTableCell;
+        dragging = false;
+        options;
+        constructor(quill, options) {
+            this.quill = quill;
+            this.options = this.resolveOptions(options);
+            this.colResizer = this.quill.addContainer('ql-table-resize-line-col');
+            this.rowResizer = this.quill.addContainer('ql-table-resize-line-row');
+            this.quill.root.addEventListener('mousemove', (e) => {
+                if (this.dragging)
+                    return;
+                const tableCell = this.findTableCell(e);
+                if (!tableCell)
+                    return;
+                const tableCellBlot = Quill.find(tableCell);
+                if (!tableCellBlot)
+                    return;
+                if (this.currentTableCell !== tableCell) {
+                    this.showResizer();
+                    this.currentTableCell = tableCell;
+                    const tableMainBlot = findParentBlot(tableCellBlot, blotName.tableMain);
+                    if (tableMainBlot.getCols().length > 0) {
+                        this.updateColResizer(tableCellBlot);
+                    }
+                    this.updateRowResizer(tableCellBlot);
+                }
+            });
+            this.quill.on(Quill.events.TEXT_CHANGE, () => {
+                this.hideResizer();
+            });
+        }
+        resolveOptions(options) {
+            return Object.assign({}, options);
+        }
+        findTableCell(e) {
+            for (const el of e.composedPath()) {
+                if (el instanceof HTMLElement && el.tagName === 'TD') {
+                    return el;
+                }
+            }
+            return null;
+        }
+        updateColResizer(tableCellBlot) {
+            this.quill.container.removeChild(this.colResizer);
+            this.colResizer = this.quill.addContainer('ql-table-resize-line-col');
+            const [tableBodyBlot, tableMainBlot] = findParentBlots(tableCellBlot, [blotName.tableBody, blotName.tableMain]);
+            const tableBodyect = tableBodyBlot.domNode.getBoundingClientRect();
+            const tableCellRect = tableCellBlot.domNode.getBoundingClientRect();
+            const rootRect = this.quill.root.getBoundingClientRect();
+            Object.assign(this.colResizer.style, {
+                top: `${tableBodyect.y - rootRect.y}px`,
+                left: `${tableCellRect.right - rootRect.x}px`,
+                height: `${tableBodyect.height}px`,
+            });
+            const cols = tableMainBlot.getCols();
+            const curColIndex = cols.findIndex(col => col.colId === tableCellBlot.colId);
+            let tipColBreak;
+            const handleMousemove = (e) => {
+                const rect = cols[curColIndex].domNode.getBoundingClientRect();
+                const tableWidth = tableMainBlot.domNode.getBoundingClientRect().width;
+                let resX = e.clientX;
+                if (tableMainBlot.full) {
+                    // max width = current col.width + next col.width
+                    // if current col is last. max width = current col.width
+                    const minWidth = (tableColMinWidthPre / 100) * tableWidth;
+                    const maxRange = resX > rect.right
+                        ? cols[curColIndex + 1]
+                            ? cols[curColIndex + 1].domNode.getBoundingClientRect().right - minWidth
+                            : rect.right - minWidth
+                        : Infinity;
+                    const minRange = rect.x + minWidth;
+                    resX = Math.min(Math.max(resX, minRange), maxRange);
+                }
+                else {
+                    if (resX - rect.x < tableColMinWidthPx) {
+                        resX = rect.x + tableColMinWidthPx;
+                    }
+                }
+                tipColBreak.style.left = `${resX}px`;
+                tipColBreak.dataset.w = String(resX - rect.x);
+            };
+            const handleMouseup = () => {
+                const w = Number.parseInt(tipColBreak.dataset.w);
+                if (tableMainBlot.full) {
+                    let pre = (w / tableMainBlot.domNode.getBoundingClientRect().width) * 100;
+                    const oldWidthPre = cols[curColIndex].width;
+                    if (pre < oldWidthPre) {
+                        // minus
+                        // if not the last col. add the reduced amount to the next col
+                        // if is the last col. add the reduced amount to the pre col
+                        pre = Math.max(tableColMinWidthPre, pre);
+                        const last = oldWidthPre - pre;
+                        if (cols[curColIndex + 1]) {
+                            cols[curColIndex + 1].width = `${cols[curColIndex + 1].width + last}%`;
+                        }
+                        else if (cols[curColIndex - 1]) {
+                            cols[curColIndex - 1].width = `${cols[curColIndex - 1].width + last}%`;
+                        }
+                        else {
+                            pre = 100;
+                        }
+                        cols[curColIndex].width = `${pre}%`;
+                    }
+                    else {
+                        // magnify col
+                        // the last col can't magnify. control last but one minus to magnify last col
+                        if (cols[curColIndex + 1]) {
+                            const totalWidthNextPre = oldWidthPre + cols[curColIndex + 1].width;
+                            pre = Math.min(totalWidthNextPre - tableColMinWidthPre, pre);
+                            cols[curColIndex].width = `${pre}%`;
+                            cols[curColIndex + 1].width = `${totalWidthNextPre - pre}%`;
+                        }
+                    }
+                }
+                else {
+                    tableMainBlot.domNode.style.width = `${Number.parseFloat(tableMainBlot.domNode.style.width)
+                    - cols[curColIndex].domNode.getBoundingClientRect().width
+                    + w}px`;
+                    cols[curColIndex].width = `${w}px`;
+                }
+                document.body.removeChild(tipColBreak);
+                tipColBreak = null;
+                document.removeEventListener('mouseup', handleMouseup);
+                document.removeEventListener('mousemove', handleMousemove);
+                this.dragging = false;
+                this.updateColResizer(tableCellBlot);
+                this.quill.emitter.emit(AFTER_TABLE_RESIZE);
+            };
+            const handleMousedown = (e) => {
+                if (e.button !== 0)
+                    return;
+                this.dragging = true;
+                document.addEventListener('mouseup', handleMouseup);
+                document.addEventListener('mousemove', handleMousemove);
+                const divDom = document.createElement('div');
+                divDom.classList.add('ql-table-drag-line');
+                divDom.classList.add('col');
+                // set drag init width
+                const tableMainRect = tableMainBlot.domNode.getBoundingClientRect();
+                const fullWidth = tableMainRect.width;
+                const colWidthAttr = cols[curColIndex].width;
+                const width = tableMainBlot.full ? colWidthAttr / 100 * fullWidth : colWidthAttr;
+                divDom.dataset.w = String(width);
+                Object.assign(divDom.style, {
+                    top: `${tableMainRect.y}px`,
+                    left: `${e.clientX}px`,
+                    height: `${tableMainRect.height}px`,
+                });
+                document.body.appendChild(divDom);
+                if (tipColBreak)
+                    document.body.removeChild(tipColBreak);
+                tipColBreak = divDom;
+            };
+            this.colResizer.addEventListener('mousedown', handleMousedown);
+            this.colResizer.addEventListener('dragstart', (e) => {
+                e.preventDefault();
+            });
+        }
+        updateRowResizer(tableCellBlot) {
+            this.quill.container.removeChild(this.rowResizer);
+            this.rowResizer = this.quill.addContainer('ql-table-resize-line-row');
+            const row = tableCellBlot.parent;
+            if (!(row instanceof TableRowFormat)) {
+                return;
+            }
+            const [tableBodyBlot, tableMainBlot] = findParentBlots(tableCellBlot, [blotName.tableBody, blotName.tableMain]);
+            const tableBodynRect = tableBodyBlot.domNode.getBoundingClientRect();
+            const tableCellRect = tableCellBlot.domNode.getBoundingClientRect();
+            const rootRect = this.quill.root.getBoundingClientRect();
+            Object.assign(this.rowResizer.style, {
+                top: `${tableCellRect.bottom - rootRect.y}px`,
+                left: `${tableBodynRect.x - rootRect.x}px`,
+                width: `${tableBodynRect.width}px`,
+            });
+            let tipRowBreak;
+            const handleMousemove = (e) => {
+                const rect = tableCellBlot.parent.domNode.getBoundingClientRect();
+                let resY = e.clientY;
+                if (resY - rect.y < tableRowMinWidthPx) {
+                    resY = rect.y + tableRowMinWidthPx;
+                }
+                tipRowBreak.style.top = `${resY}px`;
+                tipRowBreak.dataset.w = String(resY - rect.y);
+            };
+            const handleMouseup = () => {
+                const w = `${tipRowBreak.dataset.w}px`;
+                tableCellBlot.parent.setHeight(w);
+                document.body.removeChild(tipRowBreak);
+                tipRowBreak = null;
+                document.removeEventListener('mouseup', handleMouseup);
+                document.removeEventListener('mousemove', handleMousemove);
+                this.dragging = false;
+                this.updateRowResizer(tableCellBlot);
+                this.quill.emitter.emit(AFTER_TABLE_RESIZE);
+            };
+            const handleMousedown = (e) => {
+                if (e.button !== 0)
+                    return;
+                this.dragging = true;
+                document.addEventListener('mouseup', handleMouseup);
+                document.addEventListener('mousemove', handleMousemove);
+                const divDom = document.createElement('div');
+                divDom.classList.add('ql-table-drag-line');
+                divDom.classList.add('row');
+                // set drag init height
+                const height = tableCellBlot.parent.domNode.getBoundingClientRect().height;
+                divDom.dataset.w = String(height);
+                const tableMainRect = tableMainBlot.domNode.getBoundingClientRect();
+                Object.assign(divDom.style, {
+                    top: `${e.clientY}px`,
+                    left: `${tableMainRect.x}px`,
+                    width: `${tableMainRect.width}px`,
+                });
+                document.body.appendChild(divDom);
+                if (tipRowBreak)
+                    document.body.removeChild(tipRowBreak);
+                tipRowBreak = divDom;
+            };
+            this.rowResizer.addEventListener('mousedown', handleMousedown);
+            this.rowResizer.addEventListener('dragstart', (e) => {
+                e.preventDefault();
+            });
+        }
+        showResizer() {
+            Object.assign(this.colResizer.style, { display: null });
+            Object.assign(this.rowResizer.style, { display: null });
+        }
+        hideResizer() {
+            this.currentTableCell = undefined;
+            this.rowResizer.style.display = 'none';
+            this.colResizer.style.display = 'none';
+        }
+    }
+
+    const ERROR_LIMIT = 2;
+    class TableSelection {
+        tableModule;
+        table;
+        quill;
+        options;
+        boundary = null;
+        startScrollX = 0;
+        selectedTds = [];
+        cellSelect;
+        dragging = false;
+        scrollHandler = [];
+        selectingHandler = this.mouseDownHandler.bind(this);
+        tableMenu;
+        constructor(tableModule, table, quill, options = {}) {
+            this.tableModule = tableModule;
+            this.table = table;
+            this.quill = quill;
+            this.options = this.resolveOptions(options);
+            this.cellSelect = this.quill.addContainer('ql-table-selection_line');
+            this.helpLinesInitial();
+            const resizeObserver = new ResizeObserver(() => {
+                this.hideSelection();
+            });
+            resizeObserver.observe(this.table);
+            this.quill.root.addEventListener('mousedown', this.selectingHandler, false);
+            this.tableMenu = new TableMenu(this.tableModule, quill, this.options.tableMenu);
+        }
+        resolveOptions(options) {
+            return Object.assign({
+                selectColor: '#0589f3',
+                tableMenu: {},
+            }, options);
+        }
+        ;
+        addScrollEvent(dom, handle) {
+            dom.addEventListener('scroll', handle);
+            this.scrollHandler.push([dom, handle]);
+        }
+        clearScrollEvent() {
+            for (let i = 0; i < this.scrollHandler.length; i++) {
+                const [dom, handle] = this.scrollHandler[i];
+                dom.removeEventListener('scroll', handle);
+            }
+            this.scrollHandler = [];
+        }
+        helpLinesInitial() {
+            Object.assign(this.cellSelect.style, {
+                'border-color': this.options.selectColor,
+            });
+        }
+        computeSelectedTds(startPoint, endPoint) {
+            // Use TableCell to calculation selected range, because TableCellInner is scrollable, the width will effect calculate
+            const tableMain = Quill.find(this.table);
+            if (!tableMain)
+                return [];
+            const tableCells = new Set(tableMain.descendants(TableCellFormat).map((cell, i) => {
+                cell.index = i;
+                return cell;
+            }));
+            const tableRect = this.table.getBoundingClientRect();
+            // set boundary to initially mouse move rectangle
+            let boundary = {
+                x: Math.max(tableRect.left, Math.min(endPoint.x, startPoint.x)),
+                y: Math.max(tableRect.top, Math.min(endPoint.y, startPoint.y)),
+                x1: Math.min(tableRect.right, Math.max(endPoint.x, startPoint.x)),
+                y1: Math.min(tableRect.bottom, Math.max(endPoint.y, startPoint.y)),
+            };
+            const selectedCells = new Set();
+            let findEnd = true;
+            // loop all cells to find correct boundary
+            while (findEnd) {
+                findEnd = false;
+                for (const cell of tableCells) {
+                    if (!cell.__rect) {
+                        cell.__rect = cell.domNode.getBoundingClientRect();
+                    }
+                    // Determine whether the cell intersects with the current boundary
+                    const { x, y, right, bottom } = cell.__rect;
+                    if (isRectanglesIntersect(boundary, { x, y, x1: right, y1: bottom }, ERROR_LIMIT)) {
+                        // add cell to selected
+                        selectedCells.add(cell);
+                        tableCells.delete(cell);
+                        // update boundary
+                        boundary = {
+                            x: Math.min(boundary.x, x),
+                            y: Math.min(boundary.y, y),
+                            x1: Math.max(boundary.x1, right),
+                            y1: Math.max(boundary.y1, bottom),
+                        };
+                        // recalculate boundary last cells
+                        findEnd = true;
+                        break;
+                    }
+                }
+            }
+            for (const cell of [...selectedCells, ...tableCells]) {
+                delete cell.__rect;
+            }
+            // save result boundary relative to the editor
+            this.boundary = getRelativeRect({
+                ...boundary,
+                width: boundary.x1 - boundary.x,
+                height: boundary.y1 - boundary.y,
+            }, this.quill.root.parentNode);
+            return Array.from(selectedCells).sort((a, b) => a.index - b.index).map((cell) => {
+                delete cell.index;
+                return cell.getCellInner();
+            });
+        }
+        mouseDownHandler(mousedownEvent) {
+            const { button, target, clientX, clientY } = mousedownEvent;
+            const closestTable = target.closest('.ql-table');
+            if (button !== 0 || !closestTable)
+                return;
+            const startTableId = closestTable.dataset.tableId;
+            const startPoint = { x: clientX, y: clientY };
+            this.startScrollX = this.table.parentNode.scrollLeft;
+            this.selectedTds = this.computeSelectedTds(startPoint, startPoint);
+            this.showSelection();
+            const mouseMoveHandler = (mousemoveEvent) => {
+                const { button, target, clientX, clientY } = mousemoveEvent;
+                const closestTable = target.closest('.ql-table');
+                if (button !== 0
+                    || !closestTable
+                    || closestTable.dataset.tableId !== startTableId) {
+                    return;
+                }
+                this.dragging = true;
+                const movePoint = { x: clientX, y: clientY };
+                this.selectedTds = this.computeSelectedTds(startPoint, movePoint);
+                if (this.selectedTds.length > 1) {
+                    this.quill.blur();
+                }
+                this.updateSelection();
+            };
+            const mouseUpHandler = () => {
+                document.body.removeEventListener('mousemove', mouseMoveHandler, false);
+                document.body.removeEventListener('mouseup', mouseUpHandler, false);
+                this.dragging = false;
+            };
+            document.body.addEventListener('mousemove', mouseMoveHandler, false);
+            document.body.addEventListener('mouseup', mouseUpHandler, false);
+        }
+        updateSelection() {
+            if (this.selectedTds.length === 0 || !this.boundary)
+                return;
+            const tableViewScrollLeft = this.table.parentNode.scrollLeft;
+            const scrollTop = this.quill.root.parentNode.scrollTop;
+            Object.assign(this.cellSelect.style, {
+                left: `${this.boundary.x + (this.startScrollX - tableViewScrollLeft) - 1}px`,
+                top: `${scrollTop * 2 + this.boundary.y}px`,
+                width: `${this.boundary.width + 1}px`,
+                height: `${this.boundary.height + 1}px`,
+            });
+            this.tableMenu.updateTools();
+        }
+        showSelection() {
+            this.clearScrollEvent();
+            Object.assign(this.cellSelect.style, { display: 'block' });
+            this.updateSelection();
+            this.addScrollEvent(this.table.parentNode, () => {
+                this.updateSelection();
+            });
+        }
+        hideSelection() {
+            this.boundary = null;
+            this.selectedTds = [];
+            this.cellSelect && Object.assign(this.cellSelect.style, { display: 'none' });
+            this.tableMenu.hideTools();
+            this.clearScrollEvent();
+        }
+        destroy() {
+            this.hideSelection();
+            this.tableMenu.destroy();
+            this.cellSelect.remove();
+            this.clearScrollEvent();
+            this.quill.root.removeEventListener('mousedown', this.selectingHandler, false);
+            return null;
+        }
+    }
+    function isRectanglesIntersect(a, b, tolerance = 4) {
+        const { x: minAx, y: minAy, x1: maxAx, y1: maxAy } = a;
+        const { x: minBx, y: minBy, x1: maxBx, y1: maxBy } = b;
+        const notOverlapX = maxAx <= minBx + tolerance || minAx + tolerance >= maxBx;
+        const notOverlapY = maxAy <= minBy + tolerance || minAy + tolerance >= maxBy;
+        return !(notOverlapX || notOverlapY);
+    }
+    function getRelativeRect(targetRect, container) {
+        const containerRect = container.getBoundingClientRect();
+        return {
+            x: targetRect.x - containerRect.x - container.scrollLeft,
+            y: targetRect.y - containerRect.y - container.scrollTop,
+            x1: targetRect.x - containerRect.x - container.scrollLeft + targetRect.width,
+            y1: targetRect.y - containerRect.y - container.scrollTop + targetRect.height,
+            width: targetRect.width,
+            height: targetRect.height,
+        };
+    }
+
     const Delta = Quill.import('delta');
     const Break = Quill.import('blots/break');
     const icons = Quill.import('ui/icons');
@@ -2502,7 +2591,7 @@
         : false;
     class TableUp {
         static moduleName = 'tableUp';
-        static toolName = blotName.tableMain;
+        static toolName = 'table-up';
         static keyboradHandler = {
             'forbid remove table by backspace': {
                 bindInHead: true,
@@ -2615,12 +2704,15 @@
         tableSelection;
         tableResizer;
         tableResizerLine;
+        get statics() {
+            return this.constructor;
+        }
         constructor(quill, options) {
             this.quill = quill;
             this.options = this.resolveOptions(options || {});
             const toolbar = this.quill.getModule('toolbar');
             if (toolbar && this.quill.theme.pickers) {
-                const [, select] = (toolbar.controls || []).find(([name]) => name === TableUp.toolName) || [];
+                const [, select] = (toolbar.controls || []).find(([name]) => name === this.statics.toolName) || [];
                 if (select && select.tagName.toLocaleLowerCase() === 'select') {
                     this.picker = this.quill.theme.pickers.find(picker => picker.select === select);
                     if (this.picker) {

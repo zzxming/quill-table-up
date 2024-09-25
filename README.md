@@ -96,6 +96,7 @@ const defaultTexts = {
 | localstorageKey | used color save localstorage key                                                 | `string`                 | `__table-bg-used-color` |
 | tools           | display tip text when hover icon                                                 | `Tool[]`                 | `defaultTools`          |
 | contextmenu     | table menu will display when selected at least one cell and right click on table | `boolean`                | `false`                 |
+| defaultColorMap | color map                                                                        | `string[][]`             | in source code          |
 
 <details>
   <summary> types and default value </summary>
