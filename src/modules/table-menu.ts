@@ -162,7 +162,7 @@ export class TableMenu {
         usedColorWrapper.innerHTML = '';
         for (const recordColor of usedColors) {
           const colorItem = document.createElement('div');
-          colorItem.classList.add('table-color-used-item');
+          colorItem.classList.add('table-color-item');
           colorItem.style.backgroundColor = recordColor;
           usedColorWrapper.appendChild(colorItem);
         }
