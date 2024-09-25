@@ -330,34 +330,39 @@ export class TableMenu {
             colorSelectWrapper.appendChild(colorMap);
           }
 
-          const clearColor = document.createElement('button');
-          clearColor.textContent = 'Clear';
-          Object.assign(clearColor.style, {
-            flex: '0 0 50%',
-            height: '24px',
-            padding: '0px 4px',
-          });
-          clearColor.addEventListener('click', () => {
-            handle(this.tableModule, this.selectedTds, null);
-          });
           const colorMapRow = document.createElement('div');
           colorMapRow.classList.add('table-color-map-row');
           Object.assign(colorMapRow.style, {
             marginTop: '4px',
           });
+          const clearColor = document.createElement('div');
+          clearColor.textContent = 'Clear';
+          clearColor.addEventListener('click', () => {
+            handle(this.tableModule, this.selectedTds, null);
+          });
+          const label = document.createElement('label');
+          const customColor = document.createElement('span');
+          customColor.textContent = 'Custom';
           const input = document.createElement('input');
           input.type = 'color';
           Object.assign(input.style, {
-            flex: '0 0 50%',
-            height: '24px',
-            padding: '0px 4px',
+            width: 0,
+            height: 0,
+            padding: 0,
+            border: 0,
+            outline: 'none',
+            opacity: 0,
           });
           input.addEventListener('input', () => {
             handle(this.tableModule, this.selectedTds, input.value);
             this.updateUsedColor(input.value);
           }, false);
+          label.appendChild(customColor);
+          label.appendChild(input);
+          clearColor.classList.add('table-color-clear');
+          label.classList.add('table-color-custom');
           colorMapRow.appendChild(clearColor);
-          colorMapRow.appendChild(input);
+          colorMapRow.appendChild(label);
           colorSelectWrapper.appendChild(colorMapRow);
 
           if (usedColors.size > 0) {
@@ -375,7 +380,6 @@ export class TableMenu {
           }
 
           colorSelectWrapper.addEventListener('click', (e) => {
-            e.preventDefault();
             const item = e.target as HTMLElement;
             const color = item.style.backgroundColor;
             if (item && color && this.selectedTds.length > 0) {
