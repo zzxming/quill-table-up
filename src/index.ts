@@ -666,7 +666,7 @@ export class TableUp {
     );
   }
 
-  setBackgroundColor(selectedTds: TableCellInnerFormat[], color: string) {
+  setBackgroundColor(selectedTds: TableCellInnerFormat[], color: string | null) {
     if (selectedTds.length === 0) return;
     for (const td of selectedTds) {
       td.backgroundColor = color;
