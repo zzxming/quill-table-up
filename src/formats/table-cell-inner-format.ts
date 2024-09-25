@@ -88,7 +88,6 @@ export class TableCellInnerFormat extends ContainerFormat {
   }
 
   set backgroundColor(value: string | null) {
-    console.log(value);
     this.parent && (this.parent.backgroundColor = value);
     this.setFormatValue('background-color', value);
   }
