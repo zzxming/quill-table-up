@@ -715,3 +715,51 @@ describe('table undo', () => {
     );
   });
 });
+
+describe('cell attribute', () => {
+  it('undo set bg color', async () => {
+    const quill = await createTable(3, 3);
+    const tableModule = quill.getModule('tableUp') as TableUp;
+    const table = quill.root.querySelector('table')!;
+    tableModule.tableSelection = new TableSelection(tableModule, table, quill);
+    const tds = quill.scroll.descendants(TableCellInnerFormat, 0);
+    const selectedTds = [tds[0], tds[1], tds[2]];
+    tableModule.setBackgroundColor(selectedTds, 'rgb(253, 235, 255)');
+    await vi.runAllTimersAsync();
+    expect(quill.root).toEqualHTML(
+      `
+        <p><br></p>
+        <div>
+          <table cellpadding="0" cellspacing="0" data-full="true">
+            ${createTaleColHTML(3)}
+            <tbody>
+              ${
+                new Array(3).fill(0).map((_, i) => `
+                  <tr data-row-id="${i + 1}">
+                    ${
+                      new Array(3).fill(0).map((_, j) => `<td rowspan="1" colspan="1" data-row-id="${i + 1}" data-col-id="${j + 1}"${i === 0 ? ' style="background-color: rgb(253, 235, 255);"' : ''}>
+                        <div data-rowspan="1" data-colspan="1" data-row-id="${i + 1}" data-col-id="${j + 1}"${i === 0 ? ' data-background-color="rgb(253, 235, 255)"' : ''}><p>${i * 3 + j + 1}</p></div>
+                      </td>`).join('\n')
+                    }
+                  </tr>
+                `).join('\n')
+              }
+            </tbody>
+          </table>
+        </div>
+        <p><br></p>
+      `,
+      { ignoreAttrs: ['class', 'data-table-id', 'contenteditable'] },
+    );
+    quill.history.undo();
+    await vi.runAllTimersAsync();
+    expect(quill.root).toEqualHTML(
+      `
+        <p><br></p>
+        ${createTableHTML(3, 3)}
+        <p><br></p>
+      `,
+      { ignoreAttrs: ['class', 'data-table-id', 'contenteditable'] },
+    );
+  });
+});
