@@ -67,6 +67,7 @@ export class TableResizeLine {
     const curColIndex = cols.findIndex(col => col.colId === tableCellBlot.colId);
     let tipColBreak: HTMLElement | null;
     const handleMousemove = (e: MouseEvent) => {
+      e.preventDefault();
       const rect = cols[curColIndex].domNode.getBoundingClientRect();
       const tableWidth = tableMainBlot.domNode.getBoundingClientRect().width;
       let resX = e.clientX;
@@ -143,6 +144,7 @@ export class TableResizeLine {
     };
     const handleMousedown = (e: MouseEvent) => {
       if (e.button !== 0) return;
+      e.preventDefault();
       this.dragging = true;
       document.addEventListener('mouseup', handleMouseup);
       document.addEventListener('mousemove', handleMousemove);
@@ -194,6 +196,7 @@ export class TableResizeLine {
 
     let tipRowBreak: HTMLElement | null;
     const handleMousemove = (e: MouseEvent) => {
+      e.preventDefault();
       const rect = tableCellBlot.parent.domNode.getBoundingClientRect();
       let resY = e.clientY;
       if (resY - rect.y < tableRowMinWidthPx) {
@@ -216,6 +219,7 @@ export class TableResizeLine {
     };
     const handleMousedown = (e: MouseEvent) => {
       if (e.button !== 0) return;
+      e.preventDefault();
       this.dragging = true;
       document.addEventListener('mouseup', handleMouseup);
       document.addEventListener('mousemove', handleMousemove);

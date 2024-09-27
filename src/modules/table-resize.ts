@@ -64,6 +64,7 @@ export class TableResize {
     const tableColHeadSeparators = Array.from(this.root.getElementsByClassName('ql-table-col-separator')) as HTMLElement[];
     const appendTo = document.body;
     const handleMousemove = (e: MouseEvent) => {
+      e.preventDefault();
       const rect = tableColHeads[curColIndex].getBoundingClientRect();
       const tableWidth = this.tableMain.domNode.getBoundingClientRect().width;
       let resX = e.clientX;
@@ -147,6 +148,7 @@ export class TableResize {
       this.quill.emitter.emit(AFTER_TABLE_RESIZE);
     };
     const handleMousedown = (i: number, e: MouseEvent) => {
+      e.preventDefault();
       document.addEventListener('mouseup', handleMouseup);
       document.addEventListener('mousemove', handleMousemove);
       curColIndex = i;
@@ -199,6 +201,7 @@ export class TableResize {
     const tableRowHeadSeparators = Array.from(this.root.getElementsByClassName('ql-table-row-separator')) as HTMLElement[];
     const appendTo = document.body;
     const handleMousemove = (e: MouseEvent) => {
+      e.preventDefault();
       const rect = tableRowHeads[curRowIndex].getBoundingClientRect();
       let resY = e.clientY;
       if (resY - rect.y < tableRowMinWidthPx) {
@@ -226,6 +229,7 @@ export class TableResize {
       this.quill.emitter.emit(AFTER_TABLE_RESIZE);
     };
     const handleMousedown = (i: number, e: MouseEvent) => {
+      e.preventDefault();
       document.addEventListener('mouseup', handleMouseup);
       document.addEventListener('mousemove', handleMousemove);
       curRowIndex = i;
