@@ -1,6 +1,6 @@
 import type Quill from 'quill';
 import type { TableCellInnerFormat, TableUp } from '..';
-import type { TableMenuOptions, Tool, ToolOption } from '../utils';
+import type { TableMenuOptions, TableMenuTexts, Tool, ToolOption } from '../utils';
 import Color from '../svg/color.svg';
 import InsertBottom from '../svg/insert-bottom.svg';
 import InsertLeft from '../svg/insert-left.svg';
@@ -123,6 +123,7 @@ const defaultTools: Tool[] = [
   },
 ];
 
+type TableMenuOptionsInput = Partial<Omit<TableMenuOptions, 'texts'> & { texts?: Partial<TableMenuTexts> }>;
 export class TableMenu {
   options: TableMenuOptions;
   menu: HTMLElement | null = null;
@@ -131,7 +132,7 @@ export class TableMenu {
   colorItemClass = `color-${randomId()}`;
   tooltipItem: HTMLElement[] = [];
 
-  constructor(public tableModule: TableUp, public quill: Quill, options: Partial<TableMenuOptions>) {
+  constructor(public tableModule: TableUp, public quill: Quill, options: TableMenuOptionsInput) {
     this.options = this.resolveOptions(options);
 
     try {
@@ -177,7 +178,7 @@ export class TableMenu {
     }
   }
 
-  resolveOptions(options: Partial<TableMenuOptions>) {
+  resolveOptions(options: TableMenuOptionsInput) {
     return Object.assign({
       tipText: true,
       tipTexts: {},
@@ -258,8 +259,16 @@ export class TableMenu {
           'rgb(59, 21, 81)',
         ],
       ],
+      texts: this.resolveTexts(options.texts),
     }, options);
   };
+
+  resolveTexts(texts: Partial<TableMenuTexts> = {}) {
+    return Object.assign({
+      custom: 'Custom',
+      clear: 'Clear',
+    }, texts);
+  }
 
   listenContextmenu = (e: MouseEvent) => {
     e.preventDefault();
@@ -336,13 +345,13 @@ export class TableMenu {
             marginTop: '4px',
           });
           const clearColor = document.createElement('div');
-          clearColor.textContent = 'Clear';
+          clearColor.textContent = this.options.texts.clear;
           clearColor.addEventListener('click', () => {
             handle(this.tableModule, this.selectedTds, null);
           });
           const label = document.createElement('label');
           const customColor = document.createElement('span');
-          customColor.textContent = 'Custom';
+          customColor.textContent = this.options.texts.custom;
           const input = document.createElement('input');
           input.type = 'color';
           Object.assign(input.style, {
