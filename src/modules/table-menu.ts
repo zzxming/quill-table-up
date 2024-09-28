@@ -11,14 +11,9 @@ import RemoveColumn from '../svg/remove-column.svg';
 import RemoveRow from '../svg/remove-row.svg';
 import RemoveTable from '../svg/remove-table.svg';
 import SplitCell from '../svg/split-cell.svg';
-import { createToolTip, debounce, isArray, isFunction, randomId } from '../utils';
+import { createToolTip, debounce, isArray, isFunction, limitDomInViewPort, randomId } from '../utils';
 
 const usedColors = new Set<string>();
-
-const parseNum = (num: any) => {
-  const n = Number.parseFloat(num);
-  return Number.isNaN(n) ? 0 : n;
-};
 
 const defaultTools: Tool[] = [
   {
@@ -293,7 +288,9 @@ export class TableMenu {
   };
 
   buildTools() {
-    const toolBox = this.quill.addContainer('ql-table-menu');
+    const toolBox = document.createElement('div');
+    toolBox.classList.add('ql-table-menu');
+    document.body.appendChild(toolBox);
     if (this.options.contextmenu) {
       toolBox.classList.add('contextmenu');
     }
@@ -439,54 +436,34 @@ export class TableMenu {
     this.selectedTds = selectedTds;
 
     if (!this.options.contextmenu) {
+      const containerRect = this.quill.container.getBoundingClientRect();
       Object.assign(this.menu.style, {
         display: 'flex',
-        left: `${boundary.x + (boundary.width / 2) - 1}px`,
-        top: `${boundary.y + boundary.height}px`,
+        left: `${containerRect.left + boundary.x + (boundary.width / 2)}px`,
+        top: `${containerRect.top + boundary.y + boundary.height}px`,
         transform: `translate(-50%, 20%)`,
       });
-      // limit menu in viewport
-      const { paddingLeft, paddingRight } = getComputedStyle(this.quill.root);
-      const menuRect = this.menu.getBoundingClientRect();
-      const rootRect = this.quill.root.getBoundingClientRect();
-      if (menuRect.right > rootRect.right - parseNum(paddingRight)) {
-        Object.assign(this.menu.style, {
-          left: `${rootRect.right - rootRect.left - menuRect.width - parseNum(paddingRight) - 1}px`,
-          transform: `translate(0%, 20%)`,
-        });
-      }
-      else if (menuRect.left < parseNum(paddingLeft)) {
-        Object.assign(this.menu.style, {
-          left: `${parseNum(paddingLeft) + 1}px`,
-          transform: `translate(0%, 20%)`,
-        });
-      }
     }
     else {
       if (!position) {
         return this.hideTools();
       }
       const { x, y } = position;
-      const containerRect = this.quill.container.getBoundingClientRect();
-      let resLeft = x - containerRect.left;
-      let resTop = y - containerRect.top;
       Object.assign(this.menu.style, {
         display: 'flex',
-        left: null,
-        top: null,
-      });
-      const menuRect = this.menu.getBoundingClientRect();
-      if (resLeft + menuRect.width + containerRect.left > containerRect.right) {
-        resLeft = containerRect.width - menuRect.width - 15;
-      }
-      if (resTop + menuRect.height + containerRect.top > containerRect.bottom) {
-        resTop = containerRect.height - menuRect.height - 15;
-      }
-      Object.assign(this.menu.style, {
-        left: `${resLeft}px`,
-        top: `${resTop}px`,
+        left: `${x}px`,
+        top: `${y}px`,
       });
     }
+
+    // limit menu in viewport
+    const menuRect = this.menu.getBoundingClientRect();
+    const { left, top, leftLimited } = limitDomInViewPort(menuRect);
+    Object.assign(this.menu.style, {
+      left: `${left}px`,
+      top: `${top}px`,
+      transform: !this.options.contextmenu && leftLimited ? `translate(0%, 20%)` : null,
+    });
   }
 
   destroy() {

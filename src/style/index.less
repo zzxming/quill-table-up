@@ -24,60 +24,6 @@
     }
   }
 
-  .ql-table-menu {
-    position: absolute;
-    z-index: 11;
-    display: none;
-    align-items: center;
-    justify-content: center;
-    padding: 4px;
-    border-radius: 6px;
-    box-shadow: 0 0 8px rgba(0, 0, 0, 0.5);
-    background-color: #ffffff;
-    font-size: 14px;
-    &.contextmenu {
-      flex-direction: column;
-      .ql-table-menu-item {
-        width: 100%;
-        justify-content: flex-start;
-        cursor: pointer;
-      }
-      .break {
-        height: 1px;
-        margin: 4px 0px;
-        background-color: #a3a3a3;
-      }
-      .icon {
-        margin-right: 4px;
-      }
-    }
-    &-item {
-      position: relative;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      padding: 4px;
-      border-radius: 4px;
-      cursor: pointer;
-      &:hover {
-        background-color: #eeeeee;
-      }
-      &.break {
-        align-self: stretch;
-        width: 1px;
-        padding: 0px;
-        margin: 2px 4px;
-        background-color: #a3a3a3;
-        cursor: default;
-      }
-      .icon {
-        display: flex;
-        flex-shrink: 0;
-        font-size: 20px;
-      }
-    }
-  }
-
   .ql-table-resize-line {
     &-row,
     &-col {
@@ -221,17 +167,72 @@
   }
 }
 
-.ql-table-drag-line {
-  position: fixed;
-  z-index: 10;
-  background-color: #409eff;
-  &.col {
-    width: 2px;
-    cursor: ew-resize;
+.ql-table {
+  &-drag-line {
+    position: fixed;
+    z-index: 10;
+    background-color: #409eff;
+    &.col {
+      width: 2px;
+      cursor: ew-resize;
+    }
+    &.row {
+      height: 2px;
+      cursor: ns-resize;
+    }
   }
-  &.row {
-    height: 2px;
-    cursor: ns-resize;
+  &-menu {
+    position: absolute;
+    z-index: 11;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 4px;
+    border-radius: 6px;
+    box-shadow: 0 0 8px rgba(0, 0, 0, 0.5);
+    background-color: #ffffff;
+    font-size: 14px;
+    &.contextmenu {
+      flex-direction: column;
+      .ql-table-menu-item {
+        width: 100%;
+        justify-content: flex-start;
+        cursor: pointer;
+      }
+      .break {
+        height: 1px;
+        margin: 4px 0px;
+        background-color: #a3a3a3;
+      }
+      .icon {
+        margin-right: 4px;
+      }
+    }
+    &-item {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 4px;
+      border-radius: 4px;
+      cursor: pointer;
+      &:hover {
+        background-color: #eeeeee;
+      }
+      &.break {
+        align-self: stretch;
+        width: 1px;
+        padding: 0px;
+        margin: 2px 4px;
+        background-color: #a3a3a3;
+        cursor: default;
+      }
+      .icon {
+        display: flex;
+        flex-shrink: 0;
+        font-size: 20px;
+      }
+    }
   }
 }
 

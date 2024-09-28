@@ -1,4 +1,5 @@
 import type { TableTextOptions } from './types';
+import { limitDomInViewPort } from './utils';
 
 interface InputOptions {
   type?: string;
@@ -311,15 +312,13 @@ export const createToolTip = (target: HTMLElement, options: ToolTipOptions = {})
           },
         } as const;
         const extra = extraPositionMap[direction];
-        const top = window.scrollY + elRect.top + extra.top;
+        let top = window.scrollY + elRect.top + extra.top;
         let left = window.scrollX + elRect.left + extra.left;
-        const innerWidth = document.documentElement.clientWidth;
-        if (left + contentRect.width > innerWidth) {
-          left = innerWidth - contentRect.width;
-        }
-        else if (left < 0) {
-          left = 0;
-        }
+        Object.assign(tooltip.style, {
+          top: `${top}px`,
+          left: `${left}px`,
+        });
+        ({ top, left } = limitDomInViewPort(tooltip.getBoundingClientRect()));
         Object.assign(tooltip.style, {
           top: `${top}px`,
           left: `${left}px`,
