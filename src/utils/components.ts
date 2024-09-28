@@ -331,6 +331,10 @@ export const createToolTip = (target: HTMLElement, options: ToolTipOptions = {})
       timer = setTimeout(() => {
         tooltip.classList.add('transparent');
         tooltip.addEventListener('transitionend', transitionendHandler, { once: true });
+        // handle remove when transition set none
+        setTimeout(() => {
+          transitionendHandler();
+        }, 150);
       }, delay);
     };
     target.addEventListener('mouseenter', open);
