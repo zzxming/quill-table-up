@@ -10,6 +10,8 @@ export default factory({
         'unicorn/prefer-dom-node-dataset': 'off',
         'no-cond-assign': 'off',
         'ts/no-unused-expressions': 'off',
+        'ts/no-this-alias': 'off',
+        'unicorn/no-this-assignment': 'off',
       },
     },
   ],

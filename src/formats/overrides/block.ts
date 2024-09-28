@@ -22,7 +22,6 @@ export class BlockOverride extends Block {
             selfParent.insertBefore(replacement, this.prev ? null : this.next);
           }
           if (this.parent.statics.blotName === blotName.tableCellInner && this.prev) {
-            // eslint-disable-next-line unicorn/no-this-assignment, ts/no-this-alias
             let block: TypeBlock | null = this;
             while (block) {
               const next = block.next as TypeBlock | null;
