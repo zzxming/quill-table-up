@@ -277,15 +277,16 @@ export const createToolTip = (target: HTMLElement, options: ToolTipOptions = {})
     else if (msg) {
       tooltip.textContent = msg;
     }
-    tooltipContainer.appendChild(tooltip);
     let timer: ReturnType<typeof setTimeout> | null;
 
     const transitionendHandler = () => {
       tooltip.classList.add('hidden');
+      tooltipContainer.removeChild(tooltip);
     };
     const open = () => {
       if (timer) clearTimeout(timer);
       timer = setTimeout(() => {
+        tooltipContainer.appendChild(tooltip);
         tooltip.removeEventListener('transitionend', transitionendHandler);
         tooltip.classList.remove('hidden');
         const elRect = target.getBoundingClientRect();
