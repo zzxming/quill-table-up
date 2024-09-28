@@ -94,9 +94,10 @@ const defaultTexts = {
 | tipText         | display tip text when hover icon                                                 | `boolean`                | `true`                  |
 | tipTexts        | the text to replace tools tip text                                               | `Record<string, string>` | `{}`                    |
 | localstorageKey | used color save localstorage key                                                 | `string`                 | `__table-bg-used-color` |
-| tools           | display tip text when hover icon                                                 | `Tool[]`                 | `defaultTools`          |
+| tools           | menu items                                                                       | `Tool[]`                 | `defaultTools`          |
 | contextmenu     | table menu will display when selected at least one cell and right click on table | `boolean`                | `false`                 |
 | defaultColorMap | color map                                                                        | `string[][]`             | in source code          |
+| texts           | the text that menu needs                                                         | `TableMenuTexts`         | `defaultTexts`          |
 
 <details>
   <summary> types and default value </summary>
@@ -188,6 +189,14 @@ const defaultTools = [
     handle: (tableModule, selectedTds, color) => {},
   },
 ];
+interface TableMenuTexts {
+  custom: string;
+  clear: string;
+}
+const defaultTexts = {
+  custom: 'Custom',
+  clear: 'Clear',
+};
 ```
 
 </details>
