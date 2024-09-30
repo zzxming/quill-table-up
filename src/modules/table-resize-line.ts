@@ -1,3 +1,4 @@
+import type TableUp from '..';
 import type { TableResizeLineOptions } from '../utils';
 import Quill from 'quill';
 import { type TableCellFormat, TableRowFormat } from '../formats';
@@ -10,10 +11,10 @@ export class TableResizeLine {
   dragging = false;
   options: TableResizeLineOptions;
 
-  constructor(public quill: Quill, options: Partial<TableResizeLineOptions>) {
+  constructor(public tableModule: TableUp, public quill: Quill, options: Partial<TableResizeLineOptions>) {
     this.options = this.resolveOptions(options);
-    this.colResizer = this.quill.addContainer('ql-table-resize-line-col');
-    this.rowResizer = this.quill.addContainer('ql-table-resize-line-row');
+    this.colResizer = this.tableModule.addContainer('ql-table-resize-line-col');
+    this.rowResizer = this.tableModule.addContainer('ql-table-resize-line-row');
 
     this.quill.root.addEventListener('mousemove', (e: MouseEvent) => {
       if (this.dragging) return;
@@ -50,8 +51,8 @@ export class TableResizeLine {
   }
 
   updateColResizer(tableCellBlot: TableCellFormat) {
-    this.quill.container.removeChild(this.colResizer);
-    this.colResizer = this.quill.addContainer('ql-table-resize-line-col');
+    this.tableModule.toolBox.removeChild(this.colResizer);
+    this.colResizer = this.tableModule.addContainer('ql-table-resize-line-col');
 
     const [tableBodyBlot, tableMainBlot] = findParentBlots(tableCellBlot, [blotName.tableBody, blotName.tableMain] as const);
     const tableBodyect = tableBodyBlot.domNode.getBoundingClientRect();
@@ -67,6 +68,7 @@ export class TableResizeLine {
     const curColIndex = cols.findIndex(col => col.colId === tableCellBlot.colId);
     let tipColBreak: HTMLElement | null;
     const handleMousemove = (e: MouseEvent) => {
+      e.preventDefault();
       const rect = cols[curColIndex].domNode.getBoundingClientRect();
       const tableWidth = tableMainBlot.domNode.getBoundingClientRect().width;
       let resX = e.clientX;
@@ -143,6 +145,7 @@ export class TableResizeLine {
     };
     const handleMousedown = (e: MouseEvent) => {
       if (e.button !== 0) return;
+      e.preventDefault();
       this.dragging = true;
       document.addEventListener('mouseup', handleMouseup);
       document.addEventListener('mousemove', handleMousemove);
@@ -175,8 +178,8 @@ export class TableResizeLine {
   }
 
   updateRowResizer(tableCellBlot: TableCellFormat) {
-    this.quill.container.removeChild(this.rowResizer);
-    this.rowResizer = this.quill.addContainer('ql-table-resize-line-row');
+    this.tableModule.toolBox.removeChild(this.rowResizer);
+    this.rowResizer = this.tableModule.addContainer('ql-table-resize-line-row');
     const row = tableCellBlot.parent;
     if (!(row instanceof TableRowFormat)) {
       return;
@@ -194,6 +197,7 @@ export class TableResizeLine {
 
     let tipRowBreak: HTMLElement | null;
     const handleMousemove = (e: MouseEvent) => {
+      e.preventDefault();
       const rect = tableCellBlot.parent.domNode.getBoundingClientRect();
       let resY = e.clientY;
       if (resY - rect.y < tableRowMinWidthPx) {
@@ -216,6 +220,7 @@ export class TableResizeLine {
     };
     const handleMousedown = (e: MouseEvent) => {
       if (e.button !== 0) return;
+      e.preventDefault();
       this.dragging = true;
       document.addEventListener('mouseup', handleMouseup);
       document.addEventListener('mousemove', handleMousemove);

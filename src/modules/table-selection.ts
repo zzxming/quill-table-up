@@ -21,7 +21,7 @@ export class TableSelection {
   constructor(public tableModule: TableUp, public table: HTMLElement, public quill: Quill, options: Partial<TableSelectionOptions> = {}) {
     this.options = this.resolveOptions(options);
 
-    this.cellSelect = this.quill.addContainer('ql-table-selection_line');
+    this.cellSelect = this.tableModule.addContainer('ql-table-selection_line');
     this.helpLinesInitial();
 
     const resizeObserver = new ResizeObserver(() => {

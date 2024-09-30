@@ -1,4 +1,5 @@
 import type { TableTextOptions } from './types';
+import { limitDomInViewPort } from './utils';
 
 interface InputOptions {
   type?: string;
@@ -277,15 +278,18 @@ export const createToolTip = (target: HTMLElement, options: ToolTipOptions = {})
     else if (msg) {
       tooltip.textContent = msg;
     }
-    tooltipContainer.appendChild(tooltip);
     let timer: ReturnType<typeof setTimeout> | null;
 
     const transitionendHandler = () => {
       tooltip.classList.add('hidden');
+      if (tooltipContainer.contains(tooltip)) {
+        tooltipContainer.removeChild(tooltip);
+      }
     };
     const open = () => {
       if (timer) clearTimeout(timer);
       timer = setTimeout(() => {
+        tooltipContainer.appendChild(tooltip);
         tooltip.removeEventListener('transitionend', transitionendHandler);
         tooltip.classList.remove('hidden');
         const elRect = target.getBoundingClientRect();
@@ -310,15 +314,13 @@ export const createToolTip = (target: HTMLElement, options: ToolTipOptions = {})
           },
         } as const;
         const extra = extraPositionMap[direction];
-        const top = window.scrollY + elRect.top + extra.top;
+        let top = window.scrollY + elRect.top + extra.top;
         let left = window.scrollX + elRect.left + extra.left;
-        const innerWidth = document.documentElement.clientWidth;
-        if (left + contentRect.width > innerWidth) {
-          left = innerWidth - contentRect.width;
-        }
-        else if (left < 0) {
-          left = 0;
-        }
+        Object.assign(tooltip.style, {
+          top: `${top}px`,
+          left: `${left}px`,
+        });
+        ({ top, left } = limitDomInViewPort(tooltip.getBoundingClientRect()));
         Object.assign(tooltip.style, {
           top: `${top}px`,
           left: `${left}px`,
@@ -331,6 +333,10 @@ export const createToolTip = (target: HTMLElement, options: ToolTipOptions = {})
       timer = setTimeout(() => {
         tooltip.classList.add('transparent');
         tooltip.addEventListener('transitionend', transitionendHandler, { once: true });
+        // handle remove when transition set none
+        setTimeout(() => {
+          transitionendHandler();
+        }, 150);
       }, delay);
     };
     target.addEventListener('mouseenter', open);

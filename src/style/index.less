@@ -24,7 +24,179 @@
     }
   }
 
-  .ql-table-menu {
+  .ql-table-resize-line {
+    &-row,
+    &-col {
+      position: absolute;
+      z-index: 10;
+      &::before,
+      &::after {
+        content: '';
+        display: block;
+        position: absolute;
+        top: 0px;
+        z-index: 11;
+      }
+    }
+    &-row {
+      height: 1px;
+      cursor: ns-resize;
+      &::before,
+      &::after {
+        width: 100%;
+        height: 8px;
+      }
+      &::before {
+        transform: translateY(-8px);
+      }
+    }
+    &-col {
+      width: 1px;
+      cursor: ew-resize;
+      &::before,
+      &::after {
+        height: 100%;
+        width: 8px;
+      }
+      &::before {
+        transform: translateX(-8px);
+      }
+    }
+  }
+
+  .ql-table-resizer {
+    position: absolute;
+    z-index: 10;
+    &-row,
+    &-col {
+      position: absolute;
+      top: 0px;
+      left: 0px;
+      overflow: hidden;
+    }
+    .ql-table {
+      &-col,
+      &-row {
+        &-wrapper {
+          display: flex;
+        }
+        &-header {
+          position: relative;
+          flex-shrink: 0;
+          background-color: #f3f4f5;
+          border: 1px solid #ccc;
+        }
+      }
+      &-col {
+        &-wrapper {
+          height: 100%;
+        }
+        &-header {
+          height: 100%;
+          cursor: pointer;
+        }
+        &-separator {
+          position: absolute;
+          top: 0px;
+          bottom: 0px;
+          right: -2px;
+          width: 2px;
+          cursor: ew-resize;
+          z-index: 10;
+          &::after {
+            right: -6px;
+          }
+          &::before {
+            left: -6px;
+          }
+          &::after,
+          &::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            display: block;
+            width: 8px;
+            height: 100%;
+            z-index: 11;
+          }
+        }
+      }
+      &-row {
+        &-wrapper {
+          flex-direction: column;
+          width: 100%;
+        }
+        &-header {
+          width: 100%;
+          cursor: pointer;
+        }
+        &-separator {
+          position: absolute;
+          left: 0px;
+          right: 0px;
+          bottom: -2px;
+          height: 2px;
+          cursor: ns-resize;
+          z-index: 10;
+          &::after {
+            bottom: -6px;
+          }
+          &::before {
+            top: -6px;
+          }
+          &::after,
+          &::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            display: block;
+            width: 100%;
+            height: 8px;
+            z-index: 11;
+          }
+        }
+      }
+    }
+    &-corner {
+      position: absolute;
+      top: 0px;
+      left: 0px;
+      background-color: #f3f4f5;
+      border: 1px solid #ccc;
+      border-right: none;
+      border-bottom: none;
+      border-top-left-radius: 50%;
+    }
+  }
+}
+
+.ql-table {
+  &-toolbox {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    pointer-events: none;
+    * {
+      pointer-events: all;
+    }
+  }
+  &-drag-line {
+    position: fixed;
+    z-index: 10;
+    background-color: #409eff;
+    &.col {
+      width: 2px;
+      cursor: ew-resize;
+    }
+    &.row {
+      height: 2px;
+      cursor: ns-resize;
+    }
+  }
+  &-menu {
     position: absolute;
     z-index: 11;
     display: none;
@@ -75,161 +247,10 @@
         flex-shrink: 0;
         font-size: 20px;
       }
-    }
-  }
-
-  .ql-table-resize-line {
-    &-row,
-    &-col {
-      position: absolute;
-      z-index: 10;
-      &::before,
-      &::after {
-        content: '';
-        display: block;
-        position: absolute;
-        top: 0px;
-        z-index: 11;
+      span {
+        text-wrap: nowrap;
       }
     }
-    &-row {
-      height: 1px;
-      cursor: ns-resize;
-      &::before,
-      &::after {
-        width: 100%;
-        height: 8px;
-      }
-      &::before {
-        transform: translateY(-8px);
-      }
-    }
-    &-col {
-      width: 1px;
-      cursor: ew-resize;
-      &::before,
-      &::after {
-        height: 100%;
-        width: 8px;
-      }
-      &::before {
-        transform: translateX(-8px);
-      }
-    }
-  }
-
-  .ql-table-resizer {
-    position: absolute;
-    z-index: 10;
-    .ql-table {
-      &-col,
-      &-row {
-        &-wrapper {
-          position: absolute;
-          top: 0px;
-          left: 0px;
-          display: flex;
-          overflow: hidden;
-        }
-        &-header {
-          position: relative;
-          flex-shrink: 0;
-          background-color: #f3f4f5;
-          border: 1px solid #ccc;
-        }
-      }
-      &-col {
-        &-wrapper {
-          width: 100%;
-        }
-        &-header {
-          height: 100%;
-        }
-        &-separator {
-          position: absolute;
-          top: 0px;
-          bottom: 0px;
-          right: -2px;
-          width: 2px;
-          cursor: ew-resize;
-          z-index: 10;
-          &::after {
-            right: -6px;
-          }
-          &::before {
-            left: -6px;
-          }
-          &::after,
-          &::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            display: block;
-            width: 8px;
-            height: 100%;
-            z-index: 11;
-          }
-        }
-      }
-      &-row {
-        &-wrapper {
-          flex-direction: column;
-          height: 100%;
-        }
-        &-header {
-          width: 100%;
-        }
-        &-separator {
-          position: absolute;
-          left: 0px;
-          right: 0px;
-          bottom: -2px;
-          height: 2px;
-          cursor: ns-resize;
-          z-index: 10;
-          &::after {
-            bottom: -6px;
-          }
-          &::before {
-            top: -6px;
-          }
-          &::after,
-          &::before {
-            content: '';
-            position: absolute;
-            left: 0;
-            display: block;
-            width: 100%;
-            height: 8px;
-            z-index: 11;
-          }
-        }
-      }
-    }
-    &-corner {
-      position: absolute;
-      top: 0px;
-      left: 0px;
-      background-color: #f3f4f5;
-      border: 1px solid #ccc;
-      border-right: none;
-      border-bottom: none;
-      border-top-left-radius: 50%;
-    }
-  }
-}
-
-.ql-table-drag-line {
-  position: fixed;
-  z-index: 10;
-  background-color: #409eff;
-  &.col {
-    width: 2px;
-    cursor: ew-resize;
-  }
-  &.row {
-    height: 2px;
-    cursor: ns-resize;
   }
 }
 
@@ -283,6 +304,7 @@
 .ql-editor {
   .ql {
     &-table {
+      display: table;
       border-collapse: separate;
       table-layout: fixed;
       width: auto;
@@ -301,8 +323,8 @@
           }
         }
         &::-webkit-scrollbar {
-          width: 4px;
-          height: 4px;
+          width: 6px;
+          height: 6px;
         }
         &::-webkit-scrollbar-thumb {
           background-color: #d2d2d2;
