@@ -270,6 +270,7 @@ export class TableResize {
     this.tableCols = this.tableMain.getCols();
     this.tableRows = this.tableMain.getRows();
     this.root.innerHTML = '';
+    const tableWrapperRect = this.tableWrapper.domNode.getBoundingClientRect();
     const tableMainRect = tableMain.domNode.getBoundingClientRect();
     const rootRect = this.quill.root.getBoundingClientRect();
     Object.assign(this.root.style, {
@@ -300,13 +301,19 @@ export class TableResize {
         </div>`;
       }
       const colHeadWrapper = document.createElement('div');
-      colHeadWrapper.classList.add('ql-table-col-wrapper');
+      colHeadWrapper.classList.add('ql-table-resizer-col');
+      const colHead = document.createElement('div');
+      colHead.classList.add('ql-table-col-wrapper');
       Object.assign(colHeadWrapper.style, {
         transform: `translateY(-${this.options.size}px)`,
-        width: `${tableMainRect.width}px`,
+        width: `${tableWrapperRect.width}px`,
         height: `${this.options.size}px`,
       });
-      colHeadWrapper.innerHTML = colHeadStr;
+      Object.assign(colHead.style, {
+        width: `${tableMainRect.width}px`,
+      });
+      colHead.innerHTML = colHeadStr;
+      colHeadWrapper.appendChild(colHead);
       this.root.appendChild(colHeadWrapper);
       colHeadWrapper.scrollLeft = this.tableWrapper.domNode.scrollLeft;
       this.colHeadWrapper = colHeadWrapper;
@@ -318,17 +325,24 @@ export class TableResize {
       for (const row of this.tableRows) {
         const height = `${row.domNode.getBoundingClientRect().height}px`;
         rowHeadStr += `<div class="ql-table-row-header" style="height: ${height}">
-        <div class="ql-table-row-separator" style="width: ${tableMainRect.width + this.options.size - 3}px"></div>
-      </div>`;
+          <div class="ql-table-row-separator" style="width: ${tableMainRect.width + this.options.size - 3}px"></div>
+        </div>`;
       }
       const rowHeadWrapper = document.createElement('div');
-      rowHeadWrapper.classList.add('ql-table-row-wrapper');
+      rowHeadWrapper.classList.add('ql-table-resizer-row');
+      const rowHead = document.createElement('div');
+      rowHead.classList.add('ql-table-row-wrapper');
+
       Object.assign(rowHeadWrapper.style, {
         transform: `translateX(-${this.options.size}px)`,
         width: `${this.options.size}px`,
+        height: `${tableWrapperRect.height - (tableWrapperRect.bottom > rootRect.bottom ? tableWrapperRect.bottom - rootRect.bottom : 0)}px`,
+      });
+      Object.assign(rowHead.style, {
         height: `${tableMainRect.height}px`,
       });
-      rowHeadWrapper.innerHTML = rowHeadStr;
+      rowHead.innerHTML = rowHeadStr;
+      rowHeadWrapper.appendChild(rowHead);
       this.root.appendChild(rowHeadWrapper);
       this.rowHeadWrapper = rowHeadWrapper;
       this.bindRowEvents();
