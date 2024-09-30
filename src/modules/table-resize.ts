@@ -25,8 +25,7 @@ export class TableResize {
     this.tableWrapper = this.tableMain.parent;
     if (!this.tableWrapper) return;
 
-    this.root = this.quill.addContainer('ql-table-resizer');
-
+    this.root = this.tableModule.addContainer('ql-table-resizer');
     this.resizeObserver = new ResizeObserver(() => {
       this.showTool();
     });

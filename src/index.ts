@@ -167,6 +167,7 @@ export class TableUp {
 
   quill: Quill;
   options: TableUpOptions;
+  toolBox: HTMLDivElement;
   fixTableByLisenter = debounce(this.balanceTables, 100);
   selector?: HTMLElement;
   picker?: (Picker & { options: HTMLElement });
@@ -182,6 +183,8 @@ export class TableUp {
   constructor(quill: Quill, options: Partial<TableUpOptions>) {
     this.quill = quill;
     this.options = this.resolveOptions(options || {});
+
+    this.toolBox = this.quill.addContainer('ql-table-toolbox');
 
     const toolbar = this.quill.getModule('toolbar') as Toolbar;
     if (toolbar && (this.quill.theme as QuillTheme).pickers) {
@@ -274,7 +277,7 @@ export class TableUp {
       }
     });
     if (!this.options.resizerSetOuter) {
-      this.tableResizerLine = new TableResizeLine(quill, this.options.resizeLine || {});
+      this.tableResizerLine = new TableResizeLine(this, quill, this.options.resizeLine || {});
     }
     this.quill.on(AFTER_TABLE_RESIZE, () => {
       this.tableSelection && this.tableSelection.hideSelection();
@@ -282,6 +285,15 @@ export class TableUp {
 
     this.pasteTableHandler();
     this.listenBalanceCells();
+  }
+
+  addContainer(classes: string) {
+    const el = document.createElement('div');
+    for (const classname of classes.split(' ')) {
+      el.classList.add(classname);
+    }
+    this.toolBox.appendChild(el);
+    return el;
   }
 
   resolveOptions(options: Partial<TableUpOptions>) {

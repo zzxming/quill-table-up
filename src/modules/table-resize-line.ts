@@ -1,3 +1,4 @@
+import type TableUp from '..';
 import type { TableResizeLineOptions } from '../utils';
 import Quill from 'quill';
 import { type TableCellFormat, TableRowFormat } from '../formats';
@@ -10,10 +11,10 @@ export class TableResizeLine {
   dragging = false;
   options: TableResizeLineOptions;
 
-  constructor(public quill: Quill, options: Partial<TableResizeLineOptions>) {
+  constructor(public tableModule: TableUp, public quill: Quill, options: Partial<TableResizeLineOptions>) {
     this.options = this.resolveOptions(options);
-    this.colResizer = this.quill.addContainer('ql-table-resize-line-col');
-    this.rowResizer = this.quill.addContainer('ql-table-resize-line-row');
+    this.colResizer = this.tableModule.addContainer('ql-table-resize-line-col');
+    this.rowResizer = this.tableModule.addContainer('ql-table-resize-line-row');
 
     this.quill.root.addEventListener('mousemove', (e: MouseEvent) => {
       if (this.dragging) return;
@@ -50,8 +51,8 @@ export class TableResizeLine {
   }
 
   updateColResizer(tableCellBlot: TableCellFormat) {
-    this.quill.container.removeChild(this.colResizer);
-    this.colResizer = this.quill.addContainer('ql-table-resize-line-col');
+    this.tableModule.toolBox.removeChild(this.colResizer);
+    this.colResizer = this.tableModule.addContainer('ql-table-resize-line-col');
 
     const [tableBodyBlot, tableMainBlot] = findParentBlots(tableCellBlot, [blotName.tableBody, blotName.tableMain] as const);
     const tableBodyect = tableBodyBlot.domNode.getBoundingClientRect();
@@ -177,8 +178,8 @@ export class TableResizeLine {
   }
 
   updateRowResizer(tableCellBlot: TableCellFormat) {
-    this.quill.container.removeChild(this.rowResizer);
-    this.rowResizer = this.quill.addContainer('ql-table-resize-line-row');
+    this.tableModule.toolBox.removeChild(this.rowResizer);
+    this.rowResizer = this.tableModule.addContainer('ql-table-resize-line-row');
     const row = tableCellBlot.parent;
     if (!(row instanceof TableRowFormat)) {
       return;
