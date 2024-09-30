@@ -282,7 +282,9 @@ export const createToolTip = (target: HTMLElement, options: ToolTipOptions = {})
 
     const transitionendHandler = () => {
       tooltip.classList.add('hidden');
-      tooltipContainer.removeChild(tooltip);
+      if (tooltipContainer.contains(tooltip)) {
+        tooltipContainer.removeChild(tooltip);
+      }
     };
     const open = () => {
       if (timer) clearTimeout(timer);
