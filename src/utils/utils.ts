@@ -97,19 +97,19 @@ export function mixinClass<
 
 export const limitDomInViewPort = (rect: { left: number; top: number; width: number; height: number }) => {
   let { left, top, width, height } = rect;
-  const { innerWidth, innerHeight } = window;
+  const { clientWidth, clientHeight } = document.documentElement;
   let leftLimited = false;
   let topLimited = false;
-  if (left + width > innerWidth) {
-    left = innerWidth - width;
+  if (left + width > clientWidth) {
+    left = clientWidth - width;
     leftLimited = true;
   }
   else if (left < 0) {
     left = 0;
     leftLimited = true;
   }
-  if (top + height > innerHeight) {
-    top = innerHeight - height;
+  if (top + height > clientHeight) {
+    top = clientHeight - height;
     topLimited = true;
   }
   else if (top < 0) {
