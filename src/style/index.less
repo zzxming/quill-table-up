@@ -1,5 +1,5 @@
 .ql-toolbar {
-  .ql-table-up.ql-picker {
+  .ql-picker:not(.ql-color-picker):not(.ql-icon-picker).ql-table-up {
     width: 28px;
     .ql-picker-label {
       padding: 2px 4px;
@@ -10,7 +10,7 @@
     }
   }
   .ql-picker.ql-expanded .ql-picker-options {
-    z-index: 11;
+    z-index: 1;
   }
 }
 
@@ -28,14 +28,14 @@
     &-row,
     &-col {
       position: absolute;
-      z-index: 10;
+      z-index: 0;
       &::before,
       &::after {
         content: '';
         display: block;
         position: absolute;
         top: 0px;
-        z-index: 11;
+        z-index: 1;
       }
     }
     &-row {
@@ -66,7 +66,7 @@
 
   .ql-table-resizer {
     position: absolute;
-    z-index: 10;
+    z-index: 0;
     &-row,
     &-col {
       position: absolute;
@@ -102,7 +102,7 @@
           right: -2px;
           width: 2px;
           cursor: ew-resize;
-          z-index: 10;
+          z-index: 0;
           &::after {
             right: -6px;
           }
@@ -117,7 +117,7 @@
             display: block;
             width: 8px;
             height: 100%;
-            z-index: 11;
+            z-index: 1;
           }
         }
       }
@@ -137,7 +137,7 @@
           bottom: -2px;
           height: 2px;
           cursor: ns-resize;
-          z-index: 10;
+          z-index: 0;
           &::after {
             bottom: -6px;
           }
@@ -152,7 +152,7 @@
             display: block;
             width: 100%;
             height: 8px;
-            z-index: 11;
+            z-index: 1;
           }
         }
       }
@@ -185,7 +185,7 @@
   }
   &-drag-line {
     position: fixed;
-    z-index: 10;
+    z-index: 0;
     background-color: #409eff;
     &.col {
       width: 2px;
@@ -198,7 +198,7 @@
   }
   &-menu {
     position: absolute;
-    z-index: 11;
+    z-index: 1;
     display: none;
     align-items: center;
     justify-content: center;
