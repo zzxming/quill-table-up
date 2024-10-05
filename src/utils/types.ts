@@ -52,6 +52,7 @@ export interface TableUpOptions {
   selection?: TableSelectionOptions;
   resizer?: TableResizeOptions ;
   resizeLine?: TableResizeLineOptions;
+  icon: string;
 }
 export interface TableColValue {
   tableId: string;

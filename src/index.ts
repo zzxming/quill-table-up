@@ -192,7 +192,7 @@ export class TableUp {
       if (select && select.tagName.toLocaleLowerCase() === 'select') {
         this.picker = (this.quill.theme as QuillTheme).pickers.find(picker => picker.select === select);
         if (this.picker) {
-          this.picker.label.innerHTML = icons.table;
+          this.picker.label.innerHTML = this.options.icon;
           this.buildCustomSelect(this.options.customSelect);
           this.picker.label.addEventListener('mousedown', this.handleInViewport);
         }
@@ -302,6 +302,7 @@ export class TableUp {
       texts: this.resolveTexts(options.texts || {}),
       full: true,
       resizerSetOuter: false,
+      icon: icons.table,
     } as TableUpOptions, options);
   };
 
