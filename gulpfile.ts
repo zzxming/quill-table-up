@@ -79,17 +79,19 @@ const buildTheme = async (isDev: boolean = false) => {
       ]),
     );
   if (!isDev) {
-    await bunlde.pipe(
-      cleanCSS({}, (details) => {
-        console.log(
-          `${details.name}: ${details.stats.originalSize / 1000} KB -> ${
-            details.stats.minifiedSize / 1000
-          } KB`,
-        );
-      }),
-    );
+    await bunlde
+      .pipe(
+        cleanCSS({}, (details) => {
+          console.log(
+            `${details.name}: ${details.stats.originalSize / 1000} KB -> ${
+              details.stats.minifiedSize / 1000
+            } KB`,
+          );
+        }),
+      )
+      .pipe(dest(demoBundle));
   }
-  return bunlde.pipe(dest(isDev ? demoBundle : distBundle));
+  return bunlde.pipe(dest(distBundle));
 };
 
 const dev = () => {
