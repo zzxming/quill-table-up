@@ -314,16 +314,16 @@ export const createToolTip = (target: HTMLElement, options: ToolTipOptions = {})
           },
         } as const;
         const extra = extraPositionMap[direction];
-        let top = window.scrollY + elRect.top + extra.top;
-        let left = window.scrollX + elRect.left + extra.left;
+        let top = elRect.top + extra.top;
+        let left = elRect.left + extra.left;
         Object.assign(tooltip.style, {
-          top: `${top}px`,
-          left: `${left}px`,
+          top: `${top + window.scrollY}px`,
+          left: `${left + window.scrollX}px`,
         });
         ({ top, left } = limitDomInViewPort(tooltip.getBoundingClientRect()));
         Object.assign(tooltip.style, {
-          top: `${top}px`,
-          left: `${left}px`,
+          top: `${top + window.scrollY}px`,
+          left: `${left + window.scrollX}px`,
         });
         tooltip.classList.remove('transparent');
       }, delay);

@@ -434,34 +434,38 @@ export class TableMenu {
     if (!this.menu || !this.tableModule.tableSelection || !this.tableModule.tableSelection.boundary) return;
     const { boundary, selectedTds } = this.tableModule.tableSelection;
     this.selectedTds = selectedTds;
-
+    const style: Record<string, any> = {
+      display: 'flex',
+      left: 0,
+      top: 0,
+    };
     if (!this.options.contextmenu) {
       const containerRect = this.quill.container.getBoundingClientRect();
-      Object.assign(this.menu.style, {
-        display: 'flex',
-        left: `${containerRect.left + boundary.x + (boundary.width / 2)}px`,
-        top: `${containerRect.top + boundary.y + boundary.height}px`,
-        transform: `translate(-50%, 20%)`,
-      });
+      style.left = containerRect.left + boundary.x + (boundary.width / 2);
+      style.top = containerRect.top + boundary.y + boundary.height;
+      style.transform = `translate(-50%, 20%)`;
     }
     else {
       if (!position) {
         return this.hideTools();
       }
       const { x, y } = position;
-      Object.assign(this.menu.style, {
-        display: 'flex',
-        left: `${x}px`,
-        top: `${y}px`,
-      });
+      style.left = x;
+      style.top = y;
     }
+
+    Object.assign(this.menu.style, {
+      ...style,
+      left: `${style.left + window.scrollX}px`,
+      top: `${style.top + window.scrollY}px`,
+    });
 
     // limit menu in viewport
     const menuRect = this.menu.getBoundingClientRect();
-    const { left, top, leftLimited } = limitDomInViewPort(menuRect);
+    const { left: limitLeft, top: limitTop, leftLimited } = limitDomInViewPort(menuRect);
     Object.assign(this.menu.style, {
-      left: `${left}px`,
-      top: `${top}px`,
+      left: `${limitLeft + window.scrollX}px`,
+      top: `${limitTop + window.scrollY}px`,
       transform: !this.options.contextmenu && leftLimited ? `translate(0%, 20%)` : null,
     });
   }
