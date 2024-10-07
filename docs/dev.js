@@ -66,25 +66,26 @@
         }
         return targetClass;
     }
+    const viewportPadding = 8;
     const limitDomInViewPort = (rect) => {
         let { left, top, width, height } = rect;
         const { clientWidth, clientHeight } = document.documentElement;
         let leftLimited = false;
         let topLimited = false;
         if (left + width > clientWidth) {
-            left = clientWidth - width;
+            left = clientWidth - width - viewportPadding;
             leftLimited = true;
         }
         else if (left < 0) {
-            left = 0;
+            left = viewportPadding;
             leftLimited = true;
         }
         if (top + height > clientHeight) {
-            top = clientHeight - height;
+            top = clientHeight - height - viewportPadding;
             topLimited = true;
         }
         else if (top < 0) {
-            top = 0;
+            top = viewportPadding;
             topLimited = true;
         }
         return {
@@ -346,16 +347,16 @@
                         },
                     };
                     const extra = extraPositionMap[direction];
-                    let top = window.scrollY + elRect.top + extra.top;
-                    let left = window.scrollX + elRect.left + extra.left;
+                    let top = elRect.top + extra.top;
+                    let left = elRect.left + extra.left;
                     Object.assign(tooltip.style, {
-                        top: `${top}px`,
-                        left: `${left}px`,
+                        top: `${top + window.scrollY}px`,
+                        left: `${left + window.scrollX}px`,
                     });
                     ({ top, left } = limitDomInViewPort(tooltip.getBoundingClientRect()));
                     Object.assign(tooltip.style, {
-                        top: `${top}px`,
-                        left: `${left}px`,
+                        top: `${top + window.scrollY}px`,
+                        left: `${left + window.scrollX}px`,
                     });
                     tooltip.classList.remove('transparent');
                 }, delay);
@@ -382,7 +383,7 @@
     };
 
     const blotName = {
-        container: 'container',
+        container: 'table-up-container',
         tableWrapper: 'table-up',
         tableMain: 'table-up-main',
         tableColgroup: 'table-up-colgroup',
@@ -392,10 +393,14 @@
         tableCell: 'table-up-cell',
         tableCellInner: 'table-up-cell-inner',
     };
-    const tableColMinWidthPre = 5;
-    const tableColMinWidthPx = 26;
-    const tableRowMinWidthPx = 36;
-    const AFTER_TABLE_RESIZE = 'after-table-resize';
+    const tableUpSize = {
+        colMinWidthPre: 5,
+        colMinWidthPx: 26,
+        rowMinHeightPx: 36,
+    };
+    const tableUpEvent = {
+        AFTER_TABLE_RESIZE: 'after-table-resize',
+    };
 
     const Parchment$2 = Quill.import('parchment');
     const Container = Quill.import('blots/container');
@@ -403,7 +408,6 @@
     const BlockEmbed$2 = Quill.import('blots/block/embed');
     class ContainerFormat extends Container {
         static blotName = blotName.container;
-        static tagName = 'container';
         static scope = Parchment$2.Scope.BLOCK_BLOT;
         static allowedChildren = [Block$2, BlockEmbed$2, Container];
         static requiredContainer;
@@ -1274,7 +1278,7 @@
                 const next = this.children.iterator();
                 let cur;
                 while ((cur = next())) {
-                    if (cur.width - tableCellInner.width >= tableColMinWidthPre) {
+                    if (cur.width - tableCellInner.width >= tableUpSize.colMinWidthPre) {
                         cur.width -= tableCellInner.width;
                         break;
                     }
@@ -1790,32 +1794,36 @@
                 return;
             const { boundary, selectedTds } = this.tableModule.tableSelection;
             this.selectedTds = selectedTds;
+            const style = {
+                display: 'flex',
+                left: 0,
+                top: 0,
+            };
             if (!this.options.contextmenu) {
                 const containerRect = this.quill.container.getBoundingClientRect();
-                Object.assign(this.menu.style, {
-                    display: 'flex',
-                    left: `${containerRect.left + boundary.x + (boundary.width / 2)}px`,
-                    top: `${containerRect.top + boundary.y + boundary.height}px`,
-                    transform: `translate(-50%, 20%)`,
-                });
+                style.left = containerRect.left + boundary.x + (boundary.width / 2);
+                style.top = containerRect.top + boundary.y + boundary.height;
+                style.transform = `translate(-50%, 20%)`;
             }
             else {
                 if (!position) {
                     return this.hideTools();
                 }
                 const { x, y } = position;
-                Object.assign(this.menu.style, {
-                    display: 'flex',
-                    left: `${x}px`,
-                    top: `${y}px`,
-                });
+                style.left = x;
+                style.top = y;
             }
+            Object.assign(this.menu.style, {
+                ...style,
+                left: `${style.left + window.scrollX}px`,
+                top: `${style.top + window.scrollY}px`,
+            });
             // limit menu in viewport
             const menuRect = this.menu.getBoundingClientRect();
-            const { left, top, leftLimited } = limitDomInViewPort(menuRect);
+            const { left: limitLeft, top: limitTop, leftLimited } = limitDomInViewPort(menuRect);
             Object.assign(this.menu.style, {
-                left: `${left}px`,
-                top: `${top}px`,
+                left: `${limitLeft + window.scrollX}px`,
+                top: `${limitTop + window.scrollY}px`,
                 transform: !this.options.contextmenu && leftLimited ? `translate(0%, 20%)` : null,
             });
         }
@@ -1893,7 +1901,7 @@
                 if (this.tableMain.full) {
                     // max width = current col.width + next col.width
                     // if current col is last. max width = current col.width
-                    const minWidth = (tableColMinWidthPre / 100) * tableWidth;
+                    const minWidth = (tableUpSize.colMinWidthPre / 100) * tableWidth;
                     const maxRange = resX > rect.right
                         ? tableColHeads[curColIndex + 1]
                             ? tableColHeads[curColIndex + 1].getBoundingClientRect().right - minWidth
@@ -1903,8 +1911,8 @@
                     resX = Math.min(Math.max(resX, minRange), maxRange);
                 }
                 else {
-                    if (resX - rect.x < tableColMinWidthPx) {
-                        resX = rect.x + tableColMinWidthPx;
+                    if (resX - rect.x < tableUpSize.colMinWidthPx) {
+                        resX = rect.x + tableUpSize.colMinWidthPx;
                     }
                 }
                 tipColBreak.style.left = `${resX}px`;
@@ -1919,7 +1927,7 @@
                         // minus
                         // if not the last col. add the reduced amount to the next col
                         // if is the last col. add the reduced amount to the pre col
-                        pre = Math.max(tableColMinWidthPre, pre);
+                        pre = Math.max(tableUpSize.colMinWidthPre, pre);
                         const last = oldWidthPre - pre;
                         if (this.tableCols[curColIndex + 1]) {
                             tableColHeads[curColIndex + 1].style.width = `${this.tableCols[curColIndex + 1].width + last}%`;
@@ -1940,7 +1948,7 @@
                         // the last col can't magnify. control last but one minus to magnify last col
                         if (this.tableCols[curColIndex + 1]) {
                             const totalWidthNextPre = oldWidthPre + this.tableCols[curColIndex + 1].width;
-                            pre = Math.min(totalWidthNextPre - tableColMinWidthPre, pre);
+                            pre = Math.min(totalWidthNextPre - tableUpSize.colMinWidthPre, pre);
                             this.tableCols[curColIndex].width = `${pre}%`;
                             this.tableCols[curColIndex + 1].width = `${totalWidthNextPre - pre}%`;
                             tableColHeads[curColIndex].style.width = `${pre}%`;
@@ -1961,7 +1969,7 @@
                 curColIndex = -1;
                 document.removeEventListener('mouseup', handleMouseup);
                 document.removeEventListener('mousemove', handleMousemove);
-                this.quill.emitter.emit(AFTER_TABLE_RESIZE);
+                this.quill.emitter.emit(tableUpEvent.AFTER_TABLE_RESIZE);
             };
             const handleMousedown = (i, e) => {
                 e.preventDefault();
@@ -2011,8 +2019,8 @@
                 e.preventDefault();
                 const rect = tableRowHeads[curRowIndex].getBoundingClientRect();
                 let resY = e.clientY;
-                if (resY - rect.y < tableRowMinWidthPx) {
-                    resY = rect.y + tableRowMinWidthPx;
+                if (resY - rect.y < tableUpSize.rowMinHeightPx) {
+                    resY = rect.y + tableUpSize.rowMinHeightPx;
                 }
                 tipRowBreak.style.top = `${resY}px`;
                 tipRowBreak.dataset.w = String(resY - rect.y);
@@ -2031,7 +2039,7 @@
                 curRowIndex = -1;
                 document.removeEventListener('mouseup', handleMouseup);
                 document.removeEventListener('mousemove', handleMousemove);
-                this.quill.emitter.emit(AFTER_TABLE_RESIZE);
+                this.quill.emitter.emit(tableUpEvent.AFTER_TABLE_RESIZE);
             };
             const handleMousedown = (i, e) => {
                 e.preventDefault();
@@ -2229,7 +2237,7 @@
                 if (tableMainBlot.full) {
                     // max width = current col.width + next col.width
                     // if current col is last. max width = current col.width
-                    const minWidth = (tableColMinWidthPre / 100) * tableWidth;
+                    const minWidth = (tableUpSize.colMinWidthPre / 100) * tableWidth;
                     const maxRange = resX > rect.right
                         ? cols[curColIndex + 1]
                             ? cols[curColIndex + 1].domNode.getBoundingClientRect().right - minWidth
@@ -2239,8 +2247,8 @@
                     resX = Math.min(Math.max(resX, minRange), maxRange);
                 }
                 else {
-                    if (resX - rect.x < tableColMinWidthPx) {
-                        resX = rect.x + tableColMinWidthPx;
+                    if (resX - rect.x < tableUpSize.colMinWidthPx) {
+                        resX = rect.x + tableUpSize.colMinWidthPx;
                     }
                 }
                 tipColBreak.style.left = `${resX}px`;
@@ -2255,7 +2263,7 @@
                         // minus
                         // if not the last col. add the reduced amount to the next col
                         // if is the last col. add the reduced amount to the pre col
-                        pre = Math.max(tableColMinWidthPre, pre);
+                        pre = Math.max(tableUpSize.colMinWidthPre, pre);
                         const last = oldWidthPre - pre;
                         if (cols[curColIndex + 1]) {
                             cols[curColIndex + 1].width = `${cols[curColIndex + 1].width + last}%`;
@@ -2273,7 +2281,7 @@
                         // the last col can't magnify. control last but one minus to magnify last col
                         if (cols[curColIndex + 1]) {
                             const totalWidthNextPre = oldWidthPre + cols[curColIndex + 1].width;
-                            pre = Math.min(totalWidthNextPre - tableColMinWidthPre, pre);
+                            pre = Math.min(totalWidthNextPre - tableUpSize.colMinWidthPre, pre);
                             cols[curColIndex].width = `${pre}%`;
                             cols[curColIndex + 1].width = `${totalWidthNextPre - pre}%`;
                         }
@@ -2291,7 +2299,7 @@
                 document.removeEventListener('mousemove', handleMousemove);
                 this.dragging = false;
                 this.updateColResizer(tableCellBlot);
-                this.quill.emitter.emit(AFTER_TABLE_RESIZE);
+                this.quill.emitter.emit(tableUpEvent.AFTER_TABLE_RESIZE);
             };
             const handleMousedown = (e) => {
                 if (e.button !== 0)
@@ -2345,8 +2353,8 @@
                 e.preventDefault();
                 const rect = tableCellBlot.parent.domNode.getBoundingClientRect();
                 let resY = e.clientY;
-                if (resY - rect.y < tableRowMinWidthPx) {
-                    resY = rect.y + tableRowMinWidthPx;
+                if (resY - rect.y < tableUpSize.rowMinHeightPx) {
+                    resY = rect.y + tableUpSize.rowMinHeightPx;
                 }
                 tipRowBreak.style.top = `${resY}px`;
                 tipRowBreak.dataset.w = String(resY - rect.y);
@@ -2360,7 +2368,7 @@
                 document.removeEventListener('mousemove', handleMousemove);
                 this.dragging = false;
                 this.updateRowResizer(tableCellBlot);
-                this.quill.emitter.emit(AFTER_TABLE_RESIZE);
+                this.quill.emitter.emit(tableUpEvent.AFTER_TABLE_RESIZE);
             };
             const handleMousedown = (e) => {
                 if (e.button !== 0)
@@ -2631,7 +2639,7 @@
         : false;
     class TableUp {
         static moduleName = 'tableUp';
-        static toolName = 'table-up';
+        static toolName = blotName.tableWrapper;
         static keyboradHandler = {
             'forbid remove table by backspace': {
                 bindInHead: true,
@@ -2720,6 +2728,7 @@
             Quill.register({
                 'blots/scroll': ScrollOverride,
                 'blots/block': BlockOverride,
+                [`blots/${blotName.container}`]: ContainerFormat,
                 'formats/header': HeaderOverride,
                 'formats/list': ListItemOverride,
                 'formats/blockquote': BlockquoteOverride,
@@ -2758,7 +2767,7 @@
                 if (select && select.tagName.toLocaleLowerCase() === 'select') {
                     this.picker = this.quill.theme.pickers.find(picker => picker.select === select);
                     if (this.picker) {
-                        this.picker.label.innerHTML = icons.table;
+                        this.picker.label.innerHTML = this.options.icon;
                         this.buildCustomSelect(this.options.customSelect);
                         this.picker.label.addEventListener('mousedown', this.handleInViewport);
                     }
@@ -2833,7 +2842,7 @@
             if (!this.options.resizerSetOuter) {
                 this.tableResizerLine = new TableResizeLine(this, quill, this.options.resizeLine || {});
             }
-            this.quill.on(AFTER_TABLE_RESIZE, () => {
+            this.quill.on(tableUpEvent.AFTER_TABLE_RESIZE, () => {
                 this.tableSelection && this.tableSelection.hideSelection();
             });
             this.pasteTableHandler();
@@ -2853,6 +2862,7 @@
                 texts: this.resolveTexts(options.texts || {}),
                 full: true,
                 resizerSetOuter: false,
+                icon: icons.table,
             }, options);
         }
         ;
@@ -2902,8 +2912,8 @@
                 const editorPaddingRight = Number.parseFloat(editorStyle.paddingRight);
                 const editorInnerWidth = Number.parseFloat(editorStyle.width) - editorPaddingLeft - editorPaddingRight;
                 const defaultColWidth = isFull
-                    ? `${Math.max(100 / colIds.length, tableColMinWidthPre)}%`
-                    : `${Math.max(editorInnerWidth / colIds.length, tableColMinWidthPx)}px`;
+                    ? `${Math.max(100 / colIds.length, tableUpSize.colMinWidthPre)}%`
+                    : `${Math.max(editorInnerWidth / colIds.length, tableUpSize.colMinWidthPx)}px`;
                 if (!hasCol) {
                     colDelta = colIds.reduce((colDelta, id) => {
                         colDelta.insert({
@@ -3521,8 +3531,22 @@
             }
         }
     }
+    const updateTableConstants = (data) => {
+        Object.assign(blotName, data.blotName || {});
+        Object.assign(tableUpSize, data.tableUpSize || {});
+        Object.assign(tableUpEvent, data.tableUpEvent || {});
+        TableUp.toolName = blotName.tableWrapper;
+        ContainerFormat.blotName = blotName.container;
+        TableWrapperFormat.blotName = blotName.tableWrapper;
+        TableMainFormat.blotName = blotName.tableMain;
+        TableColgroupFormat.blotName = blotName.tableColgroup;
+        TableColFormat.blotName = blotName.tableCol;
+        TableBodyFormat.blotName = blotName.tableBody;
+        TableRowFormat.blotName = blotName.tableRow;
+        TableCellFormat.blotName = blotName.tableCell;
+        TableCellInnerFormat.blotName = blotName.tableCellInner;
+    };
 
-    exports.AFTER_TABLE_RESIZE = AFTER_TABLE_RESIZE;
     exports.BlockOverride = BlockOverride;
     exports.BlockquoteOverride = BlockquoteOverride;
     exports.CodeBlockOverride = CodeBlockOverride;
@@ -3551,6 +3575,9 @@
     exports.isRectanglesIntersect = isRectanglesIntersect;
     exports.randomId = randomId;
     exports.tableCantInsert = tableCantInsert;
+    exports.tableUpEvent = tableUpEvent;
+    exports.tableUpSize = tableUpSize;
+    exports.updateTableConstants = updateTableConstants;
 
     Object.defineProperty(exports, '__esModule', { value: true });
 

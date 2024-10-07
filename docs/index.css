@@ -1,15 +1,15 @@
-.ql-toolbar .ql-table-up.ql-picker {
+.ql-toolbar .ql-picker:not(.ql-color-picker):not(.ql-icon-picker).ql-table-up {
   width: 28px;
 }
-.ql-toolbar .ql-table-up.ql-picker .ql-picker-label {
+.ql-toolbar .ql-picker:not(.ql-color-picker):not(.ql-icon-picker).ql-table-up .ql-picker-label {
   padding: 2px 4px;
 }
-.ql-toolbar .ql-table-up.ql-picker .ql-picker-label svg {
+.ql-toolbar .ql-picker:not(.ql-color-picker):not(.ql-icon-picker).ql-table-up .ql-picker-label svg {
   position: static;
   margin-top: 0;
 }
 .ql-toolbar .ql-picker.ql-expanded .ql-picker-options {
-  z-index: 11;
+  z-index: 1;
 }
 .ql-container .ql-table-selection_line {
   display: none;
@@ -20,7 +20,7 @@
 .ql-container .ql-table-resize-line-row,
 .ql-container .ql-table-resize-line-col {
   position: absolute;
-  z-index: 10;
+  z-index: 0;
 }
 .ql-container .ql-table-resize-line-row::before,
 .ql-container .ql-table-resize-line-col::before,
@@ -30,7 +30,7 @@
   display: block;
   position: absolute;
   top: 0px;
-  z-index: 11;
+  z-index: 1;
 }
 .ql-container .ql-table-resize-line-row {
   height: 1px;
@@ -58,7 +58,7 @@
 }
 .ql-container .ql-table-resizer {
   position: absolute;
-  z-index: 10;
+  z-index: 0;
 }
 .ql-container .ql-table-resizer-row,
 .ql-container .ql-table-resizer-col {
@@ -92,7 +92,7 @@
   right: -2px;
   width: 2px;
   cursor: ew-resize;
-  z-index: 10;
+  z-index: 0;
 }
 .ql-container .ql-table-resizer .ql-table-col-separator::after {
   right: -6px;
@@ -108,7 +108,7 @@
   display: block;
   width: 8px;
   height: 100%;
-  z-index: 11;
+  z-index: 1;
 }
 .ql-container .ql-table-resizer .ql-table-row-wrapper {
   flex-direction: column;
@@ -125,7 +125,7 @@
   bottom: -2px;
   height: 2px;
   cursor: ns-resize;
-  z-index: 10;
+  z-index: 0;
 }
 .ql-container .ql-table-resizer .ql-table-row-separator::after {
   bottom: -6px;
@@ -141,7 +141,7 @@
   display: block;
   width: 100%;
   height: 8px;
-  z-index: 11;
+  z-index: 1;
 }
 .ql-container .ql-table-resizer-corner {
   position: absolute;
@@ -167,7 +167,7 @@
 }
 .ql-table-drag-line {
   position: fixed;
-  z-index: 10;
+  z-index: 0;
   background-color: #409eff;
 }
 .ql-table-drag-line.col {
@@ -180,7 +180,7 @@
 }
 .ql-table-menu {
   position: absolute;
-  z-index: 11;
+  z-index: 1;
   display: none;
   align-items: center;
   justify-content: center;

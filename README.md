@@ -222,3 +222,31 @@ class ScrollBlot extends ScrollOverride {
   // ...
 }
 ```
+
+## Other
+
+### Change internal constants variable
+
+you can change internal constants variable by importing `updateTableConstants` from `quill-table-up` and call it before `TableUp` registed.
+
+It helps to migrate from other table modules with the same data structure.
+
+[change variable demo](https://github.com/zzxming/quill-table-up/blob/master/docs/update-constants.js)
+
+If you change the `TableWrapperFormat` blot name, you also need to add new css style to make toolbar icon have correct style.
+
+```less
+.ql-toolbar {
+  // change 'table-up' to your new blot name
+  .ql-picker:not(.ql-color-picker):not(.ql-icon-picker).ql-table-up {
+    width: 28px;
+    .ql-picker-label {
+      padding: 2px 4px;
+      svg {
+        position: static;
+        margin-top: 0;
+      }
+    }
+  }
+}
+```

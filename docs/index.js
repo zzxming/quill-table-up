@@ -2,7 +2,7 @@ const Quill = window.Quill;
 const TableUp = window.TableUp.default;
 
 Quill.register({
-  'modules/tableUp': TableUp,
+  [`modules/${TableUp.moduleName}`]: TableUp,
 }, true);
 
 const quill1 = new Quill('#editor1', {
@@ -10,32 +10,31 @@ const quill1 = new Quill('#editor1', {
   theme: 'snow',
   modules: {
     toolbar: [
-      ['bold', 'italic', 'underline', 'strike'], // toggled buttons
+      ['bold', 'italic', 'underline', 'strike'],
       ['blockquote', 'code-block', 'code'],
       ['link', 'image', 'video', 'formula'],
-      [{ header: 1 }, { header: 2 }], // custom button values
       [{ list: 'ordered' }, { list: 'bullet' }, { list: 'check' }],
-      [{ script: 'sub' }, { script: 'super' }], // superscript/subscript
-      [{ indent: '-1' }, { indent: '+1' }], // outdent/indent
-      [{ direction: 'rtl' }], // text direction
+      [{ script: 'sub' }, { script: 'super' }],
+      [{ indent: '-1' }, { indent: '+1' }],
+      [{ direction: 'rtl' }],
 
-      [{ size: ['small', false, 'large', 'huge'] }], // custom dropdown
+      [{ size: ['small', false, 'large', 'huge'] }],
       [{ header: [1, 2, 3, 4, 5, 6, false] }],
-      [{ color: [] }, { background: [] }], // dropdown with defaults from theme
+      [{ color: [] }, { background: [] }],
       [{ font: [] }],
       [{ align: [] }],
       [{ [TableUp.toolName]: [] }],
       ['clean'],
     ],
-    tableUp: {
+    [TableUp.moduleName]: {
       full: false,
-      resizerSetOuter: true,
+      resizerSetOuter: false,
       selection: {
         selectColor: '#f40',
         tableMenu: {
           localstorageKey: 'used-color',
           tipText: true,
-          contextmenu: true,
+          contextmenu: false,
         },
       },
     },
@@ -47,32 +46,31 @@ const quill2 = new Quill('#editor2', {
   theme: 'snow',
   modules: {
     toolbar: [
-      ['bold', 'italic', 'underline', 'strike'], // toggled buttons
+      ['bold', 'italic', 'underline', 'strike'],
       ['blockquote', 'code-block', 'code'],
       ['link', 'image', 'video', 'formula'],
-      [{ header: 1 }, { header: 2 }], // custom button values
       [{ list: 'ordered' }, { list: 'bullet' }, { list: 'check' }],
-      [{ script: 'sub' }, { script: 'super' }], // superscript/subscript
-      [{ indent: '-1' }, { indent: '+1' }], // outdent/indent
-      [{ direction: 'rtl' }], // text direction
+      [{ script: 'sub' }, { script: 'super' }],
+      [{ indent: '-1' }, { indent: '+1' }],
+      [{ direction: 'rtl' }],
 
-      [{ size: ['small', false, 'large', 'huge'] }], // custom dropdown
+      [{ size: ['small', false, 'large', 'huge'] }],
       [{ header: [1, 2, 3, 4, 5, 6, false] }],
-      [{ color: [] }, { background: [] }], // dropdown with defaults from theme
+      [{ color: [] }, { background: [] }],
       [{ font: [] }],
       [{ align: [] }],
-      [{ 'table-up': [] }],
+      [{ [TableUp.toolName]: [] }],
       ['clean'],
     ],
-    tableUp: {
+    [TableUp.moduleName]: {
       full: true,
-      resizerSetOuter: false,
+      resizerSetOuter: true,
       selection: {
         selectColor: '#04f',
         tableMenu: {
           localstorageKey: 'used-color',
           tipText: true,
-          contextmenu: false,
+          contextmenu: true,
           tipTexts: {
             InsertTop: '向上插入一行',
             InsertRight: '向右插入一列',
@@ -406,15 +404,3 @@ quill2.setContents([
   { attributes: { 'table-up-cell-inner': { tableId: '8v36875pbr6', rowId: 'fow0uajprzw', colId: 'y0epsy6odnm', rowspan: 1, colspan: 1 } }, insert: '\n' },
   { insert: '\n' },
 ]);
-
-// quill1.on('editor-change', (name, range, oldRange) => {
-// if (name === 'selection-change' && range) {
-//   console.log(range);
-//   console.log(quill1.getLine(range.index)[0].domNode);
-// }
-// // console.log(quill.getLine(range.index + range.length)[0].domNode);
-// if (name === Quill.events.TEXT_CHANGE) {
-//   console.log(range, oldRange);
-//   console.log(quill1.history.stack);
-// }
-// });
