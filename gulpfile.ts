@@ -89,9 +89,9 @@ const buildTheme = async (isDev: boolean = false) => {
           );
         }),
       )
-      .pipe(dest(demoBundle));
+      .pipe(dest(distBundle));
   }
-  return bunlde.pipe(dest(distBundle));
+  return bunlde.pipe(dest(demoBundle));
 };
 
 const dev = () => {
