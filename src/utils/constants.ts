@@ -1,5 +1,5 @@
 export const blotName = {
-  container: 'container',
+  container: 'table-up-container',
   tableWrapper: 'table-up',
   tableMain: 'table-up-main',
   tableColgroup: 'table-up-colgroup',
@@ -10,8 +10,12 @@ export const blotName = {
   tableCellInner: 'table-up-cell-inner',
 } as const;
 
-export const tableColMinWidthPre = 5;
-export const tableColMinWidthPx = 26;
-export const tableRowMinWidthPx = 36;
+export const tableUpSize = {
+  colMinWidthPre: 5,
+  colMinWidthPx: 26,
+  rowMinHeightPx: 36,
+};
 
-export const AFTER_TABLE_RESIZE = 'after-table-resize';
+export const tableUpEvent = {
+  AFTER_TABLE_RESIZE: 'after-table-resize',
+};

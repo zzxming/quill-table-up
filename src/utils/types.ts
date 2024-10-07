@@ -88,3 +88,9 @@ export interface RelactiveRect {
 }
 
 export type Constructor<T = any, U extends Array<any> = any[]> = new (...args: U) => T;
+
+export interface TableConstantsData {
+  blotName: Record<string, string>;
+  tableUpSize: Record<string, number>;
+  tableUpEvent: Record<string, string>;
+};

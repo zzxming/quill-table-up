@@ -10,7 +10,6 @@ const BlockEmbed = Quill.import('blots/block/embed') as TypeParchment.BlotConstr
 
 export class ContainerFormat extends Container {
   static blotName: string = blotName.container;
-  static tagName = 'container';
   static scope = Parchment.Scope.BLOCK_BLOT;
 
   static allowedChildren?: TypeParchment.BlotConstructor[] = [Block, BlockEmbed, Container];

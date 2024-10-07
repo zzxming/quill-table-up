@@ -2,7 +2,7 @@ import type TableUp from '..';
 import type { TableResizeLineOptions } from '../utils';
 import Quill from 'quill';
 import { type TableCellFormat, TableRowFormat } from '../formats';
-import { AFTER_TABLE_RESIZE, blotName, findParentBlot, findParentBlots, tableColMinWidthPre, tableColMinWidthPx, tableRowMinWidthPx } from '../utils';
+import { blotName, findParentBlot, findParentBlots, tableUpEvent, tableUpSize } from '../utils';
 
 export class TableResizeLine {
   colResizer: HTMLElement;
@@ -76,7 +76,7 @@ export class TableResizeLine {
       if (tableMainBlot.full) {
         // max width = current col.width + next col.width
         // if current col is last. max width = current col.width
-        const minWidth = (tableColMinWidthPre / 100) * tableWidth;
+        const minWidth = (tableUpSize.colMinWidthPre / 100) * tableWidth;
         const maxRange = resX > rect.right
           ? cols[curColIndex + 1]
             ? cols[curColIndex + 1].domNode.getBoundingClientRect().right - minWidth
@@ -86,8 +86,8 @@ export class TableResizeLine {
         resX = Math.min(Math.max(resX, minRange), maxRange);
       }
       else {
-        if (resX - rect.x < tableColMinWidthPx) {
-          resX = rect.x + tableColMinWidthPx;
+        if (resX - rect.x < tableUpSize.colMinWidthPx) {
+          resX = rect.x + tableUpSize.colMinWidthPx;
         }
       }
       tipColBreak!.style.left = `${resX}px`;
@@ -102,7 +102,7 @@ export class TableResizeLine {
           // minus
           // if not the last col. add the reduced amount to the next col
           // if is the last col. add the reduced amount to the pre col
-          pre = Math.max(tableColMinWidthPre, pre);
+          pre = Math.max(tableUpSize.colMinWidthPre, pre);
           const last = oldWidthPre - pre;
           if (cols[curColIndex + 1]) {
             cols[curColIndex + 1].width = `${cols[curColIndex + 1].width + last}%`;
@@ -120,7 +120,7 @@ export class TableResizeLine {
           // the last col can't magnify. control last but one minus to magnify last col
           if (cols[curColIndex + 1]) {
             const totalWidthNextPre = oldWidthPre + cols[curColIndex + 1].width;
-            pre = Math.min(totalWidthNextPre - tableColMinWidthPre, pre);
+            pre = Math.min(totalWidthNextPre - tableUpSize.colMinWidthPre, pre);
             cols[curColIndex].width = `${pre}%`;
             cols[curColIndex + 1].width = `${totalWidthNextPre - pre}%`;
           }
@@ -141,7 +141,7 @@ export class TableResizeLine {
       document.removeEventListener('mousemove', handleMousemove);
       this.dragging = false;
       this.updateColResizer(tableCellBlot);
-      this.quill.emitter.emit(AFTER_TABLE_RESIZE);
+      this.quill.emitter.emit(tableUpEvent.AFTER_TABLE_RESIZE);
     };
     const handleMousedown = (e: MouseEvent) => {
       if (e.button !== 0) return;
@@ -200,8 +200,8 @@ export class TableResizeLine {
       e.preventDefault();
       const rect = tableCellBlot.parent.domNode.getBoundingClientRect();
       let resY = e.clientY;
-      if (resY - rect.y < tableRowMinWidthPx) {
-        resY = rect.y + tableRowMinWidthPx;
+      if (resY - rect.y < tableUpSize.rowMinHeightPx) {
+        resY = rect.y + tableUpSize.rowMinHeightPx;
       }
       tipRowBreak!.style.top = `${resY}px`;
       tipRowBreak!.dataset.w = String(resY - rect.y);
@@ -216,7 +216,7 @@ export class TableResizeLine {
       document.removeEventListener('mousemove', handleMousemove);
       this.dragging = false;
       this.updateRowResizer(tableCellBlot);
-      this.quill.emitter.emit(AFTER_TABLE_RESIZE);
+      this.quill.emitter.emit(tableUpEvent.AFTER_TABLE_RESIZE);
     };
     const handleMousedown = (e: MouseEvent) => {
       if (e.button !== 0) return;

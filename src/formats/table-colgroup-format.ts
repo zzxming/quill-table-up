@@ -1,7 +1,7 @@
 import type { Parchment as TypeParchment } from 'quill';
 import type { TableColValue, TableValue } from '../utils';
 import type { TableColFormat } from './table-col-format';
-import { blotName, tableColMinWidthPre } from '../utils';
+import { blotName, tableUpSize } from '../utils';
 import { ContainerFormat } from './container-format';
 import { TableMainFormat } from './table-main-format';
 
@@ -51,7 +51,7 @@ export class TableColgroupFormat extends ContainerFormat {
       const next = this.children.iterator();
       let cur: TableColFormat | null;
       while ((cur = next())) {
-        if (cur.width - tableCellInner.width >= tableColMinWidthPre) {
+        if (cur.width - tableCellInner.width >= tableUpSize.colMinWidthPre) {
           cur.width -= tableCellInner.width;
           break;
         }

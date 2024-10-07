@@ -94,6 +94,7 @@ export function mixinClass<
 
   return targetClass;
 };
+
 const viewportPadding = 8;
 export const limitDomInViewPort = (rect: { left: number; top: number; width: number; height: number }) => {
   let { left, top, width, height } = rect;

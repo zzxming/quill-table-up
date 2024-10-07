@@ -7,11 +7,11 @@ import type Keyboard from 'quill/modules/keyboard';
 import type Toolbar from 'quill/modules/toolbar';
 import type BaseTheme from 'quill/themes/base';
 import type Picker from 'quill/ui/picker';
-import type { TableCellValue, TableColValue, TableTextOptions, TableUpOptions } from './utils';
+import type { TableCellValue, TableColValue, TableConstantsData, TableTextOptions, TableUpOptions } from './utils';
 import Quill from 'quill';
-import { BlockOverride, BlockquoteOverride, CodeBlockOverride, HeaderOverride, ListItemOverride, ScrollOverride, TableBodyFormat, TableCellFormat, TableCellInnerFormat, TableColFormat, TableColgroupFormat, TableMainFormat, TableRowFormat, TableWrapperFormat } from './formats';
+import { BlockOverride, BlockquoteOverride, CodeBlockOverride, ContainerFormat, HeaderOverride, ListItemOverride, ScrollOverride, TableBodyFormat, TableCellFormat, TableCellInnerFormat, TableColFormat, TableColgroupFormat, TableMainFormat, TableRowFormat, TableWrapperFormat } from './formats';
 import { TableResize, TableResizeLine, TableSelection } from './modules';
-import { AFTER_TABLE_RESIZE, blotName, createSelectBox, debounce, findParentBlot, findParentBlots, isFunction, randomId, tableColMinWidthPre, tableColMinWidthPx } from './utils';
+import { blotName, createSelectBox, debounce, findParentBlot, findParentBlots, isFunction, randomId, tableUpEvent, tableUpSize } from './utils';
 
 const Delta = Quill.import('delta');
 const Break = Quill.import('blots/break') as TypeParchment.BlotConstructor;
@@ -52,7 +52,7 @@ interface QuillTheme extends BaseTheme {
 
 export class TableUp {
   static moduleName = 'tableUp';
-  static toolName = 'table-up';
+  static toolName: string = blotName.tableWrapper;
   static keyboradHandler = {
     'forbid remove table by backspace': {
       bindInHead: true,
@@ -150,6 +150,7 @@ export class TableUp {
     Quill.register({
       'blots/scroll': ScrollOverride,
       'blots/block': BlockOverride,
+      [`blots/${blotName.container}`]: ContainerFormat,
       'formats/header': HeaderOverride,
       'formats/list': ListItemOverride,
       'formats/blockquote': BlockquoteOverride,
@@ -279,7 +280,7 @@ export class TableUp {
     if (!this.options.resizerSetOuter) {
       this.tableResizerLine = new TableResizeLine(this, quill, this.options.resizeLine || {});
     }
-    this.quill.on(AFTER_TABLE_RESIZE, () => {
+    this.quill.on(tableUpEvent.AFTER_TABLE_RESIZE, () => {
       this.tableSelection && this.tableSelection.hideSelection();
     });
 
@@ -354,8 +355,8 @@ export class TableUp {
       const editorPaddingRight = Number.parseFloat(editorStyle.paddingRight);
       const editorInnerWidth = Number.parseFloat(editorStyle.width) - editorPaddingLeft - editorPaddingRight;
       const defaultColWidth = isFull
-        ? `${Math.max(100 / colIds.length, tableColMinWidthPre)}%`
-        : `${Math.max(editorInnerWidth / colIds.length, tableColMinWidthPx)}px`;
+        ? `${Math.max(100 / colIds.length, tableUpSize.colMinWidthPre)}%`
+        : `${Math.max(editorInnerWidth / colIds.length, tableUpSize.colMinWidthPx)}px`;
 
       if (!hasCol) {
         colDelta = colIds.reduce((colDelta, id) => {
@@ -1014,8 +1015,26 @@ export class TableUp {
     }
   }
 }
+
+export const updateTableConstants = (data: Partial<TableConstantsData>) => {
+  Object.assign(blotName, data.blotName || {});
+  Object.assign(tableUpSize, data.tableUpSize || {});
+  Object.assign(tableUpEvent, data.tableUpEvent || {});
+
+  TableUp.toolName = blotName.tableWrapper;
+  ContainerFormat.blotName = blotName.container;
+  TableWrapperFormat.blotName = blotName.tableWrapper;
+  TableMainFormat.blotName = blotName.tableMain;
+  TableColgroupFormat.blotName = blotName.tableColgroup;
+  TableColFormat.blotName = blotName.tableCol;
+  TableBodyFormat.blotName = blotName.tableBody;
+  TableRowFormat.blotName = blotName.tableRow;
+  TableCellFormat.blotName = blotName.tableCell;
+  TableCellInnerFormat.blotName = blotName.tableCellInner;
+};
+
 export default TableUp;
 export * from './formats';
 export * from './modules';
-export { AFTER_TABLE_RESIZE, blotName, findParentBlot, findParentBlots, randomId } from './utils';
+export { blotName, findParentBlot, findParentBlots, randomId, tableUpEvent, tableUpSize } from './utils';
 export * from './utils/types';
