@@ -162,8 +162,24 @@ export class TableCellInnerFormat extends ContainerFormat {
   insertBefore(blot: TypeParchment.Blot, ref?: TypeParchment.Blot | null) {
     if (blot.statics.blotName === this.statics.blotName) {
       const cellInnerBlot = blot as TableCellInnerFormat;
-      const cellInnerBlotValue = cellInnerBlot.formats()[this.statics.blotName];
-      const selfValue = this.formats()[this.statics.blotName];
+      const cellInnerBlotValue: Record<string, any> = {
+        tableId: cellInnerBlot.tableId,
+        rowId: cellInnerBlot.rowId,
+        colId: cellInnerBlot.colId,
+        rowspan: cellInnerBlot.rowspan,
+        colspan: cellInnerBlot.colspan,
+        backgroundColor: cellInnerBlot.backgroundColor,
+        height: cellInnerBlot.height,
+      };
+      const selfValue: Record<string, any> = {
+        tableId: this.tableId,
+        rowId: this.rowId,
+        colId: this.colId,
+        rowspan: this.rowspan,
+        colspan: this.colspan,
+        backgroundColor: this.backgroundColor,
+        height: this.height,
+      };
       const isSame = Object.entries(selfValue).every(([key, value]) => value === cellInnerBlotValue[key]);
 
       if (!isSame) {
@@ -188,7 +204,7 @@ export class TableCellInnerFormat extends ContainerFormat {
           }
         }
         // different rowId. split current row. move lines which after ref to next row
-        if (selfValue.rowId !== cellInnerBlotValue.rowId) {
+        if (this.rowId !== cellInnerBlot.rowId) {
           if (ref) {
             const index = ref.offset(selfRow);
             selfRow.split(index);
@@ -200,7 +216,10 @@ export class TableCellInnerFormat extends ContainerFormat {
           const newCell = cellInnerBlot.wrap(blotName.tableCell, cellInnerBlotValue);
           return selfRow.parent.insertBefore(newCell.wrap(blotName.tableRow, cellInnerBlotValue), selfRow.next);
         }
-        return selfRow.insertBefore(cellInnerBlot.wrap(blotName.tableCell, cellInnerBlotValue), ref ? selfCell : selfCell.next);
+        return selfRow.insertBefore(
+          cellInnerBlot.wrap(blotName.tableCell, cellInnerBlotValue),
+          ref ? selfCell : selfCell.next,
+        );
       }
       else {
         return this.parent.insertBefore(cellInnerBlot, this.next);
