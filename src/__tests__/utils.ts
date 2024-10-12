@@ -90,8 +90,12 @@ interface TableColDeltaValue {
   width: number;
   full?: 'true';
 };
+interface TableCreatorOptions {
+  isEmpty: boolean;
+}
 
-export const createTableDeltaOps = (row: number, col: number, full: boolean = true, width: number = 100) => {
+export const createTableDeltaOps = (row: number, col: number, full: boolean = true, width: number = 100, options: Partial<TableCreatorOptions> = {}) => {
+  const { isEmpty = false } = options;
   const table: any[] = [{ insert: '\n' }];
   for (const [i, _] of new Array(col).fill(0).entries()) {
     const value: TableColDeltaValue = { tableId: '1', colId: `${i + 1}`, width: 1 / col * 100 };
@@ -105,8 +109,10 @@ export const createTableDeltaOps = (row: number, col: number, full: boolean = tr
   }
   for (let i = 0; i < row; i++) {
     for (let j = 0; j < col; j++) {
+      if (!isEmpty) {
+        table.push({ insert: `${i * row + j + 1}` });
+      }
       table.push(
-        { insert: `${i * row + j + 1}` },
         {
           attributes: { 'table-up-cell-inner': { tableId: '1', rowId: i + 1, colId: j + 1, rowspan: 1, colspan: 1 } },
           insert: '\n',
@@ -117,9 +123,9 @@ export const createTableDeltaOps = (row: number, col: number, full: boolean = tr
   table.push({ insert: '\n' });
   return table;
 };
-export const createTable = async (row: number, col: number, full: boolean = true, width: number = 100) => {
+export const createTable = async (row: number, col: number, full: boolean = true, width: number = 100, options?: Partial<TableCreatorOptions>) => {
   const quill = createQuillWithTableModule(`<p><br></p>`);
-  quill.setContents(createTableDeltaOps(row, col, full, width));
+  quill.setContents(createTableDeltaOps(row, col, full, width, options));
   // set range for undo won't scrollSelectionIntoView
   quill.setSelection({ index: 0, length: 0 });
   await vi.runAllTimersAsync();
@@ -136,7 +142,8 @@ export const createTaleColHTML = (col: number, full: boolean = true, width: numb
     </colgroup>
   `;
 };
-export const createTableHTML = (row: number, col: number, full: boolean = true, width: number = 100) => {
+export const createTableHTML = (row: number, col: number, full: boolean = true, width: number = 100, options: Partial<TableCreatorOptions> = {}) => {
+  const { isEmpty = false } = options;
   return `
     <div>
       <table cellpadding="0" cellspacing="0" ${full ? 'data-full="true"' : ''}>
@@ -147,7 +154,11 @@ export const createTableHTML = (row: number, col: number, full: boolean = true, 
               <tr data-row-id="${i + 1}">
                 ${
                   new Array(col).fill(0).map((_, j) => `<td rowspan="1" colspan="1" data-row-id="${i + 1}" data-col-id="${j + 1}">
-                    <div data-rowspan="1" data-colspan="1" data-row-id="${i + 1}" data-col-id="${j + 1}"><p>${i * row + j + 1}</p></div>
+                    <div data-rowspan="1" data-colspan="1" data-row-id="${i + 1}" data-col-id="${j + 1}">
+                      <p>
+                        ${isEmpty ? '<br>' : i * row + j + 1}
+                      </p>
+                    </div>
                   </td>`).join('\n')
                 }
               </tr>
