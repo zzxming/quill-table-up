@@ -66,10 +66,10 @@ describe('table undo', () => {
     await vi.runAllTimersAsync();
     expect(quill.root).toEqualHTML(
       `
-      <p><br></p>
-      ${createTableHTML(3, 3)}
-      <p><br></p>
-    `,
+        <p><br></p>
+        ${createTableHTML(3, 3)}
+        <p><br></p>
+      `,
       { ignoreAttrs: ['class', 'style', 'data-table-id', 'contenteditable'] },
     );
   });
@@ -87,10 +87,10 @@ describe('table undo', () => {
     await vi.runAllTimersAsync();
     expect(quill.root).toEqualHTML(
       `
-      <p><br></p>
-      ${createTableHTML(4, 4)}
-      <p><br></p>
-    `,
+        <p><br></p>
+        ${createTableHTML(4, 4)}
+        <p><br></p>
+      `,
       { ignoreAttrs: ['class', 'style', 'data-table-id', 'contenteditable'] },
     );
   });

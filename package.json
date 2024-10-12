@@ -34,6 +34,7 @@
     "build": "gulp --require @esbuild-kit/cjs-loader",
     "dev": "gulp --require @esbuild-kit/cjs-loader dev",
     "test": "vitest",
+    "test:ui": "vitest --ui",
     "test:cover": "vitest --coverage"
   },
   "peerDependencies": {

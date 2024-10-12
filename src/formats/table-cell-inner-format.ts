@@ -142,6 +142,14 @@ export class TableCellInnerFormat extends ContainerFormat {
     }
     if (parent !== null && parent.statics.blotName !== blotName.tableCell) {
       this.wrap(blotName.tableCell, { tableId, colId, rowId, rowspan, colspan, backgroundColor, height });
+      // when insert delta like: [ { attributes: { 'table-up-cell-inner': { ... } }, insert: '\n' }, { attributes: { 'table-up-cell-inner': { ... } }, insert: '\n' }, ...]
+      // that delta will create dom like: <td><div></div></td>... . that means TableCellInner will be an empty cell without 'block'
+      // in this case, a 'block' should to inserted to makesure that the cell will not be remove
+      if (this.children.length === 0) {
+        const block = this.scroll.create('block') as TypeParchment.BlockBlot;
+        block.appendChild(this.scroll.create('break'));
+        this.appendChild(block);
+      }
     }
 
     if (this.children.length > 0 && this.next != null && this.checkMerge()) {
@@ -162,8 +170,24 @@ export class TableCellInnerFormat extends ContainerFormat {
   insertBefore(blot: TypeParchment.Blot, ref?: TypeParchment.Blot | null) {
     if (blot.statics.blotName === this.statics.blotName) {
       const cellInnerBlot = blot as TableCellInnerFormat;
-      const cellInnerBlotValue = cellInnerBlot.formats()[this.statics.blotName];
-      const selfValue = this.formats()[this.statics.blotName];
+      const cellInnerBlotValue: Record<string, any> = {
+        tableId: cellInnerBlot.tableId,
+        rowId: cellInnerBlot.rowId,
+        colId: cellInnerBlot.colId,
+        rowspan: cellInnerBlot.rowspan,
+        colspan: cellInnerBlot.colspan,
+        backgroundColor: cellInnerBlot.backgroundColor,
+        height: cellInnerBlot.height,
+      };
+      const selfValue: Record<string, any> = {
+        tableId: this.tableId,
+        rowId: this.rowId,
+        colId: this.colId,
+        rowspan: this.rowspan,
+        colspan: this.colspan,
+        backgroundColor: this.backgroundColor,
+        height: this.height,
+      };
       const isSame = Object.entries(selfValue).every(([key, value]) => value === cellInnerBlotValue[key]);
 
       if (!isSame) {
@@ -188,7 +212,7 @@ export class TableCellInnerFormat extends ContainerFormat {
           }
         }
         // different rowId. split current row. move lines which after ref to next row
-        if (selfValue.rowId !== cellInnerBlotValue.rowId) {
+        if (this.rowId !== cellInnerBlot.rowId) {
           if (ref) {
             const index = ref.offset(selfRow);
             selfRow.split(index);
@@ -200,7 +224,10 @@ export class TableCellInnerFormat extends ContainerFormat {
           const newCell = cellInnerBlot.wrap(blotName.tableCell, cellInnerBlotValue);
           return selfRow.parent.insertBefore(newCell.wrap(blotName.tableRow, cellInnerBlotValue), selfRow.next);
         }
-        return selfRow.insertBefore(cellInnerBlot.wrap(blotName.tableCell, cellInnerBlotValue), ref ? selfCell : selfCell.next);
+        return selfRow.insertBefore(
+          cellInnerBlot.wrap(blotName.tableCell, cellInnerBlotValue),
+          ref ? selfCell : selfCell.next,
+        );
       }
       else {
         return this.parent.insertBefore(cellInnerBlot, this.next);

@@ -246,4 +246,18 @@ describe('set contents', () => {
       { ignoreAttrs: ['class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
     );
   });
+
+  it('should display an empty table', async () => {
+    const quill = createQuillWithTableModule(`<p><br></p>`);
+    quill.setContents(createTableDeltaOps(2, 2, true, 100, { isEmpty: true }));
+    await vi.runAllTimersAsync();
+    expect(quill.root).toEqualHTML(
+      `
+        <p><br></p>
+        ${createTableHTML(2, 2, true, 100, { isEmpty: true })}
+        <p><br></p>
+      `,
+      { ignoreAttrs: ['class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
+    );
+  });
 });
