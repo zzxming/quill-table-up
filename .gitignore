@@ -3,3 +3,6 @@ node_modules
 coverage
 
 .eslintcache
+
+docs/dev.*
+docs/*.css
