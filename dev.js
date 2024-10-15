@@ -1871,10 +1871,244 @@
         }
     }
 
-    class TableResize {
+    class TableResizeCommon {
+        quill;
+        colIndex = -1;
+        tableMain;
+        dragging = false;
+        dragColBreak = null;
+        handleColMouseUpFunc = this.handleColMouseUp.bind(this);
+        handleColMouseMoveFunc = this.handleColMouseMove.bind(this);
+        handleColMouseDownFunc = this.handleColMouseDown.bind(this);
+        rowIndex = -1;
+        dragRowBreak = null;
+        handleRowMouseUpFunc = this.handleRowMouseUp.bind(this);
+        handleRowMouseMoveFunc = this.handleRowMouseMove.bind(this);
+        handleRowMouseDownFunc = this.handleRowMouseDown.bind(this);
+        constructor(quill) {
+            this.quill = quill;
+        }
+        findCurrentColIndex(_e) {
+            return -1;
+        }
+        colWidthChange(_i, _w, _isFull) { }
+        handleColMouseUp() {
+            if (!this.dragColBreak || !this.tableMain || this.colIndex === -1)
+                return;
+            const cols = this.tableMain.getCols();
+            const w = Number.parseInt(this.dragColBreak.dataset.w);
+            const isFull = this.tableMain.full;
+            if (isFull) {
+                let pre = (w / this.tableMain.domNode.getBoundingClientRect().width) * 100;
+                const oldWidthPre = cols[this.colIndex].width;
+                if (pre < oldWidthPre) {
+                    // minus
+                    // if not the last col. add the reduced amount to the next col
+                    // if is the last col. add the reduced amount to the pre col
+                    pre = Math.max(tableUpSize.colMinWidthPre, pre);
+                    if (cols[this.colIndex + 1] || cols[this.colIndex - 1]) {
+                        const i = cols[this.colIndex + 1] ? this.colIndex + 1 : this.colIndex - 1;
+                        const changeTableCol = cols[i];
+                        const resultWidth = changeTableCol.width + oldWidthPre - pre;
+                        changeTableCol.width = `${resultWidth}%`;
+                        this.colWidthChange(i, resultWidth, isFull);
+                    }
+                    else {
+                        pre = 100;
+                    }
+                    cols[this.colIndex].width = `${pre}%`;
+                    this.colWidthChange(this.colIndex, pre, isFull);
+                }
+                else {
+                    // magnify col
+                    // the last col can't magnify. control last but one minus to magnify last col
+                    if (cols[this.colIndex + 1]) {
+                        const totalWidthNextPre = oldWidthPre + cols[this.colIndex + 1].width;
+                        pre = Math.min(totalWidthNextPre - tableUpSize.colMinWidthPre, pre);
+                        cols[this.colIndex].width = `${pre}%`;
+                        this.colWidthChange(this.colIndex, pre, isFull);
+                        cols[this.colIndex + 1].width = `${totalWidthNextPre - pre}%`;
+                        this.colWidthChange(this.colIndex + 1, totalWidthNextPre - pre, isFull);
+                    }
+                }
+            }
+            else {
+                this.tableMain.domNode.style.width = `${Number.parseFloat(this.tableMain.domNode.style.width)
+                - cols[this.colIndex].domNode.getBoundingClientRect().width
+                + w}px`;
+                cols[this.colIndex].width = `${w}px`;
+                this.colWidthChange(this.colIndex, w, isFull);
+            }
+            document.body.removeChild(this.dragColBreak);
+            this.dragColBreak = null;
+            document.removeEventListener('mouseup', this.handleColMouseUpFunc);
+            document.removeEventListener('mousemove', this.handleColMouseMoveFunc);
+            this.dragging = false;
+            this.quill.emitter.emit(tableUpEvent.AFTER_TABLE_RESIZE);
+        }
+        ;
+        handleColMouseMove(e) {
+            e.preventDefault();
+            if (!this.dragColBreak || !this.tableMain || this.colIndex === -1)
+                return;
+            const cols = this.tableMain.getCols();
+            const rect = cols[this.colIndex].domNode.getBoundingClientRect();
+            const tableRect = this.tableMain.domNode.getBoundingClientRect();
+            let resX = e.clientX;
+            if (this.tableMain.full) {
+                // max width = current col.width + next col.width
+                // if current col is last. max width = current col.width
+                const minWidth = (tableUpSize.colMinWidthPre / 100) * tableRect.width;
+                const maxRange = resX > rect.right
+                    ? cols[this.colIndex + 1]
+                        ? Math.max(cols[this.colIndex + 1].domNode.getBoundingClientRect().right - minWidth, rect.left + minWidth)
+                        : tableRect.right
+                    : Infinity;
+                const minRange = rect.x + minWidth;
+                resX = Math.min(Math.max(resX, minRange), maxRange);
+            }
+            else {
+                if (resX - rect.x < tableUpSize.colMinWidthPx) {
+                    resX = rect.x + tableUpSize.colMinWidthPx;
+                }
+            }
+            this.dragColBreak.style.left = `${resX}px`;
+            this.dragColBreak.dataset.w = String(resX - rect.x);
+            return {
+                left: resX,
+                width: resX - rect.x,
+            };
+        }
+        ;
+        handleColMouseDown(e) {
+            if (e.button !== 0)
+                return;
+            e.preventDefault();
+            if (!this.tableMain)
+                return;
+            // set drag init width
+            const cols = this.tableMain.getCols();
+            const tableMainRect = this.tableMain.domNode.getBoundingClientRect();
+            const fullWidth = tableMainRect.width;
+            this.colIndex = this.findCurrentColIndex(e);
+            if (this.colIndex === -1)
+                return;
+            const colWidthAttr = cols[this.colIndex].width;
+            const width = this.tableMain.full ? colWidthAttr / 100 * fullWidth : colWidthAttr;
+            // if the column already smaller than min width, don't allow drag
+            if (this.tableMain.full) {
+                if (colWidthAttr < tableUpSize.colMinWidthPre) {
+                    return;
+                }
+            }
+            else {
+                if (width < tableUpSize.colMinWidthPx) {
+                    return;
+                }
+            }
+            document.addEventListener('mouseup', this.handleColMouseUpFunc);
+            document.addEventListener('mousemove', this.handleColMouseMoveFunc);
+            this.dragging = true;
+            const divDom = document.createElement('div');
+            divDom.classList.add('ql-table-drag-line');
+            divDom.classList.add('col');
+            divDom.dataset.w = String(width);
+            const styleValue = {
+                top: tableMainRect.y,
+                left: e.clientX,
+                height: tableMainRect.height,
+            };
+            Object.assign(divDom.style, {
+                top: `${styleValue.top}px`,
+                left: `${styleValue.left}px`,
+                height: `${styleValue.height}px`,
+            });
+            const appendTo = document.body;
+            appendTo.appendChild(divDom);
+            if (this.dragColBreak)
+                appendTo.removeChild(this.dragColBreak);
+            this.dragColBreak = divDom;
+            return styleValue;
+        }
+        ;
+        findCurrentRowIndex(_e) {
+            return -1;
+        }
+        rowHeightChange(_i, _h) { }
+        handleRowMouseUp() {
+            if (!this.tableMain || !this.dragRowBreak || this.rowIndex === -1)
+                return;
+            const h = Number.parseInt(this.dragRowBreak.dataset.h);
+            const rows = this.tableMain.getRows();
+            rows[this.rowIndex].setHeight(`${h}px`);
+            this.rowHeightChange(this.rowIndex, h);
+            document.body.removeChild(this.dragRowBreak);
+            this.dragRowBreak = null;
+            document.removeEventListener('mouseup', this.handleRowMouseUpFunc);
+            document.removeEventListener('mousemove', this.handleRowMouseMoveFunc);
+            this.dragging = false;
+            this.quill.emitter.emit(tableUpEvent.AFTER_TABLE_RESIZE);
+        }
+        handleRowMouseMove(e) {
+            if (!this.tableMain || !this.dragRowBreak || this.rowIndex === -1)
+                return;
+            e.preventDefault();
+            const rows = this.tableMain.getRows();
+            const rect = rows[this.rowIndex].domNode.getBoundingClientRect();
+            let resY = e.clientY;
+            if (resY - rect.y < tableUpSize.rowMinHeightPx) {
+                resY = rect.y + tableUpSize.rowMinHeightPx;
+            }
+            this.dragRowBreak.style.top = `${resY}px`;
+            this.dragRowBreak.dataset.h = String(resY - rect.y);
+            return {
+                top: resY,
+                height: resY - rect.y,
+            };
+        }
+        handleRowMouseDown(e) {
+            if (e.button !== 0)
+                return;
+            e.preventDefault();
+            if (!this.tableMain)
+                return;
+            this.rowIndex = this.findCurrentRowIndex(e);
+            if (this.rowIndex === -1)
+                return;
+            this.dragging = true;
+            document.addEventListener('mouseup', this.handleRowMouseUpFunc);
+            document.addEventListener('mousemove', this.handleRowMouseMoveFunc);
+            const rows = this.tableMain.getRows();
+            // set drag init width
+            const height = rows[this.rowIndex].domNode.getBoundingClientRect().height;
+            const tableMainRect = this.tableMain?.domNode.getBoundingClientRect();
+            const divDom = document.createElement('div');
+            divDom.classList.add('ql-table-drag-line');
+            divDom.classList.add('row');
+            divDom.dataset.h = String(height);
+            const styleValue = {
+                top: e.clientY,
+                left: tableMainRect.x,
+                width: tableMainRect.width,
+            };
+            Object.assign(divDom.style, {
+                top: `${styleValue.top}px`,
+                left: `${styleValue.left}px`,
+                width: `${styleValue.width}px`,
+            });
+            const appendTo = document.body;
+            appendTo.appendChild(divDom);
+            if (this.dragRowBreak)
+                appendTo.removeChild(this.dragRowBreak);
+            this.dragRowBreak = divDom;
+            return styleValue;
+        }
+        ;
+    }
+
+    class TableResize extends TableResizeCommon {
         tableModule;
         table;
-        quill;
         options;
         root;
         tableMain;
@@ -1886,9 +2120,9 @@
         colHeadWrapper = null;
         scrollHandler = [];
         constructor(tableModule, table, quill, options) {
+            super(quill);
             this.tableModule = tableModule;
             this.table = table;
-            this.quill = quill;
             this.options = this.resolveOptions(options);
             this.tableMain = Quill.find(this.table);
             if (!this.tableMain)
@@ -1911,7 +2145,7 @@
             dom.addEventListener('scroll', handle);
             this.scrollHandler.push([dom, handle]);
         }
-        handleResizerHeader = (isX, e) => {
+        handleResizerHeader(isX, e) {
             const { clientX, clientY } = e;
             const tableRect = this.table.getBoundingClientRect();
             if (this.tableModule.tableSelection) {
@@ -1919,188 +2153,67 @@
                 tableSelection.selectedTds = tableSelection.computeSelectedTds({ x: clientX, y: clientY }, { x: isX ? tableRect.right : clientX, y: isX ? clientY : tableRect.bottom });
                 tableSelection.showSelection();
             }
-        };
+        }
+        ;
+        findCurrentColIndex(e) {
+            return Array.from(this.root.getElementsByClassName('ql-table-col-separator')).indexOf(e.target);
+        }
+        colWidthChange(i, w, isFull) {
+            const tableColHeads = Array.from(this.root.getElementsByClassName('ql-table-col-header'));
+            tableColHeads[i].style.width = `${w}${isFull ? '%' : 'px'}`;
+        }
+        handleColMouseDownFunc = function (e) {
+            const value = this.handleColMouseDown(e);
+            if (value) {
+                Object.assign(this.dragColBreak.style, {
+                    top: `${value.top - this.options.size}px`,
+                    left: `${value.left}px`,
+                    height: `${value.height + this.options.size}px`,
+                });
+            }
+            return value;
+        }.bind(this);
         bindColEvents() {
-            let tipColBreak = null;
-            let curColIndex = -1;
             const tableColHeads = Array.from(this.root.getElementsByClassName('ql-table-col-header'));
             const tableColHeadSeparators = Array.from(this.root.getElementsByClassName('ql-table-col-separator'));
-            const appendTo = document.body;
-            const handleMousemove = (e) => {
-                e.preventDefault();
-                const rect = tableColHeads[curColIndex].getBoundingClientRect();
-                const tableWidth = this.tableMain.domNode.getBoundingClientRect().width;
-                let resX = e.clientX;
-                if (this.tableMain.full) {
-                    // max width = current col.width + next col.width
-                    // if current col is last. max width = current col.width
-                    const minWidth = (tableUpSize.colMinWidthPre / 100) * tableWidth;
-                    const maxRange = resX > rect.right
-                        ? tableColHeads[curColIndex + 1]
-                            ? tableColHeads[curColIndex + 1].getBoundingClientRect().right - minWidth
-                            : rect.right - minWidth
-                        : Infinity;
-                    const minRange = rect.x + minWidth;
-                    resX = Math.min(Math.max(resX, minRange), maxRange);
-                }
-                else {
-                    if (resX - rect.x < tableUpSize.colMinWidthPx) {
-                        resX = rect.x + tableUpSize.colMinWidthPx;
-                    }
-                }
-                tipColBreak.style.left = `${resX}px`;
-                tipColBreak.dataset.w = String(resX - rect.x);
-            };
-            const handleMouseup = () => {
-                const w = Number.parseInt(tipColBreak.dataset.w);
-                if (this.tableMain.full) {
-                    let pre = (w / this.tableMain.domNode.getBoundingClientRect().width) * 100;
-                    const oldWidthPre = this.tableCols[curColIndex].width;
-                    if (pre < oldWidthPre) {
-                        // minus
-                        // if not the last col. add the reduced amount to the next col
-                        // if is the last col. add the reduced amount to the pre col
-                        pre = Math.max(tableUpSize.colMinWidthPre, pre);
-                        const last = oldWidthPre - pre;
-                        if (this.tableCols[curColIndex + 1]) {
-                            tableColHeads[curColIndex + 1].style.width = `${this.tableCols[curColIndex + 1].width + last}%`;
-                            this.tableCols[curColIndex + 1].width = `${this.tableCols[curColIndex + 1].width + last}%`;
-                        }
-                        else if (this.tableCols[curColIndex - 1]) {
-                            tableColHeads[curColIndex - 1].style.width = `${this.tableCols[curColIndex - 1].width + last}%`;
-                            this.tableCols[curColIndex - 1].width = `${this.tableCols[curColIndex - 1].width + last}%`;
-                        }
-                        else {
-                            pre = 100;
-                        }
-                        tableColHeads[curColIndex].style.width = `${pre}%`;
-                        this.tableCols[curColIndex].width = `${pre}%`;
-                    }
-                    else {
-                        // magnify col
-                        // the last col can't magnify. control last but one minus to magnify last col
-                        if (this.tableCols[curColIndex + 1]) {
-                            const totalWidthNextPre = oldWidthPre + this.tableCols[curColIndex + 1].width;
-                            pre = Math.min(totalWidthNextPre - tableUpSize.colMinWidthPre, pre);
-                            this.tableCols[curColIndex].width = `${pre}%`;
-                            this.tableCols[curColIndex + 1].width = `${totalWidthNextPre - pre}%`;
-                            tableColHeads[curColIndex].style.width = `${pre}%`;
-                            tableColHeads[curColIndex + 1].style.width = `${totalWidthNextPre - pre}%`;
-                        }
-                    }
-                }
-                else {
-                    this.tableMain.domNode.style.width = `${Number.parseFloat(this.tableMain.domNode.style.width)
-                    - Number.parseFloat(tableColHeads[curColIndex].style.width)
-                    + w}px`;
-                    tableColHeads[curColIndex].style.width = `${w}px`;
-                    this.tableCols[curColIndex].width = `${w}px`;
-                    this.colHeadWrapper.style.width = `${this.tableMain.colWidthFillTable()}px`;
-                }
-                appendTo.removeChild(tipColBreak);
-                tipColBreak = null;
-                curColIndex = -1;
-                document.removeEventListener('mouseup', handleMouseup);
-                document.removeEventListener('mousemove', handleMousemove);
-                this.quill.emitter.emit(tableUpEvent.AFTER_TABLE_RESIZE);
-            };
-            const handleMousedown = (i, e) => {
-                e.preventDefault();
-                document.addEventListener('mouseup', handleMouseup);
-                document.addEventListener('mousemove', handleMousemove);
-                curColIndex = i;
-                const divDom = document.createElement('div');
-                divDom.classList.add('ql-table-drag-line');
-                divDom.classList.add('col');
-                // set drag init width
-                const fullWidth = this.tableMain.domNode.getBoundingClientRect().width;
-                const colWidthAttr = Number.parseFloat(tableColHeads[curColIndex].style.width);
-                const width = this.tableMain.full ? colWidthAttr / 100 * fullWidth : colWidthAttr;
-                divDom.dataset.w = String(width);
-                const tableMainRect = this.table.getBoundingClientRect();
-                Object.assign(divDom.style, {
-                    top: `${tableMainRect.y - this.options.size}px`,
-                    left: `${e.clientX}px`,
-                    height: `${tableMainRect.height + this.options.size}px`,
-                });
-                appendTo.appendChild(divDom);
-                if (tipColBreak)
-                    appendTo.removeChild(tipColBreak);
-                tipColBreak = divDom;
-            };
             this.addScrollEvent(this.tableWrapper.domNode, () => {
                 this.colHeadWrapper.scrollLeft = this.tableWrapper.domNode.scrollLeft;
             });
             for (const el of tableColHeads) {
                 el.addEventListener('click', this.handleResizerHeader.bind(this, false));
             }
-            for (const [i, el] of tableColHeadSeparators.entries()) {
-                el.addEventListener('mousedown', handleMousedown.bind(this, i));
+            for (const el of tableColHeadSeparators) {
+                el.addEventListener('mousedown', this.handleColMouseDownFunc);
                 // prevent drag
-                el.addEventListener('dragstart', (e) => {
-                    e.preventDefault();
-                });
+                el.addEventListener('dragstart', e => e.preventDefault());
             }
         }
+        findCurrentRowIndex(e) {
+            return Array.from(this.root.getElementsByClassName('ql-table-row-separator')).indexOf(e.target);
+        }
+        rowHeightChange(i, h) {
+            const tableRowHeads = Array.from(this.root.getElementsByClassName('ql-table-row-header'));
+            tableRowHeads[i].style.height = `${h}px`;
+        }
+        handleRowMouseDownFunc = function (e) {
+            const value = this.handleRowMouseDown(e);
+            if (value) {
+                Object.assign(this.dragRowBreak.style, {
+                    top: `${value.top}px`,
+                    left: `${value.left - this.options.size}px`,
+                    width: `${value.width + this.options.size}px`,
+                });
+            }
+            return value;
+        }.bind(this);
         bindRowEvents() {
-            let tipRowBreak = null;
-            let curRowIndex = -1;
             const tableRowHeads = Array.from(this.root.getElementsByClassName('ql-table-row-header'));
             const tableRowHeadSeparators = Array.from(this.root.getElementsByClassName('ql-table-row-separator'));
-            const appendTo = document.body;
-            const handleMousemove = (e) => {
-                e.preventDefault();
-                const rect = tableRowHeads[curRowIndex].getBoundingClientRect();
-                let resY = e.clientY;
-                if (resY - rect.y < tableUpSize.rowMinHeightPx) {
-                    resY = rect.y + tableUpSize.rowMinHeightPx;
-                }
-                tipRowBreak.style.top = `${resY}px`;
-                tipRowBreak.dataset.w = String(resY - rect.y);
-            };
-            const handleMouseup = () => {
-                const w = `${tipRowBreak.dataset.w}px`;
-                this.tableRows[curRowIndex].setHeight(w);
-                const tableMainRect = this.table.getBoundingClientRect();
-                this.rowHeadWrapper.style.height = `${tableMainRect.height}px`;
-                for (const [i, row] of this.tableRows.entries()) {
-                    const rect = row.domNode.getBoundingClientRect();
-                    tableRowHeads[i].style.height = `${rect.height}px`;
-                }
-                appendTo.removeChild(tipRowBreak);
-                tipRowBreak = null;
-                curRowIndex = -1;
-                document.removeEventListener('mouseup', handleMouseup);
-                document.removeEventListener('mousemove', handleMousemove);
-                this.quill.emitter.emit(tableUpEvent.AFTER_TABLE_RESIZE);
-            };
-            const handleMousedown = (i, e) => {
-                e.preventDefault();
-                document.addEventListener('mouseup', handleMouseup);
-                document.addEventListener('mousemove', handleMousemove);
-                curRowIndex = i;
-                const divDom = document.createElement('div');
-                divDom.classList.add('ql-table-drag-line');
-                divDom.classList.add('row');
-                // set drag init width
-                const height = tableRowHeads[curRowIndex].getBoundingClientRect().height;
-                divDom.dataset.w = String(height);
-                const tableMainRect = this.table.getBoundingClientRect();
-                Object.assign(divDom.style, {
-                    top: `${e.clientY}px`,
-                    left: `${tableMainRect.x - this.options.size}px`,
-                    width: `${tableMainRect.width + this.options.size}px`,
-                });
-                appendTo.appendChild(divDom);
-                if (tipRowBreak)
-                    appendTo.removeChild(tipRowBreak);
-                tipRowBreak = divDom;
-            };
             for (const el of tableRowHeads) {
                 el.addEventListener('click', this.handleResizerHeader.bind(this, true));
             }
-            for (const [i, el] of tableRowHeadSeparators.entries()) {
-                el.addEventListener('mousedown', handleMousedown.bind(this, i));
+            for (const el of tableRowHeadSeparators) {
+                el.addEventListener('mousedown', this.handleRowMouseDownFunc);
                 // prevent drag
                 el.addEventListener('dragstart', e => e.preventDefault());
             }
@@ -2199,17 +2312,19 @@
         }
     }
 
-    class TableResizeLine {
+    class TableResizeLine extends TableResizeCommon {
         tableModule;
-        quill;
         colResizer;
         rowResizer;
         currentTableCell;
         dragging = false;
         options;
+        curColIndex = -1;
+        curRowIndex = -1;
+        tableCellBlot;
         constructor(tableModule, quill, options) {
+            super(quill);
             this.tableModule = tableModule;
-            this.quill = quill;
             this.options = this.resolveOptions(options);
             this.colResizer = this.tableModule.addContainer('ql-table-resize-line-col');
             this.rowResizer = this.tableModule.addContainer('ql-table-resize-line-row');
@@ -2225,11 +2340,12 @@
                 if (this.currentTableCell !== tableCell) {
                     this.showResizer();
                     this.currentTableCell = tableCell;
-                    const tableMainBlot = findParentBlot(tableCellBlot, blotName.tableMain);
-                    if (tableMainBlot.getCols().length > 0) {
-                        this.updateColResizer(tableCellBlot);
+                    this.tableCellBlot = tableCellBlot;
+                    this.tableMain = findParentBlot(tableCellBlot, blotName.tableMain);
+                    if (this.tableMain.getCols().length > 0) {
+                        this.updateColResizer();
                     }
-                    this.updateRowResizer(tableCellBlot);
+                    this.updateRowResizer();
                 }
             });
             this.quill.on(Quill.events.TEXT_CHANGE, () => {
@@ -2247,10 +2363,20 @@
             }
             return null;
         }
-        updateColResizer(tableCellBlot) {
+        findCurrentColIndex() {
+            return this.curColIndex;
+        }
+        handleColMouseUpFunc = function () {
+            this.handleColMouseUp();
+            this.updateColResizer();
+        }.bind(this);
+        updateColResizer() {
+            if (!this.tableMain || !this.tableCellBlot)
+                return;
+            const tableCellBlot = this.tableCellBlot;
             this.tableModule.toolBox.removeChild(this.colResizer);
             this.colResizer = this.tableModule.addContainer('ql-table-resize-line-col');
-            const [tableBodyBlot, tableMainBlot] = findParentBlots(tableCellBlot, [blotName.tableBody, blotName.tableMain]);
+            const [tableBodyBlot] = findParentBlots(tableCellBlot, [blotName.tableBody]);
             const tableBodyect = tableBodyBlot.domNode.getBoundingClientRect();
             const tableCellRect = tableCellBlot.domNode.getBoundingClientRect();
             const rootRect = this.quill.root.getBoundingClientRect();
@@ -2259,120 +2385,31 @@
                 left: `${tableCellRect.right - rootRect.x}px`,
                 height: `${tableBodyect.height}px`,
             });
-            const cols = tableMainBlot.getCols();
-            const curColIndex = cols.findIndex(col => col.colId === tableCellBlot.colId);
-            let tipColBreak;
-            const handleMousemove = (e) => {
-                e.preventDefault();
-                const rect = cols[curColIndex].domNode.getBoundingClientRect();
-                const tableWidth = tableMainBlot.domNode.getBoundingClientRect().width;
-                let resX = e.clientX;
-                if (tableMainBlot.full) {
-                    // max width = current col.width + next col.width
-                    // if current col is last. max width = current col.width
-                    const minWidth = (tableUpSize.colMinWidthPre / 100) * tableWidth;
-                    const maxRange = resX > rect.right
-                        ? cols[curColIndex + 1]
-                            ? cols[curColIndex + 1].domNode.getBoundingClientRect().right - minWidth
-                            : rect.right - minWidth
-                        : Infinity;
-                    const minRange = rect.x + minWidth;
-                    resX = Math.min(Math.max(resX, minRange), maxRange);
-                }
-                else {
-                    if (resX - rect.x < tableUpSize.colMinWidthPx) {
-                        resX = rect.x + tableUpSize.colMinWidthPx;
-                    }
-                }
-                tipColBreak.style.left = `${resX}px`;
-                tipColBreak.dataset.w = String(resX - rect.x);
-            };
-            const handleMouseup = () => {
-                const w = Number.parseInt(tipColBreak.dataset.w);
-                if (tableMainBlot.full) {
-                    let pre = (w / tableMainBlot.domNode.getBoundingClientRect().width) * 100;
-                    const oldWidthPre = cols[curColIndex].width;
-                    if (pre < oldWidthPre) {
-                        // minus
-                        // if not the last col. add the reduced amount to the next col
-                        // if is the last col. add the reduced amount to the pre col
-                        pre = Math.max(tableUpSize.colMinWidthPre, pre);
-                        const last = oldWidthPre - pre;
-                        if (cols[curColIndex + 1]) {
-                            cols[curColIndex + 1].width = `${cols[curColIndex + 1].width + last}%`;
-                        }
-                        else if (cols[curColIndex - 1]) {
-                            cols[curColIndex - 1].width = `${cols[curColIndex - 1].width + last}%`;
-                        }
-                        else {
-                            pre = 100;
-                        }
-                        cols[curColIndex].width = `${pre}%`;
-                    }
-                    else {
-                        // magnify col
-                        // the last col can't magnify. control last but one minus to magnify last col
-                        if (cols[curColIndex + 1]) {
-                            const totalWidthNextPre = oldWidthPre + cols[curColIndex + 1].width;
-                            pre = Math.min(totalWidthNextPre - tableUpSize.colMinWidthPre, pre);
-                            cols[curColIndex].width = `${pre}%`;
-                            cols[curColIndex + 1].width = `${totalWidthNextPre - pre}%`;
-                        }
-                    }
-                }
-                else {
-                    tableMainBlot.domNode.style.width = `${Number.parseFloat(tableMainBlot.domNode.style.width)
-                    - cols[curColIndex].domNode.getBoundingClientRect().width
-                    + w}px`;
-                    cols[curColIndex].width = `${w}px`;
-                }
-                document.body.removeChild(tipColBreak);
-                tipColBreak = null;
-                document.removeEventListener('mouseup', handleMouseup);
-                document.removeEventListener('mousemove', handleMousemove);
-                this.dragging = false;
-                this.updateColResizer(tableCellBlot);
-                this.quill.emitter.emit(tableUpEvent.AFTER_TABLE_RESIZE);
-            };
-            const handleMousedown = (e) => {
-                if (e.button !== 0)
-                    return;
-                e.preventDefault();
-                this.dragging = true;
-                document.addEventListener('mouseup', handleMouseup);
-                document.addEventListener('mousemove', handleMousemove);
-                const divDom = document.createElement('div');
-                divDom.classList.add('ql-table-drag-line');
-                divDom.classList.add('col');
-                // set drag init width
-                const tableMainRect = tableMainBlot.domNode.getBoundingClientRect();
-                const fullWidth = tableMainRect.width;
-                const colWidthAttr = cols[curColIndex].width;
-                const width = tableMainBlot.full ? colWidthAttr / 100 * fullWidth : colWidthAttr;
-                divDom.dataset.w = String(width);
-                Object.assign(divDom.style, {
-                    top: `${tableMainRect.y}px`,
-                    left: `${e.clientX}px`,
-                    height: `${tableMainRect.height}px`,
-                });
-                document.body.appendChild(divDom);
-                if (tipColBreak)
-                    document.body.removeChild(tipColBreak);
-                tipColBreak = divDom;
-            };
-            this.colResizer.addEventListener('mousedown', handleMousedown);
+            const cols = this.tableMain.getCols();
+            this.curColIndex = cols.findIndex(col => col.colId === tableCellBlot.colId);
+            this.colResizer.addEventListener('mousedown', this.handleColMouseDownFunc);
             this.colResizer.addEventListener('dragstart', (e) => {
                 e.preventDefault();
             });
         }
-        updateRowResizer(tableCellBlot) {
+        findCurrentRowIndex() {
+            return this.curRowIndex;
+        }
+        handleRowMouseUpFunc = function () {
+            this.handleRowMouseUp();
+            this.updateRowResizer();
+        }.bind(this);
+        updateRowResizer() {
+            if (!this.tableMain || !this.tableCellBlot)
+                return;
+            const tableCellBlot = this.tableCellBlot;
             this.tableModule.toolBox.removeChild(this.rowResizer);
             this.rowResizer = this.tableModule.addContainer('ql-table-resize-line-row');
-            const row = tableCellBlot.parent;
-            if (!(row instanceof TableRowFormat)) {
+            const currentRow = tableCellBlot.parent;
+            if (!(currentRow instanceof TableRowFormat)) {
                 return;
             }
-            const [tableBodyBlot, tableMainBlot] = findParentBlots(tableCellBlot, [blotName.tableBody, blotName.tableMain]);
+            const [tableBodyBlot] = findParentBlots(tableCellBlot, [blotName.tableBody]);
             const tableBodynRect = tableBodyBlot.domNode.getBoundingClientRect();
             const tableCellRect = tableCellBlot.domNode.getBoundingClientRect();
             const rootRect = this.quill.root.getBoundingClientRect();
@@ -2381,53 +2418,9 @@
                 left: `${tableBodynRect.x - rootRect.x}px`,
                 width: `${tableBodynRect.width}px`,
             });
-            let tipRowBreak;
-            const handleMousemove = (e) => {
-                e.preventDefault();
-                const rect = tableCellBlot.parent.domNode.getBoundingClientRect();
-                let resY = e.clientY;
-                if (resY - rect.y < tableUpSize.rowMinHeightPx) {
-                    resY = rect.y + tableUpSize.rowMinHeightPx;
-                }
-                tipRowBreak.style.top = `${resY}px`;
-                tipRowBreak.dataset.w = String(resY - rect.y);
-            };
-            const handleMouseup = () => {
-                const w = `${tipRowBreak.dataset.w}px`;
-                tableCellBlot.parent.setHeight(w);
-                document.body.removeChild(tipRowBreak);
-                tipRowBreak = null;
-                document.removeEventListener('mouseup', handleMouseup);
-                document.removeEventListener('mousemove', handleMousemove);
-                this.dragging = false;
-                this.updateRowResizer(tableCellBlot);
-                this.quill.emitter.emit(tableUpEvent.AFTER_TABLE_RESIZE);
-            };
-            const handleMousedown = (e) => {
-                if (e.button !== 0)
-                    return;
-                e.preventDefault();
-                this.dragging = true;
-                document.addEventListener('mouseup', handleMouseup);
-                document.addEventListener('mousemove', handleMousemove);
-                const divDom = document.createElement('div');
-                divDom.classList.add('ql-table-drag-line');
-                divDom.classList.add('row');
-                // set drag init height
-                const height = tableCellBlot.parent.domNode.getBoundingClientRect().height;
-                divDom.dataset.w = String(height);
-                const tableMainRect = tableMainBlot.domNode.getBoundingClientRect();
-                Object.assign(divDom.style, {
-                    top: `${e.clientY}px`,
-                    left: `${tableMainRect.x}px`,
-                    width: `${tableMainRect.width}px`,
-                });
-                document.body.appendChild(divDom);
-                if (tipRowBreak)
-                    document.body.removeChild(tipRowBreak);
-                tipRowBreak = divDom;
-            };
-            this.rowResizer.addEventListener('mousedown', handleMousedown);
+            const rows = this.tableMain.getRows();
+            this.curRowIndex = rows.indexOf(currentRow);
+            this.rowResizer.addEventListener('mousedown', this.handleRowMouseDownFunc);
             this.rowResizer.addEventListener('dragstart', (e) => {
                 e.preventDefault();
             });
@@ -3595,6 +3588,7 @@
     exports.TableMainFormat = TableMainFormat;
     exports.TableMenu = TableMenu;
     exports.TableResize = TableResize;
+    exports.TableResizeCommon = TableResizeCommon;
     exports.TableResizeLine = TableResizeLine;
     exports.TableRowFormat = TableRowFormat;
     exports.TableSelection = TableSelection;
