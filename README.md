@@ -235,18 +235,16 @@ It helps to migrate from other table modules with the same data structure.
 
 If you change the `TableWrapperFormat` blot name, you also need to add new css style to make toolbar icon have correct style.
 
-```less
-.ql-toolbar {
-  // change 'table-up' to your new blot name
-  .ql-picker:not(.ql-color-picker):not(.ql-icon-picker).ql-table-up {
-    width: 28px;
-    .ql-picker-label {
-      padding: 2px 4px;
-      svg {
-        position: static;
-        margin-top: 0;
-      }
-    }
-  }
+```css
+/* change 'table-up' to your new blot name */
+.ql-toolbar .ql-picker:not(.ql-color-picker):not(.ql-icon-picker).ql-table-up {
+  width: 28px;
+}
+.ql-toolbar .ql-picker:not(.ql-color-picker):not(.ql-icon-picker).ql-table-up .ql-picker-label {
+  padding: 2px 4px;
+}
+.ql-toolbar .ql-picker:not(.ql-color-picker):not(.ql-icon-picker).ql-table-up .ql-picker-label svg {
+  position: static;
+  margin-top: 0;
 }
 ```
