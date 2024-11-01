@@ -551,10 +551,11 @@ export class TableUp {
     const colIds = new Array(columns).fill(0).map(() => randomId());
 
     // insert delta data to create table
+    const colWidth = !this.options.full ? `${Math.max(Math.floor(width / columns), tableUpSize.colMinWidthPx)}px` : `${Math.max((1 / columns) * 100, tableUpSize.colMinWidthPre)}%`;
     delta = new Array(columns).fill('\n').reduce((memo, text, i) => {
       memo.insert(text, {
         [blotName.tableCol]: {
-          width: !this.options.full ? `${Math.floor(width / columns)}px` : `${(1 / columns) * 100}%`,
+          width: colWidth,
           tableId,
           colId: colIds[i],
           full: this.options.full,
