@@ -154,6 +154,7 @@ export const showTableCreator = async (options: TableCreatorOptions = {}) => {
 
   return new Promise<{ row: number; col: number }>((resolve, reject) => {
     const { close } = createDialog({ child: box, beforeClose: reject });
+    rowInput.focus();
 
     confirmBtn.addEventListener('click', async () => {
       const row = Number(rowInput.value);
