@@ -152,26 +152,48 @@ export const showTableCreator = async (options: TableCreatorOptions = {}) => {
   control.appendChild(cancelBtn);
   box.appendChild(control);
 
+  const validateInput = (row: number = Number(rowInput.value), col: number = Number(colInput.value)) => {
+    if (Number.isNaN(row) || row <= 0) {
+      rowErrorTip(options.notPositiveNumberError || '请输入正整数');
+      return;
+    }
+    if (Number.isNaN(col) || col <= 0) {
+      colErrorTip(options.notPositiveNumberError || '请输入正整数');
+      return;
+    }
+    return { row, col };
+  };
+  const keyboardClose = (e: KeyboardEvent) => {
+    if (e.key === 'Escape') {
+      close();
+      document.removeEventListener('keydown', keyboardClose);
+    }
+  };
+
   return new Promise<{ row: number; col: number }>((resolve, reject) => {
     const { close } = createDialog({ child: box, beforeClose: reject });
     rowInput.focus();
 
+    for (const input of [rowInput, colInput]) {
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          const result = validateInput();
+          if (result) {
+            resolve(result);
+            close();
+          }
+        }
+      });
+    }
     confirmBtn.addEventListener('click', async () => {
-      const row = Number(rowInput.value);
-      const col = Number(colInput.value);
-
-      if (Number.isNaN(row) || row <= 0) {
-        return rowErrorTip(options.notPositiveNumberError || '请输入正整数');
+      const result = validateInput();
+      if (result) {
+        resolve(result);
+        close();
       }
-      if (Number.isNaN(col) || col <= 0) {
-        return colErrorTip(options.notPositiveNumberError || '请输入正整数');
-      }
-      resolve({ row, col });
-      close();
     });
-    cancelBtn.addEventListener('click', () => {
-      close();
-    });
+    document.addEventListener('keydown', keyboardClose);
+    cancelBtn.addEventListener('click', close);
   });
 };
 
