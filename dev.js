@@ -202,24 +202,46 @@
         control.appendChild(confirmBtn);
         control.appendChild(cancelBtn);
         box.appendChild(control);
+        const validateInput = (row = Number(rowInput.value), col = Number(colInput.value)) => {
+            if (Number.isNaN(row) || row <= 0) {
+                rowErrorTip(options.notPositiveNumberError || '请输入正整数');
+                return;
+            }
+            if (Number.isNaN(col) || col <= 0) {
+                colErrorTip(options.notPositiveNumberError || '请输入正整数');
+                return;
+            }
+            return { row, col };
+        };
+        const keyboardClose = (e) => {
+            if (e.key === 'Escape') {
+                close();
+                document.removeEventListener('keydown', keyboardClose);
+            }
+        };
         return new Promise((resolve, reject) => {
             const { close } = createDialog({ child: box, beforeClose: reject });
             rowInput.focus();
+            for (const input of [rowInput, colInput]) {
+                input.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') {
+                        const result = validateInput();
+                        if (result) {
+                            resolve(result);
+                            close();
+                        }
+                    }
+                });
+            }
             confirmBtn.addEventListener('click', async () => {
-                const row = Number(rowInput.value);
-                const col = Number(colInput.value);
-                if (Number.isNaN(row) || row <= 0) {
-                    return rowErrorTip(options.notPositiveNumberError || '请输入正整数');
+                const result = validateInput();
+                if (result) {
+                    resolve(result);
+                    close();
                 }
-                if (Number.isNaN(col) || col <= 0) {
-                    return colErrorTip(options.notPositiveNumberError || '请输入正整数');
-                }
-                resolve({ row, col });
-                close();
             });
-            cancelBtn.addEventListener('click', () => {
-                close();
-            });
+            document.addEventListener('keydown', keyboardClose);
+            cancelBtn.addEventListener('click', close);
         });
     };
     const createSelectBox = (options = {}) => {
