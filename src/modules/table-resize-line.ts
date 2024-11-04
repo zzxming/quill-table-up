@@ -25,7 +25,9 @@ export class TableResizeLine extends TableResizeCommon {
     this.quill.root.addEventListener('mousemove', (e: MouseEvent) => {
       if (this.dragging) return;
       const tableCell = this.findTableCell(e);
-      if (!tableCell) return;
+      if (!tableCell) {
+        return this.hideResizer();
+      }
       const tableCellBlot = Quill.find(tableCell) as TableCellFormat;
       if (!tableCellBlot) return;
       if (this.currentTableCell !== tableCell) {
@@ -52,6 +54,9 @@ export class TableResizeLine extends TableResizeCommon {
     for (const el of e.composedPath()) {
       if (el instanceof HTMLElement && el.tagName === 'TD') {
         return el;
+      }
+      if (el === document.body) {
+        return null;
       }
     }
     return null;
