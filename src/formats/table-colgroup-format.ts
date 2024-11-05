@@ -77,6 +77,15 @@ export class TableColgroupFormat extends ContainerFormat {
     }
   }
 
+  checkMerge(): boolean {
+    const reuslt = super.checkMerge();
+    const tableMain = this.parent;
+    if (reuslt && (tableMain instanceof TableMainFormat) && !tableMain.full) {
+      tableMain.colWidthFillTable();
+    }
+    return reuslt;
+  }
+
   optimize(context: Record<string, any>) {
     const parent = this.parent;
     if (parent != null && parent.statics.blotName !== blotName.tableMain) {

@@ -261,3 +261,12 @@ describe('set contents', () => {
     );
   });
 });
+
+describe('column width calculate', () => {
+  it('should calculate correct width', async () => {
+    const quill = createQuillWithTableModule(`<p><br></p>`);
+    quill.setContents(createTableDeltaOps(3, 3, false, 100));
+    await vi.runAllTimersAsync();
+    expect(quill.root.querySelectorAll('table')[0].style.width).toBe('300px');
+  });
+});

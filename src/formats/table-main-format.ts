@@ -1,4 +1,3 @@
-import type { Parchment as TypeParchment } from 'quill';
 import type { TableValue } from '../utils';
 import { blotName } from '../utils';
 import { ContainerFormat } from './container-format';
@@ -17,16 +16,7 @@ export class TableMainFormat extends ContainerFormat {
     node.classList.add('ql-table');
     node.setAttribute('cellpadding', '0');
     node.setAttribute('cellspacing', '0');
-
     return node;
-  }
-
-  constructor(scroll: TypeParchment.ScrollBlot, domNode: Node) {
-    super(scroll, domNode);
-
-    setTimeout(() => {
-      this.colWidthFillTable();
-    }, 0);
   }
 
   colWidthFillTable() {
@@ -34,7 +24,7 @@ export class TableMainFormat extends ContainerFormat {
     const cols = this.getCols();
     if (!cols) return;
     const colsWidth = cols.reduce((sum, col) => col.width + sum, 0);
-    if (colsWidth === 0 || Number.isNaN(colsWidth) || this.full) return null;
+    if (colsWidth === 0 || Number.isNaN(colsWidth)) return null;
     this.domNode.style.width = `${colsWidth}px`;
     return colsWidth;
   }
@@ -82,7 +72,6 @@ export class TableMainFormat extends ContainerFormat {
     if (parent !== null && parent.statics.blotName !== blotName.tableWrapper) {
       this.wrap(blotName.tableWrapper, this.tableId);
     }
-
     super.optimize(context);
   }
 }
