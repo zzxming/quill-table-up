@@ -1239,12 +1239,6 @@
             node.setAttribute('cellspacing', '0');
             return node;
         }
-        constructor(scroll, domNode) {
-            super(scroll, domNode);
-            setTimeout(() => {
-                this.colWidthFillTable();
-            }, 0);
-        }
         colWidthFillTable() {
             if (this.full)
                 return;
@@ -1252,7 +1246,7 @@
             if (!cols)
                 return;
             const colsWidth = cols.reduce((sum, col) => col.width + sum, 0);
-            if (colsWidth === 0 || Number.isNaN(colsWidth) || this.full)
+            if (colsWidth === 0 || Number.isNaN(colsWidth))
                 return null;
             this.domNode.style.width = `${colsWidth}px`;
             return colsWidth;
@@ -1357,6 +1351,14 @@
                 }
                 col.remove();
             }
+        }
+        checkMerge() {
+            const reuslt = super.checkMerge();
+            const tableMain = this.parent;
+            if (reuslt && (tableMain instanceof TableMainFormat) && !tableMain.full) {
+                tableMain.colWidthFillTable();
+            }
+            return reuslt;
         }
         optimize(context) {
             const parent = this.parent;
