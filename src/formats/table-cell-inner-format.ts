@@ -1,4 +1,5 @@
 import type { Parchment as TypeParchment } from 'quill';
+import type TypeBlock from 'quill/blots/block';
 import type { TableCellValue } from '../utils';
 import type { TableCellFormat } from './table-cell-format';
 import Quill from 'quill';
@@ -40,7 +41,10 @@ export class TableCellInnerFormat extends ContainerFormat {
     else {
       this.domNode.removeAttribute(attrName);
     }
-    this.clearDeltaCache();
+    const blocks = this.descendants(Block, 0);
+    for (const child of blocks) {
+      (child as TypeBlock).cache = {};
+    }
   }
 
   get tableId() {

@@ -1,4 +1,3 @@
-import type { Parchment as TypeParchment } from 'quill';
 import { blotName } from '../utils';
 import { ContainerFormat } from './container-format';
 import { TableBodyFormat } from './table-body-format';
@@ -34,24 +33,6 @@ export class TableWrapperFormat extends ContainerFormat {
 
   get tableId() {
     return this.domNode.dataset.tableId!;
-  }
-
-  insertBefore(blot: TypeParchment.Blot, ref?: TypeParchment.Blot | null) {
-    if (blot.statics.blotName === this.statics.blotName) {
-      super.insertBefore((blot as TypeParchment.ParentBlot).children.head!, ref);
-    }
-    else if (this.statics.allowedChildren.some((child: TypeParchment.BlotConstructor) => child.blotName === blot.statics.blotName)) {
-      super.insertBefore(blot, ref);
-    }
-    else {
-      // TODO: is this necessary?
-      if (ref) {
-        this.prev ? this.prev.insertBefore(blot, null) : this.parent.insertBefore(blot, this);
-      }
-      else {
-        this.next ? this.next.insertBefore(blot, ref) : this.parent.appendChild(blot);
-      }
-    }
   }
 
   checkMerge(): boolean {
