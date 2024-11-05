@@ -237,8 +237,11 @@ export class TableCellInnerFormat extends ContainerFormat {
             const index = selfCell.next.offset(selfRow);
             selfRow.split(index);
           }
-          const newCell = cellInnerBlot.wrap(blotName.tableCell, cellInnerBlotValue);
-          return selfRow.parent.insertBefore(newCell.wrap(blotName.tableRow, cellInnerBlotValue), selfRow.next);
+          const row = this.scroll.create(blotName.tableRow, cellInnerBlotValue) as TypeParchment.Parent;
+          const cell = this.scroll.create(blotName.tableCell, cellInnerBlotValue) as TypeParchment.Parent;
+          cell.appendChild(cellInnerBlot);
+          row.appendChild(cell);
+          return selfRow.parent.insertBefore(row, selfRow.next);
         }
         return selfRow.insertBefore(
           cellInnerBlot.wrap(blotName.tableCell, cellInnerBlotValue),
