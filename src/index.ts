@@ -301,7 +301,7 @@ export class TableUp {
     return Object.assign({
       customBtn: true,
       texts: this.resolveTexts(options.texts || {}),
-      full: true,
+      full: false,
       resizerSetOuter: false,
       icon: icons.table,
     } as TableUpOptions, options);
