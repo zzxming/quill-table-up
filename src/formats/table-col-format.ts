@@ -65,13 +65,13 @@ export class TableColFormat extends BlockEmbed {
   }
 
   checkMerge(): boolean {
-    const next = this.next;
+    const next = this.next as TableColFormat;
     const { tableId, colId } = this;
     return (
       next !== null
       && next.statics.blotName === this.statics.blotName
-      && (next.domNode as HTMLElement).dataset.tableId === tableId
-      && (next.domNode as HTMLElement).dataset.colId === colId
+      && next.tableId === tableId
+      && next.colId === colId
     );
   }
 

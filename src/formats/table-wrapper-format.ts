@@ -55,12 +55,11 @@ export class TableWrapperFormat extends ContainerFormat {
   }
 
   checkMerge(): boolean {
-    const next = this.next;
+    const next = this.next as TableWrapperFormat;
     return (
       next !== null
       && next.statics.blotName === this.statics.blotName
-      && next.domNode.tagName === this.domNode.tagName
-      && next.domNode.dataset.tableId === this.tableId
+      && next.tableId === this.tableId
     );
   }
 

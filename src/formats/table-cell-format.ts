@@ -86,13 +86,15 @@ export class TableCellFormat extends ContainerFormat {
   }
 
   checkMerge(): boolean {
-    const { colId, rowId } = this.domNode.dataset;
-    const next = this.next;
+    const { colId, rowId, colspan, rowspan } = this;
+    const next = this.next as TableCellFormat;
     return (
       next !== null
       && next.statics.blotName === this.statics.blotName
-      && (next.domNode as HTMLElement).dataset.rowId === rowId
-      && (next.domNode as HTMLElement).dataset.colId === colId
+      && next.rowId === rowId
+      && next.colId === colId
+      && next.colspan === colspan
+      && next.rowspan === rowspan
     );
   }
 
