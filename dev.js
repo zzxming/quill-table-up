@@ -430,27 +430,18 @@
     const Block$2 = Quill.import('blots/block');
     const BlockEmbed$2 = Quill.import('blots/block/embed');
     class ContainerFormat extends Container {
+        static tagName;
         static blotName = blotName.container;
         static scope = Parchment$2.Scope.BLOCK_BLOT;
         static allowedChildren = [Block$2, BlockEmbed$2, Container];
         static requiredContainer;
         static defaultChild;
-        clearDeltaCache() {
-            const blocks = this.descendants(Block$2, 0);
-            for (const child of blocks) {
-                child.cache = {};
+        static create(_value) {
+            const node = document.createElement(this.tagName);
+            if (this.className) {
+                node.classList.add(this.className);
             }
-        }
-        insertBefore(blot, ref) {
-            // when block line remove will merge format. but in TableCellInner will get TableCellInner format
-            // that will insert a new TableCellInner line. not a Block line
-            // detail to see Quill module -> Keyboard -> handleBackspace
-            if (blot.statics.blotName === this.statics.blotName && blot.children.length > 0) {
-                super.insertBefore(blot.children.head, ref);
-            }
-            else {
-                super.insertBefore(blot, ref);
-            }
+            return node;
         }
         insertAt(index, value, def) {
             const [child] = this.children.find(index);
@@ -641,7 +632,10 @@
             else {
                 this.domNode.removeAttribute(attrName);
             }
-            this.clearDeltaCache();
+            const blocks = this.descendants(Block, 0);
+            for (const child of blocks) {
+                child.cache = {};
+            }
         }
         get tableId() {
             return this.domNode.dataset.tableId;
@@ -715,6 +709,16 @@
                 [this.statics.blotName]: value,
             };
         }
+        checkMerge() {
+            const { colId, rowId, colspan, rowspan } = this;
+            const next = this.next;
+            return (next !== null
+                && next.statics.blotName === this.statics.blotName
+                && next.rowId === rowId
+                && next.colId === colId
+                && next.colspan === colspan
+                && next.rowspan === rowspan);
+        }
         optimize() {
             const parent = this.parent;
             const { tableId, colId, rowId, rowspan, colspan, backgroundColor, height } = this;
@@ -730,9 +734,8 @@
                 // that delta will create dom like: <td><div></div></td>... . that means TableCellInner will be an empty cell without 'block'
                 // in this case, a 'block' should to inserted to makesure that the cell will not be remove
                 if (this.children.length === 0) {
-                    const block = this.scroll.create('block');
-                    block.appendChild(this.scroll.create('break'));
-                    this.appendChild(block);
+                    const child = this.scroll.create(this.statics.defaultChild.blotName);
+                    this.appendChild(child);
                 }
             }
             if (this.children.length > 0 && this.next != null && this.checkMerge()) {
@@ -801,8 +804,11 @@
                             const index = selfCell.next.offset(selfRow);
                             selfRow.split(index);
                         }
-                        const newCell = cellInnerBlot.wrap(blotName.tableCell, cellInnerBlotValue);
-                        return selfRow.parent.insertBefore(newCell.wrap(blotName.tableRow, cellInnerBlotValue), selfRow.next);
+                        const row = this.scroll.create(blotName.tableRow, cellInnerBlotValue);
+                        const cell = this.scroll.create(blotName.tableCell, cellInnerBlotValue);
+                        cell.appendChild(cellInnerBlot);
+                        row.appendChild(cell);
+                        return selfRow.parent.insertBefore(row, selfRow.next);
                     }
                     return selfRow.insertBefore(cellInnerBlot.wrap(blotName.tableCell, cellInnerBlotValue), ref ? selfCell : selfCell.next);
                 }
@@ -823,12 +829,6 @@
             node.dataset.tableId = value.tableId;
             node.dataset.rowId = value.rowId;
             return node;
-        }
-        checkMerge() {
-            const next = this.next;
-            return (next !== null
-                && next.statics.blotName === this.statics.blotName
-                && next.domNode.dataset.rowId === this.rowId);
         }
         get rowId() {
             return this.domNode.dataset.rowId;
@@ -932,6 +932,12 @@
                     break;
             }
         }
+        checkMerge() {
+            const next = this.next;
+            return (next !== null
+                && next.statics.blotName === this.statics.blotName
+                && next.rowId === this.rowId);
+        }
         optimize(context) {
             const parent = this.parent;
             const { tableId } = this;
@@ -952,11 +958,6 @@
         }
         get tableId() {
             return this.domNode.dataset.tableId;
-        }
-        checkMerge() {
-            const next = this.next;
-            return (next !== null
-                && next.statics.blotName === this.statics.blotName);
         }
         // insert row at index
         insertRow(targetIndex) {
@@ -1013,6 +1014,12 @@
                 tableRow.appendChild(tableCell);
             }
             this.insertBefore(tableRow, rows[targetIndex] || null);
+        }
+        checkMerge() {
+            const next = this.next;
+            return (next !== null
+                && next.statics.blotName === this.statics.blotName
+                && next.tableId === this.tableId);
         }
         optimize(context) {
             const parent = this.parent;
@@ -1089,12 +1096,14 @@
             return this.descendants(TableCellInnerFormat)[0];
         }
         checkMerge() {
-            const { colId, rowId } = this.domNode.dataset;
+            const { colId, rowId, colspan, rowspan } = this;
             const next = this.next;
             return (next !== null
                 && next.statics.blotName === this.statics.blotName
-                && next.domNode.dataset.rowId === rowId
-                && next.domNode.dataset.colId === colId);
+                && next.rowId === rowId
+                && next.colId === colId
+                && next.colspan === colspan
+                && next.rowspan === rowspan);
         }
         optimize(context) {
             const parent = this.parent;
@@ -1161,8 +1170,8 @@
             const { tableId, colId } = this;
             return (next !== null
                 && next.statics.blotName === this.statics.blotName
-                && next.domNode.dataset.tableId === tableId
-                && next.domNode.dataset.colId === colId);
+                && next.tableId === tableId
+                && next.colId === colId);
         }
         optimize(context) {
             const parent = this.parent;
@@ -1276,7 +1285,6 @@
             const next = this.next;
             return (next !== null
                 && next.statics.blotName === this.statics.blotName
-                && next.domNode.tagName === this.domNode.tagName
                 && next.domNode.dataset.tableId === this.tableId);
         }
         optimize(context) {
@@ -1353,7 +1361,10 @@
             }
         }
         checkMerge() {
-            const reuslt = super.checkMerge();
+            const next = this.next;
+            const reuslt = (next !== null
+                && next.statics.blotName === this.statics.blotName
+                && next.tableId === this.tableId);
             const tableMain = this.parent;
             if (reuslt && (tableMain instanceof TableMainFormat) && !tableMain.full) {
                 tableMain.colWidthFillTable();
@@ -1394,38 +1405,19 @@
         get tableId() {
             return this.domNode.dataset.tableId;
         }
-        insertBefore(blot, ref) {
-            if (blot.statics.blotName === this.statics.blotName) {
-                super.insertBefore(blot.children.head, ref);
-            }
-            else if (this.statics.allowedChildren.some((child) => child.blotName === blot.statics.blotName)) {
-                super.insertBefore(blot, ref);
-            }
-            else {
-                // TODO: is this necessary?
-                if (ref) {
-                    this.prev ? this.prev.insertBefore(blot, null) : this.parent.insertBefore(blot, this);
-                }
-                else {
-                    this.next ? this.next.insertBefore(blot, ref) : this.parent.appendChild(blot);
-                }
-            }
-        }
         checkMerge() {
             const next = this.next;
             return (next !== null
                 && next.statics.blotName === this.statics.blotName
-                && next.domNode.tagName === this.domNode.tagName
-                && next.domNode.dataset.tableId === this.tableId);
+                && next.tableId === this.tableId);
         }
         deleteAt(index, length) {
             super.deleteAt(index, length);
-            setTimeout(() => {
-                const tableBodys = (this.descendants(TableBodyFormat));
-                const tableColgroups = (this.descendants(TableColgroupFormat));
-                if (tableBodys.length === 0 || tableColgroups.length === 0)
-                    this.remove();
-            }, 0);
+            const tableBodys = (this.descendants(TableBodyFormat));
+            const tableColgroups = (this.descendants(TableColgroupFormat));
+            if (tableBodys.length === 0 || tableColgroups.length === 0) {
+                this.remove();
+            }
         }
     }
 
@@ -2915,7 +2907,7 @@
             return Object.assign({
                 customBtn: true,
                 texts: this.resolveTexts(options.texts || {}),
-                full: true,
+                full: false,
                 resizerSetOuter: false,
                 icon: icons.table,
             }, options);
@@ -3146,38 +3138,44 @@
             const paddingLeft = Number.parseInt(rootStyle.paddingLeft);
             const paddingRight = Number.parseInt(rootStyle.paddingRight);
             const width = Number.parseInt(rootStyle.width) - paddingLeft - paddingRight;
-            let delta = new Delta().retain(range.index).insert('\n');
             const tableId = randomId();
             const colIds = new Array(columns).fill(0).map(() => randomId());
             // insert delta data to create table
             const colWidth = !this.options.full ? `${Math.max(Math.floor(width / columns), tableUpSize.colMinWidthPx)}px` : `${Math.max((1 / columns) * 100, tableUpSize.colMinWidthPre)}%`;
-            delta = new Array(columns).fill('\n').reduce((memo, text, i) => {
-                memo.insert(text, {
-                    [blotName.tableCol]: {
-                        width: colWidth,
-                        tableId,
-                        colId: colIds[i],
-                        full: this.options.full,
+            const delta = [
+                { retain: range.index },
+                { insert: '\n' },
+            ];
+            for (let i = 0; i < columns; i++) {
+                delta.push({
+                    insert: {
+                        [blotName.tableCol]: {
+                            width: colWidth,
+                            tableId,
+                            colId: colIds[i],
+                            full: this.options.full,
+                        },
                     },
                 });
-                return memo;
-            }, delta);
-            delta = new Array(rows).fill(0).reduce((memo) => {
+            }
+            for (let j = 0; j < rows; j++) {
                 const rowId = randomId();
-                return new Array(columns).fill('\n').reduce((memo, text, i) => {
-                    memo.insert(text, {
-                        [blotName.tableCellInner]: {
-                            tableId,
-                            rowId,
-                            colId: colIds[i],
-                            rowspan: 1,
-                            colspan: 1,
+                for (let i = 0; i < columns; i++) {
+                    delta.push({
+                        insert: '\n',
+                        attributes: {
+                            [blotName.tableCellInner]: {
+                                tableId,
+                                rowId,
+                                colId: colIds[i],
+                                rowspan: 1,
+                                colspan: 1,
+                            },
                         },
                     });
-                    return memo;
-                }, memo);
-            }, delta);
-            this.quill.updateContents(delta, Quill.sources.USER);
+                }
+            }
+            this.quill.updateContents(new Delta(delta), Quill.sources.USER);
             this.quill.setSelection(range.index + columns + columns * rows + 1, Quill.sources.SILENT);
             this.quill.focus();
         }
