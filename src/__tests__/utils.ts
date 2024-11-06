@@ -25,7 +25,7 @@ export const sortAttributes = (element: HTMLElement) => {
     }
   });
 };
-export const createQuillWithTableModule = (html: string, options = true, moduleOptions = {}, register = {}) => {
+export const createQuillWithTableModule = (html: string, options = {}, moduleOptions = {}, register = {}) => {
   Quill.register({
     'modules/tableUp': TableUp,
     ...register,
@@ -34,7 +34,10 @@ export const createQuillWithTableModule = (html: string, options = true, moduleO
   container.innerHTML = normalizeHTML(html);
   const quill = new Quill(container, {
     modules: {
-      tableUp: options,
+      tableUp: {
+        full: true,
+        ...options,
+      },
       history: {
         delay: 0,
       },

@@ -1074,7 +1074,7 @@ describe('insert row into table', () => {
 });
 
 describe('unusual delete', () => {
-  it('delete head to inside', async () => {
+  it('delete head from outside table to inside', async () => {
     const quill = createQuillWithTableModule(`<p><br></p>`);
     const tableModule = quill.getModule('tableUp') as TableUp;
     tableModule.insertTable(5, 5);
@@ -1101,7 +1101,7 @@ describe('unusual delete', () => {
     );
   });
 
-  it('delete tail to outside', async () => {
+  it('delete tail from inside table to outside', async () => {
     const quill = createQuillWithTableModule(`<p><br></p>`);
     const tableModule = quill.getModule('tableUp') as TableUp;
     tableModule.insertTable(5, 5);
@@ -1168,7 +1168,7 @@ describe('unusual delete', () => {
     );
   });
 
-  it('delete inside', async () => {
+  it('delete table inside cell', async () => {
     const quill = createQuillWithTableModule(`<p><br></p>`);
     const tableModule = quill.getModule('tableUp') as TableUp;
     tableModule.insertTable(5, 5);

@@ -1,5 +1,4 @@
 import type { Parchment as TypeParchment } from 'quill';
-import type TypeBlock from 'quill/blots/block';
 import Quill from 'quill';
 import { blotName } from '../utils';
 
@@ -9,6 +8,7 @@ const Block = Quill.import('blots/block') as TypeParchment.BlotConstructor;
 const BlockEmbed = Quill.import('blots/block/embed') as TypeParchment.BlotConstructor;
 
 export class ContainerFormat extends Container {
+  static tagName: string;
   static blotName: string = blotName.container;
   static scope = Parchment.Scope.BLOCK_BLOT;
 
@@ -16,23 +16,12 @@ export class ContainerFormat extends Container {
   static requiredContainer: TypeParchment.BlotConstructor;
   static defaultChild?: TypeParchment.BlotConstructor;
 
-  clearDeltaCache() {
-    const blocks = this.descendants(Block, 0);
-    for (const child of blocks) {
-      (child as TypeBlock).cache = {};
+  static create(_value?: unknown) {
+    const node = document.createElement(this.tagName);
+    if (this.className) {
+      node.classList.add(this.className);
     }
-  }
-
-  insertBefore(blot: TypeParchment.Blot, ref?: TypeParchment.Blot | null) {
-    // when block line remove will merge format. but in TableCellInner will get TableCellInner format
-    // that will insert a new TableCellInner line. not a Block line
-    // detail to see Quill module -> Keyboard -> handleBackspace
-    if (blot.statics.blotName === this.statics.blotName && (blot as TypeParchment.ParentBlot).children.length > 0) {
-      super.insertBefore((blot as TypeParchment.ParentBlot).children.head!, ref);
-    }
-    else {
-      super.insertBefore(blot, ref);
-    }
+    return node;
   }
 
   insertAt(index: number, value: string, def?: any): void {

@@ -1,4 +1,5 @@
 import type { Parchment as TypeParchment } from 'quill';
+import type TypeBlock from 'quill/blots/block';
 import type { TableCellValue } from '../utils';
 import type { TableCellFormat } from './table-cell-format';
 import Quill from 'quill';
@@ -40,7 +41,10 @@ export class TableCellInnerFormat extends ContainerFormat {
     else {
       this.domNode.removeAttribute(attrName);
     }
-    this.clearDeltaCache();
+    const blocks = this.descendants(Block, 0);
+    for (const child of blocks) {
+      (child as TypeBlock).cache = {};
+    }
   }
 
   get tableId() {
@@ -131,6 +135,19 @@ export class TableCellInnerFormat extends ContainerFormat {
     };
   }
 
+  checkMerge(): boolean {
+    const { colId, rowId, colspan, rowspan } = this;
+    const next = this.next as TableCellInnerFormat;
+    return (
+      next !== null
+      && next.statics.blotName === this.statics.blotName
+      && next.rowId === rowId
+      && next.colId === colId
+      && next.colspan === colspan
+      && next.rowspan === rowspan
+    );
+  }
+
   optimize() {
     const parent = this.parent;
     const { tableId, colId, rowId, rowspan, colspan, backgroundColor, height } = this;
@@ -146,9 +163,8 @@ export class TableCellInnerFormat extends ContainerFormat {
       // that delta will create dom like: <td><div></div></td>... . that means TableCellInner will be an empty cell without 'block'
       // in this case, a 'block' should to inserted to makesure that the cell will not be remove
       if (this.children.length === 0) {
-        const block = this.scroll.create('block') as TypeParchment.BlockBlot;
-        block.appendChild(this.scroll.create('break'));
-        this.appendChild(block);
+        const child = this.scroll.create(this.statics.defaultChild.blotName);
+        this.appendChild(child);
       }
     }
 
@@ -221,8 +237,11 @@ export class TableCellInnerFormat extends ContainerFormat {
             const index = selfCell.next.offset(selfRow);
             selfRow.split(index);
           }
-          const newCell = cellInnerBlot.wrap(blotName.tableCell, cellInnerBlotValue);
-          return selfRow.parent.insertBefore(newCell.wrap(blotName.tableRow, cellInnerBlotValue), selfRow.next);
+          const row = this.scroll.create(blotName.tableRow, cellInnerBlotValue) as TypeParchment.Parent;
+          const cell = this.scroll.create(blotName.tableCell, cellInnerBlotValue) as TypeParchment.Parent;
+          cell.appendChild(cellInnerBlot);
+          row.appendChild(cell);
+          return selfRow.parent.insertBefore(row, selfRow.next);
         }
         return selfRow.insertBefore(
           cellInnerBlot.wrap(blotName.tableCell, cellInnerBlotValue),

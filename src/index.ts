@@ -301,7 +301,7 @@ export class TableUp {
     return Object.assign({
       customBtn: true,
       texts: this.resolveTexts(options.texts || {}),
-      full: true,
+      full: false,
       resizerSetOuter: false,
       icon: icons.table,
     } as TableUpOptions, options);
@@ -546,40 +546,47 @@ export class TableUp {
     const paddingRight = Number.parseInt(rootStyle.paddingRight);
     const width = Number.parseInt(rootStyle.width) - paddingLeft - paddingRight;
 
-    let delta = new Delta().retain(range.index).insert('\n');
     const tableId = randomId();
     const colIds = new Array(columns).fill(0).map(() => randomId());
 
     // insert delta data to create table
     const colWidth = !this.options.full ? `${Math.max(Math.floor(width / columns), tableUpSize.colMinWidthPx)}px` : `${Math.max((1 / columns) * 100, tableUpSize.colMinWidthPre)}%`;
-    delta = new Array(columns).fill('\n').reduce((memo, text, i) => {
-      memo.insert(text, {
-        [blotName.tableCol]: {
-          width: colWidth,
-          tableId,
-          colId: colIds[i],
-          full: this.options.full,
+    const delta: Record<string, any>[] = [
+      { retain: range.index },
+      { insert: '\n' },
+    ];
+
+    for (let i = 0; i < columns; i++) {
+      delta.push({
+        insert: {
+          [blotName.tableCol]: {
+            width: colWidth,
+            tableId,
+            colId: colIds[i],
+            full: this.options.full,
+          },
         },
       });
-      return memo;
-    }, delta);
-    delta = new Array(rows).fill(0).reduce((memo) => {
+    }
+    for (let j = 0; j < rows; j++) {
       const rowId = randomId();
-      return new Array(columns).fill('\n').reduce((memo, text, i) => {
-        memo.insert(text, {
-          [blotName.tableCellInner]: {
-            tableId,
-            rowId,
-            colId: colIds[i],
-            rowspan: 1,
-            colspan: 1,
+      for (let i = 0; i < columns; i++) {
+        delta.push({
+          insert: '\n',
+          attributes: {
+            [blotName.tableCellInner]: {
+              tableId,
+              rowId,
+              colId: colIds[i],
+              rowspan: 1,
+              colspan: 1,
+            },
           },
         });
-        return memo;
-      }, memo);
-    }, delta);
+      }
+    }
 
-    this.quill.updateContents(delta, Quill.sources.USER);
+    this.quill.updateContents(new Delta(delta), Quill.sources.USER);
     this.quill.setSelection(range.index + columns + columns * rows + 1, Quill.sources.SILENT);
     this.quill.focus();
   }

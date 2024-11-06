@@ -16,14 +16,6 @@ export class TableBodyFormat extends ContainerFormat {
     return this.domNode.dataset.tableId!;
   }
 
-  checkMerge(): boolean {
-    const next = this.next;
-    return (
-      next !== null
-      && next.statics.blotName === this.statics.blotName
-    );
-  }
-
   // insert row at index
   insertRow(targetIndex: number) {
     const tableBlot = findParentBlot(this, blotName.tableMain);
@@ -77,6 +69,15 @@ export class TableBodyFormat extends ContainerFormat {
       tableRow.appendChild(tableCell);
     }
     this.insertBefore(tableRow, rows[targetIndex] || null);
+  }
+
+  checkMerge(): boolean {
+    const next = this.next as TableBodyFormat;
+    return (
+      next !== null
+      && next.statics.blotName === this.statics.blotName
+      && next.tableId === this.tableId
+    );
   }
 
   optimize(context: Record<string, any>) {

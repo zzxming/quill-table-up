@@ -20,15 +20,6 @@ export class TableRowFormat extends ContainerFormat {
 
   declare children: TypeParchment.LinkedList<TableCellFormat>;
 
-  checkMerge(): boolean {
-    const next = this.next;
-    return (
-      next !== null
-      && next.statics.blotName === this.statics.blotName
-      && next.domNode.dataset.rowId === this.rowId
-    );
-  }
-
   get rowId() {
     return this.domNode.dataset.rowId!;
   }
@@ -133,6 +124,15 @@ export class TableRowFormat extends ContainerFormat {
       const [tableCell] = cur.descendants(TableCellInnerFormat);
       if (func(tableCell, i++)) break;
     }
+  }
+
+  checkMerge(): boolean {
+    const next = this.next as TableRowFormat;
+    return (
+      next !== null
+      && next.statics.blotName === this.statics.blotName
+      && next.rowId === this.rowId
+    );
   }
 
   optimize(context: Record<string, any>) {

@@ -1,3 +1,4 @@
+/* eslint-disable no-undef */
 const Quill = window.Quill;
 const TableUp = window.TableUp.default;
 
@@ -133,10 +134,16 @@ const quill = [
   quill2,
 ];
 window.quill = quill;
-// eslint-disable-next-line no-undef
-const output = [output1, output2];
-// eslint-disable-next-line no-undef
-for (const [i, btn] of [btn1, btn2].entries()) {
+
+const output = [
+  output1,
+  output2,
+];
+
+for (const [i, btn] of [
+  btn1,
+  btn2,
+].entries()) {
   btn.addEventListener('click', () => {
     const content = quill[i].getContents();
     console.log(content);

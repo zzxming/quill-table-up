@@ -62,7 +62,6 @@ export class TableMainFormat extends ContainerFormat {
     return (
       next !== null
       && next.statics.blotName === this.statics.blotName
-      && next.domNode.tagName === this.domNode.tagName
       && next.domNode.dataset.tableId === this.tableId
     );
   }
