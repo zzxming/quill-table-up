@@ -105,6 +105,9 @@ export class TableSelection {
           findEnd = true;
           break;
         }
+        else if (x > boundary.x1 && y > boundary.y1) {
+          break;
+        }
       }
     }
     for (const cell of [...selectedCells, ...tableCells]) {
