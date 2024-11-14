@@ -57,13 +57,14 @@ const quill = new Quill('#editor', {
 
 | attribute       | description                                                                                                                             | type                                    | default             |
 | --------------- | --------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------- | ------------------- |
-| full            | if set `true`. width max will be 100%                                                                                                   | `boolean`                               | `true`              |
+| full            | if set `true`. width max will be 100%                                                                                                   | `boolean`                               | `false`             |
 | customBtn       | display a custom button to custom row and column number add a table                                                                     | `boolean`                               | `false`             |
 | resizerSetOuter | if set `true`. table cell resize will be border around table                                                                            | `boolean`                               | `false`             |
 | texts           | the text used to create the table                                                                                                       | `TableTextOptions`                      | `defaultTexts`      |
 | customSelect    | display a custom select to custom row and column number add a table. the DOM returned by the function will replace the default selector | `(tableModule: TableUp) => HTMLElement` | -                   |
-| selection       | moduel TableSelection options                                                                                                           | `TableSelection`                        | -                   |
+| selection       | moduel TableSelection options                                                                                                           | `TableSelectionOptions`                 | -                   |
 | icon            | picker svg icon string. it will set with `innerHTML`                                                                                    | `string`                                | `origin table icon` |
+| scrollbar       | enable table virtual scrollbar                                                                                                          | `boolean`                               | `true`              |
 
 <details>
   <summary> default value </summary>
