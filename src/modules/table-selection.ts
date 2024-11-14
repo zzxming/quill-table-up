@@ -3,6 +3,7 @@ import type { TableCellInnerFormat, TableMainFormat } from '../formats';
 import type { RelactiveRect, TableSelectionOptions } from '../utils';
 import Quill from 'quill';
 import { TableCellFormat } from '../formats';
+import { addScrollEvent, clearScrollEvent } from '../utils';
 import { TableMenu } from './table-menu';
 
 const ERROR_LIMIT = 2;
@@ -39,19 +40,6 @@ export class TableSelection {
       tableMenu: {},
     }, options);
   };
-
-  addScrollEvent(dom: HTMLElement, handle: (...args: any[]) => void) {
-    dom.addEventListener('scroll', handle);
-    this.scrollHandler.push([dom, handle]);
-  }
-
-  clearScrollEvent() {
-    for (let i = 0; i < this.scrollHandler.length; i++) {
-      const [dom, handle] = this.scrollHandler[i];
-      dom.removeEventListener('scroll', handle);
-    }
-    this.scrollHandler = [];
-  }
 
   helpLinesInitial() {
     Object.assign(this.cellSelect.style, {
@@ -180,12 +168,15 @@ export class TableSelection {
   }
 
   showSelection() {
-    this.clearScrollEvent();
+    clearScrollEvent.call(this);
 
     Object.assign(this.cellSelect.style, { display: 'block' });
     this.updateSelection();
 
-    this.addScrollEvent(this.table.parentNode as HTMLElement, () => {
+    addScrollEvent.call(this, this.quill.root, () => {
+      this.updateSelection();
+    });
+    addScrollEvent.call(this, this.table.parentElement!, () => {
       this.updateSelection();
     });
   }
@@ -195,14 +186,14 @@ export class TableSelection {
     this.selectedTds = [];
     this.cellSelect && Object.assign(this.cellSelect.style, { display: 'none' });
     this.tableMenu.hideTools();
-    this.clearScrollEvent();
+    clearScrollEvent.call(this);
   }
 
   destroy() {
     this.hideSelection();
     this.tableMenu.destroy();
     this.cellSelect.remove();
-    this.clearScrollEvent();
+    clearScrollEvent.call(this);
 
     this.quill.root.removeEventListener('mousedown', this.selectingHandler, false);
     return null;

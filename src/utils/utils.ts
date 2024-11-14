@@ -4,6 +4,7 @@ import type { blotName } from './constants';
 import type { Constructor } from './types';
 
 export const isFunction = (val: any): val is Function => typeof val === 'function';
+export const isBoolean = (val: any): val is boolean => typeof val === 'boolean';
 export const isArray = Array.isArray;
 
 export const randomId = () => Math.random().toString(36).slice(2);
@@ -124,3 +125,19 @@ export const limitDomInViewPort = (rect: { left: number; top: number; width: num
     topLimited,
   };
 };
+
+interface ScrollHandle {
+  scrollHandler: [HTMLElement, (e: Event) => void][];
+};
+export function addScrollEvent(this: ScrollHandle, dom: HTMLElement, handle: (e: Event) => void) {
+  dom.addEventListener('scroll', handle);
+  this.scrollHandler.push([dom, handle]);
+}
+
+export function clearScrollEvent(this: ScrollHandle) {
+  for (let i = 0; i < this.scrollHandler.length; i++) {
+    const [dom, handle] = this.scrollHandler[i];
+    dom.removeEventListener('scroll', handle);
+  }
+  this.scrollHandler = [];
+}

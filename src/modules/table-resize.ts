@@ -3,6 +3,7 @@ import type TableUp from '..';
 import type { TableColFormat, TableMainFormat, TableRowFormat } from '..';
 import type { TableResizeOptions } from '../utils';
 import Quill from 'quill';
+import { addScrollEvent, clearScrollEvent } from '../utils';
 import { TableResizeCommon } from './table-resize-common';
 
 export class TableResize extends TableResizeCommon {
@@ -37,11 +38,6 @@ export class TableResize extends TableResizeCommon {
     return Object.assign({
       size: 12,
     }, options);
-  }
-
-  addScrollEvent(dom: HTMLElement, handle: (e: Event) => void) {
-    dom.addEventListener('scroll', handle);
-    this.scrollHandler.push([dom, handle]);
   }
 
   handleResizerHeader(isX: boolean, e: MouseEvent) {
@@ -82,12 +78,9 @@ export class TableResize extends TableResizeCommon {
     const tableColHeads = Array.from(this.root.getElementsByClassName('ql-table-col-header')) as HTMLElement[];
     const tableColHeadSeparators = Array.from(this.root.getElementsByClassName('ql-table-col-separator')) as HTMLElement[];
 
-    this.addScrollEvent(
-      this.tableWrapper.domNode,
-      () => {
-        this.colHeadWrapper!.scrollLeft = this.tableWrapper.domNode.scrollLeft;
-      },
-    );
+    addScrollEvent.call(this, this.tableWrapper.domNode, () => {
+      this.colHeadWrapper!.scrollLeft = this.tableWrapper.domNode.scrollLeft;
+    });
 
     for (const el of tableColHeads) {
       el.addEventListener('click', this.handleResizerHeader.bind(this, false));
@@ -124,6 +117,9 @@ export class TableResize extends TableResizeCommon {
     const tableRowHeads = Array.from(this.root.getElementsByClassName('ql-table-row-header')) as HTMLElement[];
     const tableRowHeadSeparators = Array.from(this.root.getElementsByClassName('ql-table-row-separator')) as HTMLElement[];
 
+    addScrollEvent.call(this, this.tableWrapper.domNode, () => {
+      this.rowHeadWrapper!.scrollTop = this.tableWrapper.domNode.scrollTop;
+    });
     for (const el of tableRowHeads) {
       el.addEventListener('click', this.handleResizerHeader.bind(this, true));
     }
@@ -217,6 +213,10 @@ export class TableResize extends TableResizeCommon {
       this.rowHeadWrapper = rowHeadWrapper;
       this.bindRowEvents();
     }
+
+    addScrollEvent.call(this, this.quill.root, () => {
+      this.updateRootPosition();
+    });
   }
 
   hideTool() {
@@ -225,6 +225,7 @@ export class TableResize extends TableResizeCommon {
 
   destroy() {
     this.hideTool();
+    clearScrollEvent.call(this);
     this.resizeObserver.disconnect();
     for (const [dom, handle] of this.scrollHandler) {
       dom.removeEventListener('scroll', handle);
