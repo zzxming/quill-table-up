@@ -279,6 +279,9 @@
 .table-color-custom:hover {
   background-color: #edeeef;
 }
+.ql-table-scrollbar--origin.ql-container .ql-table-wrapper {
+  scrollbar-width: inherit;
+}
 .ql-editor .ql-table {
   display: table;
   border-collapse: separate;
@@ -295,22 +298,15 @@
 }
 .ql-editor .ql-table-wrapper {
   width: 100%;
+  max-height: 140px;
   overflow: auto;
-}
-.ql-editor .ql-table-wrapper:hover::-webkit-scrollbar-thumb {
-  background-color: #a1a1aa;
-}
-.ql-editor .ql-table-wrapper::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-.ql-editor .ql-table-wrapper::-webkit-scrollbar-thumb {
-  background-color: #d2d2d2;
-  border-radius: 4px;
+  scrollbar-width: none;
+  --td-border-color: #a1a1aa;
+  --td-border: 1px solid var(--td-border-color);
 }
 .ql-editor .ql-table-cell {
   padding: 8px 12px;
-  border: 1px solid #a1a1aa;
+  border-color: transparent;
   font-size: 14px;
   outline: none;
   overflow: auto;
@@ -325,6 +321,49 @@
   text-indent: initial;
   display: table-column;
   table-layout: fixed;
+}
+.ql-editor .ql-table td {
+  border-top: var(--td-border);
+  border-left: var(--td-border);
+}
+.ql-editor .ql-table td:last-child {
+  border-right: var(--td-border);
+}
+.ql-editor .ql-table tr:last-child td {
+  border-bottom: var(--td-border);
+}
+.ql-table-scrollbar {
+  position: absolute;
+  z-index: 1;
+}
+.ql-table-scrollbar-container {
+  position: relative;
+}
+.ql-table-scrollbar.vertical {
+  top: 2px;
+  bottom: 2px;
+  left: -8px;
+  width: 6px;
+}
+.ql-table-scrollbar.vertical .ql-table-scrollbar-thumb {
+  width: 100%;
+}
+.ql-table-scrollbar.horizontal {
+  bottom: 2px;
+  left: 2px;
+  right: 2px;
+  height: 6px;
+}
+.ql-table-scrollbar.horizontal .ql-table-scrollbar-thumb {
+  height: 100%;
+}
+.ql-table-scrollbar-thumb {
+  border-radius: 5px;
+  background-color: #d2d2d2;
+  cursor: pointer;
+}
+.ql-table-scrollbar-thumb:hover {
+  background-color: #a1a1aa;
 }
 .ql-snow .select-box {
   --select-box-color-bg-hover: #f5f5f5;

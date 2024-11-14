@@ -5,6 +5,7 @@
 })(this, (function (exports, Quill) { 'use strict';
 
     const isFunction = (val) => typeof val === 'function';
+    const isBoolean = (val) => typeof val === 'boolean';
     const isArray = Array.isArray;
     const randomId = () => Math.random().toString(36).slice(2);
     const debounce = (fn, delay) => {
@@ -95,6 +96,17 @@
             topLimited,
         };
     };
+    function addScrollEvent(dom, handle) {
+        dom.addEventListener('scroll', handle);
+        this.scrollHandler.push([dom, handle]);
+    }
+    function clearScrollEvent() {
+        for (let i = 0; i < this.scrollHandler.length; i++) {
+            const [dom, handle] = this.scrollHandler[i];
+            dom.removeEventListener('scroll', handle);
+        }
+        this.scrollHandler = [];
+    }
 
     const createInputItem = (label, options) => {
         options.type || (options.type = 'text');
@@ -2158,10 +2170,6 @@
                 size: 12,
             }, options);
         }
-        addScrollEvent(dom, handle) {
-            dom.addEventListener('scroll', handle);
-            this.scrollHandler.push([dom, handle]);
-        }
         handleResizerHeader(isX, e) {
             const { clientX, clientY } = e;
             const tableRect = this.table.getBoundingClientRect();
@@ -2193,7 +2201,7 @@
         bindColEvents() {
             const tableColHeads = Array.from(this.root.getElementsByClassName('ql-table-col-header'));
             const tableColHeadSeparators = Array.from(this.root.getElementsByClassName('ql-table-col-separator'));
-            this.addScrollEvent(this.tableWrapper.domNode, () => {
+            addScrollEvent.call(this, this.tableWrapper.domNode, () => {
                 this.colHeadWrapper.scrollLeft = this.tableWrapper.domNode.scrollLeft;
             });
             for (const el of tableColHeads) {
@@ -2226,6 +2234,9 @@
         bindRowEvents() {
             const tableRowHeads = Array.from(this.root.getElementsByClassName('ql-table-row-header'));
             const tableRowHeadSeparators = Array.from(this.root.getElementsByClassName('ql-table-row-separator'));
+            addScrollEvent.call(this, this.tableWrapper.domNode, () => {
+                this.rowHeadWrapper.scrollTop = this.tableWrapper.domNode.scrollTop;
+            });
             for (const el of tableRowHeads) {
                 el.addEventListener('click', this.handleResizerHeader.bind(this, true));
             }
@@ -2235,19 +2246,24 @@
                 el.addEventListener('dragstart', e => e.preventDefault());
             }
         }
+        updateRootPosition() {
+            const tableWrapperRect = this.tableWrapper.domNode.getBoundingClientRect();
+            const rootRect = this.quill.root.getBoundingClientRect();
+            Object.assign(this.root.style, {
+                top: `${tableWrapperRect.y - rootRect.y}px`,
+                left: `${tableWrapperRect.x - rootRect.x}px`,
+            });
+        }
         showTool() {
-            const tableMain = Quill.find(this.table);
-            if (!tableMain)
-                return;
             this.tableCols = this.tableMain.getCols();
             this.tableRows = this.tableMain.getRows();
             this.root.innerHTML = '';
             const tableWrapperRect = this.tableWrapper.domNode.getBoundingClientRect();
-            const tableMainRect = tableMain.domNode.getBoundingClientRect();
+            const tableMainRect = this.tableMain.domNode.getBoundingClientRect();
             const rootRect = this.quill.root.getBoundingClientRect();
             Object.assign(this.root.style, {
-                top: `${tableMainRect.y - rootRect.y}px`,
-                left: `${tableMainRect.x - rootRect.x + this.tableWrapper.domNode.scrollLeft}px`,
+                top: `${tableWrapperRect.y - rootRect.y}px`,
+                left: `${tableWrapperRect.x - rootRect.x}px`,
             });
             if (this.tableCols.length > 0 && this.tableRows.length > 0) {
                 const corner = document.createElement('div');
@@ -2262,7 +2278,7 @@
             if (this.tableCols.length > 0) {
                 let colHeadStr = '';
                 for (const col of this.tableCols) {
-                    let width = col.width + (tableMain.full ? '%' : 'px');
+                    let width = col.width + (this.tableMain.full ? '%' : 'px');
                     if (!col.width) {
                         width = `${col.domNode.getBoundingClientRect().width}px`;
                     }
@@ -2304,7 +2320,7 @@
                 Object.assign(rowHeadWrapper.style, {
                     transform: `translateX(-${this.options.size}px)`,
                     width: `${this.options.size}px`,
-                    height: `${tableWrapperRect.height - (tableWrapperRect.bottom > rootRect.bottom ? tableWrapperRect.bottom - rootRect.bottom : 0)}px`,
+                    height: `${tableWrapperRect.height}px`,
                 });
                 Object.assign(rowHead.style, {
                     height: `${tableMainRect.height}px`,
@@ -2312,15 +2328,20 @@
                 rowHead.innerHTML = rowHeadStr;
                 rowHeadWrapper.appendChild(rowHead);
                 this.root.appendChild(rowHeadWrapper);
+                rowHeadWrapper.scrollTop = this.tableWrapper.domNode.scrollTop;
                 this.rowHeadWrapper = rowHeadWrapper;
                 this.bindRowEvents();
             }
+            addScrollEvent.call(this, this.quill.root, () => {
+                this.updateRootPosition();
+            });
         }
         hideTool() {
             this.root.classList.add('ql-hidden');
         }
         destroy() {
             this.hideTool();
+            clearScrollEvent.call(this);
             this.resizeObserver.disconnect();
             for (const [dom, handle] of this.scrollHandler) {
                 dom.removeEventListener('scroll', handle);
@@ -2457,6 +2478,212 @@
         }
     }
 
+    class Scrollbar {
+        quill;
+        isVertical;
+        table;
+        scrollbarContainer;
+        minSize = 20;
+        gap = 4;
+        move = 0;
+        cursorDown = false;
+        cursorLeave = false;
+        ratioY = 1;
+        ratioX = 1;
+        sizeWidth = '';
+        sizeHeight = '';
+        thumbState = {
+            X: 0,
+            Y: 0,
+        };
+        ob;
+        container;
+        scrollbar;
+        thumb = document.createElement('div');
+        scrollHandler = [];
+        propertyMap;
+        constructor(quill, isVertical, table, scrollbarContainer) {
+            this.quill = quill;
+            this.isVertical = isVertical;
+            this.table = table;
+            this.scrollbarContainer = scrollbarContainer;
+            this.container = table.parentElement;
+            this.propertyMap = this.isVertical
+                ? {
+                    size: 'height',
+                    offset: 'offsetHeight',
+                    scrollDirection: 'scrollTop',
+                    scrollSize: 'scrollHeight',
+                    axis: 'Y',
+                    direction: 'top',
+                    client: 'clientY',
+                }
+                : {
+                    size: 'width',
+                    offset: 'offsetWidth',
+                    scrollDirection: 'scrollLeft',
+                    scrollSize: 'scrollWidth',
+                    axis: 'X',
+                    direction: 'left',
+                    client: 'clientX',
+                };
+            this.calculateSize();
+            this.ob = new ResizeObserver(() => {
+                this.calculateSize();
+                this.setScrollbarPosition();
+            });
+            this.ob.observe(table);
+            this.scrollbar = this.createScrollbar();
+            this.setScrollbarPosition();
+            addScrollEvent.call(this, this.quill.root, () => this.setScrollbarPosition());
+            this.showScrollbar();
+        }
+        setScrollbarPosition() {
+            const { scrollLeft: editorScrollX, scrollTop: editorScrollY } = this.quill.root;
+            const { offsetWidth: containerOffsetWidth, offsetHeight: containerOffsetHeight, offsetLeft: containerOffsetLeft, offsetTop: containerOffsetTop } = this.container;
+            const { offsetHeight: tableOffsetHeight, offsetWidth: tableOffsetWidth } = this.table;
+            Object.assign(this.scrollbar.style, {
+                [this.propertyMap.size]: `${this.isVertical ? containerOffsetHeight : containerOffsetWidth}px`,
+                transform: `translate(${(this.isVertical
+                ? Math.min(containerOffsetWidth, tableOffsetWidth) + containerOffsetLeft
+                : containerOffsetLeft) - editorScrollX}px, ${(this.isVertical
+                ? containerOffsetTop
+                : Math.min(containerOffsetHeight, tableOffsetHeight) + containerOffsetTop) - editorScrollY}px)`,
+            });
+            this.containerScrollHandler(this.container);
+        }
+        calculateSize() {
+            const offsetHeight = this.container.offsetHeight - this.gap;
+            const offsetWidth = this.container.offsetWidth - this.gap;
+            const originalHeight = offsetHeight ** 2 / this.container.scrollHeight;
+            const originalWidth = offsetWidth ** 2 / this.container.scrollWidth;
+            const height = Math.max(originalHeight, this.minSize);
+            const width = Math.max(originalWidth, this.minSize);
+            this.ratioY = originalHeight / (offsetHeight - originalHeight) / (height / (offsetHeight - height));
+            this.ratioX = originalWidth / (offsetWidth - originalWidth) / (width / (offsetWidth - width));
+            this.sizeWidth = width + this.gap < offsetWidth ? `${width}px` : '';
+            this.sizeHeight = height + this.gap < offsetHeight ? `${height}px` : '';
+        }
+        createScrollbar() {
+            const scrollbar = document.createElement('div');
+            scrollbar.classList.add('ql-table-scrollbar');
+            scrollbar.classList.add(this.isVertical ? 'vertical' : 'horizontal');
+            Object.assign(scrollbar.style, {
+                display: 'none',
+            });
+            this.thumb.classList.add('ql-table-scrollbar-thumb');
+            // eslint-disable-next-line unicorn/consistent-function-scoping
+            const mouseMoveDocumentHandler = (e) => {
+                if (this.cursorDown === false)
+                    return;
+                const prevPage = this.thumbState[this.propertyMap.axis];
+                if (!prevPage)
+                    return;
+                const offsetRatio = this.scrollbar[this.propertyMap.offset] ** 2
+                    / this.container[this.propertyMap.scrollSize] / (this.isVertical ? this.ratioY : this.ratioX)
+                    / this.thumb[this.propertyMap.offset];
+                const offset = (this.scrollbar.getBoundingClientRect()[this.propertyMap.direction] - e[this.propertyMap.client]) * -1;
+                const thumbClickPosition = this.thumb[this.propertyMap.offset] - prevPage;
+                const thumbPositionPercentage = ((offset - thumbClickPosition) * 100 * offsetRatio) / this.scrollbar[this.propertyMap.offset];
+                this.container[this.propertyMap.scrollDirection] = (thumbPositionPercentage * this.container[this.propertyMap.scrollSize]) / 100;
+            };
+            const mouseUpDocumentHandler = () => {
+                this.thumbState[this.propertyMap.axis] = 0;
+                this.cursorDown = false;
+                document.removeEventListener('mousemove', mouseMoveDocumentHandler);
+                document.removeEventListener('mouseup', mouseUpDocumentHandler);
+                if (this.cursorLeave) {
+                    this.scrollbar.style.display = 'none';
+                }
+            };
+            const startDrag = (e) => {
+                e.stopImmediatePropagation();
+                this.cursorDown = true;
+                document.addEventListener('mousemove', mouseMoveDocumentHandler);
+                document.addEventListener('mouseup', mouseUpDocumentHandler);
+                // eslint-disable-next-line unicorn/prefer-add-event-listener
+                document.onselectstart = () => false;
+            };
+            this.thumb.addEventListener('mousedown', (e) => {
+                e.stopPropagation();
+                if (e.ctrlKey || [1, 2].includes(e.button))
+                    return;
+                window.getSelection()?.removeAllRanges();
+                startDrag(e);
+                const el = e.currentTarget;
+                if (!el)
+                    return;
+                this.thumbState[this.propertyMap.axis] = el[this.propertyMap.offset] - (e[this.propertyMap.client] - el.getBoundingClientRect()[this.propertyMap.direction]);
+            });
+            const displayListener = [this.table, scrollbar];
+            for (const el of displayListener) {
+                el.addEventListener('mouseenter', this.showScrollbar);
+                el.addEventListener('mouseleave', this.hideScrollbar);
+            }
+            addScrollEvent.call(this, this.container, () => {
+                this.containerScrollHandler(this.container);
+            });
+            addScrollEvent.call(this, this.quill.root, () => {
+                this.setScrollbarPosition();
+            });
+            scrollbar.appendChild(this.thumb);
+            return scrollbar;
+        }
+        containerScrollHandler(wrap) {
+            if (wrap) {
+                const offset = wrap[this.propertyMap.offset] - this.gap;
+                this.move = wrap[this.propertyMap.scrollDirection] * 100 / offset * (this.isVertical ? this.ratioY : this.ratioX);
+                Object.assign(this.thumb.style, {
+                    [this.propertyMap.size]: this.isVertical ? this.sizeHeight : this.sizeWidth,
+                    transform: `translate${this.propertyMap.axis}(${this.move}%)`,
+                });
+            }
+        }
+        // eslint-disable-next-line unicorn/consistent-function-scoping
+        showScrollbar = debounce(() => {
+            this.cursorLeave = false;
+            this.scrollbar.style.display = (this.isVertical ? this.sizeHeight : this.sizeWidth) ? 'block' : 'none';
+        }, 200);
+        // eslint-disable-next-line unicorn/consistent-function-scoping
+        hideScrollbar = debounce(() => {
+            this.cursorLeave = true;
+            this.scrollbar.style.display = this.cursorDown && (this.isVertical ? this.sizeHeight : this.sizeWidth) ? 'block' : 'none';
+        }, 200);
+        destroy() {
+            this.ob.disconnect();
+            clearScrollEvent.call(this);
+            this.table.removeEventListener('mouseenter', this.showScrollbar);
+            this.table.removeEventListener('mouseleave', this.hideScrollbar);
+        }
+    }
+    class TableVitrualScroll {
+        tableModule;
+        table;
+        quill;
+        scrollbarContainer;
+        scrollbar;
+        constructor(tableModule, table, quill) {
+            this.tableModule = tableModule;
+            this.table = table;
+            this.quill = quill;
+            this.scrollbarContainer = this.tableModule.addContainer('ql-table-scrollbar-container');
+            this.scrollbar = [
+                new Scrollbar(quill, true, table, this.scrollbarContainer),
+                new Scrollbar(quill, false, table, this.scrollbarContainer),
+            ];
+            for (const item of this.scrollbar) {
+                this.scrollbarContainer.appendChild(item.scrollbar);
+            }
+        }
+        destroy() {
+            this.scrollbarContainer.remove();
+            for (const scrollbar of this.scrollbar) {
+                scrollbar.destroy();
+            }
+            return null;
+        }
+    }
+
     const ERROR_LIMIT = 2;
     class TableSelection {
         tableModule;
@@ -2465,6 +2692,11 @@
         options;
         boundary = null;
         startScrollX = 0;
+        startScrollY = 0;
+        selectedTableScrollX = 0;
+        selectedTableScrollY = 0;
+        selectedEditorScrollX = 0;
+        selectedEditorScrollY = 0;
         selectedTds = [];
         cellSelect;
         dragging = false;
@@ -2492,17 +2724,6 @@
             }, options);
         }
         ;
-        addScrollEvent(dom, handle) {
-            dom.addEventListener('scroll', handle);
-            this.scrollHandler.push([dom, handle]);
-        }
-        clearScrollEvent() {
-            for (let i = 0; i < this.scrollHandler.length; i++) {
-                const [dom, handle] = this.scrollHandler[i];
-                dom.removeEventListener('scroll', handle);
-            }
-            this.scrollHandler = [];
-        }
         helpLinesInitial() {
             Object.assign(this.cellSelect.style, {
                 'border-color': this.options.selectColor,
@@ -2517,13 +2738,21 @@
                 cell.index = i;
                 return cell;
             }));
-            const tableRect = this.table.getBoundingClientRect();
+            const { x: tableScrollX, y: tableScrollY } = this.getTableViewScroll();
+            const { x: editorScrollX, y: editorScrollY } = this.getQuillViewScroll();
+            this.selectedTableScrollX = tableScrollX;
+            this.selectedTableScrollY = tableScrollY;
+            this.selectedEditorScrollX = editorScrollX;
+            this.selectedEditorScrollY = editorScrollY;
             // set boundary to initially mouse move rectangle
+            const tableRect = this.table.getBoundingClientRect();
+            const startPointX = startPoint.x - tableScrollX + this.startScrollX;
+            const startPointY = startPoint.y - tableScrollY + this.startScrollY;
             let boundary = {
-                x: Math.max(tableRect.left, Math.min(endPoint.x, startPoint.x)),
-                y: Math.max(tableRect.top, Math.min(endPoint.y, startPoint.y)),
-                x1: Math.min(tableRect.right, Math.max(endPoint.x, startPoint.x)),
-                y1: Math.min(tableRect.bottom, Math.max(endPoint.y, startPoint.y)),
+                x: Math.max(tableRect.left, Math.min(endPoint.x, startPointX)),
+                y: Math.max(tableRect.top, Math.min(endPoint.y, startPointY)),
+                x1: Math.min(tableRect.right, Math.max(endPoint.x, startPointX)),
+                y1: Math.min(tableRect.bottom, Math.max(endPoint.y, startPointY)),
             };
             const selectedCells = new Set();
             let findEnd = true;
@@ -2551,6 +2780,9 @@
                         findEnd = true;
                         break;
                     }
+                    else if (x > boundary.x1 && y > boundary.y1) {
+                        break;
+                    }
                 }
             }
             for (const cell of [...selectedCells, ...tableCells]) {
@@ -2561,7 +2793,7 @@
                 ...boundary,
                 width: boundary.x1 - boundary.x,
                 height: boundary.y1 - boundary.y,
-            }, this.quill.root.parentNode);
+            }, this.quill.root);
             return Array.from(selectedCells).sort((a, b) => a.index - b.index).map((cell) => {
                 delete cell.index;
                 return cell.getCellInner();
@@ -2574,7 +2806,9 @@
                 return;
             const startTableId = closestTable.dataset.tableId;
             const startPoint = { x: clientX, y: clientY };
-            this.startScrollX = this.table.parentNode.scrollLeft;
+            const { x: tableScrollX, y: tableScrollY } = this.getTableViewScroll();
+            this.startScrollX = tableScrollX;
+            this.startScrollY = tableScrollY;
             this.selectedTds = this.computeSelectedTds(startPoint, startPoint);
             this.showSelection();
             const mouseMoveHandler = (mousemoveEvent) => {
@@ -2604,21 +2838,36 @@
         updateSelection() {
             if (this.selectedTds.length === 0 || !this.boundary)
                 return;
-            const tableViewScrollLeft = this.table.parentNode.scrollLeft;
-            const scrollTop = this.quill.root.parentNode.scrollTop;
+            const { x: editorScrollX, y: editorScrollY } = this.getQuillViewScroll();
+            const { x: tableScrollX, y: tableScrollY } = this.getTableViewScroll();
             Object.assign(this.cellSelect.style, {
-                left: `${this.boundary.x + (this.startScrollX - tableViewScrollLeft) - 1}px`,
-                top: `${scrollTop * 2 + this.boundary.y}px`,
+                left: `${this.selectedEditorScrollX * 2 - editorScrollX + this.boundary.x + this.selectedTableScrollX - tableScrollX}px`,
+                top: `${this.selectedEditorScrollY * 2 - editorScrollY + this.boundary.y + this.selectedTableScrollY - tableScrollY}px`,
                 width: `${this.boundary.width + 1}px`,
                 height: `${this.boundary.height + 1}px`,
             });
             this.tableMenu.updateTools();
         }
+        getQuillViewScroll() {
+            return {
+                x: this.quill.root.scrollLeft,
+                y: this.quill.root.scrollTop,
+            };
+        }
+        getTableViewScroll() {
+            return {
+                x: this.table.parentElement.scrollLeft,
+                y: this.table.parentElement.scrollTop,
+            };
+        }
         showSelection() {
-            this.clearScrollEvent();
+            clearScrollEvent.call(this);
             Object.assign(this.cellSelect.style, { display: 'block' });
             this.updateSelection();
-            this.addScrollEvent(this.table.parentNode, () => {
+            addScrollEvent.call(this, this.quill.root, () => {
+                this.updateSelection();
+            });
+            addScrollEvent.call(this, this.table.parentElement, () => {
                 this.updateSelection();
             });
         }
@@ -2627,13 +2876,13 @@
             this.selectedTds = [];
             this.cellSelect && Object.assign(this.cellSelect.style, { display: 'none' });
             this.tableMenu.hideTools();
-            this.clearScrollEvent();
+            clearScrollEvent.call(this);
         }
         destroy() {
             this.hideSelection();
             this.tableMenu.destroy();
             this.cellSelect.remove();
-            this.clearScrollEvent();
+            clearScrollEvent.call(this);
             this.quill.root.removeEventListener('mousedown', this.selectingHandler, false);
             return null;
         }
@@ -2801,12 +3050,16 @@
         tableSelection;
         tableResizer;
         tableResizerLine;
+        tableScrollbar;
         get statics() {
             return this.constructor;
         }
         constructor(quill, options) {
             this.quill = quill;
             this.options = this.resolveOptions(options || {});
+            if (isBoolean(this.options.scrollbar) && !this.options.scrollbar) {
+                this.quill.container.classList.add('ql-table-scrollbar--origin');
+            }
             this.toolBox = this.quill.addContainer('ql-table-toolbox');
             const toolbar = this.quill.getModule('toolbar');
             if (toolbar && this.quill.theme.pickers) {
@@ -2841,16 +3094,13 @@
                         return;
                     }
                     if (this.table)
-                        this.hideTableTools();
+                        this.hideTableTools(true);
                     this.showTableTools(tableNode, quill);
                 }
                 else if (this.table) {
-                    this.hideTableTools();
+                    this.hideTableTools(true);
                 }
             }, false);
-            this.quill.root.addEventListener('scroll', () => {
-                this.hideTableTools();
-            });
             this.quill.on(Quill.events.EDITOR_CHANGE, (event, range, oldRange) => {
                 if (event === Quill.events.SELECTION_CHANGE && range) {
                     const [startBlot] = this.quill.getLine(range.index);
@@ -2882,7 +3132,7 @@
                     }
                     // if range is not in table. hide table tools
                     if (!startTableBlot || !endTableBlot) {
-                        this.hideTableTools();
+                        this.hideTableTools(true);
                     }
                 }
             });
@@ -2910,6 +3160,7 @@
                 full: false,
                 resizerSetOuter: false,
                 icon: icons.table,
+                scrollbar: true,
             }, options);
         }
         ;
@@ -3072,14 +3323,25 @@
             if (table) {
                 this.table = table;
                 this.tableSelection = new TableSelection(this, table, quill, this.options.selection || {});
+                if (this.options.scrollbar) {
+                    this.tableScrollbar = new TableVitrualScroll(this, table, quill);
+                }
                 if (this.options.resizerSetOuter) {
                     this.tableResizer = new TableResize(this, table, quill, this.options.resizer || {});
                 }
             }
         }
-        hideTableTools() {
-            this.tableSelection && this.tableSelection.destroy();
-            this.tableSelection = undefined;
+        hideTableTools(removeAll = false) {
+            if (this.tableSelection) {
+                this.tableSelection.destroy();
+                this.tableSelection = undefined;
+            }
+            if (removeAll) {
+                // eslint-disable-next-line unicorn/no-lonely-if
+                if (this.tableScrollbar) {
+                    this.tableScrollbar.destroy();
+                }
+            }
             this.table = undefined;
             if (this.options.resizerSetOuter) {
                 this.tableResizer && this.tableResizer.destroy();
@@ -3275,7 +3537,7 @@
             const selectedTds = this.tableSelection.selectedTds;
             const tableBlot = findParentBlot(selectedTds[0], blotName.tableMain);
             tableBlot && tableBlot.remove();
-            this.hideTableTools();
+            this.hideTableTools(true);
         }
         appendRow(isDown) {
             if (!this.tableSelection)
@@ -3608,6 +3870,7 @@
     exports.HeaderOverride = HeaderOverride;
     exports.ListItemOverride = ListItemOverride;
     exports.ScrollOverride = ScrollOverride;
+    exports.Scrollbar = Scrollbar;
     exports.TableBodyFormat = TableBodyFormat;
     exports.TableCellFormat = TableCellFormat;
     exports.TableCellInnerFormat = TableCellInnerFormat;
@@ -3621,6 +3884,7 @@
     exports.TableRowFormat = TableRowFormat;
     exports.TableSelection = TableSelection;
     exports.TableUp = TableUp;
+    exports.TableVitrualScroll = TableVitrualScroll;
     exports.TableWrapperFormat = TableWrapperFormat;
     exports.blotName = blotName;
     exports.default = TableUp;
