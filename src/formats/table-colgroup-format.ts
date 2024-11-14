@@ -67,13 +67,16 @@ export class TableColgroupFormat extends ContainerFormat {
     }
     const col = this.findCol(index);
     if (col) {
-      if (col.next) {
-        (col.next as TableColFormat).width += col.width;
-      }
-      else if (col.prev) {
-        (col.prev as TableColFormat).width += col.width;
+      if (table.full) {
+        if (col.next) {
+          (col.next as TableColFormat).width += col.width;
+        }
+        else if (col.prev) {
+          (col.prev as TableColFormat).width += col.width;
+        }
       }
       col.remove();
+      table.colWidthFillTable();
     }
   }
 
