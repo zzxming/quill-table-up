@@ -120,6 +120,7 @@ export class TableResize extends TableResizeCommon {
     addScrollEvent.call(this, this.tableWrapper.domNode, () => {
       this.rowHeadWrapper!.scrollTop = this.tableWrapper.domNode.scrollTop;
     });
+
     for (const el of tableRowHeads) {
       el.addEventListener('click', this.handleResizerHeader.bind(this, true));
     }
@@ -130,18 +131,25 @@ export class TableResize extends TableResizeCommon {
     }
   }
 
+  updateRootPosition() {
+    const tableWrapperRect = this.tableWrapper.domNode.getBoundingClientRect();
+    const rootRect = this.quill.root.getBoundingClientRect();
+    Object.assign(this.root.style, {
+      top: `${tableWrapperRect.y - rootRect.y}px`,
+      left: `${tableWrapperRect.x - rootRect.x}px`,
+    });
+  }
+
   showTool() {
-    const tableMain = Quill.find(this.table) as TableMainFormat;
-    if (!tableMain) return;
     this.tableCols = this.tableMain.getCols();
     this.tableRows = this.tableMain.getRows();
     this.root.innerHTML = '';
     const tableWrapperRect = this.tableWrapper.domNode.getBoundingClientRect();
-    const tableMainRect = tableMain.domNode.getBoundingClientRect();
+    const tableMainRect = this.tableMain.domNode.getBoundingClientRect();
     const rootRect = this.quill.root.getBoundingClientRect();
     Object.assign(this.root.style, {
-      top: `${tableMainRect.y - rootRect.y}px`,
-      left: `${tableMainRect.x - rootRect.x + this.tableWrapper.domNode.scrollLeft}px`,
+      top: `${tableWrapperRect.y - rootRect.y}px`,
+      left: `${tableWrapperRect.x - rootRect.x}px`,
     });
 
     if (this.tableCols.length > 0 && this.tableRows.length > 0) {
@@ -158,7 +166,7 @@ export class TableResize extends TableResizeCommon {
     if (this.tableCols.length > 0) {
       let colHeadStr = '';
       for (const col of this.tableCols) {
-        let width = col.width + (tableMain.full ? '%' : 'px');
+        let width = col.width + (this.tableMain.full ? '%' : 'px');
         if (!col.width) {
           width = `${col.domNode.getBoundingClientRect().width}px`;
         }
@@ -202,7 +210,7 @@ export class TableResize extends TableResizeCommon {
       Object.assign(rowHeadWrapper.style, {
         transform: `translateX(-${this.options.size}px)`,
         width: `${this.options.size}px`,
-        height: `${tableWrapperRect.height - (tableWrapperRect.bottom > rootRect.bottom ? tableWrapperRect.bottom - rootRect.bottom : 0)}px`,
+        height: `${tableWrapperRect.height}px`,
       });
       Object.assign(rowHead.style, {
         height: `${tableMainRect.height}px`,
@@ -210,6 +218,7 @@ export class TableResize extends TableResizeCommon {
       rowHead.innerHTML = rowHeadStr;
       rowHeadWrapper.appendChild(rowHead);
       this.root.appendChild(rowHeadWrapper);
+      rowHeadWrapper.scrollTop = this.tableWrapper.domNode.scrollTop;
       this.rowHeadWrapper = rowHeadWrapper;
       this.bindRowEvents();
     }
