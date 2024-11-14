@@ -301,6 +301,16 @@
   }
 }
 
+.ql-table-scrollbar--origin.ql-container {
+  .ql {
+    &-table {
+      &-wrapper {
+        scrollbar-width: inherit;
+      }
+    }
+  }
+}
+
 .ql-editor {
   .ql {
     &-table {
@@ -316,24 +326,15 @@
       }
       &-wrapper {
         width: 100%;
+        max-height: 140px;
         overflow: auto;
-        &:hover {
-          &::-webkit-scrollbar-thumb {
-            background-color: #a1a1aa;
-          }
-        }
-        &::-webkit-scrollbar {
-          width: 6px;
-          height: 6px;
-        }
-        &::-webkit-scrollbar-thumb {
-          background-color: #d2d2d2;
-          border-radius: 4px;
-        }
+        scrollbar-width: none;
+        --td-border-color: #a1a1aa;
+        --td-border: 1px solid var(--td-border-color);
       }
       &-cell {
         padding: 8px 12px;
-        border: 1px solid #a1a1aa;
+        border-color: transparent;
         font-size: 14px;
         outline: none;
         overflow: auto;
@@ -349,6 +350,53 @@
         display: table-column;
         table-layout: fixed;
       }
+      td {
+        border-top: var(--td-border);
+        border-left: var(--td-border);
+        &:last-child {
+          border-right: var(--td-border);
+        }
+      }
+      tr:last-child {
+        td {
+          border-bottom: var(--td-border);
+        }
+      }
+    }
+  }
+}
+
+.ql-table-scrollbar {
+  position: absolute;
+  z-index: 1;
+  &-container {
+    position: relative;
+  }
+  &.vertical {
+    top: 2px;
+    bottom: 2px;
+    // calculate transform start ql-container left top. -8 = width + gap / 2
+    left: -8px;
+    width: 6px;
+    .ql-table-scrollbar-thumb {
+      width: 100%;
+    }
+  }
+  &.horizontal {
+    bottom: 2px;
+    left: 2px;
+    right: 2px;
+    height: 6px;
+    .ql-table-scrollbar-thumb {
+      height: 100%;
+    }
+  }
+  &-thumb {
+    border-radius: 5px;
+    background-color: #d2d2d2;
+    cursor: pointer;
+    &:hover {
+      background-color: #a1a1aa;
     }
   }
 }

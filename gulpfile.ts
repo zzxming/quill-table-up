@@ -22,7 +22,7 @@ const buildDts = async () => {
       input: './src/index.ts',
       external: [/^quill/],
       treeshake: true,
-      plugins: [dts()],
+      plugins: [dts({ tsconfig: './tsconfig.json' })],
     },
   );
   return bundle.write({
@@ -34,9 +34,7 @@ const buildDts = async () => {
 const buildTs = async (isDev: boolean = false) => {
   const plugins = [
     typescript({ tsconfig: './tsconfig.json' }),
-    svg({
-      stringify: true,
-    }),
+    svg({ stringify: true }),
   ];
   !isDev && plugins.push(terser());
   const bundle = await rollup(

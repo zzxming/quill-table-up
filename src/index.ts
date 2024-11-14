@@ -10,8 +10,8 @@ import type Picker from 'quill/ui/picker';
 import type { TableCellValue, TableColValue, TableConstantsData, TableTextOptions, TableUpOptions } from './utils';
 import Quill from 'quill';
 import { BlockOverride, BlockquoteOverride, CodeBlockOverride, ContainerFormat, HeaderOverride, ListItemOverride, ScrollOverride, TableBodyFormat, TableCellFormat, TableCellInnerFormat, TableColFormat, TableColgroupFormat, TableMainFormat, TableRowFormat, TableWrapperFormat } from './formats';
-import { TableResize, TableResizeLine, TableSelection } from './modules';
-import { blotName, createSelectBox, debounce, findParentBlot, findParentBlots, isFunction, randomId, tableUpEvent, tableUpSize } from './utils';
+import { TableResize, TableResizeLine, TableSelection, TableVitrualScroll } from './modules';
+import { blotName, createSelectBox, debounce, findParentBlot, findParentBlots, isBoolean, isFunction, randomId, tableUpEvent, tableUpSize } from './utils';
 
 const Delta = Quill.import('delta');
 const Break = Quill.import('blots/break') as TypeParchment.BlotConstructor;
@@ -177,6 +177,7 @@ export class TableUp {
   tableSelection?: TableSelection;
   tableResizer?: TableResize;
   tableResizerLine?: TableResizeLine;
+  tableScrollbar?: TableVitrualScroll;
   get statics(): any {
     return this.constructor;
   }
@@ -184,6 +185,10 @@ export class TableUp {
   constructor(quill: Quill, options: Partial<TableUpOptions>) {
     this.quill = quill;
     this.options = this.resolveOptions(options || {});
+
+    if (isBoolean(this.options.scrollbar) && !this.options.scrollbar) {
+      this.quill.container.classList.add('ql-table-scrollbar--origin');
+    }
 
     this.toolBox = this.quill.addContainer('ql-table-toolbox');
 
@@ -223,18 +228,15 @@ export class TableUp {
             this.tableSelection && this.tableSelection?.showSelection();
             return;
           }
-          if (this.table) this.hideTableTools();
+          if (this.table) this.hideTableTools(true);
           this.showTableTools(tableNode, quill);
         }
         else if (this.table) {
-          this.hideTableTools();
+          this.hideTableTools(true);
         }
       },
       false,
     );
-    this.quill.root.addEventListener('scroll', () => {
-      this.hideTableTools();
-    });
     this.quill.on(Quill.events.EDITOR_CHANGE, (event: string, range: Range, oldRange: Range) => {
       if (event === Quill.events.SELECTION_CHANGE && range) {
         const [startBlot] = this.quill.getLine(range.index);
@@ -273,7 +275,7 @@ export class TableUp {
 
         // if range is not in table. hide table tools
         if (!startTableBlot || !endTableBlot) {
-          this.hideTableTools();
+          this.hideTableTools(true);
         }
       }
     });
@@ -304,6 +306,7 @@ export class TableUp {
       full: false,
       resizerSetOuter: false,
       icon: icons.table,
+      scrollbar: true,
     } as TableUpOptions, options);
   };
 
@@ -478,15 +481,27 @@ export class TableUp {
     if (table) {
       this.table = table;
       this.tableSelection = new TableSelection(this, table, quill, this.options.selection || {});
+      if (this.options.scrollbar) {
+        this.tableScrollbar = new TableVitrualScroll(this, table, quill);
+      }
       if (this.options.resizerSetOuter) {
         this.tableResizer = new TableResize(this, table, quill, this.options.resizer || {});
       }
     }
   }
 
-  hideTableTools() {
-    this.tableSelection && this.tableSelection.destroy();
-    this.tableSelection = undefined;
+  hideTableTools(removeAll: boolean = false) {
+    if (this.tableSelection) {
+      this.tableSelection.destroy();
+      this.tableSelection = undefined;
+    }
+    if (removeAll) {
+      // eslint-disable-next-line unicorn/no-lonely-if
+      if (this.tableScrollbar) {
+        this.tableScrollbar.destroy();
+      }
+    }
+
     this.table = undefined;
     if (this.options.resizerSetOuter) {
       this.tableResizer && this.tableResizer.destroy();
@@ -700,7 +715,7 @@ export class TableUp {
     const selectedTds = this.tableSelection.selectedTds;
     const tableBlot = findParentBlot(selectedTds[0], blotName.tableMain);
     tableBlot && tableBlot.remove();
-    this.hideTableTools();
+    this.hideTableTools(true);
   }
 
   appendRow(isDown: boolean) {

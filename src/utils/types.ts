@@ -48,11 +48,12 @@ export interface TableUpOptions {
   full: boolean;
   customBtn: boolean;
   texts: TableTextOptions;
+  icon: string;
   resizerSetOuter: boolean;
   selection?: TableSelectionOptions;
   resizer?: TableResizeOptions ;
   resizeLine?: TableResizeLineOptions;
-  icon: string;
+  scrollbar?: boolean;
 }
 export interface TableColValue {
   tableId: string;

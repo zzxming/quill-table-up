@@ -3,6 +3,7 @@ import type { TableCellInnerFormat, TableMainFormat } from '../formats';
 import type { RelactiveRect, TableSelectionOptions } from '../utils';
 import Quill from 'quill';
 import { TableCellFormat } from '../formats';
+import { addScrollEvent, clearScrollEvent } from '../utils';
 import { TableMenu } from './table-menu';
 
 const ERROR_LIMIT = 2;
@@ -11,6 +12,11 @@ export class TableSelection {
   options: TableSelectionOptions;
   boundary: RelactiveRect | null = null;
   startScrollX: number = 0;
+  startScrollY: number = 0;
+  selectedTableScrollX: number = 0;
+  selectedTableScrollY: number = 0;
+  selectedEditorScrollX = 0;
+  selectedEditorScrollY = 0;
   selectedTds: TableCellInnerFormat[] = [];
   cellSelect: HTMLDivElement;
   dragging: boolean = false;
@@ -40,19 +46,6 @@ export class TableSelection {
     }, options);
   };
 
-  addScrollEvent(dom: HTMLElement, handle: (...args: any[]) => void) {
-    dom.addEventListener('scroll', handle);
-    this.scrollHandler.push([dom, handle]);
-  }
-
-  clearScrollEvent() {
-    for (let i = 0; i < this.scrollHandler.length; i++) {
-      const [dom, handle] = this.scrollHandler[i];
-      dom.removeEventListener('scroll', handle);
-    }
-    this.scrollHandler = [];
-  }
-
   helpLinesInitial() {
     Object.assign(this.cellSelect.style, {
       'border-color': this.options.selectColor,
@@ -70,13 +63,22 @@ export class TableSelection {
       return cell;
     }));
 
-    const tableRect = this.table.getBoundingClientRect();
+    const { x: tableScrollX, y: tableScrollY } = this.getTableViewScroll();
+    const { x: editorScrollX, y: editorScrollY } = this.getQuillViewScroll();
+    this.selectedTableScrollX = tableScrollX;
+    this.selectedTableScrollY = tableScrollY;
+    this.selectedEditorScrollX = editorScrollX;
+    this.selectedEditorScrollY = editorScrollY;
+
     // set boundary to initially mouse move rectangle
+    const tableRect = this.table.getBoundingClientRect();
+    const startPointX = startPoint.x - tableScrollX + this.startScrollX;
+    const startPointY = startPoint.y - tableScrollY + this.startScrollY;
     let boundary = {
-      x: Math.max(tableRect.left, Math.min(endPoint.x, startPoint.x)),
-      y: Math.max(tableRect.top, Math.min(endPoint.y, startPoint.y)),
-      x1: Math.min(tableRect.right, Math.max(endPoint.x, startPoint.x)),
-      y1: Math.min(tableRect.bottom, Math.max(endPoint.y, startPoint.y)),
+      x: Math.max(tableRect.left, Math.min(endPoint.x, startPointX)),
+      y: Math.max(tableRect.top, Math.min(endPoint.y, startPointY)),
+      x1: Math.min(tableRect.right, Math.max(endPoint.x, startPointX)),
+      y1: Math.min(tableRect.bottom, Math.max(endPoint.y, startPointY)),
     };
 
     const selectedCells = new Set<TempSortedTableCellFormat>();
@@ -105,6 +107,9 @@ export class TableSelection {
           findEnd = true;
           break;
         }
+        else if (x > boundary.x1 && y > boundary.y1) {
+          break;
+        }
       }
     }
     for (const cell of [...selectedCells, ...tableCells]) {
@@ -115,7 +120,7 @@ export class TableSelection {
       ...boundary,
       width: boundary.x1 - boundary.x,
       height: boundary.y1 - boundary.y,
-    }, this.quill.root.parentNode as HTMLElement);
+    }, this.quill.root);
     return Array.from(selectedCells).sort((a, b) => a.index! - b.index!).map((cell) => {
       delete cell.index;
       return cell.getCellInner();
@@ -129,7 +134,9 @@ export class TableSelection {
 
     const startTableId = closestTable.dataset.tableId;
     const startPoint = { x: clientX, y: clientY };
-    this.startScrollX = (this.table.parentNode as HTMLElement).scrollLeft;
+    const { x: tableScrollX, y: tableScrollY } = this.getTableViewScroll();
+    this.startScrollX = tableScrollX;
+    this.startScrollY = tableScrollY;
     this.selectedTds = this.computeSelectedTds(startPoint, startPoint);
     this.showSelection();
 
@@ -164,25 +171,42 @@ export class TableSelection {
 
   updateSelection() {
     if (this.selectedTds.length === 0 || !this.boundary) return;
-    const tableViewScrollLeft = (this.table.parentNode as HTMLElement).scrollLeft;
-    const scrollTop = (this.quill.root.parentNode as HTMLElement).scrollTop;
+    const { x: editorScrollX, y: editorScrollY } = this.getQuillViewScroll();
+    const { x: tableScrollX, y: tableScrollY } = this.getTableViewScroll();
 
     Object.assign(this.cellSelect.style, {
-      left: `${this.boundary.x + (this.startScrollX - tableViewScrollLeft) - 1}px`,
-      top: `${scrollTop * 2 + this.boundary.y}px`,
+      left: `${this.selectedEditorScrollX * 2 - editorScrollX + this.boundary.x + this.selectedTableScrollX - tableScrollX}px`,
+      top: `${this.selectedEditorScrollY * 2 - editorScrollY + this.boundary.y + this.selectedTableScrollY - tableScrollY}px`,
       width: `${this.boundary.width + 1}px`,
       height: `${this.boundary.height + 1}px`,
     });
     this.tableMenu.updateTools();
   }
 
+  getQuillViewScroll() {
+    return {
+      x: this.quill.root.scrollLeft,
+      y: this.quill.root.scrollTop,
+    };
+  }
+
+  getTableViewScroll() {
+    return {
+      x: this.table.parentElement!.scrollLeft,
+      y: this.table.parentElement!.scrollTop,
+    };
+  }
+
   showSelection() {
-    this.clearScrollEvent();
+    clearScrollEvent.call(this);
 
     Object.assign(this.cellSelect.style, { display: 'block' });
     this.updateSelection();
 
-    this.addScrollEvent(this.table.parentNode as HTMLElement, () => {
+    addScrollEvent.call(this, this.quill.root, () => {
+      this.updateSelection();
+    });
+    addScrollEvent.call(this, this.table.parentElement!, () => {
       this.updateSelection();
     });
   }
@@ -192,14 +216,14 @@ export class TableSelection {
     this.selectedTds = [];
     this.cellSelect && Object.assign(this.cellSelect.style, { display: 'none' });
     this.tableMenu.hideTools();
-    this.clearScrollEvent();
+    clearScrollEvent.call(this);
   }
 
   destroy() {
     this.hideSelection();
     this.tableMenu.destroy();
     this.cellSelect.remove();
-    this.clearScrollEvent();
+    clearScrollEvent.call(this);
 
     this.quill.root.removeEventListener('mousedown', this.selectingHandler, false);
     return null;
