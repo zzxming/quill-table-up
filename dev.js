@@ -1363,13 +1363,16 @@
             }
             const col = this.findCol(index);
             if (col) {
-                if (col.next) {
-                    col.next.width += col.width;
-                }
-                else if (col.prev) {
-                    col.prev.width += col.width;
+                if (table.full) {
+                    if (col.next) {
+                        col.next.width += col.width;
+                    }
+                    else if (col.prev) {
+                        col.prev.width += col.width;
+                    }
                 }
                 col.remove();
+                table.colWidthFillTable();
             }
         }
         checkMerge() {
