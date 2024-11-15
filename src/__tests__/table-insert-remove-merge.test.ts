@@ -350,6 +350,39 @@ describe('remove column from table', () => {
     );
   });
 
+  it('remove column in not full table', async () => {
+    const quill = await createTable(1, 3, false, 100);
+    const tableModule = quill.getModule('tableUp') as TableUp;
+    await vi.runAllTimersAsync();
+    const table = quill.root.querySelector('table')!;
+    tableModule.tableSelection = new TableSelection(tableModule, table, quill);
+    const tds = quill.scroll.descendants(TableCellInnerFormat, 0);
+    tableModule.tableSelection.selectedTds = [tds[0]];
+    tableModule.removeCol();
+    await vi.runAllTimersAsync();
+    expect(quill.root).toEqualHTML(
+      `
+        <p><br></p>
+        <div>
+          <table cellpadding="0" cellspacing="0" style="width: 200px;">
+            <colgroup>
+              <col width="100px" />
+              <col width="100px" />
+            </colgroup>
+            <tbody>
+                <tr>
+                  <td rowspan="1" colspan="1"><div><p>2</p></div></td>
+                  <td rowspan="1" colspan="1"><div><p>3</p></div></td>
+                </tr>
+            </tbody>
+          </table>
+        </div>
+        <p><br></p>
+      `,
+      { ignoreAttrs: ['class', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
+    );
+  });
+
   it('remove column. remove colspan start cell and rowspan cell', async () => {
     const quill = createQuillWithTableModule(`<p><br></p>`);
     const tableModule = quill.getModule('tableUp') as TableUp;
