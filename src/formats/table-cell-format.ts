@@ -22,6 +22,29 @@ export class TableCellFormat extends ContainerFormat {
     return node;
   }
 
+  allowDataAttrs = new Set(['table-id', 'row-id', 'col-id']);
+  allowAttrs = new Set(['rowspan', 'colspan']);
+  allowStyle = new Set(['background-color', 'height']);
+  setFormatValue(name: string, value?: any) {
+    if (this.allowAttrs.has(name) || this.allowDataAttrs.has(name)) {
+      let attrName = name;
+      if (this.allowDataAttrs.has(name)) {
+        attrName = `data-${name}`;
+      }
+      if (value) {
+        this.domNode.setAttribute(attrName, value);
+      }
+      else {
+        this.domNode.removeAttribute(attrName);
+      }
+    }
+    else if (this.allowStyle.has(name)) {
+      Object.assign(this.domNode.style, {
+        [name]: value,
+      });
+    }
+  }
+
   get tableId() {
     return this.domNode.dataset.tableId!;
   }
@@ -30,52 +53,24 @@ export class TableCellFormat extends ContainerFormat {
     return this.domNode.dataset.rowId!;
   }
 
-  set rowId(value) {
-    this.domNode.dataset.rowId = value;
-  }
-
   get colId() {
     return this.domNode.dataset.colId!;
-  }
-
-  set colId(value) {
-    this.domNode.dataset.colId = value;
   }
 
   get rowspan() {
     return Number(this.domNode.getAttribute('rowspan'));
   }
 
-  set rowspan(value: number) {
-    this.domNode.setAttribute('rowspan', String(value));
-  }
-
   get colspan() {
     return Number(this.domNode.getAttribute('colspan'));
-  }
-
-  set colspan(value: number) {
-    this.domNode.setAttribute('colspan', String(value));
   }
 
   get backgroundColor() {
     return this.domNode.dataset.backgroundColor || '';
   }
 
-  set backgroundColor(value: string | null) {
-    Object.assign(this.domNode.style, {
-      backgroundColor: value,
-    });
-  }
-
   get height() {
     return this.domNode.style.height;
-  }
-
-  set height(value: string) {
-    if (value) {
-      this.domNode.style.height = value;
-    }
   }
 
   getCellInner() {

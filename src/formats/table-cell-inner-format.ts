@@ -41,6 +41,9 @@ export class TableCellInnerFormat extends ContainerFormat {
     else {
       this.domNode.removeAttribute(attrName);
     }
+    if (this.parent) {
+      this.parent.setFormatValue(name, value);
+    }
     const blocks = this.descendants(Block, 0);
     for (const child of blocks) {
       (child as TypeBlock).cache = {};
@@ -56,7 +59,6 @@ export class TableCellInnerFormat extends ContainerFormat {
   }
 
   set rowId(value) {
-    this.parent && (this.parent.rowId = value);
     this.setFormatValue('row-id', value);
   }
 
@@ -65,7 +67,6 @@ export class TableCellInnerFormat extends ContainerFormat {
   }
 
   set colId(value) {
-    this.parent && (this.parent.colId = value);
     this.setFormatValue('col-id', value);
   }
 
@@ -74,7 +75,6 @@ export class TableCellInnerFormat extends ContainerFormat {
   }
 
   set rowspan(value: number) {
-    this.parent && (this.parent.rowspan = value);
     this.setFormatValue('rowspan', value);
   }
 
@@ -83,7 +83,6 @@ export class TableCellInnerFormat extends ContainerFormat {
   }
 
   set colspan(value: number) {
-    this.parent && (this.parent.colspan = value);
     this.setFormatValue('colspan', value);
   }
 
@@ -92,7 +91,6 @@ export class TableCellInnerFormat extends ContainerFormat {
   }
 
   set backgroundColor(value: string | null) {
-    this.parent && (this.parent.backgroundColor = value);
     this.setFormatValue('background-color', value);
   }
 
@@ -100,8 +98,7 @@ export class TableCellInnerFormat extends ContainerFormat {
     return this.domNode.dataset.height || '';
   }
 
-  set height(value: string) {
-    this.parent && (this.parent.height = value);
+  set height(value: string | null) {
     this.setFormatValue('height', value);
   }
 
