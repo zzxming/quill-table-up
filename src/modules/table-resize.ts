@@ -160,6 +160,17 @@ export class TableResize extends TableResizeCommon {
         height: `${this.options.size}px`,
         transform: `translate(-${this.options.size}px, -${this.options.size}px)`,
       });
+      corner.addEventListener('click', () => {
+        const tableRect = this.table.getBoundingClientRect();
+        if (this.tableModule.tableSelection) {
+          const tableSelection = this.tableModule.tableSelection;
+          tableSelection.selectedTds = tableSelection.computeSelectedTds(
+            { x: tableRect.x, y: tableRect.y },
+            { x: tableRect.right, y: tableRect.bottom },
+          );
+          tableSelection.showSelection();
+        }
+      });
       this.root.appendChild(corner);
     }
 
