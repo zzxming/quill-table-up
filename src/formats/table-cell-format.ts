@@ -9,20 +9,59 @@ export class TableCellFormat extends ContainerFormat {
   static tagName = 'td';
   static className = 'ql-table-cell';
 
-  // for TableSelection computed selectedTds
-  __rect?: DOMRect;
-
   static create(value: TableCellValue) {
-    const { tableId, rowId, colId, rowspan, colspan, backgroundColor, height } = value;
+    const { tableId, rowId, colId, rowspan, colspan, backgroundColor, borderColor, height } = value;
     const node = super.create() as HTMLElement;
     node.dataset.tableId = tableId;
     node.dataset.rowId = rowId;
     node.dataset.colId = colId;
     node.setAttribute('rowspan', String(rowspan || 1));
     node.setAttribute('colspan', String(colspan || 1));
-    backgroundColor && (node.style.backgroundColor = backgroundColor);
     height && (node.style.height = height);
+    backgroundColor && (node.style.backgroundColor = backgroundColor);
+    borderColor && (node.style.borderColor = borderColor);
     return node;
+  }
+
+  static formats(domNode: HTMLElement) {
+    const { tableId, rowId, colId } = domNode.dataset;
+    const rowspan = Number(domNode.getAttribute('rowspan'));
+    const colspan = Number(domNode.getAttribute('colspan'));
+    const value: Record<string, any> = {
+      tableId,
+      rowId,
+      colId,
+      rowspan,
+      colspan,
+    };
+    const { height, backgroundColor, borderColor } = domNode.style;
+    height && (value.height = height);
+    backgroundColor && (value.backgroundColor = backgroundColor);
+    borderColor && (value.borderColor = borderColor);
+    return value;
+  }
+
+  allowDataAttrs = new Set(['table-id', 'row-id', 'col-id']);
+  allowAttrs = new Set(['rowspan', 'colspan']);
+  allowStyle = new Set(['background-color', 'border-color', 'height']);
+  setFormatValue(name: string, value?: any) {
+    if (this.allowAttrs.has(name) || this.allowDataAttrs.has(name)) {
+      let attrName = name;
+      if (this.allowDataAttrs.has(name)) {
+        attrName = `data-${name}`;
+      }
+      if (value) {
+        this.domNode.setAttribute(attrName, value);
+      }
+      else {
+        this.domNode.removeAttribute(attrName);
+      }
+    }
+    else if (this.allowStyle.has(name)) {
+      Object.assign(this.domNode.style, {
+        [name]: value,
+      });
+    }
   }
 
   get tableId() {
@@ -33,52 +72,24 @@ export class TableCellFormat extends ContainerFormat {
     return this.domNode.dataset.rowId!;
   }
 
-  set rowId(value) {
-    this.domNode.dataset.rowId = value;
-  }
-
   get colId() {
     return this.domNode.dataset.colId!;
-  }
-
-  set colId(value) {
-    this.domNode.dataset.colId = value;
   }
 
   get rowspan() {
     return Number(this.domNode.getAttribute('rowspan'));
   }
 
-  set rowspan(value: number) {
-    this.domNode.setAttribute('rowspan', String(value));
-  }
-
   get colspan() {
     return Number(this.domNode.getAttribute('colspan'));
-  }
-
-  set colspan(value: number) {
-    this.domNode.setAttribute('colspan', String(value));
   }
 
   get backgroundColor() {
     return this.domNode.dataset.backgroundColor || '';
   }
 
-  set backgroundColor(value: string | null) {
-    Object.assign(this.domNode.style, {
-      backgroundColor: value,
-    });
-  }
-
   get height() {
     return this.domNode.style.height;
-  }
-
-  set height(value: string) {
-    if (value) {
-      this.domNode.style.height = value;
-    }
   }
 
   getCellInner() {

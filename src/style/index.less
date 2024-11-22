@@ -16,8 +16,11 @@
 
 .ql-container {
   .ql-table-selection {
+    display: none;
+    position: absolute;
+    overflow: hidden;
+    pointer-events: none;
     &_line {
-      display: none;
       position: absolute;
       border: 2px solid;
       pointer-events: none;
@@ -166,6 +169,7 @@
       border-right: none;
       border-bottom: none;
       border-top-left-radius: 50%;
+      cursor: pointer;
     }
   }
 }
@@ -266,6 +270,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
+      gap: 4px;
     }
   }
   &-used {
@@ -284,6 +289,7 @@
     border: 1px solid #a3a3a3;
     cursor: pointer;
   }
+  &-transparent,
   &-clear,
   &-custom {
     display: flex;
@@ -291,7 +297,6 @@
     justify-content: center;
     flex: 1;
     height: 20px;
-    margin: 0px 4px;
     color: #303133;
     background-color: #fff;
     cursor: pointer;
@@ -329,8 +334,6 @@
         max-height: 140px;
         overflow: auto;
         scrollbar-width: none;
-        --td-border-color: #a1a1aa;
-        --td-border: 1px solid var(--td-border-color);
       }
       &-cell {
         padding: 8px 12px;
@@ -351,16 +354,7 @@
         table-layout: fixed;
       }
       td {
-        border-top: var(--td-border);
-        border-left: var(--td-border);
-        &:last-child {
-          border-right: var(--td-border);
-        }
-      }
-      tr:last-child {
-        td {
-          border-bottom: var(--td-border);
-        }
+        border: 1px solid #a1a1aa;
       }
     }
   }

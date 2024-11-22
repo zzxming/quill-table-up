@@ -7,7 +7,7 @@ import type Keyboard from 'quill/modules/keyboard';
 import type Toolbar from 'quill/modules/toolbar';
 import type BaseTheme from 'quill/themes/base';
 import type Picker from 'quill/ui/picker';
-import type { TableCellValue, TableColValue, TableConstantsData, TableTextOptions, TableUpOptions } from './utils';
+import type { TableColValue, TableConstantsData, TableTextOptions, TableUpOptions } from './utils';
 import Quill from 'quill';
 import { BlockOverride, BlockquoteOverride, CodeBlockOverride, ContainerFormat, HeaderOverride, ListItemOverride, ScrollOverride, TableBodyFormat, TableCellFormat, TableCellInnerFormat, TableColFormat, TableColgroupFormat, TableMainFormat, TableRowFormat, TableWrapperFormat } from './formats';
 import { TableResize, TableResizeLine, TableSelection, TableVitrualScroll } from './modules';
@@ -443,8 +443,6 @@ export class TableUp {
       const cell = node as HTMLElement;
       const rowspan = Number(cell.getAttribute('rowspan')) || 1;
       const colspan = Number(cell.getAttribute('colspan')) || 1;
-      const height = cell.style.height;
-      const backgroundColor = cell.style.backgroundColor;
       if (!colIds[cellCount]) {
         for (let i = cellCount; i >= 0; i--) {
           if (!colIds[i]) colIds[i] = randomId();
@@ -457,15 +455,13 @@ export class TableUp {
         delta.insert('\n');
       }
       // add each insert tableCellInner format
-      const value: TableCellValue = {
+      const value = Object.assign(TableCellFormat.formats(cell), {
         tableId,
         rowId,
         colId,
         rowspan: Number.isNaN(rowspan) ? 1 : rowspan,
         colspan: Number.isNaN(colspan) ? 1 : colspan,
-      };
-      height && (value.height = height);
-      backgroundColor && (value.backgroundColor = backgroundColor);
+      });
       return delta.compose(
         new Delta().retain(delta.length(), {
           [blotName.tableCellInner]: value,
@@ -703,10 +699,10 @@ export class TableUp {
     );
   }
 
-  setBackgroundColor(selectedTds: TableCellInnerFormat[], color: string | null) {
+  setCellAttrs(selectedTds: TableCellInnerFormat[], attr: string, value?: any) {
     if (selectedTds.length === 0) return;
     for (const td of selectedTds) {
-      td.backgroundColor = color;
+      td.setFormatValue(attr, value);
     }
   }
 

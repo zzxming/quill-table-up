@@ -724,7 +724,7 @@ describe('cell attribute', () => {
     tableModule.tableSelection = new TableSelection(tableModule, table, quill);
     const tds = quill.scroll.descendants(TableCellInnerFormat, 0);
     const selectedTds = [tds[0], tds[1], tds[2]];
-    tableModule.setBackgroundColor(selectedTds, 'rgb(253, 235, 255)');
+    tableModule.setCellAttrs(selectedTds, 'background-color', 'rgb(253, 235, 255)');
     await vi.runAllTimersAsync();
     expect(quill.root).toEqualHTML(
       `

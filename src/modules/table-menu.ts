@@ -1,7 +1,8 @@
 import type Quill from 'quill';
 import type { TableCellInnerFormat, TableUp } from '..';
 import type { TableMenuOptions, TableMenuTexts, Tool, ToolOption } from '../utils';
-import Color from '../svg/color.svg';
+import Background from '../svg/background.svg';
+import Border from '../svg/border.svg';
 import InsertBottom from '../svg/insert-bottom.svg';
 import InsertLeft from '../svg/insert-left.svg';
 import InsertRight from '../svg/insert-right.svg';
@@ -109,11 +110,22 @@ const defaultTools: Tool[] = [
   },
   {
     name: 'BackgroundColor',
-    icon: Color,
+    icon: Background,
     isColorChoose: true,
     tip: 'Set background color',
+    key: 'background-color',
     handle: (tableModule, selectedTds, color) => {
-      tableModule.setBackgroundColor(selectedTds, color as string);
+      tableModule.setCellAttrs(selectedTds, 'background-color', color);
+    },
+  },
+  {
+    name: 'BorderColor',
+    icon: Border,
+    isColorChoose: true,
+    tip: 'Set border color',
+    key: 'border-color',
+    handle: (tableModule, selectedTds, color) => {
+      tableModule.setCellAttrs(selectedTds, 'border-color', color);
     },
   },
 ];
@@ -174,7 +186,7 @@ export class TableMenu {
   }
 
   resolveOptions(options: TableMenuOptionsInput) {
-    return Object.assign({
+    const value = Object.assign({
       tipText: true,
       tipTexts: {},
       tools: defaultTools,
@@ -254,14 +266,16 @@ export class TableMenu {
           'rgb(59, 21, 81)',
         ],
       ],
-      texts: this.resolveTexts(options.texts),
     }, options);
+    value.texts = Object.assign(this.resolveTexts(options.texts), options.texts);
+    return value as TableMenuOptions;
   };
 
   resolveTexts(texts: Partial<TableMenuTexts> = {}) {
     return Object.assign({
       custom: 'Custom',
       clear: 'Clear',
+      transparent: 'Transparent',
     }, texts);
   }
 
@@ -296,7 +310,7 @@ export class TableMenu {
     }
     Object.assign(toolBox.style, { display: 'flex' });
     for (const tool of this.options.tools) {
-      const { name, icon, handle, isColorChoose, tip = '' } = tool as ToolOption;
+      const { name, icon, handle, isColorChoose, key: attrKey, tip = '' } = tool as ToolOption;
       const item = document.createElement('span');
       item.classList.add('ql-table-menu-item');
       if (name === 'break') {
@@ -315,7 +329,7 @@ export class TableMenu {
         item.appendChild(iconDom);
 
         // color choose handler will trigger when the color input event
-        if (isColorChoose) {
+        if (isColorChoose && attrKey) {
           const colorSelectWrapper = document.createElement('div');
           colorSelectWrapper.classList.add('table-color-select-wrapper');
 
@@ -341,7 +355,14 @@ export class TableMenu {
           Object.assign(colorMapRow.style, {
             marginTop: '4px',
           });
+          const transparentColor = document.createElement('div');
+          transparentColor.classList.add('table-color-transparent');
+          transparentColor.textContent = this.options.texts.transparent;
+          transparentColor.addEventListener('click', () => {
+            handle(this.tableModule, this.selectedTds, 'transparent');
+          });
           const clearColor = document.createElement('div');
+          clearColor.classList.add('table-color-clear');
           clearColor.textContent = this.options.texts.clear;
           clearColor.addEventListener('click', () => {
             handle(this.tableModule, this.selectedTds, null);
@@ -365,8 +386,9 @@ export class TableMenu {
           }, false);
           label.appendChild(customColor);
           label.appendChild(input);
-          clearColor.classList.add('table-color-clear');
           label.classList.add('table-color-custom');
+
+          colorMapRow.appendChild(transparentColor);
           colorMapRow.appendChild(clearColor);
           colorMapRow.appendChild(label);
           colorSelectWrapper.appendChild(colorMapRow);
@@ -389,7 +411,7 @@ export class TableMenu {
             const item = e.target as HTMLElement;
             const color = item.style.backgroundColor;
             if (item && color && this.selectedTds.length > 0) {
-              this.tableModule.setBackgroundColor(this.selectedTds, color);
+              this.tableModule.setCellAttrs(this.selectedTds, attrKey, color);
               this.updateUsedColor(color);
             }
           });
