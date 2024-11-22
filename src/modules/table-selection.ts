@@ -184,8 +184,8 @@ export class TableSelection {
     Object.assign(this.cellSelect.style, {
       left: `${this.selectedEditorScrollX * 2 - editorScrollX + this.boundary.x + this.selectedTableScrollX - tableScrollX - wrapLeft}px`,
       top: `${this.selectedEditorScrollY * 2 - editorScrollY + this.boundary.y + this.selectedTableScrollY - tableScrollY - wrapTop}px`,
-      width: `${this.boundary.width + 1}px`,
-      height: `${this.boundary.height + 1}px`,
+      width: `${this.boundary.width}px`,
+      height: `${this.boundary.height}px`,
     });
     Object.assign(this.cellSelectWrap.style, {
       left: `${wrapLeft}px`,
