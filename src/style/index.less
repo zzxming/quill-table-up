@@ -270,6 +270,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
+      gap: 4px;
     }
   }
   &-used {
@@ -288,6 +289,7 @@
     border: 1px solid #a3a3a3;
     cursor: pointer;
   }
+  &-transparent,
   &-clear,
   &-custom {
     display: flex;
@@ -295,7 +297,6 @@
     justify-content: center;
     flex: 1;
     height: 20px;
-    margin: 0px 4px;
     color: #303133;
     background-color: #fff;
     cursor: pointer;
@@ -354,16 +355,6 @@
       }
       td {
         border: 1px solid #a1a1aa;
-        border-bottom-color: transparent;
-        border-right-color: transparent;
-        &:last-child {
-          border-right-color: #a1a1aa;
-        }
-      }
-      tr:last-child {
-        td {
-          border-bottom-color: #a1a1aa;
-        }
       }
     }
   }

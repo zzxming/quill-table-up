@@ -16,6 +16,7 @@ export type Tool = ToolOption | ToolOptionBreak;
 export interface TableMenuTexts {
   custom: string;
   clear: string;
+  transparent: string;
 }
 export interface TableMenuOptions {
   tipText: boolean;

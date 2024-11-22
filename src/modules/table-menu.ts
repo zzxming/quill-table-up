@@ -186,7 +186,7 @@ export class TableMenu {
   }
 
   resolveOptions(options: TableMenuOptionsInput) {
-    return Object.assign({
+    const value = Object.assign({
       tipText: true,
       tipTexts: {},
       tools: defaultTools,
@@ -266,14 +266,16 @@ export class TableMenu {
           'rgb(59, 21, 81)',
         ],
       ],
-      texts: this.resolveTexts(options.texts),
     }, options);
+    value.texts = Object.assign(this.resolveTexts(options.texts), options.texts);
+    return value as TableMenuOptions;
   };
 
   resolveTexts(texts: Partial<TableMenuTexts> = {}) {
     return Object.assign({
       custom: 'Custom',
       clear: 'Clear',
+      transparent: 'Transparent',
     }, texts);
   }
 
@@ -353,7 +355,14 @@ export class TableMenu {
           Object.assign(colorMapRow.style, {
             marginTop: '4px',
           });
+          const transparentColor = document.createElement('div');
+          transparentColor.classList.add('table-color-transparent');
+          transparentColor.textContent = this.options.texts.transparent;
+          transparentColor.addEventListener('click', () => {
+            handle(this.tableModule, this.selectedTds, 'transparent');
+          });
           const clearColor = document.createElement('div');
+          clearColor.classList.add('table-color-clear');
           clearColor.textContent = this.options.texts.clear;
           clearColor.addEventListener('click', () => {
             handle(this.tableModule, this.selectedTds, null);
@@ -377,8 +386,9 @@ export class TableMenu {
           }, false);
           label.appendChild(customColor);
           label.appendChild(input);
-          clearColor.classList.add('table-color-clear');
           label.classList.add('table-color-custom');
+
+          colorMapRow.appendChild(transparentColor);
           colorMapRow.appendChild(clearColor);
           colorMapRow.appendChild(label);
           colorSelectWrapper.appendChild(colorMapRow);
