@@ -18,6 +18,7 @@ export class TableSelection {
   selectedEditorScrollX = 0;
   selectedEditorScrollY = 0;
   selectedTds: TableCellInnerFormat[] = [];
+  cellSelectWrap: HTMLDivElement;
   cellSelect: HTMLDivElement;
   dragging: boolean = false;
   scrollHandler: [HTMLElement, (...args: any[]) => void][] = [];
@@ -27,12 +28,10 @@ export class TableSelection {
   constructor(public tableModule: TableUp, public table: HTMLElement, public quill: Quill, options: Partial<TableSelectionOptions> = {}) {
     this.options = this.resolveOptions(options);
 
-    this.cellSelect = this.tableModule.addContainer('ql-table-selection_line');
-    this.helpLinesInitial();
+    this.cellSelectWrap = this.tableModule.addContainer('ql-table-selection');
+    this.cellSelect = this.helpLinesInitial();
 
-    const resizeObserver = new ResizeObserver(() => {
-      this.hideSelection();
-    });
+    const resizeObserver = new ResizeObserver(() => this.hideSelection());
     resizeObserver.observe(this.table);
 
     this.quill.root.addEventListener('mousedown', this.selectingHandler, false);
@@ -47,9 +46,13 @@ export class TableSelection {
   };
 
   helpLinesInitial() {
-    Object.assign(this.cellSelect.style, {
+    const cellSelect = document.createElement('div');
+    cellSelect.classList.add('ql-table-selection_line');
+    Object.assign(cellSelect.style, {
       'border-color': this.options.selectColor,
     });
+    this.cellSelectWrap.appendChild(cellSelect);
+    return cellSelect;
   }
 
   computeSelectedTds(startPoint: { x: number; y: number }, endPoint: { x: number; y: number }) {
@@ -173,12 +176,22 @@ export class TableSelection {
     if (this.selectedTds.length === 0 || !this.boundary) return;
     const { x: editorScrollX, y: editorScrollY } = this.getQuillViewScroll();
     const { x: tableScrollX, y: tableScrollY } = this.getTableViewScroll();
+    const tableWrapperRect = this.table.parentElement!.getBoundingClientRect();
+    const rootRect = this.quill.root.getBoundingClientRect();
+    const wrapLeft = tableWrapperRect.x - rootRect.x;
+    const wrapTop = tableWrapperRect.y - rootRect.y;
 
     Object.assign(this.cellSelect.style, {
-      left: `${this.selectedEditorScrollX * 2 - editorScrollX + this.boundary.x + this.selectedTableScrollX - tableScrollX}px`,
-      top: `${this.selectedEditorScrollY * 2 - editorScrollY + this.boundary.y + this.selectedTableScrollY - tableScrollY}px`,
+      left: `${this.selectedEditorScrollX * 2 - editorScrollX + this.boundary.x + this.selectedTableScrollX - tableScrollX - wrapLeft}px`,
+      top: `${this.selectedEditorScrollY * 2 - editorScrollY + this.boundary.y + this.selectedTableScrollY - tableScrollY - wrapTop}px`,
       width: `${this.boundary.width + 1}px`,
       height: `${this.boundary.height + 1}px`,
+    });
+    Object.assign(this.cellSelectWrap.style, {
+      left: `${wrapLeft}px`,
+      top: `${wrapTop}px`,
+      width: `${tableWrapperRect.width + 2}px`,
+      height: `${tableWrapperRect.height + 2}px`,
     });
     this.tableMenu.updateTools();
   }
@@ -200,7 +213,7 @@ export class TableSelection {
   showSelection() {
     clearScrollEvent.call(this);
 
-    Object.assign(this.cellSelect.style, { display: 'block' });
+    Object.assign(this.cellSelectWrap.style, { display: 'block' });
     this.updateSelection();
 
     addScrollEvent.call(this, this.quill.root, () => {
@@ -214,7 +227,7 @@ export class TableSelection {
   hideSelection() {
     this.boundary = null;
     this.selectedTds = [];
-    this.cellSelect && Object.assign(this.cellSelect.style, { display: 'none' });
+    this.cellSelectWrap && Object.assign(this.cellSelectWrap.style, { display: 'none' });
     this.tableMenu.hideTools();
     clearScrollEvent.call(this);
   }
@@ -222,7 +235,7 @@ export class TableSelection {
   destroy() {
     this.hideSelection();
     this.tableMenu.destroy();
-    this.cellSelect.remove();
+    this.cellSelectWrap.remove();
     clearScrollEvent.call(this);
 
     this.quill.root.removeEventListener('mousedown', this.selectingHandler, false);

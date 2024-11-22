@@ -16,8 +16,11 @@
 
 .ql-container {
   .ql-table-selection {
+    display: none;
+    position: absolute;
+    overflow: hidden;
+    pointer-events: none;
     &_line {
-      display: none;
       position: absolute;
       border: 2px solid;
       pointer-events: none;
@@ -330,8 +333,6 @@
         max-height: 140px;
         overflow: auto;
         scrollbar-width: none;
-        --td-border-color: #a1a1aa;
-        --td-border: 1px solid var(--td-border-color);
       }
       &-cell {
         padding: 8px 12px;
@@ -352,15 +353,16 @@
         table-layout: fixed;
       }
       td {
-        border-top: var(--td-border);
-        border-left: var(--td-border);
+        border: 1px solid #a1a1aa;
+        border-bottom-color: transparent;
+        border-right-color: transparent;
         &:last-child {
-          border-right: var(--td-border);
+          border-right-color: #a1a1aa;
         }
       }
       tr:last-child {
         td {
-          border-bottom: var(--td-border);
+          border-bottom-color: #a1a1aa;
         }
       }
     }
