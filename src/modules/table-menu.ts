@@ -1,7 +1,8 @@
 import type Quill from 'quill';
 import type { TableCellInnerFormat, TableUp } from '..';
 import type { TableMenuOptions, TableMenuTexts, Tool, ToolOption } from '../utils';
-import Color from '../svg/color.svg';
+import Background from '../svg/background.svg';
+import Border from '../svg/border.svg';
 import InsertBottom from '../svg/insert-bottom.svg';
 import InsertLeft from '../svg/insert-left.svg';
 import InsertRight from '../svg/insert-right.svg';
@@ -109,11 +110,22 @@ const defaultTools: Tool[] = [
   },
   {
     name: 'BackgroundColor',
-    icon: Color,
+    icon: Background,
     isColorChoose: true,
     tip: 'Set background color',
+    key: 'background-color',
     handle: (tableModule, selectedTds, color) => {
       tableModule.setCellAttrs(selectedTds, 'background-color', color);
+    },
+  },
+  {
+    name: 'BorderColor',
+    icon: Border,
+    isColorChoose: true,
+    tip: 'Set border color',
+    key: 'border-color',
+    handle: (tableModule, selectedTds, color) => {
+      tableModule.setCellAttrs(selectedTds, 'border-color', color);
     },
   },
 ];
@@ -296,7 +308,7 @@ export class TableMenu {
     }
     Object.assign(toolBox.style, { display: 'flex' });
     for (const tool of this.options.tools) {
-      const { name, icon, handle, isColorChoose, tip = '' } = tool as ToolOption;
+      const { name, icon, handle, isColorChoose, key: attrKey, tip = '' } = tool as ToolOption;
       const item = document.createElement('span');
       item.classList.add('ql-table-menu-item');
       if (name === 'break') {
@@ -315,7 +327,7 @@ export class TableMenu {
         item.appendChild(iconDom);
 
         // color choose handler will trigger when the color input event
-        if (isColorChoose) {
+        if (isColorChoose && attrKey) {
           const colorSelectWrapper = document.createElement('div');
           colorSelectWrapper.classList.add('table-color-select-wrapper');
 
@@ -389,7 +401,7 @@ export class TableMenu {
             const item = e.target as HTMLElement;
             const color = item.style.backgroundColor;
             if (item && color && this.selectedTds.length > 0) {
-              this.tableModule.setCellAttrs(this.selectedTds, 'background-color', color);
+              this.tableModule.setCellAttrs(this.selectedTds, attrKey, color);
               this.updateUsedColor(color);
             }
           });

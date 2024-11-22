@@ -836,7 +836,7 @@ describe('insert column into table', () => {
     );
   });
 
-  it('insert column. tr.insertCell should find correct index and skip index', async () => {
+  it('insert column. `tr.insertCell` should find correct index and skip index', async () => {
     const quill = createQuillWithTableModule(`<p><br></p>`);
     const tableModule = quill.getModule('tableUp') as TableUp;
     tableModule.insertTable(4, 5);

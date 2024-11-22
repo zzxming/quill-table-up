@@ -5,6 +5,7 @@ export interface ToolOption {
   icon: string | ((tableModule: TableUp) => HTMLElement);
   tip?: string;
   isColorChoose?: boolean;
+  key?: string;
   handle: (tableModule: TableUp, selectedTds: TableCellInnerFormat[], e: Event | string | null) => void;
 }
 export interface ToolOptionBreak {
@@ -68,6 +69,7 @@ export interface TableCellValue {
   rowspan: number;
   colspan: number;
   backgroundColor?: string;
+  borderColor?: string;
   height?: string;
 };
 export interface TableRowValue {

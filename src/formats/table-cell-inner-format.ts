@@ -9,7 +9,7 @@ import { ContainerFormat } from './container-format';
 const Block = Quill.import('blots/block') as TypeParchment.BlotConstructor;
 const BlockEmbed = Quill.import('blots/block/embed') as TypeParchment.BlotConstructor;
 
-export const allowAttrs = ['table-id', 'row-id', 'col-id', 'rowspan', 'colspan', 'background-color', 'height'] as const;
+export const allowAttrs = ['table-id', 'row-id', 'col-id', 'rowspan', 'colspan', 'background-color', 'border-color', 'height'] as const;
 
 export class TableCellInnerFormat extends ContainerFormat {
   static blotName = blotName.tableCellInner;
@@ -19,7 +19,7 @@ export class TableCellInnerFormat extends ContainerFormat {
   static defaultChild: TypeParchment.BlotConstructor = Block;
 
   static create(value: TableCellValue) {
-    const { tableId, rowId, colId, rowspan, colspan, backgroundColor, height } = value;
+    const { tableId, rowId, colId, rowspan, colspan, backgroundColor, borderColor, height } = value;
     const node = super.create() as HTMLElement;
     node.dataset.tableId = tableId;
     node.dataset.rowId = rowId;
@@ -28,7 +28,23 @@ export class TableCellInnerFormat extends ContainerFormat {
     node.dataset.colspan = String(colspan || 1);
     height && (node.dataset.height = height);
     backgroundColor && (node.dataset.backgroundColor = backgroundColor);
+    borderColor && (node.dataset.borderColor = borderColor);
     return node;
+  }
+
+  static formats(domNode: HTMLElement) {
+    const { tableId, rowId, colId, rowspan, colspan, backgroundColor, borderColor, height } = domNode.dataset;
+    const value: Record<string, any> = {
+      tableId,
+      rowId,
+      colId,
+      rowspan: Number(rowspan),
+      colspan: Number(colspan),
+    };
+    height && (value.height = height);
+    backgroundColor && (value.backgroundColor = backgroundColor);
+    borderColor && (value.borderColor = borderColor);
+    return value;
   }
 
   declare parent: TableCellFormat;
@@ -104,6 +120,10 @@ export class TableCellInnerFormat extends ContainerFormat {
     this.setFormatValue('height', value);
   }
 
+  get borderColor() {
+    return this.domNode.dataset.borderColor || '';
+  }
+
   getColumnIndex() {
     const table = findParentBlot(this, blotName.tableMain);
     return table.getColIds().indexOf(this.colId);
@@ -119,16 +139,7 @@ export class TableCellInnerFormat extends ContainerFormat {
   }
 
   formats(): Record<string, any> {
-    const { tableId, rowId, colId, rowspan, colspan, backgroundColor, height } = this;
-    const value: Record<string, any> = {
-      tableId,
-      rowId,
-      colId,
-      rowspan,
-      colspan,
-    };
-    height && (value.height = height);
-    backgroundColor && (value.backgroundColor = backgroundColor);
+    const value = TableCellInnerFormat.formats(this.domNode);
     return {
       [this.statics.blotName]: value,
     };
@@ -149,7 +160,7 @@ export class TableCellInnerFormat extends ContainerFormat {
 
   optimize() {
     const parent = this.parent;
-    const { tableId, colId, rowId, rowspan, colspan, backgroundColor, height } = this;
+    const blotValue = TableCellInnerFormat.formats(this.domNode);
     // handle BlockEmbed to insert tableCellInner when setContents
     if (this.prev && this.prev instanceof BlockEmbed) {
       const afterBlock = this.scroll.create('block');
@@ -157,7 +168,7 @@ export class TableCellInnerFormat extends ContainerFormat {
       this.appendChild(afterBlock);
     }
     if (parent !== null && parent.statics.blotName !== blotName.tableCell) {
-      this.wrap(blotName.tableCell, { tableId, colId, rowId, rowspan, colspan, backgroundColor, height });
+      this.wrap(blotName.tableCell, blotValue);
       // when insert delta like: [ { attributes: { 'table-up-cell-inner': { ... } }, insert: '\n' }, { attributes: { 'table-up-cell-inner': { ... } }, insert: '\n' }, ...]
       // that delta will create dom like: <td><div></div></td>... . that means TableCellInner will be an empty cell without 'block'
       // in this case, a 'block' should to inserted to makesure that the cell will not be remove
@@ -185,24 +196,8 @@ export class TableCellInnerFormat extends ContainerFormat {
   insertBefore(blot: TypeParchment.Blot, ref?: TypeParchment.Blot | null) {
     if (blot.statics.blotName === this.statics.blotName) {
       const cellInnerBlot = blot as TableCellInnerFormat;
-      const cellInnerBlotValue: Record<string, any> = {
-        tableId: cellInnerBlot.tableId,
-        rowId: cellInnerBlot.rowId,
-        colId: cellInnerBlot.colId,
-        rowspan: cellInnerBlot.rowspan,
-        colspan: cellInnerBlot.colspan,
-        backgroundColor: cellInnerBlot.backgroundColor,
-        height: cellInnerBlot.height,
-      };
-      const selfValue: Record<string, any> = {
-        tableId: this.tableId,
-        rowId: this.rowId,
-        colId: this.colId,
-        rowspan: this.rowspan,
-        colspan: this.colspan,
-        backgroundColor: this.backgroundColor,
-        height: this.height,
-      };
+      const cellInnerBlotValue = TableCellInnerFormat.formats(cellInnerBlot.domNode);
+      const selfValue = TableCellInnerFormat.formats(this.domNode);
       const isSame = Object.entries(selfValue).every(([key, value]) => value === cellInnerBlotValue[key]);
 
       if (!isSame) {

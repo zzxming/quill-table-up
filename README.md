@@ -109,6 +109,7 @@ interface ToolOption {
   name: string;
   icon: string | ((tableModule: TableUp) => HTMLElement);
   tip?: string;
+  key?: string; // the attribute name to set on td.
   isColorChoose?: boolean;
   handle: (tableModule: TableUp, selectedTds: TableCellInnerFormat[], e: Event | string) => void;
 }
@@ -146,14 +147,12 @@ const defaultTools = [
     name: 'break',
   },
   {
-
     name: 'MergeCell',
     icon: MergeCell,
     tip: 'Merge Cell',
     handle: (tableModule) => {},
   },
   {
-
     name: 'SplitCell',
     icon: SplitCell,
     tip: 'Split Cell',
@@ -188,6 +187,15 @@ const defaultTools = [
     icon: Color,
     isColorChoose: true,
     tip: 'Set background color',
+    key: 'background-color',
+    handle: (tableModule, selectedTds, color) => {},
+  },
+  {
+    name: 'BorderColor',
+    icon: Border,
+    isColorChoose: true,
+    tip: 'Set border color',
+    key: 'border-color',
     handle: (tableModule, selectedTds, color) => {},
   },
 ];

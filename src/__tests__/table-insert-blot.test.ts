@@ -1,5 +1,7 @@
+import type TableUp from '..';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { createQuillWithTableModule, createTableDeltaOps, createTableHTML } from './utils';
+import { TableCellInnerFormat } from '..';
+import { createQuillWithTableModule, createTable, createTableDeltaOps, createTableHTML } from './utils';
 
 beforeEach(() => {
   vi.useFakeTimers();
@@ -259,6 +261,40 @@ describe('set contents', () => {
       `,
       { ignoreAttrs: ['class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
     );
+  });
+
+  it('delta should render save construct', async () => {
+    const quill = await createTable(3, 2);
+    const tableModule = quill.getModule('tableUp') as TableUp;
+    const tds = quill.scroll.descendants(TableCellInnerFormat, 0);
+    tableModule.setCellAttrs([tds[0], tds[1]], 'background-color', 'red');
+    tableModule.setCellAttrs([tds[2], tds[3]], 'border-color', 'red');
+    tableModule.setCellAttrs([tds[4], tds[5]], 'height', '50px');
+    await vi.runAllTimersAsync();
+    const delta = quill.getContents();
+    const insertGetHTML = quill.root.innerHTML;
+    expect(delta.ops).toEqual([
+      { insert: '\n' },
+      { insert: { 'table-up-col': { tableId: '1', colId: '1', full: true, width: 50 } } },
+      { insert: { 'table-up-col': { tableId: '1', colId: '2', full: true, width: 50 } } },
+      { insert: '1' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '1', rowspan: 1, colspan: 1, backgroundColor: 'red' } }, insert: '\n' },
+      { insert: '2' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '2', rowspan: 1, colspan: 1, backgroundColor: 'red' } }, insert: '\n' },
+      { insert: '3' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '1', rowspan: 1, colspan: 1, borderColor: 'red' } }, insert: '\n' },
+      { insert: '4' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '2', rowspan: 1, colspan: 1, borderColor: 'red' } }, insert: '\n' },
+      { insert: '5' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '3', colId: '1', rowspan: 1, colspan: 1, height: '50px' } }, insert: '\n' },
+      { insert: '6' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '3', colId: '2', rowspan: 1, colspan: 1, height: '50px' } }, insert: '\n' },
+      { insert: '\n' },
+    ]);
+    quill.setContents([{ insert: '\n' }]);
+    quill.setContents(delta);
+    await vi.runAllTimersAsync();
+    expect(quill.root.innerHTML).toBe(insertGetHTML);
   });
 });
 

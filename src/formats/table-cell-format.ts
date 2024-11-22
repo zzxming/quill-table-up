@@ -10,21 +10,40 @@ export class TableCellFormat extends ContainerFormat {
   static className = 'ql-table-cell';
 
   static create(value: TableCellValue) {
-    const { tableId, rowId, colId, rowspan, colspan, backgroundColor, height } = value;
+    const { tableId, rowId, colId, rowspan, colspan, backgroundColor, borderColor, height } = value;
     const node = super.create() as HTMLElement;
     node.dataset.tableId = tableId;
     node.dataset.rowId = rowId;
     node.dataset.colId = colId;
     node.setAttribute('rowspan', String(rowspan || 1));
     node.setAttribute('colspan', String(colspan || 1));
-    backgroundColor && (node.style.backgroundColor = backgroundColor);
     height && (node.style.height = height);
+    backgroundColor && (node.style.backgroundColor = backgroundColor);
+    borderColor && (node.style.borderColor = borderColor);
     return node;
+  }
+
+  static formats(domNode: HTMLElement) {
+    const { tableId, rowId, colId } = domNode.dataset;
+    const rowspan = Number(domNode.getAttribute('rowspan'));
+    const colspan = Number(domNode.getAttribute('colspan'));
+    const value: Record<string, any> = {
+      tableId,
+      rowId,
+      colId,
+      rowspan,
+      colspan,
+    };
+    const { height, backgroundColor, borderColor } = domNode.style;
+    height && (value.height = height);
+    backgroundColor && (value.backgroundColor = backgroundColor);
+    borderColor && (value.borderColor = borderColor);
+    return value;
   }
 
   allowDataAttrs = new Set(['table-id', 'row-id', 'col-id']);
   allowAttrs = new Set(['rowspan', 'colspan']);
-  allowStyle = new Set(['background-color', 'height']);
+  allowStyle = new Set(['background-color', 'border-color', 'height']);
   setFormatValue(name: string, value?: any) {
     if (this.allowAttrs.has(name) || this.allowDataAttrs.has(name)) {
       let attrName = name;
