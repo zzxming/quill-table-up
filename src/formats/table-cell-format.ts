@@ -9,9 +9,6 @@ export class TableCellFormat extends ContainerFormat {
   static tagName = 'td';
   static className = 'ql-table-cell';
 
-  // for TableSelection computed selectedTds
-  __rect?: DOMRect;
-
   static create(value: TableCellValue) {
     const { tableId, rowId, colId, rowspan, colspan, backgroundColor, height } = value;
     const node = super.create() as HTMLElement;

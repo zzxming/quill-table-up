@@ -56,7 +56,7 @@ export class TableSelection {
   }
 
   computeSelectedTds(startPoint: { x: number; y: number }, endPoint: { x: number; y: number }) {
-    type TempSortedTableCellFormat = TableCellFormat & { index?: number };
+    type TempSortedTableCellFormat = TableCellFormat & { index?: number; __rect?: DOMRect };
 
     // Use TableCell to calculation selected range, because TableCellInner is scrollable, the width will effect calculate
     const tableMain = Quill.find(this.table) as TableMainFormat;
