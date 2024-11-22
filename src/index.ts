@@ -7,6 +7,7 @@ import type Keyboard from 'quill/modules/keyboard';
 import type Toolbar from 'quill/modules/toolbar';
 import type BaseTheme from 'quill/themes/base';
 import type Picker from 'quill/ui/picker';
+import type { allowAttrs } from './formats';
 import type { TableCellValue, TableColValue, TableConstantsData, TableTextOptions, TableUpOptions } from './utils';
 import Quill from 'quill';
 import { BlockOverride, BlockquoteOverride, CodeBlockOverride, ContainerFormat, HeaderOverride, ListItemOverride, ScrollOverride, TableBodyFormat, TableCellFormat, TableCellInnerFormat, TableColFormat, TableColgroupFormat, TableMainFormat, TableRowFormat, TableWrapperFormat } from './formats';
@@ -703,10 +704,10 @@ export class TableUp {
     );
   }
 
-  setBackgroundColor(selectedTds: TableCellInnerFormat[], color: string | null) {
+  setCellAttrs(selectedTds: TableCellInnerFormat[], attr: typeof allowAttrs[number], value?: any) {
     if (selectedTds.length === 0) return;
     for (const td of selectedTds) {
-      td.backgroundColor = color;
+      td.setFormatValue(attr, value);
     }
   }
 

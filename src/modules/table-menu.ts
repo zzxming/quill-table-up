@@ -113,7 +113,7 @@ const defaultTools: Tool[] = [
     isColorChoose: true,
     tip: 'Set background color',
     handle: (tableModule, selectedTds, color) => {
-      tableModule.setBackgroundColor(selectedTds, color as string);
+      tableModule.setCellAttrs(selectedTds, 'background-color', color);
     },
   },
 ];
@@ -389,7 +389,7 @@ export class TableMenu {
             const item = e.target as HTMLElement;
             const color = item.style.backgroundColor;
             if (item && color && this.selectedTds.length > 0) {
-              this.tableModule.setBackgroundColor(this.selectedTds, color);
+              this.tableModule.setCellAttrs(this.selectedTds, 'background-color', color);
               this.updateUsedColor(color);
             }
           });

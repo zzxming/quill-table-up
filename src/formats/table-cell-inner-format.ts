@@ -9,6 +9,8 @@ import { ContainerFormat } from './container-format';
 const Block = Quill.import('blots/block') as TypeParchment.BlotConstructor;
 const BlockEmbed = Quill.import('blots/block/embed') as TypeParchment.BlotConstructor;
 
+export const allowAttrs = ['table-id', 'row-id', 'col-id', 'rowspan', 'colspan', 'background-color', 'height'] as const;
+
 export class TableCellInnerFormat extends ContainerFormat {
   static blotName = blotName.tableCellInner;
   static tagName = 'div';
@@ -31,7 +33,7 @@ export class TableCellInnerFormat extends ContainerFormat {
 
   declare parent: TableCellFormat;
 
-  allowDataAttrs: Set<string> = new Set(['table-id', 'row-id', 'col-id', 'rowspan', 'colspan', 'background-color', 'height']);
+  allowDataAttrs: Set<string> = new Set(allowAttrs);
   setFormatValue(name: string, value: any) {
     if (!this.allowDataAttrs.has(name)) return;
     const attrName = `data-${name}`;
