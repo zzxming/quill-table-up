@@ -83,6 +83,7 @@ const quill2 = new Quill('#editor2', {
             DeleteColumn: '删除当前列',
             DeleteTable: '删除当前表格',
             BackgroundColor: '设置背景颜色',
+            BorderColor: '设置边框颜色',
           },
           defaultColorMap: [
             [
@@ -114,6 +115,7 @@ const quill2 = new Quill('#editor2', {
           texts: {
             custom: '自定义',
             clear: '清除',
+            transparent: '透明',
           },
         },
       },

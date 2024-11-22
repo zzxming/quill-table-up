@@ -616,13 +616,14 @@
 
     const Block = Quill.import('blots/block');
     const BlockEmbed$1 = Quill.import('blots/block/embed');
+    const allowAttrs = ['table-id', 'row-id', 'col-id', 'rowspan', 'colspan', 'background-color', 'border-color', 'height'];
     class TableCellInnerFormat extends ContainerFormat {
         static blotName = blotName.tableCellInner;
         static tagName = 'div';
         static className = 'ql-table-cell-inner';
         static defaultChild = Block;
         static create(value) {
-            const { tableId, rowId, colId, rowspan, colspan, backgroundColor, height } = value;
+            const { tableId, rowId, colId, rowspan, colspan, backgroundColor, borderColor, height } = value;
             const node = super.create();
             node.dataset.tableId = tableId;
             node.dataset.rowId = rowId;
@@ -631,9 +632,24 @@
             node.dataset.colspan = String(colspan || 1);
             height && (node.dataset.height = height);
             backgroundColor && (node.dataset.backgroundColor = backgroundColor);
+            borderColor && (node.dataset.borderColor = borderColor);
             return node;
         }
-        allowDataAttrs = new Set(['table-id', 'row-id', 'col-id', 'rowspan', 'colspan', 'background-color', 'height']);
+        static formats(domNode) {
+            const { tableId, rowId, colId, rowspan, colspan, backgroundColor, borderColor, height } = domNode.dataset;
+            const value = {
+                tableId,
+                rowId,
+                colId,
+                rowspan: Number(rowspan),
+                colspan: Number(colspan),
+            };
+            height && (value.height = height);
+            backgroundColor && (value.backgroundColor = backgroundColor);
+            borderColor && (value.borderColor = borderColor);
+            return value;
+        }
+        allowDataAttrs = new Set(allowAttrs);
         setFormatValue(name, value) {
             if (!this.allowDataAttrs.has(name))
                 return;
@@ -643,6 +659,9 @@
             }
             else {
                 this.domNode.removeAttribute(attrName);
+            }
+            if (this.parent) {
+                this.parent.setFormatValue(name, value);
             }
             const blocks = this.descendants(Block, 0);
             for (const child of blocks) {
@@ -656,43 +675,40 @@
             return this.domNode.dataset.rowId;
         }
         set rowId(value) {
-            this.parent && (this.parent.rowId = value);
             this.setFormatValue('row-id', value);
         }
         get colId() {
             return this.domNode.dataset.colId;
         }
         set colId(value) {
-            this.parent && (this.parent.colId = value);
             this.setFormatValue('col-id', value);
         }
         get rowspan() {
             return Number(this.domNode.dataset.rowspan);
         }
         set rowspan(value) {
-            this.parent && (this.parent.rowspan = value);
             this.setFormatValue('rowspan', value);
         }
         get colspan() {
             return Number(this.domNode.dataset.colspan);
         }
         set colspan(value) {
-            this.parent && (this.parent.colspan = value);
             this.setFormatValue('colspan', value);
         }
         get backgroundColor() {
             return this.domNode.dataset.backgroundColor || '';
         }
         set backgroundColor(value) {
-            this.parent && (this.parent.backgroundColor = value);
             this.setFormatValue('background-color', value);
         }
         get height() {
             return this.domNode.dataset.height || '';
         }
         set height(value) {
-            this.parent && (this.parent.height = value);
             this.setFormatValue('height', value);
+        }
+        get borderColor() {
+            return this.domNode.dataset.borderColor || '';
         }
         getColumnIndex() {
             const table = findParentBlot(this, blotName.tableMain);
@@ -707,16 +723,7 @@
             super.formatAt(index, length, name, value);
         }
         formats() {
-            const { tableId, rowId, colId, rowspan, colspan, backgroundColor, height } = this;
-            const value = {
-                tableId,
-                rowId,
-                colId,
-                rowspan,
-                colspan,
-            };
-            height && (value.height = height);
-            backgroundColor && (value.backgroundColor = backgroundColor);
+            const value = TableCellInnerFormat.formats(this.domNode);
             return {
                 [this.statics.blotName]: value,
             };
@@ -733,7 +740,7 @@
         }
         optimize() {
             const parent = this.parent;
-            const { tableId, colId, rowId, rowspan, colspan, backgroundColor, height } = this;
+            const blotValue = TableCellInnerFormat.formats(this.domNode);
             // handle BlockEmbed to insert tableCellInner when setContents
             if (this.prev && this.prev instanceof BlockEmbed$1) {
                 const afterBlock = this.scroll.create('block');
@@ -741,7 +748,7 @@
                 this.appendChild(afterBlock);
             }
             if (parent !== null && parent.statics.blotName !== blotName.tableCell) {
-                this.wrap(blotName.tableCell, { tableId, colId, rowId, rowspan, colspan, backgroundColor, height });
+                this.wrap(blotName.tableCell, blotValue);
                 // when insert delta like: [ { attributes: { 'table-up-cell-inner': { ... } }, insert: '\n' }, { attributes: { 'table-up-cell-inner': { ... } }, insert: '\n' }, ...]
                 // that delta will create dom like: <td><div></div></td>... . that means TableCellInner will be an empty cell without 'block'
                 // in this case, a 'block' should to inserted to makesure that the cell will not be remove
@@ -767,24 +774,8 @@
         insertBefore(blot, ref) {
             if (blot.statics.blotName === this.statics.blotName) {
                 const cellInnerBlot = blot;
-                const cellInnerBlotValue = {
-                    tableId: cellInnerBlot.tableId,
-                    rowId: cellInnerBlot.rowId,
-                    colId: cellInnerBlot.colId,
-                    rowspan: cellInnerBlot.rowspan,
-                    colspan: cellInnerBlot.colspan,
-                    backgroundColor: cellInnerBlot.backgroundColor,
-                    height: cellInnerBlot.height,
-                };
-                const selfValue = {
-                    tableId: this.tableId,
-                    rowId: this.rowId,
-                    colId: this.colId,
-                    rowspan: this.rowspan,
-                    colspan: this.colspan,
-                    backgroundColor: this.backgroundColor,
-                    height: this.height,
-                };
+                const cellInnerBlotValue = TableCellInnerFormat.formats(cellInnerBlot.domNode);
+                const selfValue = TableCellInnerFormat.formats(this.domNode);
                 const isSame = Object.entries(selfValue).every(([key, value]) => value === cellInnerBlotValue[key]);
                 if (!isSame) {
                     const [selfRow, selfCell] = findParentBlots(this, [blotName.tableRow, blotName.tableCell]);
@@ -1047,19 +1038,57 @@
         static blotName = blotName.tableCell;
         static tagName = 'td';
         static className = 'ql-table-cell';
-        // for TableSelection computed selectedTds
-        __rect;
         static create(value) {
-            const { tableId, rowId, colId, rowspan, colspan, backgroundColor, height } = value;
+            const { tableId, rowId, colId, rowspan, colspan, backgroundColor, borderColor, height } = value;
             const node = super.create();
             node.dataset.tableId = tableId;
             node.dataset.rowId = rowId;
             node.dataset.colId = colId;
             node.setAttribute('rowspan', String(rowspan || 1));
             node.setAttribute('colspan', String(colspan || 1));
-            backgroundColor && (node.style.backgroundColor = backgroundColor);
             height && (node.style.height = height);
+            backgroundColor && (node.style.backgroundColor = backgroundColor);
+            borderColor && (node.style.borderColor = borderColor);
             return node;
+        }
+        static formats(domNode) {
+            const { tableId, rowId, colId } = domNode.dataset;
+            const rowspan = Number(domNode.getAttribute('rowspan'));
+            const colspan = Number(domNode.getAttribute('colspan'));
+            const value = {
+                tableId,
+                rowId,
+                colId,
+                rowspan,
+                colspan,
+            };
+            const { height, backgroundColor, borderColor } = domNode.style;
+            height && (value.height = height);
+            backgroundColor && (value.backgroundColor = backgroundColor);
+            borderColor && (value.borderColor = borderColor);
+            return value;
+        }
+        allowDataAttrs = new Set(['table-id', 'row-id', 'col-id']);
+        allowAttrs = new Set(['rowspan', 'colspan']);
+        allowStyle = new Set(['background-color', 'border-color', 'height']);
+        setFormatValue(name, value) {
+            if (this.allowAttrs.has(name) || this.allowDataAttrs.has(name)) {
+                let attrName = name;
+                if (this.allowDataAttrs.has(name)) {
+                    attrName = `data-${name}`;
+                }
+                if (value) {
+                    this.domNode.setAttribute(attrName, value);
+                }
+                else {
+                    this.domNode.removeAttribute(attrName);
+                }
+            }
+            else if (this.allowStyle.has(name)) {
+                Object.assign(this.domNode.style, {
+                    [name]: value,
+                });
+            }
         }
         get tableId() {
             return this.domNode.dataset.tableId;
@@ -1067,42 +1096,20 @@
         get rowId() {
             return this.domNode.dataset.rowId;
         }
-        set rowId(value) {
-            this.domNode.dataset.rowId = value;
-        }
         get colId() {
             return this.domNode.dataset.colId;
-        }
-        set colId(value) {
-            this.domNode.dataset.colId = value;
         }
         get rowspan() {
             return Number(this.domNode.getAttribute('rowspan'));
         }
-        set rowspan(value) {
-            this.domNode.setAttribute('rowspan', String(value));
-        }
         get colspan() {
             return Number(this.domNode.getAttribute('colspan'));
-        }
-        set colspan(value) {
-            this.domNode.setAttribute('colspan', String(value));
         }
         get backgroundColor() {
             return this.domNode.dataset.backgroundColor || '';
         }
-        set backgroundColor(value) {
-            Object.assign(this.domNode.style, {
-                backgroundColor: value,
-            });
-        }
         get height() {
             return this.domNode.style.height;
-        }
-        set height(value) {
-            if (value) {
-                this.domNode.style.height = value;
-            }
         }
         getCellInner() {
             return this.descendants(TableCellInnerFormat)[0];
@@ -1436,7 +1443,9 @@
         }
     }
 
-    var Color = "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"1em\" height=\"1em\" viewBox=\"0 0 24 24\"><path fill=\"none\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"m11 7l6 6M4 16L15.7 4.3a1 1 0 0 1 1.4 0l2.6 2.6a1 1 0 0 1 0 1.4L8 20H4z\"/></svg>";
+    var Background = "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"1em\" height=\"1em\" viewBox=\"0 0 24 24\"><path fill=\"none\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"m4 8l4-4m6 0L4 14m0 6L20 4m0 6L10 20m10-4l-4 4\"/></svg>";
+
+    var Border = "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"1em\" height=\"1em\" viewBox=\"0 0 24 24\"><path fill=\"none\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"1.5\" d=\"m12.01 16l-.01.011M12.01 12l-.01.011M12.01 8l-.01.011M8.01 12l-.01.011M16.01 12l-.01.011M21 3.6v16.8a.6.6 0 0 1-.6.6H3.6a.6.6 0 0 1-.6-.6V3.6a.6.6 0 0 1 .6-.6h16.8a.6.6 0 0 1 .6.6\"/></svg>";
 
     var InsertBottom = "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"1em\" height=\"1em\" viewBox=\"0 0 24 24\"><path fill=\"currentColor\" d=\"M4 3h14a2 2 0 0 1 2 2v7.08a6 6 0 0 0-4.32.92H12v4h1.08c-.11.68-.11 1.35 0 2H4a2 2 0 0 1-2-2V5c0-1.1.9-2 2-2m0 4v4h6V7zm8 0v4h6V7zm-8 6v4h6v-4zm11.94 5.5h2v-4h2v4h2l-3 3z\"/></svg>";
 
@@ -1549,11 +1558,22 @@
         },
         {
             name: 'BackgroundColor',
-            icon: Color,
+            icon: Background,
             isColorChoose: true,
             tip: 'Set background color',
+            key: 'background-color',
             handle: (tableModule, selectedTds, color) => {
-                tableModule.setBackgroundColor(selectedTds, color);
+                tableModule.setCellAttrs(selectedTds, 'background-color', color);
+            },
+        },
+        {
+            name: 'BorderColor',
+            icon: Border,
+            isColorChoose: true,
+            tip: 'Set border color',
+            key: 'border-color',
+            handle: (tableModule, selectedTds, color) => {
+                tableModule.setCellAttrs(selectedTds, 'border-color', color);
             },
         },
     ];
@@ -1610,7 +1630,7 @@
             }
         }
         resolveOptions(options) {
-            return Object.assign({
+            const value = Object.assign({
                 tipText: true,
                 tipTexts: {},
                 tools: defaultTools,
@@ -1690,14 +1710,16 @@
                         'rgb(59, 21, 81)',
                     ],
                 ],
-                texts: this.resolveTexts(options.texts),
             }, options);
+            value.texts = Object.assign(this.resolveTexts(options.texts), options.texts);
+            return value;
         }
         ;
         resolveTexts(texts = {}) {
             return Object.assign({
                 custom: 'Custom',
                 clear: 'Clear',
+                transparent: 'Transparent',
             }, texts);
         }
         listenContextmenu = (e) => {
@@ -1728,7 +1750,7 @@
             }
             Object.assign(toolBox.style, { display: 'flex' });
             for (const tool of this.options.tools) {
-                const { name, icon, handle, isColorChoose, tip = '' } = tool;
+                const { name, icon, handle, isColorChoose, key: attrKey, tip = '' } = tool;
                 const item = document.createElement('span');
                 item.classList.add('ql-table-menu-item');
                 if (name === 'break') {
@@ -1746,7 +1768,7 @@
                     }
                     item.appendChild(iconDom);
                     // color choose handler will trigger when the color input event
-                    if (isColorChoose) {
+                    if (isColorChoose && attrKey) {
                         const colorSelectWrapper = document.createElement('div');
                         colorSelectWrapper.classList.add('table-color-select-wrapper');
                         if (this.options.defaultColorMap.length > 0) {
@@ -1770,7 +1792,14 @@
                         Object.assign(colorMapRow.style, {
                             marginTop: '4px',
                         });
+                        const transparentColor = document.createElement('div');
+                        transparentColor.classList.add('table-color-transparent');
+                        transparentColor.textContent = this.options.texts.transparent;
+                        transparentColor.addEventListener('click', () => {
+                            handle(this.tableModule, this.selectedTds, 'transparent');
+                        });
                         const clearColor = document.createElement('div');
+                        clearColor.classList.add('table-color-clear');
                         clearColor.textContent = this.options.texts.clear;
                         clearColor.addEventListener('click', () => {
                             handle(this.tableModule, this.selectedTds, null);
@@ -1794,8 +1823,8 @@
                         }, false);
                         label.appendChild(customColor);
                         label.appendChild(input);
-                        clearColor.classList.add('table-color-clear');
                         label.classList.add('table-color-custom');
+                        colorMapRow.appendChild(transparentColor);
                         colorMapRow.appendChild(clearColor);
                         colorMapRow.appendChild(label);
                         colorSelectWrapper.appendChild(colorMapRow);
@@ -1816,7 +1845,7 @@
                             const item = e.target;
                             const color = item.style.backgroundColor;
                             if (item && color && this.selectedTds.length > 0) {
-                                this.tableModule.setBackgroundColor(this.selectedTds, color);
+                                this.tableModule.setCellAttrs(this.selectedTds, attrKey, color);
                                 this.updateUsedColor(color);
                             }
                         });
@@ -2276,6 +2305,14 @@
                     height: `${this.options.size}px`,
                     transform: `translate(-${this.options.size}px, -${this.options.size}px)`,
                 });
+                corner.addEventListener('click', () => {
+                    const tableRect = this.table.getBoundingClientRect();
+                    if (this.tableModule.tableSelection) {
+                        const tableSelection = this.tableModule.tableSelection;
+                        tableSelection.selectedTds = tableSelection.computeSelectedTds({ x: tableRect.x, y: tableRect.y }, { x: tableRect.right, y: tableRect.bottom });
+                        tableSelection.showSelection();
+                    }
+                });
                 this.root.appendChild(corner);
             }
             if (this.tableCols.length > 0) {
@@ -2701,6 +2738,7 @@
         selectedEditorScrollX = 0;
         selectedEditorScrollY = 0;
         selectedTds = [];
+        cellSelectWrap;
         cellSelect;
         dragging = false;
         scrollHandler = [];
@@ -2711,11 +2749,9 @@
             this.table = table;
             this.quill = quill;
             this.options = this.resolveOptions(options);
-            this.cellSelect = this.tableModule.addContainer('ql-table-selection_line');
-            this.helpLinesInitial();
-            const resizeObserver = new ResizeObserver(() => {
-                this.hideSelection();
-            });
+            this.cellSelectWrap = this.tableModule.addContainer('ql-table-selection');
+            this.cellSelect = this.helpLinesInitial();
+            const resizeObserver = new ResizeObserver(() => this.hideSelection());
             resizeObserver.observe(this.table);
             this.quill.root.addEventListener('mousedown', this.selectingHandler, false);
             this.tableMenu = new TableMenu(this.tableModule, quill, this.options.tableMenu);
@@ -2728,9 +2764,13 @@
         }
         ;
         helpLinesInitial() {
-            Object.assign(this.cellSelect.style, {
+            const cellSelect = document.createElement('div');
+            cellSelect.classList.add('ql-table-selection_line');
+            Object.assign(cellSelect.style, {
                 'border-color': this.options.selectColor,
             });
+            this.cellSelectWrap.appendChild(cellSelect);
+            return cellSelect;
         }
         computeSelectedTds(startPoint, endPoint) {
             // Use TableCell to calculation selected range, because TableCellInner is scrollable, the width will effect calculate
@@ -2843,11 +2883,21 @@
                 return;
             const { x: editorScrollX, y: editorScrollY } = this.getQuillViewScroll();
             const { x: tableScrollX, y: tableScrollY } = this.getTableViewScroll();
+            const tableWrapperRect = this.table.parentElement.getBoundingClientRect();
+            const rootRect = this.quill.root.getBoundingClientRect();
+            const wrapLeft = tableWrapperRect.x - rootRect.x;
+            const wrapTop = tableWrapperRect.y - rootRect.y;
             Object.assign(this.cellSelect.style, {
-                left: `${this.selectedEditorScrollX * 2 - editorScrollX + this.boundary.x + this.selectedTableScrollX - tableScrollX}px`,
-                top: `${this.selectedEditorScrollY * 2 - editorScrollY + this.boundary.y + this.selectedTableScrollY - tableScrollY}px`,
-                width: `${this.boundary.width + 1}px`,
-                height: `${this.boundary.height + 1}px`,
+                left: `${this.selectedEditorScrollX * 2 - editorScrollX + this.boundary.x + this.selectedTableScrollX - tableScrollX - wrapLeft}px`,
+                top: `${this.selectedEditorScrollY * 2 - editorScrollY + this.boundary.y + this.selectedTableScrollY - tableScrollY - wrapTop}px`,
+                width: `${this.boundary.width}px`,
+                height: `${this.boundary.height}px`,
+            });
+            Object.assign(this.cellSelectWrap.style, {
+                left: `${wrapLeft}px`,
+                top: `${wrapTop}px`,
+                width: `${tableWrapperRect.width + 2}px`,
+                height: `${tableWrapperRect.height + 2}px`,
             });
             this.tableMenu.updateTools();
         }
@@ -2865,7 +2915,7 @@
         }
         showSelection() {
             clearScrollEvent.call(this);
-            Object.assign(this.cellSelect.style, { display: 'block' });
+            Object.assign(this.cellSelectWrap.style, { display: 'block' });
             this.updateSelection();
             addScrollEvent.call(this, this.quill.root, () => {
                 this.updateSelection();
@@ -2877,14 +2927,14 @@
         hideSelection() {
             this.boundary = null;
             this.selectedTds = [];
-            this.cellSelect && Object.assign(this.cellSelect.style, { display: 'none' });
+            this.cellSelectWrap && Object.assign(this.cellSelectWrap.style, { display: 'none' });
             this.tableMenu.hideTools();
             clearScrollEvent.call(this);
         }
         destroy() {
             this.hideSelection();
             this.tableMenu.destroy();
-            this.cellSelect.remove();
+            this.cellSelectWrap.remove();
             clearScrollEvent.call(this);
             this.quill.root.removeEventListener('mousedown', this.selectingHandler, false);
             return null;
@@ -3292,8 +3342,6 @@
                 const cell = node;
                 const rowspan = Number(cell.getAttribute('rowspan')) || 1;
                 const colspan = Number(cell.getAttribute('colspan')) || 1;
-                const height = cell.style.height;
-                const backgroundColor = cell.style.backgroundColor;
                 if (!colIds[cellCount]) {
                     for (let i = cellCount; i >= 0; i--) {
                         if (!colIds[i])
@@ -3306,15 +3354,13 @@
                     delta.insert('\n');
                 }
                 // add each insert tableCellInner format
-                const value = {
+                const value = Object.assign(TableCellFormat.formats(cell), {
                     tableId,
                     rowId,
                     colId,
                     rowspan: Number.isNaN(rowspan) ? 1 : rowspan,
                     colspan: Number.isNaN(colspan) ? 1 : colspan,
-                };
-                height && (value.height = height);
-                backgroundColor && (value.backgroundColor = backgroundColor);
+                });
                 return delta.compose(new Delta().retain(delta.length(), {
                     [blotName.tableCellInner]: value,
                 }));
@@ -3527,11 +3573,11 @@
                 });
             });
         }
-        setBackgroundColor(selectedTds, color) {
+        setCellAttrs(selectedTds, attr, value) {
             if (selectedTds.length === 0)
                 return;
             for (const td of selectedTds) {
-                td.backgroundColor = color;
+                td.setFormatValue(attr, value);
             }
         }
         deleteTable() {
@@ -3889,6 +3935,7 @@
     exports.TableUp = TableUp;
     exports.TableVitrualScroll = TableVitrualScroll;
     exports.TableWrapperFormat = TableWrapperFormat;
+    exports.allowAttrs = allowAttrs;
     exports.blotName = blotName;
     exports.default = TableUp;
     exports.findParentBlot = findParentBlot;

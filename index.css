@@ -11,8 +11,13 @@
 .ql-toolbar .ql-picker.ql-expanded .ql-picker-options {
   z-index: 1;
 }
-.ql-container .ql-table-selection_line {
+.ql-container .ql-table-selection {
   display: none;
+  position: absolute;
+  overflow: hidden;
+  pointer-events: none;
+}
+.ql-container .ql-table-selection_line {
   position: absolute;
   border: 2px solid;
   pointer-events: none;
@@ -152,6 +157,7 @@
   border-right: none;
   border-bottom: none;
   border-top-left-radius: 50%;
+  cursor: pointer;
 }
 .ql-table-toolbox {
   position: absolute;
@@ -246,6 +252,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 0.25rem;
 }
 .table-color-used {
   display: flex;
@@ -263,6 +270,7 @@
   border: 0.0625rem solid #a3a3a3;
   cursor: pointer;
 }
+.table-color-transparent,
 .table-color-clear,
 .table-color-custom {
   display: flex;
@@ -270,11 +278,11 @@
   justify-content: center;
   flex: 1;
   height: 1.25rem;
-  margin: 0 0.25rem;
   color: #303133;
   background-color: #fff;
   cursor: pointer;
 }
+.table-color-transparent:hover,
 .table-color-clear:hover,
 .table-color-custom:hover {
   background-color: #edeeef;
@@ -301,8 +309,6 @@
   max-height: 140px;
   overflow: auto;
   scrollbar-width: none;
-  --td-border-color: #a1a1aa;
-  --td-border: 1px solid var(--td-border-color);
 }
 .ql-editor .ql-table-cell {
   padding: 8px 12px;
@@ -323,14 +329,7 @@
   table-layout: fixed;
 }
 .ql-editor .ql-table td {
-  border-top: var(--td-border);
-  border-left: var(--td-border);
-}
-.ql-editor .ql-table td:last-child {
-  border-right: var(--td-border);
-}
-.ql-editor .ql-table tr:last-child td {
-  border-bottom: var(--td-border);
+  border: 1px solid #a1a1aa;
 }
 .ql-table-scrollbar {
   position: absolute;
