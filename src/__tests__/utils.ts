@@ -113,7 +113,7 @@ export const createTableDeltaOps = (row: number, col: number, full: boolean = tr
   for (let i = 0; i < row; i++) {
     for (let j = 0; j < col; j++) {
       if (!isEmpty) {
-        table.push({ insert: `${i * row + j + 1}` });
+        table.push({ insert: `${i * col + j + 1}` });
       }
       table.push(
         {
