@@ -1,6 +1,6 @@
 import type Quill from 'quill';
-import type { TableMainFormat } from '../formats';
-import { tableUpEvent, tableUpSize } from '../utils';
+import type { TableMainFormat } from '../../formats';
+import { tableUpEvent, tableUpSize } from '../../utils';
 
 export class TableResizeCommon {
   colIndex: number = -1;

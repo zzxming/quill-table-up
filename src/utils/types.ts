@@ -39,7 +39,7 @@ export interface TableTextOptions {
   colText?: string;
   notPositiveNumberError?: string;
 }
-export interface TableResizeOptions {
+export interface TableResizeBoxOptions {
   size: number;
 }
 // eslint-disable-next-line ts/no-empty-object-type
@@ -53,7 +53,7 @@ export interface TableUpOptions {
   icon: string;
   resizerSetOuter: boolean;
   selection?: TableSelectionOptions;
-  resizer?: TableResizeOptions ;
+  resizeBox?: TableResizeBoxOptions ;
   resizeLine?: TableResizeLineOptions;
   scrollbar?: boolean;
 }
