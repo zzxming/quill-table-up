@@ -1,4 +1,4 @@
-import type { TableCellInnerFormat, TableUp } from '..';
+import type { TableCellInnerFormat, TableMenuCommon, TableUp } from '..';
 
 export interface ToolOption {
   name: string;
@@ -22,13 +22,13 @@ export interface TableMenuOptions {
   tipText: boolean;
   tipTexts: Record<string, string>;
   tools: Tool[];
-  contextmenu: boolean;
   localstorageKey: string;
   defaultColorMap: string[];
   texts: TableMenuTexts;
 };
 export interface TableSelectionOptions {
   selectColor: string;
+  tableMenuClass: Constructor<TableMenuCommon>;
   tableMenu: TableMenuOptions;
 }
 export interface TableTextOptions {

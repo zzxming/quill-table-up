@@ -1,10 +1,10 @@
-import type { TableUp } from '..';
+import type { TableMenuCommon, TableUp } from '..';
 import type { TableCellInnerFormat, TableMainFormat } from '../formats';
 import type { RelactiveRect, TableSelectionOptions } from '../utils';
 import Quill from 'quill';
 import { TableCellFormat } from '../formats';
 import { addScrollEvent, clearScrollEvent } from '../utils';
-import { TableMenu } from './table-menu';
+import { TableMenuSelect } from './table-menu';
 
 const ERROR_LIMIT = 2;
 
@@ -23,7 +23,7 @@ export class TableSelection {
   dragging: boolean = false;
   scrollHandler: [HTMLElement, (...args: any[]) => void][] = [];
   selectingHandler = this.mouseDownHandler.bind(this);
-  tableMenu: TableMenu;
+  tableMenu: TableMenuCommon;
 
   constructor(public tableModule: TableUp, public table: HTMLElement, public quill: Quill, options: Partial<TableSelectionOptions> = {}) {
     this.options = this.resolveOptions(options);
@@ -35,12 +35,13 @@ export class TableSelection {
     resizeObserver.observe(this.table);
 
     this.quill.root.addEventListener('mousedown', this.selectingHandler, false);
-    this.tableMenu = new TableMenu(this.tableModule, quill, this.options.tableMenu);
+    this.tableMenu = new this.options.tableMenuClass(this.tableModule, quill, this.options.tableMenu);
   }
 
   resolveOptions(options: Partial<TableSelectionOptions>) {
     return Object.assign({
       selectColor: '#0589f3',
+      tableMenuClass: TableMenuSelect,
       tableMenu: {},
     }, options);
   };
