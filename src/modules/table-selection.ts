@@ -142,6 +142,7 @@ export class TableSelection {
     this.startScrollY = tableScrollY;
     this.selectedTds = this.computeSelectedTds(startPoint, startPoint);
     this.showSelection();
+    this.tableMenu.hideTools();
 
     const mouseMoveHandler = (mousemoveEvent: MouseEvent) => {
       const { button, target, clientX, clientY } = mousemoveEvent;
@@ -166,6 +167,7 @@ export class TableSelection {
       document.body.removeEventListener('mousemove', mouseMoveHandler, false);
       document.body.removeEventListener('mouseup', mouseUpHandler, false);
       this.dragging = false;
+      this.tableMenu.updateTools();
     };
 
     document.body.addEventListener('mousemove', mouseMoveHandler, false);
@@ -193,7 +195,9 @@ export class TableSelection {
       width: `${tableWrapperRect.width + 2}px`,
       height: `${tableWrapperRect.height + 2}px`,
     });
-    this.tableMenu.updateTools();
+    if (!this.dragging) {
+      this.tableMenu.updateTools();
+    }
   }
 
   getQuillViewScroll() {
