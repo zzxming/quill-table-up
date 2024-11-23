@@ -1,13 +1,13 @@
 import type { Parchment as TypeParchment } from 'quill';
-import type TableUp from '..';
-import type { TableColFormat, TableMainFormat, TableRowFormat } from '..';
-import type { TableResizeOptions } from '../utils';
+import type TableUp from '../..';
+import type { TableColFormat, TableMainFormat, TableRowFormat } from '../..';
+import type { TableResizeBoxOptions } from '../../utils';
 import Quill from 'quill';
-import { addScrollEvent, clearScrollEvent } from '../utils';
+import { addScrollEvent, clearScrollEvent } from '../../utils';
 import { TableResizeCommon } from './table-resize-common';
 
-export class TableResize extends TableResizeCommon {
-  options: TableResizeOptions;
+export class TableResizeBox extends TableResizeCommon {
+  options: TableResizeBoxOptions;
   root!: HTMLElement;
   tableMain: TableMainFormat;
   tableWrapper!: TypeParchment.Parent;
@@ -18,7 +18,7 @@ export class TableResize extends TableResizeCommon {
   colHeadWrapper: HTMLElement | null = null;
   scrollHandler: [HTMLElement, (e: Event) => void][] = [];
 
-  constructor(public tableModule: TableUp, public table: HTMLElement, quill: Quill, options: Partial<TableResizeOptions>) {
+  constructor(public tableModule: TableUp, public table: HTMLElement, quill: Quill, options: Partial<TableResizeBoxOptions>) {
     super(quill);
     this.options = this.resolveOptions(options);
     this.tableMain = Quill.find(this.table) as TableMainFormat;
@@ -34,7 +34,7 @@ export class TableResize extends TableResizeCommon {
     this.resizeObserver.observe(this.table);
   }
 
-  resolveOptions(options: Partial<TableResizeOptions>) {
+  resolveOptions(options: Partial<TableResizeBoxOptions>) {
     return Object.assign({
       size: 12,
     }, options);
@@ -62,7 +62,7 @@ export class TableResize extends TableResizeCommon {
     tableColHeads[i].style.width = `${w}${isFull ? '%' : 'px'}`;
   }
 
-  handleColMouseDownFunc = function (this: TableResize, e: MouseEvent) {
+  handleColMouseDownFunc = function (this: TableResizeBox, e: MouseEvent) {
     const value = this.handleColMouseDown(e);
     if (value) {
       Object.assign(this.dragColBreak!.style, {
@@ -101,7 +101,7 @@ export class TableResize extends TableResizeCommon {
     tableRowHeads[i].style.height = `${h}px`;
   }
 
-  handleRowMouseDownFunc = function (this: TableResize, e: MouseEvent) {
+  handleRowMouseDownFunc = function (this: TableResizeBox, e: MouseEvent) {
     const value = this.handleRowMouseDown(e);
     if (value) {
       Object.assign(this.dragRowBreak!.style, {

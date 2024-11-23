@@ -1,8 +1,8 @@
-import type TableUp from '..';
-import type { TableResizeLineOptions } from '../utils';
+import type TableUp from '../..';
+import type { TableResizeLineOptions } from '../../utils';
 import Quill from 'quill';
-import { type TableCellFormat, TableRowFormat } from '../formats';
-import { blotName, findParentBlot, findParentBlots } from '../utils';
+import { type TableCellFormat, TableRowFormat } from '../../formats';
+import { blotName, findParentBlot, findParentBlots } from '../../utils';
 import { TableResizeCommon } from './table-resize-common';
 
 export class TableResizeLine extends TableResizeCommon {

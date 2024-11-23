@@ -28,50 +28,14 @@ const quill1 = new Quill('#editor1', {
       ['clean'],
     ],
     [TableUp.moduleName]: {
-      full: false,
-      resizerSetOuter: false,
-      selection: {
-        selectColor: '#f40',
-        tableMenu: {
-          localstorageKey: 'used-color',
-          tipText: true,
-          contextmenu: false,
-        },
-      },
-    },
-  },
-});
-
-const quill2 = new Quill('#editor2', {
-  // debug: 'info',
-  theme: 'snow',
-  modules: {
-    toolbar: [
-      ['bold', 'italic', 'underline', 'strike'],
-      ['blockquote', 'code-block', 'code'],
-      ['link', 'image', 'video', 'formula'],
-      [{ list: 'ordered' }, { list: 'bullet' }, { list: 'check' }],
-      [{ script: 'sub' }, { script: 'super' }],
-      [{ indent: '-1' }, { indent: '+1' }],
-      [{ direction: 'rtl' }],
-
-      [{ size: ['small', false, 'large', 'huge'] }],
-      [{ header: [1, 2, 3, 4, 5, 6, false] }],
-      [{ color: [] }, { background: [] }],
-      [{ font: [] }],
-      [{ align: [] }],
-      [{ [TableUp.toolName]: [] }],
-      ['clean'],
-    ],
-    [TableUp.moduleName]: {
       full: true,
       resizerSetOuter: true,
       selection: {
         selectColor: '#04f',
+        tableMenuClass: window.TableUp.TableMenuContextmenu,
         tableMenu: {
           localstorageKey: 'used-color',
           tipText: true,
-          contextmenu: true,
           tipTexts: {
             InsertTop: '向上插入一行',
             InsertRight: '向右插入一列',
@@ -126,6 +90,42 @@ const quill2 = new Quill('#editor2', {
         rowText: '行数',
         colText: '列数',
         notPositiveNumberError: '请输入正整数',
+      },
+    },
+  },
+});
+
+const quill2 = new Quill('#editor2', {
+  // debug: 'info',
+  theme: 'snow',
+  modules: {
+    toolbar: [
+      ['bold', 'italic', 'underline', 'strike'],
+      ['blockquote', 'code-block', 'code'],
+      ['link', 'image', 'video', 'formula'],
+      [{ list: 'ordered' }, { list: 'bullet' }, { list: 'check' }],
+      [{ script: 'sub' }, { script: 'super' }],
+      [{ indent: '-1' }, { indent: '+1' }],
+      [{ direction: 'rtl' }],
+
+      [{ size: ['small', false, 'large', 'huge'] }],
+      [{ header: [1, 2, 3, 4, 5, 6, false] }],
+      [{ color: [] }, { background: [] }],
+      [{ font: [] }],
+      [{ align: [] }],
+      [{ [TableUp.toolName]: [] }],
+      ['clean'],
+    ],
+    [TableUp.moduleName]: {
+      full: false,
+      resizerSetOuter: false,
+      selection: {
+        selectColor: '#f40',
+        // tableMenuClass: window.TableUp.TableMenuSelect,
+        tableMenu: {
+          localstorageKey: 'used-color',
+          tipText: true,
+        },
       },
     },
   },

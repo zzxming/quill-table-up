@@ -1,4 +1,4 @@
-import type { TableCellInnerFormat, TableUp } from '..';
+import type { TableCellInnerFormat, TableMenuCommon, TableUp } from '..';
 
 export interface ToolOption {
   name: string;
@@ -22,13 +22,13 @@ export interface TableMenuOptions {
   tipText: boolean;
   tipTexts: Record<string, string>;
   tools: Tool[];
-  contextmenu: boolean;
   localstorageKey: string;
   defaultColorMap: string[];
   texts: TableMenuTexts;
 };
 export interface TableSelectionOptions {
   selectColor: string;
+  tableMenuClass: Constructor<TableMenuCommon>;
   tableMenu: TableMenuOptions;
 }
 export interface TableTextOptions {
@@ -39,7 +39,7 @@ export interface TableTextOptions {
   colText?: string;
   notPositiveNumberError?: string;
 }
-export interface TableResizeOptions {
+export interface TableResizeBoxOptions {
   size: number;
 }
 // eslint-disable-next-line ts/no-empty-object-type
@@ -53,7 +53,7 @@ export interface TableUpOptions {
   icon: string;
   resizerSetOuter: boolean;
   selection?: TableSelectionOptions;
-  resizer?: TableResizeOptions ;
+  resizeBox?: TableResizeBoxOptions ;
   resizeLine?: TableResizeLineOptions;
   scrollbar?: boolean;
 }

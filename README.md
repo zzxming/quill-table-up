@@ -84,22 +84,22 @@ const defaultTexts = {
 
 ### TableSelection Options
 
-| attribute   | description              | type               | default   |
-| ----------- | ------------------------ | ------------------ | --------- |
-| selectColor | selector border color    | `string`           | `#0589f3` |
-| tableMenu   | module TableMenu options | `TableMenuOptions` | -         |
+| attribute      | description                                                                                                                            | type               | default           |
+| -------------- | -------------------------------------------------------------------------------------------------------------------------------------- | ------------------ | ----------------- |
+| selectColor    | selector border color                                                                                                                  | `string`           | `#0589f3`         |
+| tableMenu      | module TableMenu options                                                                                                               | `TableMenuOptions` | -                 |
+| tableMenuClass | when select a cell will trigger this class to create menu. module provide two menu module `TableMenuContextmenu` and `TableMenuSelect` | `Constructor`      | `TableMenuSelect` |
 
 ### TableMenu Options
 
-| attribute       | description                                                                      | type                     | default                 |
-| --------------- | -------------------------------------------------------------------------------- | ------------------------ | ----------------------- |
-| tipText         | display tip text when hover icon                                                 | `boolean`                | `true`                  |
-| tipTexts        | the text to replace tools tip text                                               | `Record<string, string>` | `{}`                    |
-| localstorageKey | used color save localstorage key                                                 | `string`                 | `__table-bg-used-color` |
-| tools           | menu items                                                                       | `Tool[]`                 | `defaultTools`          |
-| contextmenu     | table menu will display when selected at least one cell and right click on table | `boolean`                | `false`                 |
-| defaultColorMap | color map                                                                        | `string[][]`             | in source code          |
-| texts           | the text that menu needs                                                         | `TableMenuTexts`         | `defaultTexts`          |
+| attribute       | description                        | type                     | default                 |
+| --------------- | ---------------------------------- | ------------------------ | ----------------------- |
+| tipText         | display tip text when hover icon   | `boolean`                | `true`                  |
+| tipTexts        | the text to replace tools tip text | `Record<string, string>` | `{}`                    |
+| localstorageKey | used color save localstorage key   | `string`                 | `__table-bg-used-color` |
+| tools           | menu items                         | `Tool[]`                 | `defaultTools`          |
+| defaultColorMap | color map                          | `string[][]`             | in source code          |
+| texts           | the text that menu needs           | `TableMenuTexts`         | `defaultTexts`          |
 
 <details>
   <summary> types and default value </summary>

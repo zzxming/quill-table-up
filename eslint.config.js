@@ -9,6 +9,7 @@ export default factory({
       rules: {
         'unicorn/prefer-dom-node-dataset': 'off',
         'no-cond-assign': 'off',
+        'new-cap': 'off',
       },
     },
   ],

@@ -10,7 +10,7 @@ import type Picker from 'quill/ui/picker';
 import type { TableColValue, TableConstantsData, TableTextOptions, TableUpOptions } from './utils';
 import Quill from 'quill';
 import { BlockOverride, BlockquoteOverride, CodeBlockOverride, ContainerFormat, HeaderOverride, ListItemOverride, ScrollOverride, TableBodyFormat, TableCellFormat, TableCellInnerFormat, TableColFormat, TableColgroupFormat, TableMainFormat, TableRowFormat, TableWrapperFormat } from './formats';
-import { TableResize, TableResizeLine, TableSelection, TableVitrualScroll } from './modules';
+import { TableResizeBox, TableResizeLine, TableSelection, TableVitrualScroll } from './modules';
 import { blotName, createSelectBox, debounce, findParentBlot, findParentBlots, isBoolean, isFunction, randomId, tableUpEvent, tableUpSize } from './utils';
 
 const Delta = Quill.import('delta');
@@ -175,7 +175,7 @@ export class TableUp {
   range?: Range | null;
   table?: HTMLElement;
   tableSelection?: TableSelection;
-  tableResizer?: TableResize;
+  tableResizerBox?: TableResizeBox;
   tableResizerLine?: TableResizeLine;
   tableScrollbar?: TableVitrualScroll;
   get statics(): any {
@@ -481,7 +481,7 @@ export class TableUp {
         this.tableScrollbar = new TableVitrualScroll(this, table, quill);
       }
       if (this.options.resizerSetOuter) {
-        this.tableResizer = new TableResize(this, table, quill, this.options.resizer || {});
+        this.tableResizerBox = new TableResizeBox(this, table, quill, this.options.resizeBox || {});
       }
     }
   }
@@ -500,8 +500,8 @@ export class TableUp {
 
     this.table = undefined;
     if (this.options.resizerSetOuter) {
-      this.tableResizer && this.tableResizer.destroy();
-      this.tableResizer = undefined;
+      this.tableResizerBox && this.tableResizerBox.destroy();
+      this.tableResizerBox = undefined;
     }
   }
 
