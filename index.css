@@ -198,6 +198,7 @@
 }
 .ql-table-menu.contextmenu {
   flex-direction: column;
+  padding: 4px 8px;
 }
 .ql-table-menu.contextmenu .ql-table-menu-item {
   width: 100%;
