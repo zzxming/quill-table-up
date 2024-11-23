@@ -1,5 +1,13 @@
 import type { TableTextOptions } from './types';
-import { limitDomInViewPort } from './utils';
+import {
+  autoUpdate,
+  computePosition,
+  flip,
+  limitShift,
+  offset,
+  shift,
+} from '@floating-ui/dom';
+import { handleIfTransitionend } from './utils';
 
 interface InputOptions {
   type?: string;
@@ -277,14 +285,29 @@ export const createSelectBox = (options: TableSelectOptions = {}) => {
 };
 
 interface ToolTipOptions {
-  direction?: 'top' | 'right' | 'bottom' | 'left';
+  direction?:
+    | 'top'
+    | 'top-start'
+    | 'top-end'
+    | 'bottom'
+    | 'bottom-start'
+    | 'bottom-end'
+    | 'right'
+    | 'right-start'
+    | 'right-end'
+    | 'left'
+    | 'left-start'
+    | 'left-end';
   msg?: string;
   delay?: number;
   content?: HTMLElement;
 }
-const DISTANCE = 8;
+const DISTANCE = 4;
 let tooltipContainer: HTMLElement;
-export const createToolTip = (target: HTMLElement, options: ToolTipOptions = {}) => {
+export interface TooltipInstance {
+  destroy: () => void;
+};
+export const createTooltip = (target: HTMLElement, options: ToolTipOptions = {}): TooltipInstance | null => {
   const { msg = '', delay = 150, content, direction = 'bottom' } = options;
   if (msg || content) {
     if (!tooltipContainer) {
@@ -292,9 +315,7 @@ export const createToolTip = (target: HTMLElement, options: ToolTipOptions = {})
       document.body.appendChild(tooltipContainer);
     }
     const tooltip = document.createElement('div');
-    tooltip.classList.add('tooltip');
-    tooltip.classList.add('hidden');
-    tooltip.classList.add('transparent');
+    tooltip.classList.add('tooltip', 'hidden', 'transparent');
     if (content) {
       tooltip.appendChild(content);
     }
@@ -302,12 +323,25 @@ export const createToolTip = (target: HTMLElement, options: ToolTipOptions = {})
       tooltip.textContent = msg;
     }
     let timer: ReturnType<typeof setTimeout> | null;
-
+    let cleanup: () => void;
+    const update = () => {
+      if (cleanup) cleanup();
+      computePosition(target, tooltip, {
+        placement: direction,
+        middleware: [flip(), shift({ limiter: limitShift() }), offset(DISTANCE)],
+      }).then(({ x, y }) => {
+        Object.assign(tooltip.style, {
+          left: `${x}px`,
+          top: `${y}px`,
+        });
+      });
+    };
     const transitionendHandler = () => {
       tooltip.classList.add('hidden');
       if (tooltipContainer.contains(tooltip)) {
         tooltipContainer.removeChild(tooltip);
       }
+      if (cleanup) cleanup();
     };
     const open = () => {
       if (timer) clearTimeout(timer);
@@ -315,39 +349,9 @@ export const createToolTip = (target: HTMLElement, options: ToolTipOptions = {})
         tooltipContainer.appendChild(tooltip);
         tooltip.removeEventListener('transitionend', transitionendHandler);
         tooltip.classList.remove('hidden');
-        const elRect = target.getBoundingClientRect();
-        const contentRect = tooltip.getBoundingClientRect();
-        const extraPositionMap = {
-          top: {
-            top: -contentRect.height - DISTANCE,
-            left: elRect.width / 2 - contentRect.width / 2,
-          },
-          right: {
-            top: elRect.height / 2 - contentRect.height / 2,
-            left: elRect.width + DISTANCE,
-          },
-          bottom: {
-            top: contentRect.height + DISTANCE,
-            left: elRect.width / 2 - contentRect.width / 2,
-          },
-          left: {
-            top: elRect.height / 2 - contentRect.height / 2,
-            left: -contentRect.width - DISTANCE,
 
-          },
-        } as const;
-        const extra = extraPositionMap[direction];
-        let top = elRect.top + extra.top;
-        let left = elRect.left + extra.left;
-        Object.assign(tooltip.style, {
-          top: `${top + window.scrollY}px`,
-          left: `${left + window.scrollX}px`,
-        });
-        ({ top, left } = limitDomInViewPort(tooltip.getBoundingClientRect()));
-        Object.assign(tooltip.style, {
-          top: `${top + window.scrollY}px`,
-          left: `${left + window.scrollX}px`,
-        });
+        cleanup = autoUpdate(target, tooltip, update);
+
         tooltip.classList.remove('transparent');
       }, delay);
     };
@@ -355,18 +359,28 @@ export const createToolTip = (target: HTMLElement, options: ToolTipOptions = {})
       if (timer) clearTimeout(timer);
       timer = setTimeout(() => {
         tooltip.classList.add('transparent');
-        tooltip.addEventListener('transitionend', transitionendHandler, { once: true });
-        // handle remove when transition set none
-        setTimeout(() => {
-          transitionendHandler();
-        }, 150);
+        handleIfTransitionend(tooltip, 150, transitionendHandler, { once: true });
       }, delay);
     };
-    target.addEventListener('mouseenter', open);
-    target.addEventListener('mouseleave', close);
-    tooltip.addEventListener('mouseenter', open);
-    tooltip.addEventListener('mouseleave', close);
-    return tooltip;
+
+    const eventListeners = [target, tooltip];
+
+    for (const listener of eventListeners) {
+      listener.addEventListener('mouseenter', open);
+      listener.addEventListener('mouseleave', close);
+    }
+
+    const destroy = () => {
+      for (const listener of eventListeners) {
+        listener.removeEventListener('mouseenter', open);
+        listener.removeEventListener('mouseleave', close);
+      }
+      if (cleanup) cleanup();
+      tooltip.remove();
+    };
+    return {
+      destroy,
+    };
   }
   return null;
 };

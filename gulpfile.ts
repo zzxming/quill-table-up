@@ -1,5 +1,6 @@
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { nodeResolve } from '@rollup/plugin-node-resolve';
 import terser from '@rollup/plugin-terser';
 import typescript from '@rollup/plugin-typescript';
 import autoprefixer from 'autoprefixer';
@@ -34,6 +35,7 @@ const buildDts = async () => {
 const buildTs = async (isDev: boolean = false) => {
   const plugins = [
     typescript({ tsconfig: './tsconfig.json' }),
+    nodeResolve(),
     svg({ stringify: true }),
   ];
   !isDev && plugins.push(terser());

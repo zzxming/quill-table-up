@@ -141,3 +141,11 @@ export function clearScrollEvent(this: ScrollHandle) {
   }
   this.scrollHandler = [];
 }
+
+export const handleIfTransitionend = (domNode: HTMLElement, duration: number, handler: () => void, options?: boolean | AddEventListenerOptions) => {
+  domNode.addEventListener('transitionend', handler, options);
+  // handle remove when transition set none
+  setTimeout(() => {
+    handler();
+  }, duration);
+};
