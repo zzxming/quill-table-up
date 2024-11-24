@@ -250,4 +250,7 @@ export class TableResizeCommon {
 
     return styleValue;
   };
+
+  update() {}
+  destroy() {}
 }
