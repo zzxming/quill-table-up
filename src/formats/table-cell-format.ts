@@ -31,8 +31,8 @@ export class TableCellFormat extends ContainerFormat {
       tableId,
       rowId,
       colId,
-      rowspan,
-      colspan,
+      rowspan: Number.isNaN(rowspan) ? 1 : rowspan,
+      colspan: Number.isNaN(colspan) ? 1 : colspan,
     };
     const { height, backgroundColor, borderColor } = domNode.style;
     height && (value.height = height);

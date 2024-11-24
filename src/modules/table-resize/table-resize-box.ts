@@ -132,11 +132,14 @@ export class TableResizeBox extends TableResizeCommon {
   }
 
   update() {
+    const tableMainRect = this.tableMain.domNode.getBoundingClientRect();
     const tableWrapperRect = this.tableWrapper.domNode.getBoundingClientRect();
+    const tableNodeX = Math.max(tableMainRect.x, tableWrapperRect.x);
+    const tableNodeY = Math.max(tableMainRect.y, tableWrapperRect.y);
     const rootRect = this.quill.root.getBoundingClientRect();
     Object.assign(this.root.style, {
-      top: `${tableWrapperRect.y - rootRect.y}px`,
-      left: `${tableWrapperRect.x - rootRect.x}px`,
+      top: `${tableNodeY - rootRect.y}px`,
+      left: `${tableNodeX - rootRect.x}px`,
     });
   }
 

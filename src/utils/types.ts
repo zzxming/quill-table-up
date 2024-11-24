@@ -56,12 +56,14 @@ export interface TableUpOptions {
   resizeBox?: TableResizeBoxOptions ;
   resizeLine?: TableResizeLineOptions;
   scrollbar?: boolean;
+  showAlign?: boolean;
 }
 export interface TableColValue {
   tableId: string;
   colId: string;
   width: string;
-  full: boolean;
+  full?: boolean;
+  align?: string;
 };
 export interface TableCellValue {
   tableId: string;
@@ -79,7 +81,8 @@ export interface TableRowValue {
 }
 export interface TableValue {
   tableId: string;
-  full: boolean;
+  full?: boolean;
+  align?: string;
 };
 
 export interface RelactiveRect {

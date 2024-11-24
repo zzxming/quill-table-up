@@ -7,10 +7,11 @@ import type Keyboard from 'quill/modules/keyboard';
 import type Toolbar from 'quill/modules/toolbar';
 import type BaseTheme from 'quill/themes/base';
 import type Picker from 'quill/ui/picker';
-import type { TableColValue, TableConstantsData, TableTextOptions, TableUpOptions } from './utils';
+import type { TableResizeCommon } from './modules';
+import type { TableConstantsData, TableTextOptions, TableUpOptions } from './utils';
 import Quill from 'quill';
 import { BlockOverride, BlockquoteOverride, CodeBlockOverride, ContainerFormat, HeaderOverride, ListItemOverride, ScrollOverride, TableBodyFormat, TableCellFormat, TableCellInnerFormat, TableColFormat, TableColgroupFormat, TableMainFormat, TableRowFormat, TableWrapperFormat } from './formats';
-import { TableResizeBox, TableResizeLine, TableSelection, TableVitrualScroll } from './modules';
+import { TableAlign, TableResizeBox, TableResizeLine, TableSelection, TableVitrualScroll } from './modules';
 import { blotName, createSelectBox, debounce, findParentBlot, findParentBlots, isBoolean, isFunction, isString, randomId, tableUpEvent, tableUpSize } from './utils';
 
 const Delta = Quill.import('delta');
@@ -175,9 +176,9 @@ export class TableUp {
   range?: Range | null;
   table?: HTMLElement;
   tableSelection?: TableSelection;
-  tableResizerBox?: TableResizeBox;
-  tableResizerLine?: TableResizeLine;
+  tableResize?: TableResizeCommon;
   tableScrollbar?: TableVitrualScroll;
+  tableAlign?: TableAlign;
   get statics(): any {
     return this.constructor;
   }
@@ -225,14 +226,14 @@ export class TableUp {
         const tableNode = path.find(node => node.tagName && node.tagName.toUpperCase() === 'TABLE' && node.classList.contains('ql-table'));
         if (tableNode) {
           if (this.table === tableNode) {
-            this.tableSelection && this.tableSelection?.showSelection();
+            this.tableSelection && this.tableSelection.showSelection();
             return;
           }
-          if (this.table) this.hideTableTools(true);
+          if (this.table) this.hideTableTools();
           this.showTableTools(tableNode, quill);
         }
         else if (this.table) {
-          this.hideTableTools(true);
+          this.hideTableTools();
         }
       },
       false,
@@ -254,6 +255,9 @@ export class TableUp {
 
         // only can select inside table or select all table
         if (startBlot instanceof TableColFormat) {
+          if (!oldRange) {
+            oldRange = { index: 0, length: 0 };
+          }
           return this.quill.setSelection(
             range.index + (oldRange.index > range.index ? -1 : 1),
             range.length + (oldRange.length === range.length ? 0 : oldRange.length > range.length ? -1 : 1),
@@ -275,12 +279,12 @@ export class TableUp {
 
         // if range is not in table. hide table tools
         if (!startTableBlot || !endTableBlot) {
-          this.hideTableTools(true);
+          this.hideTableTools();
         }
       }
     });
     if (!this.options.resizerSetOuter) {
-      this.tableResizerLine = new TableResizeLine(this, quill, this.options.resizeLine || {});
+      this.tableResize = new TableResizeLine(this, quill, this.options.resizeLine || {});
     }
     this.quill.on(tableUpEvent.AFTER_TABLE_RESIZE, () => {
       this.tableSelection && this.tableSelection.hideSelection();
@@ -313,6 +317,7 @@ export class TableUp {
       resizerSetOuter: false,
       icon: icons.table,
       scrollbar: true,
+      showAlign: true,
     } as TableUpOptions, options);
   };
 
@@ -434,31 +439,36 @@ export class TableUp {
     if (table) {
       this.table = table;
       this.tableSelection = new TableSelection(this, table, quill, this.options.selection || {});
+      if (this.options.showAlign) {
+        this.tableAlign = new TableAlign(this, table, quill);
+      }
       if (this.options.scrollbar) {
         this.tableScrollbar = new TableVitrualScroll(this, table, quill);
       }
       if (this.options.resizerSetOuter) {
-        this.tableResizerBox = new TableResizeBox(this, table, quill, this.options.resizeBox || {});
+        this.tableResize = new TableResizeBox(this, table, quill, this.options.resizeBox || {});
       }
     }
   }
 
-  hideTableTools(removeAll: boolean = false) {
+  hideTableTools() {
     if (this.tableSelection) {
       this.tableSelection.destroy();
       this.tableSelection = undefined;
     }
-    if (removeAll) {
-      // eslint-disable-next-line unicorn/no-lonely-if
-      if (this.tableScrollbar) {
-        this.tableScrollbar.destroy();
-      }
+    if (this.tableScrollbar) {
+      this.tableScrollbar.destroy();
+      this.tableSelection = undefined;
+    }
+    if (this.tableAlign) {
+      this.tableAlign.destroy();
+      this.tableSelection = undefined;
     }
 
     this.table = undefined;
     if (this.options.resizerSetOuter) {
-      this.tableResizerBox && this.tableResizerBox.destroy();
-      this.tableResizerBox = undefined;
+      this.tableResize && this.tableResize.destroy();
+      this.tableResize = undefined;
     }
   }
 
@@ -668,7 +678,7 @@ export class TableUp {
     const selectedTds = this.tableSelection.selectedTds;
     const tableBlot = findParentBlot(selectedTds[0], blotName.tableMain);
     tableBlot && tableBlot.remove();
-    this.hideTableTools(true);
+    this.hideTableTools();
   }
 
   appendRow(isDown: boolean) {

@@ -10,13 +10,24 @@ export class TableMainFormat extends ContainerFormat {
 
   static create(value: TableValue) {
     const node = super.create() as HTMLElement;
-    const { tableId, full } = value;
+    const { tableId, full, align } = value;
     node.dataset.tableId = tableId;
+    if (align === 'right' || align === 'center') {
+      node.dataset.align = align;
+    }
+    else {
+      node.removeAttribute('date-align');
+    }
     full && (node.dataset.full = String(full));
     node.classList.add('ql-table');
     node.setAttribute('cellpadding', '0');
     node.setAttribute('cellspacing', '0');
     return node;
+  }
+
+  constructor(scroll: any, domNode: HTMLElement, _value: any) {
+    super(scroll, domNode);
+    this.updateAlign();
   }
 
   colWidthFillTable() {
@@ -39,6 +50,48 @@ export class TableMainFormat extends ContainerFormat {
 
   set full(value) {
     this.domNode[value ? 'setAttribute' : 'removeAttribute']('data-full', '');
+  }
+
+  get align() {
+    return this.domNode.dataset.align || '';
+  }
+
+  set align(value: string) {
+    if (value === 'right' || value === 'center') {
+      this.domNode.dataset.align = value;
+    }
+    else {
+      this.domNode.removeAttribute('data-align');
+    }
+    this.updateAlign();
+  }
+
+  updateAlign() {
+    const value = this.align;
+    const style: Record<string, string | null> = {
+      marginLeft: null,
+      marginRight: null,
+    };
+    switch (value) {
+      case 'center': {
+        style.marginLeft = 'auto';
+        style.marginRight = 'auto';
+        break;
+      }
+      case '':
+      case 'left': {
+        style.marginRight = 'auto';
+        break;
+      }
+      case 'right': {
+        style.marginLeft = 'auto';
+        break;
+      }
+      default: {
+        break;
+      }
+    }
+    Object.assign(this.domNode.style, style);
   }
 
   getRows() {
@@ -71,6 +124,7 @@ export class TableMainFormat extends ContainerFormat {
     if (parent !== null && parent.statics.blotName !== blotName.tableWrapper) {
       this.wrap(blotName.tableWrapper, this.tableId);
     }
+
     super.optimize(context);
   }
 }

@@ -1,7 +1,7 @@
 import type { Parchment as TypeParchment } from 'quill';
 import type { TableColValue, TableValue } from '../utils';
 import type { TableColFormat } from './table-col-format';
-import { blotName, tableUpSize } from '../utils';
+import { blotName, findParentBlot, tableUpSize } from '../utils';
 import { ContainerFormat } from './container-format';
 import { TableMainFormat } from './table-main-format';
 
@@ -14,6 +14,9 @@ export class TableColgroupFormat extends ContainerFormat {
     const node = super.create() as HTMLElement;
     node.dataset.tableId = value.tableId;
     value.full && (node.dataset.full = String(value.full));
+    if (value.align && value.align !== 'left') {
+      node.dataset.align = value.align;
+    }
     node.setAttribute('contenteditable', 'false');
     return node;
   }
@@ -24,6 +27,19 @@ export class TableColgroupFormat extends ContainerFormat {
 
   get full() {
     return Object.hasOwn(this.domNode.dataset, 'full');
+  }
+
+  get align() {
+    return this.domNode.dataset.align || '';
+  }
+
+  set align(value: string) {
+    if (value === 'right' || value === 'center') {
+      this.domNode.dataset.align = value;
+    }
+    else {
+      this.domNode.removeAttribute('data-align');
+    }
   }
 
   findCol(index: number) {
@@ -95,10 +111,13 @@ export class TableColgroupFormat extends ContainerFormat {
 
   optimize(context: Record<string, any>) {
     const parent = this.parent;
+    const { tableId, full, align } = this;
     if (parent != null && parent.statics.blotName !== blotName.tableMain) {
-      const { tableId, full } = this;
-      this.wrap(blotName.tableMain, { tableId, full });
+      this.wrap(blotName.tableMain, { tableId, full, align });
     }
+
+    const tableMain = findParentBlot(this, blotName.tableMain);
+    tableMain.align = align;
 
     super.optimize(context);
   }
