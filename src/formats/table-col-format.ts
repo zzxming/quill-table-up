@@ -111,15 +111,7 @@ export class TableColFormat extends BlockEmbed {
       const cellInners = tableBodyBlot.descendants(TableCellInnerFormat);
       if (cellInners.length > 0) {
         const cellInnerBlot = cellInners[0];
-        const value: Record<string, any> = {
-          tableId: cellInnerBlot.tableId,
-          rowId: cellInnerBlot.rowId,
-          colId: cellInnerBlot.colId,
-          rowspan: cellInnerBlot.rowspan,
-          colspan: cellInnerBlot.colspan,
-          backgroundColor: cellInnerBlot.backgroundColor,
-          height: cellInnerBlot.height,
-        };
+        const value = TableCellInnerFormat.formats(cellInnerBlot.domNode);
         const newBlock = this.scroll.create('block') as TypeParchment.BlockBlot;
         const newTableCellInner = newBlock.wrap(blotName.tableCellInner, value);
         const newTableCell = newTableCellInner.wrap(blotName.tableCell, value);
