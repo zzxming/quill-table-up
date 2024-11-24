@@ -1,4 +1,5 @@
 import type TableUp from '../index';
+import type { TableMainFormat } from '../index';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { TableCellInnerFormat, TableSelection } from '../index';
 import { createTable, createTableHTML, createTaleColHTML } from './utils';
@@ -730,7 +731,7 @@ describe('cell attribute', () => {
       `
         <p><br></p>
         <div>
-          <table cellpadding="0" cellspacing="0" data-full="true">
+          <table cellpadding="0" cellspacing="0"${datasetFull(true)} style="margin-right: auto;">
             ${createTaleColHTML(3)}
             <tbody>
               ${

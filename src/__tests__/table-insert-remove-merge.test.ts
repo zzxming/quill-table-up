@@ -351,7 +351,7 @@ describe('remove column from table', () => {
   });
 
   it('remove column in not full table', async () => {
-    const quill = await createTable(1, 3, false, 100);
+    const quill = await createTable(1, 3, { full: false });
     const tableModule = quill.getModule('tableUp') as TableUp;
     await vi.runAllTimersAsync();
     const table = quill.root.querySelector('table')!;
@@ -364,7 +364,7 @@ describe('remove column from table', () => {
       `
         <p><br></p>
         <div>
-          <table cellpadding="0" cellspacing="0" style="width: 200px;">
+          <table cellpadding="0" cellspacing="0" style="margin-right: auto; width: 200px;">
             <colgroup>
               <col width="100px" />
               <col width="100px" />
