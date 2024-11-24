@@ -82,16 +82,15 @@ export class TableColgroupFormat extends ContainerFormat {
 
   checkMerge(): boolean {
     const next = this.next as TableColgroupFormat;
-    const reuslt = (
+    const tableMain = this.parent;
+    if ((tableMain instanceof TableMainFormat) && !tableMain.full) {
+      tableMain.colWidthFillTable();
+    }
+    return (
       next !== null
       && next.statics.blotName === this.statics.blotName
       && next.tableId === this.tableId
     );
-    const tableMain = this.parent;
-    if (reuslt && (tableMain instanceof TableMainFormat) && !tableMain.full) {
-      tableMain.colWidthFillTable();
-    }
-    return reuslt;
   }
 
   optimize(context: Record<string, any>) {
