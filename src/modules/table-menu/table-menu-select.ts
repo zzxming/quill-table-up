@@ -8,6 +8,7 @@ export class TableMenuSelect extends TableMenuCommon {
     super(tableModule, quill, options);
 
     this.menu = this.buildTools();
+    this.tableModule.addContainer(this.menu);
   }
 
   updateTools() {

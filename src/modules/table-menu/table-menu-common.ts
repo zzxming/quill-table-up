@@ -78,7 +78,6 @@ export class TableMenuCommon {
   buildTools(): HTMLElement {
     const toolBox = document.createElement('div');
     toolBox.classList.add('ql-table-menu');
-    document.body.appendChild(toolBox);
     Object.assign(toolBox.style, { display: 'flex' });
     for (const tool of this.options.tools) {
       const { name, icon, handle, isColorChoose, key: attrKey, tip = '' } = tool as ToolOption;
