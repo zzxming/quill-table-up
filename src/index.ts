@@ -330,81 +330,26 @@ export class TableUp {
 
     this.quill.clipboard.addMatcher('table', (node, delta) => {
       if (delta.ops.length === 0) return delta;
-      let colDelta;
 
-      // paste table have or not col
-      let hasCol = false;
-      if (delta.ops[0] && typeof delta.ops[0].insert !== 'string') {
-        for (let i = 0; i < delta.ops.length; i++) {
-          const { insert, attributes } = delta.ops[i];
-          if (insert && typeof insert !== 'string' && insert[blotName.tableCol]) {
-            hasCol = true;
-            break;
-          }
-          if (attributes && attributes[blotName.tableCellInner]) {
-            break;
-          }
-        }
-        hasCol = !!delta.ops[0].insert?.[blotName.tableCol];
-      }
-      let isFull = this.options.full;
-      if (hasCol) {
-        isFull = !!(delta.ops[0].insert as Record<string, any>)?.[blotName.tableCol]?.full;
-      }
-
-      // computed default col width
-      const editorStyle = window.getComputedStyle(this.quill.root);
-      const editorPaddingLeft = Number.parseFloat(editorStyle.paddingLeft);
-      const editorPaddingRight = Number.parseFloat(editorStyle.paddingRight);
-      const editorInnerWidth = Number.parseFloat(editorStyle.width) - editorPaddingLeft - editorPaddingRight;
-      const defaultColWidth = isFull
-        ? `${Math.max(100 / colIds.length, tableUpSize.colMinWidthPre)}%`
-        : `${Math.max(editorInnerWidth / colIds.length, tableUpSize.colMinWidthPx)}px`;
-
-      if (!hasCol) {
-        colDelta = colIds.reduce((colDelta, id) => {
-          colDelta.insert({
-            [blotName.tableCol]: {
-              colId: id,
-              tableId,
-              width: defaultColWidth,
-              full: isFull,
-            },
-          });
-          return colDelta;
-        }, new Delta());
-      }
-      else {
-        for (let i = 0; i < delta.ops.length; i++) {
-          const insert = delta.ops[i].insert;
-          if (!insert || typeof insert === 'string' || !insert[blotName.tableCol]) {
-            if (insert === '\n') {
-              delta.ops.splice(i, 1);
-            }
-            break;
-          }
-          Object.assign(insert[blotName.tableCol]!, {
-            tableId,
-            colId: colIds[i],
-            full: isFull,
-            width: !(insert[blotName.tableCol] as TableColValue).width
-              ? defaultColWidth
-              : Number.parseFloat((insert[blotName.tableCol] as TableColValue).width) + (isFull ? '%' : 'px'),
-          });
-        }
-      }
       // remove quill origin table format
       for (let i = 0; i < delta.ops.length; i++) {
-        const attrs = delta.ops[i].attributes;
+        const { attributes: attrs, insert } = delta.ops[i];
+        if (insert && typeof insert !== 'string' && insert[TableColFormat.blotName] && delta.ops[i + 1].insert === '\n') {
+          delta.ops.splice(i + 1, 1);
+          i -= 1;
+        }
         if (attrs && attrs.table) {
           delete attrs.table;
         }
+        if (attrs && attrs[TableCellFormat.blotName]) {
+          delete attrs[TableCellFormat.blotName];
+        }
       }
+      // reset variable to avoid conflict with other table
       tableId = randomId();
       colIds = [];
       cellCount = 0;
       colCount = 0;
-      delta = colDelta ? colDelta.concat(delta) : delta;
       // insert break line before table and after table
       delta.ops.unshift({ insert: '\n' });
       delta.ops.push({ insert: '\n' });
@@ -414,11 +359,13 @@ export class TableUp {
     this.quill.clipboard.addMatcher('col', (node) => {
       colIds[colCount] = randomId();
       const delta = new Delta().insert({
-        [blotName.tableCol]: {
-          tableId,
-          colId: colIds[colCount],
-          full: Object.hasOwn((node as HTMLElement).dataset, 'full'),
-        },
+        [blotName.tableCol]: Object.assign(
+          TableColFormat.value(node as HTMLElement),
+          {
+            tableId,
+            colId: colIds[colCount],
+          },
+        ),
       });
       colCount += 1;
       return delta;
@@ -441,32 +388,36 @@ export class TableUp {
 
     const matchCell = (node: Node, delta: TypeDelta) => {
       const cell = node as HTMLElement;
-      const rowspan = Number(cell.getAttribute('rowspan')) || 1;
-      const colspan = Number(cell.getAttribute('colspan')) || 1;
+      const cellFormat = TableCellFormat.formats(cell);
       if (!colIds[cellCount]) {
         for (let i = cellCount; i >= 0; i--) {
           if (!colIds[i]) colIds[i] = randomId();
         }
       }
       const colId = colIds[cellCount];
-      cellCount += Number(colspan);
+      cellCount += cellFormat.colspan;
 
-      if (delta.slice(delta.length() - 1).ops[0]?.insert !== '\n') {
-        delta.insert('\n');
-      }
       // add each insert tableCellInner format
-      const value = Object.assign(TableCellFormat.formats(cell), {
-        tableId,
-        rowId,
-        colId,
-        rowspan: Number.isNaN(rowspan) ? 1 : rowspan,
-        colspan: Number.isNaN(colspan) ? 1 : colspan,
-      });
-      return delta.compose(
-        new Delta().retain(delta.length(), {
-          [blotName.tableCellInner]: value,
-        }),
-      ); ;
+      const value = Object.assign(
+        cellFormat,
+        {
+          tableId,
+          rowId,
+          colId,
+        },
+      );
+      const ops = [];
+      for (const op of delta.ops) {
+        if (typeof op.insert === 'string') {
+          const texts = op.insert.replaceAll(/\n+/g, '\n').split('\n');
+          for (const text of texts) {
+            if (text) {
+              ops.push({ insert: text }, { insert: '\n', attributes: { [blotName.tableCellInner]: value } });
+            }
+          }
+        }
+      }
+      return new Delta(ops);
     };
 
     this.quill.clipboard.addMatcher('td', matchCell);
