@@ -131,7 +131,7 @@ export class TableResizeBox extends TableResizeCommon {
     }
   }
 
-  updateRootPosition() {
+  update() {
     const tableWrapperRect = this.tableWrapper.domNode.getBoundingClientRect();
     const rootRect = this.quill.root.getBoundingClientRect();
     Object.assign(this.root.style, {
@@ -146,11 +146,7 @@ export class TableResizeBox extends TableResizeCommon {
     this.root.innerHTML = '';
     const tableWrapperRect = this.tableWrapper.domNode.getBoundingClientRect();
     const tableMainRect = this.tableMain.domNode.getBoundingClientRect();
-    const rootRect = this.quill.root.getBoundingClientRect();
-    Object.assign(this.root.style, {
-      top: `${tableWrapperRect.y - rootRect.y}px`,
-      left: `${tableWrapperRect.x - rootRect.x}px`,
-    });
+    this.update();
 
     if (this.tableCols.length > 0 && this.tableRows.length > 0) {
       const corner = document.createElement('div');
@@ -235,7 +231,7 @@ export class TableResizeBox extends TableResizeCommon {
     }
 
     addScrollEvent.call(this, this.quill.root, () => {
-      this.updateRootPosition();
+      this.update();
     });
   }
 
