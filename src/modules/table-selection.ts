@@ -18,8 +18,8 @@ export class TableSelection {
   selectedEditorScrollX = 0;
   selectedEditorScrollY = 0;
   selectedTds: TableCellInnerFormat[] = [];
-  cellSelectWrap: HTMLDivElement;
-  cellSelect: HTMLDivElement;
+  cellSelectWrap: HTMLElement;
+  cellSelect: HTMLElement;
   dragging: boolean = false;
   scrollHandler: [HTMLElement, (...args: any[]) => void][] = [];
   selectingHandler = this.mouseDownHandler.bind(this);

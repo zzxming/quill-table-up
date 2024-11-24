@@ -11,7 +11,7 @@ import type { TableColValue, TableConstantsData, TableTextOptions, TableUpOption
 import Quill from 'quill';
 import { BlockOverride, BlockquoteOverride, CodeBlockOverride, ContainerFormat, HeaderOverride, ListItemOverride, ScrollOverride, TableBodyFormat, TableCellFormat, TableCellInnerFormat, TableColFormat, TableColgroupFormat, TableMainFormat, TableRowFormat, TableWrapperFormat } from './formats';
 import { TableResizeBox, TableResizeLine, TableSelection, TableVitrualScroll } from './modules';
-import { blotName, createSelectBox, debounce, findParentBlot, findParentBlots, isBoolean, isFunction, randomId, tableUpEvent, tableUpSize } from './utils';
+import { blotName, createSelectBox, debounce, findParentBlot, findParentBlots, isBoolean, isFunction, isString, randomId, tableUpEvent, tableUpSize } from './utils';
 
 const Delta = Quill.import('delta');
 const Break = Quill.import('blots/break') as TypeParchment.BlotConstructor;
@@ -290,13 +290,19 @@ export class TableUp {
     this.listenBalanceCells();
   }
 
-  addContainer(classes: string) {
-    const el = document.createElement('div');
-    for (const classname of classes.split(' ')) {
-      el.classList.add(classname);
+  addContainer(classes: string | HTMLElement) {
+    if (isString(classes)) {
+      const el = document.createElement('div');
+      for (const classname of classes.split(' ')) {
+        el.classList.add(classname);
+      }
+      this.toolBox.appendChild(el);
+      return el;
     }
-    this.toolBox.appendChild(el);
-    return el;
+    else {
+      this.toolBox.appendChild(classes);
+      return classes;
+    }
   }
 
   resolveOptions(options: Partial<TableUpOptions>) {
