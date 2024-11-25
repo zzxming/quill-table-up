@@ -12,15 +12,7 @@ export class TableAlign {
     this.tableBlot = Quill.find(table)! as TableMainFormat;
     this.tableWrapperBlot = this.tableBlot.parent as TableWrapperFormat;
 
-    if (!this.tableBlot.full) {
-      this.alignBox = this.buildTool();
-      this.cleanup = autoUpdate(
-        this.tableWrapperBlot.domNode,
-        this.alignBox,
-        () => this.update(),
-      );
-      this.update();
-    }
+    this.alignBox = this.buildTool();
   }
 
   buildTool() {
@@ -53,6 +45,13 @@ export class TableAlign {
       });
       alignBox.appendChild(item);
     }
+    if (!this.cleanup) {
+      this.cleanup = autoUpdate(
+        this.tableWrapperBlot.domNode,
+        alignBox,
+        () => this.update(),
+      );
+    }
     return alignBox;
   }
 
@@ -63,9 +62,28 @@ export class TableAlign {
     }
   }
 
-  update() {
+  show() {
     if (!this.alignBox) return;
     Object.assign(this.alignBox.style, { display: 'flex' });
+  }
+
+  hide() {
+    if (!this.alignBox) return;
+    Object.assign(this.alignBox.style, { display: null });
+    if (this.cleanup) {
+      this.cleanup();
+      this.cleanup = undefined;
+    }
+  }
+
+  update() {
+    if (!this.alignBox) return;
+    if (this.tableBlot.full || this.tableBlot.domNode.offsetWidth >= this.quill.root.offsetWidth) {
+      this.hide();
+      return;
+    }
+
+    this.show();
     computePosition(this.tableWrapperBlot.domNode, this.alignBox, {
       placement: 'top',
       middleware: [flip(), shift({ limiter: limitShift() }), offset(8)],
@@ -78,10 +96,7 @@ export class TableAlign {
   }
 
   destroy() {
-    if (this.cleanup) {
-      this.cleanup();
-      this.cleanup = undefined;
-    }
+    this.hide();
     if (this.alignBox) {
       this.alignBox.remove();
       this.alignBox = undefined;

@@ -228,6 +228,7 @@ export class TableUp {
         if (tableNode) {
           if (this.table === tableNode) {
             this.tableSelection && this.tableSelection.showSelection();
+            this.tableAlign && this.tableAlign.update();
             return;
           }
           if (this.table) this.hideTableTools();
