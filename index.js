@@ -28,8 +28,8 @@ const quill1 = new Quill('#editor1', {
       ['clean'],
     ],
     [TableUp.moduleName]: {
-      full: true,
-      resizerSetOuter: true,
+      full: false,
+      resizerSetOuter: false,
       selection: {
         selectColor: '#04f',
         tableMenuClass: window.TableUp.TableMenuContextmenu,
@@ -117,11 +117,11 @@ const quill2 = new Quill('#editor2', {
       ['clean'],
     ],
     [TableUp.moduleName]: {
-      full: false,
-      resizerSetOuter: false,
+      full: true,
+      resizerSetOuter: true,
       selection: {
         selectColor: '#f40',
-        // tableMenuClass: window.TableUp.TableMenuSelect,
+        tableMenuClass: window.TableUp.TableMenuSelect,
         tableMenu: {
           localstorageKey: 'used-color',
           tipText: true,
@@ -219,15 +219,15 @@ quill1.setContents([
   // { insert: '\n' },
 
   { insert: '\n' },
-  { insert: { 'table-up-col': { tableId: '1', colId: '1', width: 121 } } },
-  { insert: { 'table-up-col': { tableId: '1', colId: '2', width: 121 } } },
-  { insert: { 'table-up-col': { tableId: '1', colId: '3', width: 121 } } },
+  { insert: { 'table-up-col': { tableId: '1', colId: '1', full: false, width: 121, align: 'center' } } },
+  { insert: { 'table-up-col': { tableId: '1', colId: '2', full: false, width: 121, align: 'center' } } },
+  { insert: { 'table-up-col': { tableId: '1', colId: '3', full: false, width: 121, align: 'center' } } },
   { insert: '1' },
-  { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '1', rowspan: 1, colspan: 1 } }, insert: '\n' },
+  { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '1', rowspan: 1, colspan: 1, height: '37px' } }, insert: '\n' },
   { insert: '2' },
-  { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '2', rowspan: 1, colspan: 1 } }, insert: '\n' },
+  { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '2', rowspan: 1, colspan: 1, height: '37px' } }, insert: '\n' },
   { insert: '3' },
-  { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '3', rowspan: 1, colspan: 1 } }, insert: '\n' },
+  { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '3', rowspan: 1, colspan: 1, height: '37px' } }, insert: '\n' },
   { insert: '4' },
   { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '1', rowspan: 1, colspan: 1 } }, insert: '\n' },
   { insert: '5' },

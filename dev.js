@@ -1545,6 +1545,7 @@
   const isFunction = (val) => typeof val === 'function';
   const isBoolean = (val) => typeof val === 'boolean';
   const isArray = Array.isArray;
+  const isString = (val) => typeof val === 'string';
   const randomId = () => Math.random().toString(36).slice(2);
   const debounce = (fn, delay) => {
       let timestamp;
@@ -2669,8 +2670,8 @@
               tableId,
               rowId,
               colId,
-              rowspan,
-              colspan,
+              rowspan: Number.isNaN(rowspan) ? 1 : rowspan,
+              colspan: Number.isNaN(colspan) ? 1 : colspan,
           };
           const { height, backgroundColor, borderColor } = domNode.style;
           height && (value.height = height);
@@ -2751,10 +2752,13 @@
       static blotName = blotName.tableCol;
       static tagName = 'col';
       static create(value) {
-          const { width, tableId, colId, full } = value;
+          const { width, tableId, colId, full, align } = value;
           const node = super.create();
           node.setAttribute('width', `${Number.parseFloat(width)}${full ? '%' : 'px'}`);
           full && (node.dataset.full = String(full));
+          if (align && align !== 'left') {
+              node.dataset.align = align;
+          }
           node.dataset.tableId = tableId;
           node.dataset.colId = colId;
           node.setAttribute('contenteditable', 'false');
@@ -2782,9 +2786,21 @@
       get full() {
           return Object.hasOwn(this.domNode.dataset, 'full');
       }
+      get align() {
+          return this.domNode.dataset.align || '';
+      }
+      set align(value) {
+          if (value === 'right' || value === 'center') {
+              this.domNode.dataset.align = value;
+          }
+          else {
+              this.domNode.removeAttribute('data-align');
+          }
+      }
       static value(domNode) {
           const { tableId, colId } = domNode.dataset;
           const width = domNode.getAttribute('width');
+          const align = domNode.dataset.align;
           const full = Object.hasOwn(domNode.dataset, 'full');
           const value = {
               tableId,
@@ -2792,6 +2808,7 @@
               full,
           };
           width && (value.width = Number.parseFloat(width));
+          align && (value.align = align);
           return value;
       }
       checkMerge() {
@@ -2805,9 +2822,11 @@
       optimize(context) {
           const parent = this.parent;
           if (parent != null && parent.statics.blotName !== blotName.tableColgroup) {
-              const { tableId, full } = this;
-              this.wrap(blotName.tableColgroup, { tableId, full });
+              const value = TableColFormat.value(this.domNode);
+              this.wrap(blotName.tableColgroup, value);
           }
+          const tableColgroup = findParentBlot(this, blotName.tableColgroup);
+          tableColgroup.align = this.align;
           super.optimize(context);
       }
       insertAt(index, value, def) {
@@ -2836,15 +2855,7 @@
               const cellInners = tableBodyBlot.descendants(TableCellInnerFormat);
               if (cellInners.length > 0) {
                   const cellInnerBlot = cellInners[0];
-                  const value = {
-                      tableId: cellInnerBlot.tableId,
-                      rowId: cellInnerBlot.rowId,
-                      colId: cellInnerBlot.colId,
-                      rowspan: cellInnerBlot.rowspan,
-                      colspan: cellInnerBlot.colspan,
-                      backgroundColor: cellInnerBlot.backgroundColor,
-                      height: cellInnerBlot.height,
-                  };
+                  const value = TableCellInnerFormat.formats(cellInnerBlot.domNode);
                   const newBlock = this.scroll.create('block');
                   const newTableCellInner = newBlock.wrap(blotName.tableCellInner, value);
                   const newTableCell = newTableCellInner.wrap(blotName.tableCell, value);
@@ -2869,13 +2880,23 @@
       static tagName = 'table';
       static create(value) {
           const node = super.create();
-          const { tableId, full } = value;
+          const { tableId, full, align } = value;
           node.dataset.tableId = tableId;
+          if (align === 'right' || align === 'center') {
+              node.dataset.align = align;
+          }
+          else {
+              node.removeAttribute('date-align');
+          }
           full && (node.dataset.full = String(full));
           node.classList.add('ql-table');
           node.setAttribute('cellpadding', '0');
           node.setAttribute('cellspacing', '0');
           return node;
+      }
+      constructor(scroll, domNode, _value) {
+          super(scroll, domNode);
+          this.updateAlign();
       }
       colWidthFillTable() {
           if (this.full)
@@ -2897,6 +2918,42 @@
       }
       set full(value) {
           this.domNode[value ? 'setAttribute' : 'removeAttribute']('data-full', '');
+      }
+      get align() {
+          return this.domNode.dataset.align || '';
+      }
+      set align(value) {
+          if (value === 'right' || value === 'center') {
+              this.domNode.dataset.align = value;
+          }
+          else {
+              this.domNode.removeAttribute('data-align');
+          }
+          this.updateAlign();
+      }
+      updateAlign() {
+          const value = this.align;
+          const style = {
+              marginLeft: null,
+              marginRight: null,
+          };
+          switch (value) {
+              case 'center': {
+                  style.marginLeft = 'auto';
+                  style.marginRight = 'auto';
+                  break;
+              }
+              case '':
+              case 'left': {
+                  style.marginRight = 'auto';
+                  break;
+              }
+              case 'right': {
+                  style.marginLeft = 'auto';
+                  break;
+              }
+          }
+          Object.assign(this.domNode.style, style);
       }
       getRows() {
           return this.descendants(TableRowFormat);
@@ -2932,6 +2989,9 @@
           const node = super.create();
           node.dataset.tableId = value.tableId;
           value.full && (node.dataset.full = String(value.full));
+          if (value.align && value.align !== 'left') {
+              node.dataset.align = value.align;
+          }
           node.setAttribute('contenteditable', 'false');
           return node;
       }
@@ -2940,6 +3000,17 @@
       }
       get full() {
           return Object.hasOwn(this.domNode.dataset, 'full');
+      }
+      get align() {
+          return this.domNode.dataset.align || '';
+      }
+      set align(value) {
+          if (value === 'right' || value === 'center') {
+              this.domNode.dataset.align = value;
+          }
+          else {
+              this.domNode.removeAttribute('data-align');
+          }
       }
       findCol(index) {
           const next = this.children.iterator();
@@ -2994,21 +3065,22 @@
       }
       checkMerge() {
           const next = this.next;
-          const reuslt = (next !== null
-              && next.statics.blotName === this.statics.blotName
-              && next.tableId === this.tableId);
           const tableMain = this.parent;
-          if (reuslt && (tableMain instanceof TableMainFormat) && !tableMain.full) {
+          if ((tableMain instanceof TableMainFormat) && !tableMain.full) {
               tableMain.colWidthFillTable();
           }
-          return reuslt;
+          return (next !== null
+              && next.statics.blotName === this.statics.blotName
+              && next.tableId === this.tableId);
       }
       optimize(context) {
           const parent = this.parent;
+          const { tableId, full, align } = this;
           if (parent != null && parent.statics.blotName !== blotName.tableMain) {
-              const { tableId, full } = this;
-              this.wrap(blotName.tableMain, { tableId, full });
+              this.wrap(blotName.tableMain, { tableId, full, align });
           }
+          const tableMain = findParentBlot(this, blotName.tableMain);
+          tableMain.align = align;
           super.optimize(context);
       }
   }
@@ -3049,6 +3121,89 @@
           const tableColgroups = (this.descendants(TableColgroupFormat));
           if (tableBodys.length === 0 || tableColgroups.length === 0) {
               this.remove();
+          }
+      }
+  }
+
+  class TableAlign {
+      tableModule;
+      table;
+      quill;
+      tableBlot;
+      tableWrapperBlot;
+      alignBox;
+      cleanup;
+      constructor(tableModule, table, quill) {
+          this.tableModule = tableModule;
+          this.table = table;
+          this.quill = quill;
+          this.tableBlot = Quill.find(table);
+          this.tableWrapperBlot = this.tableBlot.parent;
+          if (!this.tableBlot.full) {
+              this.alignBox = this.buildTool();
+              this.cleanup = autoUpdate(this.tableWrapperBlot.domNode, this.alignBox, () => this.update());
+              this.update();
+          }
+      }
+      buildTool() {
+          const alignBox = this.tableModule.addContainer('ql-table-align');
+          const icons = Quill.import('ui/icons');
+          const alignIcons = {
+              left: icons.align[''],
+              center: icons.align.center,
+              right: icons.align.right,
+          };
+          for (const [align, iconStr] of Object.entries(alignIcons)) {
+              const item = document.createElement('span');
+              item.dataset.align = align;
+              item.classList.add('ql-table-align-item');
+              item.innerHTML = `<i class="icon">${iconStr}</i>`;
+              item.addEventListener('click', () => {
+                  const value = item.dataset.align;
+                  if (value) {
+                      this.setTableAlign(this.tableBlot, value);
+                      this.quill.once(Quill.events.SCROLL_OPTIMIZE, () => {
+                          if (this.tableModule.tableSelection) {
+                              this.tableModule.tableSelection.hideSelection();
+                          }
+                          if (this.tableModule.tableResize) {
+                              this.tableModule.tableResize.update();
+                          }
+                      });
+                  }
+              });
+              alignBox.appendChild(item);
+          }
+          return alignBox;
+      }
+      setTableAlign(tableBlot, align) {
+          const cols = tableBlot.getCols();
+          for (const col of cols) {
+              col.align = align;
+          }
+      }
+      update() {
+          if (!this.alignBox)
+              return;
+          Object.assign(this.alignBox.style, { display: 'flex' });
+          computePosition(this.tableWrapperBlot.domNode, this.alignBox, {
+              placement: 'top',
+              middleware: [flip(), shift({ limiter: limitShift() }), offset(8)],
+          }).then(({ x, y }) => {
+              Object.assign(this.alignBox.style, {
+                  left: `${x}px`,
+                  top: `${y}px`,
+              });
+          });
+      }
+      destroy() {
+          if (this.cleanup) {
+              this.cleanup();
+              this.cleanup = undefined;
+          }
+          if (this.alignBox) {
+              this.alignBox.remove();
+              this.alignBox = undefined;
           }
       }
   }
@@ -3260,7 +3415,6 @@
       buildTools() {
           const toolBox = document.createElement('div');
           toolBox.classList.add('ql-table-menu');
-          document.body.appendChild(toolBox);
           Object.assign(toolBox.style, { display: 'flex' });
           for (const tool of this.options.tools) {
               const { name, icon, handle, isColorChoose, key: attrKey, tip = '' } = tool;
@@ -3447,6 +3601,7 @@
           for (const item of Array.from(items)) {
               item.addEventListener('click', e => e.stopPropagation());
           }
+          document.body.appendChild(menu);
           return menu;
       }
       createTipText(item, text) {
@@ -3501,6 +3656,7 @@
           this.tableModule = tableModule;
           this.quill = quill;
           this.menu = this.buildTools();
+          this.tableModule.addContainer(this.menu);
       }
       updateTools() {
           if (!this.menu || !this.tableModule.tableSelection || !this.tableModule.tableSelection.boundary)
@@ -3515,30 +3671,6 @@
                   top: `${y}px`,
               });
           });
-          // const { boundary, selectedTds } = this.tableModule.tableSelection;
-          // this.selectedTds = selectedTds;
-          // const style: Record<string, any> = {
-          //   display: 'flex',
-          //   left: 0,
-          //   top: 0,
-          // };
-          // const containerRect = this.quill.container.getBoundingClientRect();
-          // style.left = containerRect.left + boundary.x + (boundary.width / 2);
-          // style.top = containerRect.top + boundary.y + boundary.height;
-          // style.transform = `translate(-50%, 20%)`;
-          // Object.assign(this.menu.style, {
-          //   ...style,
-          //   left: `${style.left + window.scrollX}px`,
-          //   top: `${style.top + window.scrollY}px`,
-          // });
-          // // limit menu in viewport
-          // const menuRect = this.menu.getBoundingClientRect();
-          // const { left: limitLeft, top: limitTop, leftLimited } = limitDomInViewPort(menuRect);
-          // Object.assign(this.menu.style, {
-          //   left: `${limitLeft + window.scrollX}px`,
-          //   top: `${limitTop + window.scrollY}px`,
-          //   transform: leftLimited ? `translate(0%, 20%)` : null,
-          // });
       }
       destroy() {
           for (const tooltip of this.tooltipItem)
@@ -3783,6 +3915,8 @@
           return styleValue;
       }
       ;
+      update() { }
+      destroy() { }
   }
 
   class TableResizeBox extends TableResizeCommon {
@@ -3896,12 +4030,15 @@
               el.addEventListener('dragstart', e => e.preventDefault());
           }
       }
-      updateRootPosition() {
+      update() {
+          const tableMainRect = this.tableMain.domNode.getBoundingClientRect();
           const tableWrapperRect = this.tableWrapper.domNode.getBoundingClientRect();
+          const tableNodeX = Math.max(tableMainRect.x, tableWrapperRect.x);
+          const tableNodeY = Math.max(tableMainRect.y, tableWrapperRect.y);
           const rootRect = this.quill.root.getBoundingClientRect();
           Object.assign(this.root.style, {
-              top: `${tableWrapperRect.y - rootRect.y}px`,
-              left: `${tableWrapperRect.x - rootRect.x}px`,
+              top: `${tableNodeY - rootRect.y}px`,
+              left: `${tableNodeX - rootRect.x}px`,
           });
       }
       showTool() {
@@ -3910,11 +4047,7 @@
           this.root.innerHTML = '';
           const tableWrapperRect = this.tableWrapper.domNode.getBoundingClientRect();
           const tableMainRect = this.tableMain.domNode.getBoundingClientRect();
-          const rootRect = this.quill.root.getBoundingClientRect();
-          Object.assign(this.root.style, {
-              top: `${tableWrapperRect.y - rootRect.y}px`,
-              left: `${tableWrapperRect.x - rootRect.x}px`,
-          });
+          this.update();
           if (this.tableCols.length > 0 && this.tableRows.length > 0) {
               const corner = document.createElement('div');
               corner.classList.add('ql-table-resizer-corner');
@@ -3991,7 +4124,7 @@
               this.bindRowEvents();
           }
           addScrollEvent.call(this, this.quill.root, () => {
-              this.updateRootPosition();
+              this.update();
           });
       }
       hideTool() {
@@ -4024,31 +4157,33 @@
           this.options = this.resolveOptions(options);
           this.colResizer = this.tableModule.addContainer('ql-table-resize-line-col');
           this.rowResizer = this.tableModule.addContainer('ql-table-resize-line-row');
-          this.quill.root.addEventListener('mousemove', (e) => {
-              if (this.dragging)
-                  return;
-              const tableCell = this.findTableCell(e);
-              if (!tableCell) {
-                  return this.hideResizer();
-              }
-              const tableCellBlot = Quill.find(tableCell);
-              if (!tableCellBlot)
-                  return;
-              if (this.currentTableCell !== tableCell) {
-                  this.showResizer();
-                  this.currentTableCell = tableCell;
-                  this.tableCellBlot = tableCellBlot;
-                  this.tableMain = findParentBlot(tableCellBlot, blotName.tableMain);
-                  if (this.tableMain.getCols().length > 0) {
-                      this.updateColResizer();
-                  }
-                  this.updateRowResizer();
-              }
-          });
-          this.quill.on(Quill.events.TEXT_CHANGE, () => {
-              this.hideResizer();
-          });
+          this.quill.root.addEventListener('mousemove', this.mousemoveHandler);
+          this.quill.on(Quill.events.TEXT_CHANGE, this.hideWhenTextChange);
       }
+      mousemoveHandler = (e) => {
+          if (this.dragging)
+              return;
+          const tableCell = this.findTableCell(e);
+          if (!tableCell) {
+              return this.hideResizer();
+          }
+          const tableCellBlot = Quill.find(tableCell);
+          if (!tableCellBlot)
+              return;
+          if (this.currentTableCell !== tableCell) {
+              this.showResizer();
+              this.currentTableCell = tableCell;
+              this.tableCellBlot = tableCellBlot;
+              this.tableMain = findParentBlot(tableCellBlot, blotName.tableMain);
+              if (this.tableMain.getCols().length > 0) {
+                  this.updateColResizer();
+              }
+              this.updateRowResizer();
+          }
+      };
+      hideWhenTextChange = () => {
+          this.hideResizer();
+      };
       resolveOptions(options) {
           return Object.assign({}, options);
       }
@@ -4133,6 +4268,14 @@
           this.currentTableCell = undefined;
           this.rowResizer.style.display = 'none';
           this.colResizer.style.display = 'none';
+      }
+      update() {
+          this.updateColResizer();
+          this.updateRowResizer();
+      }
+      destroy() {
+          this.quill.root.removeEventListener('mousemove', this.mousemoveHandler);
+          this.quill.off(Quill.events.TEXT_CHANGE, this.hideWhenTextChange);
       }
   }
 
@@ -4344,7 +4487,6 @@
 
   const ERROR_LIMIT = 2;
   class TableSelection {
-      tableModule;
       table;
       quill;
       options;
@@ -4363,16 +4505,15 @@
       selectingHandler = this.mouseDownHandler.bind(this);
       tableMenu;
       constructor(tableModule, table, quill, options = {}) {
-          this.tableModule = tableModule;
           this.table = table;
           this.quill = quill;
           this.options = this.resolveOptions(options);
-          this.cellSelectWrap = this.tableModule.addContainer('ql-table-selection');
+          this.cellSelectWrap = tableModule.addContainer('ql-table-selection');
           this.cellSelect = this.helpLinesInitial();
           const resizeObserver = new ResizeObserver(() => this.hideSelection());
           resizeObserver.observe(this.table);
           this.quill.root.addEventListener('mousedown', this.selectingHandler, false);
-          this.tableMenu = new this.options.tableMenuClass(this.tableModule, quill, this.options.tableMenu);
+          this.tableMenu = new this.options.tableMenuClass(tableModule, quill, this.options.tableMenu);
       }
       resolveOptions(options) {
           return Object.assign({
@@ -4724,9 +4865,9 @@
       range;
       table;
       tableSelection;
-      tableResizerBox;
-      tableResizerLine;
+      tableResize;
       tableScrollbar;
+      tableAlign;
       get statics() {
           return this.constructor;
       }
@@ -4766,15 +4907,15 @@
               const tableNode = path.find(node => node.tagName && node.tagName.toUpperCase() === 'TABLE' && node.classList.contains('ql-table'));
               if (tableNode) {
                   if (this.table === tableNode) {
-                      this.tableSelection && this.tableSelection?.showSelection();
+                      this.tableSelection && this.tableSelection.showSelection();
                       return;
                   }
                   if (this.table)
-                      this.hideTableTools(true);
+                      this.hideTableTools();
                   this.showTableTools(tableNode, quill);
               }
               else if (this.table) {
-                  this.hideTableTools(true);
+                  this.hideTableTools();
               }
           }, false);
           this.quill.on(Quill.events.EDITOR_CHANGE, (event, range, oldRange) => {
@@ -4793,6 +4934,9 @@
                   catch { }
                   // only can select inside table or select all table
                   if (startBlot instanceof TableColFormat) {
+                      if (!oldRange) {
+                          oldRange = { index: 0, length: 0 };
+                      }
                       return this.quill.setSelection(range.index + (oldRange.index > range.index ? -1 : 1), range.length + (oldRange.length === range.length ? 0 : oldRange.length > range.length ? -1 : 1), Quill.sources.USER);
                   }
                   else if (endBlot instanceof TableColFormat) {
@@ -4808,12 +4952,12 @@
                   }
                   // if range is not in table. hide table tools
                   if (!startTableBlot || !endTableBlot) {
-                      this.hideTableTools(true);
+                      this.hideTableTools();
                   }
               }
           });
           if (!this.options.resizerSetOuter) {
-              this.tableResizerLine = new TableResizeLine(this, quill, this.options.resizeLine || {});
+              this.tableResize = new TableResizeLine(this, quill, this.options.resizeLine || {});
           }
           this.quill.on(tableUpEvent.AFTER_TABLE_RESIZE, () => {
               this.tableSelection && this.tableSelection.hideSelection();
@@ -4822,12 +4966,18 @@
           this.listenBalanceCells();
       }
       addContainer(classes) {
-          const el = document.createElement('div');
-          for (const classname of classes.split(' ')) {
-              el.classList.add(classname);
+          if (isString(classes)) {
+              const el = document.createElement('div');
+              for (const classname of classes.split(' ')) {
+                  el.classList.add(classname);
+              }
+              this.toolBox.appendChild(el);
+              return el;
           }
-          this.toolBox.appendChild(el);
-          return el;
+          else {
+              this.toolBox.appendChild(classes);
+              return classes;
+          }
       }
       resolveOptions(options) {
           return Object.assign({
@@ -4837,6 +4987,7 @@
               resizerSetOuter: false,
               icon: icons.table,
               scrollbar: true,
+              showAlign: true,
           }, options);
       }
       ;
@@ -4860,78 +5011,25 @@
           this.quill.clipboard.addMatcher('table', (node, delta) => {
               if (delta.ops.length === 0)
                   return delta;
-              let colDelta;
-              // paste table have or not col
-              let hasCol = false;
-              if (delta.ops[0] && typeof delta.ops[0].insert !== 'string') {
-                  for (let i = 0; i < delta.ops.length; i++) {
-                      const { insert, attributes } = delta.ops[i];
-                      if (insert && typeof insert !== 'string' && insert[blotName.tableCol]) {
-                          hasCol = true;
-                          break;
-                      }
-                      if (attributes && attributes[blotName.tableCellInner]) {
-                          break;
-                      }
-                  }
-                  hasCol = !!delta.ops[0].insert?.[blotName.tableCol];
-              }
-              let isFull = this.options.full;
-              if (hasCol) {
-                  isFull = !!delta.ops[0].insert?.[blotName.tableCol]?.full;
-              }
-              // computed default col width
-              const editorStyle = window.getComputedStyle(this.quill.root);
-              const editorPaddingLeft = Number.parseFloat(editorStyle.paddingLeft);
-              const editorPaddingRight = Number.parseFloat(editorStyle.paddingRight);
-              const editorInnerWidth = Number.parseFloat(editorStyle.width) - editorPaddingLeft - editorPaddingRight;
-              const defaultColWidth = isFull
-                  ? `${Math.max(100 / colIds.length, tableUpSize.colMinWidthPre)}%`
-                  : `${Math.max(editorInnerWidth / colIds.length, tableUpSize.colMinWidthPx)}px`;
-              if (!hasCol) {
-                  colDelta = colIds.reduce((colDelta, id) => {
-                      colDelta.insert({
-                          [blotName.tableCol]: {
-                              colId: id,
-                              tableId,
-                              width: defaultColWidth,
-                              full: isFull,
-                          },
-                      });
-                      return colDelta;
-                  }, new Delta());
-              }
-              else {
-                  for (let i = 0; i < delta.ops.length; i++) {
-                      const insert = delta.ops[i].insert;
-                      if (!insert || typeof insert === 'string' || !insert[blotName.tableCol]) {
-                          if (insert === '\n') {
-                              delta.ops.splice(i, 1);
-                          }
-                          break;
-                      }
-                      Object.assign(insert[blotName.tableCol], {
-                          tableId,
-                          colId: colIds[i],
-                          full: isFull,
-                          width: !insert[blotName.tableCol].width
-                              ? defaultColWidth
-                              : Number.parseFloat(insert[blotName.tableCol].width) + (isFull ? '%' : 'px'),
-                      });
-                  }
-              }
               // remove quill origin table format
               for (let i = 0; i < delta.ops.length; i++) {
-                  const attrs = delta.ops[i].attributes;
+                  const { attributes: attrs, insert } = delta.ops[i];
+                  if (insert && typeof insert !== 'string' && insert[TableColFormat.blotName] && delta.ops[i + 1].insert === '\n') {
+                      delta.ops.splice(i + 1, 1);
+                      i -= 1;
+                  }
                   if (attrs && attrs.table) {
                       delete attrs.table;
                   }
+                  if (attrs && attrs[TableCellFormat.blotName]) {
+                      delete attrs[TableCellFormat.blotName];
+                  }
               }
+              // reset variable to avoid conflict with other table
               tableId = randomId();
               colIds = [];
               cellCount = 0;
               colCount = 0;
-              delta = colDelta ? colDelta.concat(delta) : delta;
               // insert break line before table and after table
               delta.ops.unshift({ insert: '\n' });
               delta.ops.push({ insert: '\n' });
@@ -4940,11 +5038,10 @@
           this.quill.clipboard.addMatcher('col', (node) => {
               colIds[colCount] = randomId();
               const delta = new Delta().insert({
-                  [blotName.tableCol]: {
+                  [blotName.tableCol]: Object.assign(TableColFormat.value(node), {
                       tableId,
                       colId: colIds[colCount],
-                      full: Object.hasOwn(node.dataset, 'full'),
-                  },
+                  }),
               });
               colCount += 1;
               return delta;
@@ -4963,8 +5060,7 @@
           });
           const matchCell = (node, delta) => {
               const cell = node;
-              const rowspan = Number(cell.getAttribute('rowspan')) || 1;
-              const colspan = Number(cell.getAttribute('colspan')) || 1;
+              const cellFormat = TableCellFormat.formats(cell);
               if (!colIds[cellCount]) {
                   for (let i = cellCount; i >= 0; i--) {
                       if (!colIds[i])
@@ -4972,21 +5068,25 @@
                   }
               }
               const colId = colIds[cellCount];
-              cellCount += Number(colspan);
-              if (delta.slice(delta.length() - 1).ops[0]?.insert !== '\n') {
-                  delta.insert('\n');
-              }
+              cellCount += cellFormat.colspan;
               // add each insert tableCellInner format
-              const value = Object.assign(TableCellFormat.formats(cell), {
+              const value = Object.assign(cellFormat, {
                   tableId,
                   rowId,
                   colId,
-                  rowspan: Number.isNaN(rowspan) ? 1 : rowspan,
-                  colspan: Number.isNaN(colspan) ? 1 : colspan,
               });
-              return delta.compose(new Delta().retain(delta.length(), {
-                  [blotName.tableCellInner]: value,
-              }));
+              const ops = [];
+              for (const op of delta.ops) {
+                  if (typeof op.insert === 'string') {
+                      const texts = op.insert.replaceAll(/\n+/g, '\n').split('\n');
+                      for (const text of texts) {
+                          if (text) {
+                              ops.push({ insert: text }, { insert: '\n', attributes: { [blotName.tableCellInner]: value } });
+                          }
+                      }
+                  }
+              }
+              return new Delta(ops);
           };
           this.quill.clipboard.addMatcher('td', matchCell);
           this.quill.clipboard.addMatcher('th', matchCell);
@@ -4995,29 +5095,34 @@
           if (table) {
               this.table = table;
               this.tableSelection = new TableSelection(this, table, quill, this.options.selection || {});
+              if (this.options.showAlign) {
+                  this.tableAlign = new TableAlign(this, table, quill);
+              }
               if (this.options.scrollbar) {
                   this.tableScrollbar = new TableVitrualScroll(this, table, quill);
               }
               if (this.options.resizerSetOuter) {
-                  this.tableResizerBox = new TableResizeBox(this, table, quill, this.options.resizeBox || {});
+                  this.tableResize = new TableResizeBox(this, table, quill, this.options.resizeBox || {});
               }
           }
       }
-      hideTableTools(removeAll = false) {
+      hideTableTools() {
           if (this.tableSelection) {
               this.tableSelection.destroy();
               this.tableSelection = undefined;
           }
-          if (removeAll) {
-              // eslint-disable-next-line unicorn/no-lonely-if
-              if (this.tableScrollbar) {
-                  this.tableScrollbar.destroy();
-              }
+          if (this.tableScrollbar) {
+              this.tableScrollbar.destroy();
+              this.tableSelection = undefined;
+          }
+          if (this.tableAlign) {
+              this.tableAlign.destroy();
+              this.tableSelection = undefined;
           }
           this.table = undefined;
           if (this.options.resizerSetOuter) {
-              this.tableResizerBox && this.tableResizerBox.destroy();
-              this.tableResizerBox = undefined;
+              this.tableResize && this.tableResize.destroy();
+              this.tableResize = undefined;
           }
       }
       async buildCustomSelect(customSelect) {
@@ -5209,7 +5314,7 @@
           const selectedTds = this.tableSelection.selectedTds;
           const tableBlot = findParentBlot(selectedTds[0], blotName.tableMain);
           tableBlot && tableBlot.remove();
-          this.hideTableTools(true);
+          this.hideTableTools();
       }
       appendRow(isDown) {
           if (!this.tableSelection)
@@ -5543,6 +5648,7 @@
   exports.ListItemOverride = ListItemOverride;
   exports.ScrollOverride = ScrollOverride;
   exports.Scrollbar = Scrollbar;
+  exports.TableAlign = TableAlign;
   exports.TableBodyFormat = TableBodyFormat;
   exports.TableCellFormat = TableCellFormat;
   exports.TableCellInnerFormat = TableCellInnerFormat;

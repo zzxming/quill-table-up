@@ -184,7 +184,8 @@
   height: 2px;
   cursor: ns-resize;
 }
-.ql-table-menu {
+.ql-table-menu,
+.ql-table-align {
   position: absolute;
   z-index: 1;
   display: none;
@@ -195,6 +196,39 @@
   box-shadow: 0 0 8px rgba(0, 0, 0, 0.5);
   background-color: #ffffff;
   font-size: 14px;
+}
+.ql-table-menu-item,
+.ql-table-align-item {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.ql-table-menu-item:hover,
+.ql-table-align-item:hover {
+  background-color: #eeeeee;
+}
+.ql-table-menu-item.break,
+.ql-table-align-item.break {
+  align-self: stretch;
+  width: 1px;
+  padding: 0px;
+  margin: 2px 4px;
+  background-color: #a3a3a3;
+  cursor: default;
+}
+.ql-table-menu .icon,
+.ql-table-align .icon {
+  display: flex;
+  flex-shrink: 0;
+  font-size: 20px;
+}
+.ql-table-menu span,
+.ql-table-align span {
+  text-wrap: nowrap;
 }
 .ql-table-menu.contextmenu {
   flex-direction: column;
@@ -213,33 +247,9 @@
 .ql-table-menu.contextmenu .icon {
   margin-right: 4px;
 }
-.ql-table-menu-item {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 4px;
-  border-radius: 4px;
-  cursor: pointer;
-}
-.ql-table-menu-item:hover {
-  background-color: #eeeeee;
-}
-.ql-table-menu-item.break {
-  align-self: stretch;
-  width: 1px;
-  padding: 0px;
-  margin: 2px 4px;
-  background-color: #a3a3a3;
-  cursor: default;
-}
-.ql-table-menu-item .icon {
-  display: flex;
-  flex-shrink: 0;
-  font-size: 20px;
-}
-.ql-table-menu-item span {
-  text-wrap: nowrap;
+.ql-table-align .icon {
+  width: 20px;
+  height: 20px;
 }
 .table-color-select-wrapper {
   display: flex;
