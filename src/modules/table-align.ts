@@ -41,12 +41,14 @@ export class TableAlign {
         if (value) {
           this.setTableAlign(this.tableBlot, value);
 
-          if (this.tableModule.tableSelection) {
-            this.tableModule.tableSelection.hideSelection();
-          }
-          if (this.tableModule.tableResize) {
-            this.tableModule.tableResize.update();
-          }
+          this.quill.once(Quill.events.SCROLL_OPTIMIZE, () => {
+            if (this.tableModule.tableSelection) {
+              this.tableModule.tableSelection.hideSelection();
+            }
+            if (this.tableModule.tableResize) {
+              this.tableModule.tableResize.update();
+            }
+          });
         }
       });
       alignBox.appendChild(item);
