@@ -459,11 +459,11 @@ export class TableUp {
     }
     if (this.tableScrollbar) {
       this.tableScrollbar.destroy();
-      this.tableSelection = undefined;
+      this.tableScrollbar = undefined;
     }
     if (this.tableAlign) {
       this.tableAlign.destroy();
-      this.tableSelection = undefined;
+      this.tableAlign = undefined;
     }
 
     this.table = undefined;
