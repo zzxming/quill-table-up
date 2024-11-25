@@ -94,12 +94,14 @@ interface TableColDeltaValue extends Omit<TableColValue, 'width' | 'full'> {
 };
 interface TableCreatorOptions {
   isEmpty: boolean;
+  tableId: string;
 }
 type ColOptions = Omit<TableColValue, 'width' | 'tableId' | 'colId'> & { width?: number };
 
+export const datasetTableId = (id: string) => `data-table-id="${id}"`;
 export const datasetFull = (full: boolean) => full ? ' data-full="true"' : '';
 export const datasetAlign = (align: string) => align === 'left' ? '' : ` data-align="${align}"`;
-export const getColWidthStyle = (options: Required<Omit<ColOptions, 'align'>> & { colNum: number }) => {
+export const getColWidthStyle = (options: Required<Omit<ColOptions, 'align' | 'tableId'>> & { colNum: number }) => {
   const { full, width, colNum } = options;
   let colWidth = `${width}px`;
   if (full) {
@@ -108,11 +110,11 @@ export const getColWidthStyle = (options: Required<Omit<ColOptions, 'align'>> & 
   return `width="${colWidth}"`;
 };
 export const createTableDeltaOps = (row: number, col: number, colOptions?: ColOptions, options: Partial<TableCreatorOptions> = {}) => {
-  const { isEmpty = false } = options;
+  const { isEmpty = false, tableId = '1' } = options;
   const { full = true, width = 100, align = 'left' } = colOptions || {};
   const table: any[] = [{ insert: '\n' }];
   for (const [i, _] of new Array(col).fill(0).entries()) {
-    const value: TableColDeltaValue = { tableId: '1', colId: `${i + 1}`, width: 1 / col * 100 };
+    const value: TableColDeltaValue = { tableId, colId: `${i + 1}`, width: 1 / col * 100 };
     if (full) {
       value.full = 'true';
     }
@@ -131,7 +133,7 @@ export const createTableDeltaOps = (row: number, col: number, colOptions?: ColOp
       }
       table.push(
         {
-          attributes: { 'table-up-cell-inner': { tableId: '1', rowId: i + 1, colId: j + 1, rowspan: 1, colspan: 1 } },
+          attributes: { 'table-up-cell-inner': { tableId, rowId: i + 1, colId: j + 1, rowspan: 1, colspan: 1 } },
           insert: '\n',
         },
       );
@@ -148,25 +150,26 @@ export const createTable = async (row: number, col: number, colOptions?: ColOpti
   await vi.runAllTimersAsync();
   return quill;
 };
-export const createTaleColHTML = (colNum: number, options?: Partial<ColOptions>) => {
-  const { full = true, width = 100, align = 'left' } = options || {};
+export const createTaleColHTML = (colNum: number, colOptions?: Partial<ColOptions>, options?: Partial<TableCreatorOptions>) => {
+  const { full = true, width = 100, align = 'left' } = colOptions || {};
+  const { tableId = '1' } = options || {};
   const colWidth = getColWidthStyle({ full, width, colNum });
   return `
-    <colgroup${datasetFull(full)}${datasetAlign(align)}>
-      ${new Array(colNum).fill(0).map((_, i) => `<col ${colWidth} data-col-id="${i + 1}"${datasetFull(full)}${datasetAlign(align)} />`).join('\n')}
+    <colgroup ${datasetTableId(tableId)}${datasetFull(full)}${datasetAlign(align)}>
+      ${new Array(colNum).fill(0).map((_, i) => `<col ${colWidth} ${datasetTableId(tableId)} data-col-id="${i + 1}"${datasetFull(full)}${datasetAlign(align)} />`).join('\n')}
     </colgroup>
   `;
 };
 export const createTableBodyHTML = (row: number, col: number, options?: Partial<TableCreatorOptions>) => {
-  const { isEmpty = false } = options || {};
+  const { isEmpty = false, tableId = '1' } = options || {};
   return `
-    <tbody>
+    <tbody ${datasetTableId(tableId)}>
       ${
         new Array(row).fill(0).map((_, i) => `
-          <tr data-row-id="${i + 1}">
+          <tr ${datasetTableId(tableId)} data-row-id="${i + 1}">
             ${
-              new Array(col).fill(0).map((_, j) => `<td rowspan="1" colspan="1" data-row-id="${i + 1}" data-col-id="${j + 1}">
-                <div data-rowspan="1" data-colspan="1" data-row-id="${i + 1}" data-col-id="${j + 1}">
+              new Array(col).fill(0).map((_, j) => `<td rowspan="1" colspan="1" ${datasetTableId(tableId)} data-row-id="${i + 1}" data-col-id="${j + 1}">
+                <div ${datasetTableId(tableId)} data-rowspan="1" data-colspan="1" data-row-id="${i + 1}" data-col-id="${j + 1}">
                   <p>
                     ${isEmpty ? '<br>' : i * row + j + 1}
                   </p>
@@ -181,6 +184,7 @@ export const createTableBodyHTML = (row: number, col: number, options?: Partial<
 };
 export const createTableHTML = (row: number, col: number, colOptions?: ColOptions, options?: Partial<TableCreatorOptions>) => {
   const { full = true, width = 100, align = 'left' } = colOptions || {};
+  const { tableId = '1' } = options || {};
   let alignStyle = 'margin-right: auto;';
   switch (align) {
     case 'center': {
@@ -202,8 +206,8 @@ export const createTableHTML = (row: number, col: number, colOptions?: ColOption
   }
 
   return `
-    <div>
-      <table cellpadding="0" cellspacing="0"${datasetFull(full)}${datasetAlign(align)} style="${alignStyle}${full ? '' : ` width: ${width * col}px;`}">
+    <div ${datasetTableId(tableId)}>
+      <table cellpadding="0" cellspacing="0" ${datasetTableId(tableId)}${datasetFull(full)}${datasetAlign(align)} style="${alignStyle}${full ? '' : ` width: ${width * col}px;`}">
         ${createTaleColHTML(col, colOptions)}
         ${createTableBodyHTML(row, col, options)}
       </table>

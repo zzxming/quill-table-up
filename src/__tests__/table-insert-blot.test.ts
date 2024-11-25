@@ -249,6 +249,20 @@ describe('set contents', () => {
     );
   });
 
+  it('should get correct prop', async () => {
+    const quill = createQuillWithTableModule(`<p><br></p>`);
+    quill.setContents(createTableDeltaOps(3, 3, { full: false, width: 200, align: 'center' }));
+    await vi.runAllTimersAsync();
+    expect(quill.root).toEqualHTML(
+      `
+        <p><br></p>
+        ${createTableHTML(3, 3, { full: false, width: 200, align: 'center' })}
+        <p><br></p>
+      `,
+      { ignoreAttrs: ['class', 'contenteditable'] },
+    );
+  });
+
   it('should display an empty table', async () => {
     const quill = createQuillWithTableModule(`<p><br></p>`);
     quill.setContents(createTableDeltaOps(2, 2, {}, { isEmpty: true }));
