@@ -65,7 +65,7 @@ export class TableUp {
         const blot = line[0] as TypeParchment.BlockBlot;
         if (blot.prev instanceof TableWrapperFormat) {
           blot.prev.remove();
-          return true;
+          return false;
         }
 
         if (context.format[blotName.tableCellInner]) {
@@ -74,6 +74,7 @@ export class TableUp {
             return false;
           }
         }
+
         return true;
       },
     },
