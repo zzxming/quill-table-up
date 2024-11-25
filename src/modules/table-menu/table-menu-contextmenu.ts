@@ -42,6 +42,7 @@ export class TableMenuContextmenu extends TableMenuCommon {
     for (const item of Array.from(items)) {
       item.addEventListener('click', e => e.stopPropagation());
     }
+    document.body.appendChild(menu);
     return menu;
   }
 

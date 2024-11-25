@@ -7,11 +7,12 @@ import type Keyboard from 'quill/modules/keyboard';
 import type Toolbar from 'quill/modules/toolbar';
 import type BaseTheme from 'quill/themes/base';
 import type Picker from 'quill/ui/picker';
-import type { TableColValue, TableConstantsData, TableTextOptions, TableUpOptions } from './utils';
+import type { TableResizeCommon } from './modules';
+import type { TableConstantsData, TableTextOptions, TableUpOptions } from './utils';
 import Quill from 'quill';
 import { BlockOverride, BlockquoteOverride, CodeBlockOverride, ContainerFormat, HeaderOverride, ListItemOverride, ScrollOverride, TableBodyFormat, TableCellFormat, TableCellInnerFormat, TableColFormat, TableColgroupFormat, TableMainFormat, TableRowFormat, TableWrapperFormat } from './formats';
-import { TableResizeBox, TableResizeLine, TableSelection, TableVitrualScroll } from './modules';
-import { blotName, createSelectBox, debounce, findParentBlot, findParentBlots, isBoolean, isFunction, randomId, tableUpEvent, tableUpSize } from './utils';
+import { TableAlign, TableResizeBox, TableResizeLine, TableSelection, TableVitrualScroll } from './modules';
+import { blotName, createSelectBox, debounce, findParentBlot, findParentBlots, isBoolean, isFunction, isString, randomId, tableUpEvent, tableUpSize } from './utils';
 
 const Delta = Quill.import('delta');
 const Break = Quill.import('blots/break') as TypeParchment.BlotConstructor;
@@ -175,9 +176,9 @@ export class TableUp {
   range?: Range | null;
   table?: HTMLElement;
   tableSelection?: TableSelection;
-  tableResizerBox?: TableResizeBox;
-  tableResizerLine?: TableResizeLine;
+  tableResize?: TableResizeCommon;
   tableScrollbar?: TableVitrualScroll;
+  tableAlign?: TableAlign;
   get statics(): any {
     return this.constructor;
   }
@@ -225,14 +226,14 @@ export class TableUp {
         const tableNode = path.find(node => node.tagName && node.tagName.toUpperCase() === 'TABLE' && node.classList.contains('ql-table'));
         if (tableNode) {
           if (this.table === tableNode) {
-            this.tableSelection && this.tableSelection?.showSelection();
+            this.tableSelection && this.tableSelection.showSelection();
             return;
           }
-          if (this.table) this.hideTableTools(true);
+          if (this.table) this.hideTableTools();
           this.showTableTools(tableNode, quill);
         }
         else if (this.table) {
-          this.hideTableTools(true);
+          this.hideTableTools();
         }
       },
       false,
@@ -254,6 +255,9 @@ export class TableUp {
 
         // only can select inside table or select all table
         if (startBlot instanceof TableColFormat) {
+          if (!oldRange) {
+            oldRange = { index: 0, length: 0 };
+          }
           return this.quill.setSelection(
             range.index + (oldRange.index > range.index ? -1 : 1),
             range.length + (oldRange.length === range.length ? 0 : oldRange.length > range.length ? -1 : 1),
@@ -275,12 +279,12 @@ export class TableUp {
 
         // if range is not in table. hide table tools
         if (!startTableBlot || !endTableBlot) {
-          this.hideTableTools(true);
+          this.hideTableTools();
         }
       }
     });
     if (!this.options.resizerSetOuter) {
-      this.tableResizerLine = new TableResizeLine(this, quill, this.options.resizeLine || {});
+      this.tableResize = new TableResizeLine(this, quill, this.options.resizeLine || {});
     }
     this.quill.on(tableUpEvent.AFTER_TABLE_RESIZE, () => {
       this.tableSelection && this.tableSelection.hideSelection();
@@ -290,13 +294,19 @@ export class TableUp {
     this.listenBalanceCells();
   }
 
-  addContainer(classes: string) {
-    const el = document.createElement('div');
-    for (const classname of classes.split(' ')) {
-      el.classList.add(classname);
+  addContainer(classes: string | HTMLElement) {
+    if (isString(classes)) {
+      const el = document.createElement('div');
+      for (const classname of classes.split(' ')) {
+        el.classList.add(classname);
+      }
+      this.toolBox.appendChild(el);
+      return el;
     }
-    this.toolBox.appendChild(el);
-    return el;
+    else {
+      this.toolBox.appendChild(classes);
+      return classes;
+    }
   }
 
   resolveOptions(options: Partial<TableUpOptions>) {
@@ -307,6 +317,7 @@ export class TableUp {
       resizerSetOuter: false,
       icon: icons.table,
       scrollbar: true,
+      showAlign: true,
     } as TableUpOptions, options);
   };
 
@@ -330,81 +341,26 @@ export class TableUp {
 
     this.quill.clipboard.addMatcher('table', (node, delta) => {
       if (delta.ops.length === 0) return delta;
-      let colDelta;
 
-      // paste table have or not col
-      let hasCol = false;
-      if (delta.ops[0] && typeof delta.ops[0].insert !== 'string') {
-        for (let i = 0; i < delta.ops.length; i++) {
-          const { insert, attributes } = delta.ops[i];
-          if (insert && typeof insert !== 'string' && insert[blotName.tableCol]) {
-            hasCol = true;
-            break;
-          }
-          if (attributes && attributes[blotName.tableCellInner]) {
-            break;
-          }
-        }
-        hasCol = !!delta.ops[0].insert?.[blotName.tableCol];
-      }
-      let isFull = this.options.full;
-      if (hasCol) {
-        isFull = !!(delta.ops[0].insert as Record<string, any>)?.[blotName.tableCol]?.full;
-      }
-
-      // computed default col width
-      const editorStyle = window.getComputedStyle(this.quill.root);
-      const editorPaddingLeft = Number.parseFloat(editorStyle.paddingLeft);
-      const editorPaddingRight = Number.parseFloat(editorStyle.paddingRight);
-      const editorInnerWidth = Number.parseFloat(editorStyle.width) - editorPaddingLeft - editorPaddingRight;
-      const defaultColWidth = isFull
-        ? `${Math.max(100 / colIds.length, tableUpSize.colMinWidthPre)}%`
-        : `${Math.max(editorInnerWidth / colIds.length, tableUpSize.colMinWidthPx)}px`;
-
-      if (!hasCol) {
-        colDelta = colIds.reduce((colDelta, id) => {
-          colDelta.insert({
-            [blotName.tableCol]: {
-              colId: id,
-              tableId,
-              width: defaultColWidth,
-              full: isFull,
-            },
-          });
-          return colDelta;
-        }, new Delta());
-      }
-      else {
-        for (let i = 0; i < delta.ops.length; i++) {
-          const insert = delta.ops[i].insert;
-          if (!insert || typeof insert === 'string' || !insert[blotName.tableCol]) {
-            if (insert === '\n') {
-              delta.ops.splice(i, 1);
-            }
-            break;
-          }
-          Object.assign(insert[blotName.tableCol]!, {
-            tableId,
-            colId: colIds[i],
-            full: isFull,
-            width: !(insert[blotName.tableCol] as TableColValue).width
-              ? defaultColWidth
-              : Number.parseFloat((insert[blotName.tableCol] as TableColValue).width) + (isFull ? '%' : 'px'),
-          });
-        }
-      }
       // remove quill origin table format
       for (let i = 0; i < delta.ops.length; i++) {
-        const attrs = delta.ops[i].attributes;
+        const { attributes: attrs, insert } = delta.ops[i];
+        if (insert && typeof insert !== 'string' && insert[TableColFormat.blotName] && delta.ops[i + 1].insert === '\n') {
+          delta.ops.splice(i + 1, 1);
+          i -= 1;
+        }
         if (attrs && attrs.table) {
           delete attrs.table;
         }
+        if (attrs && attrs[TableCellFormat.blotName]) {
+          delete attrs[TableCellFormat.blotName];
+        }
       }
+      // reset variable to avoid conflict with other table
       tableId = randomId();
       colIds = [];
       cellCount = 0;
       colCount = 0;
-      delta = colDelta ? colDelta.concat(delta) : delta;
       // insert break line before table and after table
       delta.ops.unshift({ insert: '\n' });
       delta.ops.push({ insert: '\n' });
@@ -414,11 +370,13 @@ export class TableUp {
     this.quill.clipboard.addMatcher('col', (node) => {
       colIds[colCount] = randomId();
       const delta = new Delta().insert({
-        [blotName.tableCol]: {
-          tableId,
-          colId: colIds[colCount],
-          full: Object.hasOwn((node as HTMLElement).dataset, 'full'),
-        },
+        [blotName.tableCol]: Object.assign(
+          TableColFormat.value(node as HTMLElement),
+          {
+            tableId,
+            colId: colIds[colCount],
+          },
+        ),
       });
       colCount += 1;
       return delta;
@@ -441,32 +399,36 @@ export class TableUp {
 
     const matchCell = (node: Node, delta: TypeDelta) => {
       const cell = node as HTMLElement;
-      const rowspan = Number(cell.getAttribute('rowspan')) || 1;
-      const colspan = Number(cell.getAttribute('colspan')) || 1;
+      const cellFormat = TableCellFormat.formats(cell);
       if (!colIds[cellCount]) {
         for (let i = cellCount; i >= 0; i--) {
           if (!colIds[i]) colIds[i] = randomId();
         }
       }
       const colId = colIds[cellCount];
-      cellCount += Number(colspan);
+      cellCount += cellFormat.colspan;
 
-      if (delta.slice(delta.length() - 1).ops[0]?.insert !== '\n') {
-        delta.insert('\n');
-      }
       // add each insert tableCellInner format
-      const value = Object.assign(TableCellFormat.formats(cell), {
-        tableId,
-        rowId,
-        colId,
-        rowspan: Number.isNaN(rowspan) ? 1 : rowspan,
-        colspan: Number.isNaN(colspan) ? 1 : colspan,
-      });
-      return delta.compose(
-        new Delta().retain(delta.length(), {
-          [blotName.tableCellInner]: value,
-        }),
-      ); ;
+      const value = Object.assign(
+        cellFormat,
+        {
+          tableId,
+          rowId,
+          colId,
+        },
+      );
+      const ops = [];
+      for (const op of delta.ops) {
+        if (typeof op.insert === 'string') {
+          const texts = op.insert.replaceAll(/\n+/g, '\n').split('\n');
+          for (const text of texts) {
+            if (text) {
+              ops.push({ insert: text }, { insert: '\n', attributes: { [blotName.tableCellInner]: value } });
+            }
+          }
+        }
+      }
+      return new Delta(ops);
     };
 
     this.quill.clipboard.addMatcher('td', matchCell);
@@ -477,31 +439,36 @@ export class TableUp {
     if (table) {
       this.table = table;
       this.tableSelection = new TableSelection(this, table, quill, this.options.selection || {});
+      if (this.options.showAlign) {
+        this.tableAlign = new TableAlign(this, table, quill);
+      }
       if (this.options.scrollbar) {
         this.tableScrollbar = new TableVitrualScroll(this, table, quill);
       }
       if (this.options.resizerSetOuter) {
-        this.tableResizerBox = new TableResizeBox(this, table, quill, this.options.resizeBox || {});
+        this.tableResize = new TableResizeBox(this, table, quill, this.options.resizeBox || {});
       }
     }
   }
 
-  hideTableTools(removeAll: boolean = false) {
+  hideTableTools() {
     if (this.tableSelection) {
       this.tableSelection.destroy();
       this.tableSelection = undefined;
     }
-    if (removeAll) {
-      // eslint-disable-next-line unicorn/no-lonely-if
-      if (this.tableScrollbar) {
-        this.tableScrollbar.destroy();
-      }
+    if (this.tableScrollbar) {
+      this.tableScrollbar.destroy();
+      this.tableSelection = undefined;
+    }
+    if (this.tableAlign) {
+      this.tableAlign.destroy();
+      this.tableSelection = undefined;
     }
 
     this.table = undefined;
     if (this.options.resizerSetOuter) {
-      this.tableResizerBox && this.tableResizerBox.destroy();
-      this.tableResizerBox = undefined;
+      this.tableResize && this.tableResize.destroy();
+      this.tableResize = undefined;
     }
   }
 
@@ -711,7 +678,7 @@ export class TableUp {
     const selectedTds = this.tableSelection.selectedTds;
     const tableBlot = findParentBlot(selectedTds[0], blotName.tableMain);
     tableBlot && tableBlot.remove();
-    this.hideTableTools(true);
+    this.hideTableTools();
   }
 
   appendRow(isDown: boolean) {

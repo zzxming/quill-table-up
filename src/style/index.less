@@ -200,7 +200,8 @@
       cursor: ns-resize;
     }
   }
-  &-menu {
+  &-menu,
+  &-align {
     position: absolute;
     z-index: 1;
     display: none;
@@ -211,23 +212,6 @@
     box-shadow: 0 0 8px rgba(0, 0, 0, 0.5);
     background-color: #ffffff;
     font-size: 14px;
-    &.contextmenu {
-      flex-direction: column;
-      padding: 4px 8px;
-      .ql-table-menu-item {
-        width: 100%;
-        justify-content: flex-start;
-        cursor: pointer;
-      }
-      .break {
-        height: 1px;
-        margin: 4px 0px;
-        background-color: #a3a3a3;
-      }
-      .icon {
-        margin-right: 4px;
-      }
-    }
     &-item {
       position: relative;
       display: inline-flex;
@@ -247,14 +231,39 @@
         background-color: #a3a3a3;
         cursor: default;
       }
+    }
+    .icon {
+      display: flex;
+      flex-shrink: 0;
+      font-size: 20px;
+    }
+    span {
+      text-wrap: nowrap;
+    }
+  }
+  &-menu {
+    &.contextmenu {
+      flex-direction: column;
+      padding: 4px 8px;
+      .ql-table-menu-item {
+        width: 100%;
+        justify-content: flex-start;
+        cursor: pointer;
+      }
+      .break {
+        height: 1px;
+        margin: 4px 0px;
+        background-color: #a3a3a3;
+      }
       .icon {
-        display: flex;
-        flex-shrink: 0;
-        font-size: 20px;
+        margin-right: 4px;
       }
-      span {
-        text-wrap: nowrap;
-      }
+    }
+  }
+  &-align {
+    .icon {
+      width: 20px;
+      height: 20px;
     }
   }
 }

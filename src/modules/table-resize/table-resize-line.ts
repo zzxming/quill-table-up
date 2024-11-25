@@ -22,29 +22,33 @@ export class TableResizeLine extends TableResizeCommon {
     this.colResizer = this.tableModule.addContainer('ql-table-resize-line-col');
     this.rowResizer = this.tableModule.addContainer('ql-table-resize-line-row');
 
-    this.quill.root.addEventListener('mousemove', (e: MouseEvent) => {
-      if (this.dragging) return;
-      const tableCell = this.findTableCell(e);
-      if (!tableCell) {
-        return this.hideResizer();
-      }
-      const tableCellBlot = Quill.find(tableCell) as TableCellFormat;
-      if (!tableCellBlot) return;
-      if (this.currentTableCell !== tableCell) {
-        this.showResizer();
-        this.currentTableCell = tableCell;
-        this.tableCellBlot = tableCellBlot;
-        this.tableMain = findParentBlot(tableCellBlot, blotName.tableMain);
-        if (this.tableMain.getCols().length > 0) {
-          this.updateColResizer();
-        }
-        this.updateRowResizer();
-      }
-    });
-    this.quill.on(Quill.events.TEXT_CHANGE, () => {
-      this.hideResizer();
-    });
+    this.quill.root.addEventListener('mousemove', this.mousemoveHandler);
+    this.quill.on(Quill.events.TEXT_CHANGE, this.hideWhenTextChange);
   }
+
+  mousemoveHandler = (e: MouseEvent) => {
+    if (this.dragging) return;
+    const tableCell = this.findTableCell(e);
+    if (!tableCell) {
+      return this.hideResizer();
+    }
+    const tableCellBlot = Quill.find(tableCell) as TableCellFormat;
+    if (!tableCellBlot) return;
+    if (this.currentTableCell !== tableCell) {
+      this.showResizer();
+      this.currentTableCell = tableCell;
+      this.tableCellBlot = tableCellBlot;
+      this.tableMain = findParentBlot(tableCellBlot, blotName.tableMain);
+      if (this.tableMain.getCols().length > 0) {
+        this.updateColResizer();
+      }
+      this.updateRowResizer();
+    }
+  };
+
+  hideWhenTextChange = () => {
+    this.hideResizer();
+  };
 
   resolveOptions(options: Partial<TableResizeLineOptions>) {
     return Object.assign({}, options);
@@ -143,5 +147,15 @@ export class TableResizeLine extends TableResizeCommon {
     this.currentTableCell = undefined;
     this.rowResizer.style.display = 'none';
     this.colResizer.style.display = 'none';
+  }
+
+  update() {
+    this.updateColResizer();
+    this.updateRowResizer();
+  }
+
+  destroy(): void {
+    this.quill.root.removeEventListener('mousemove', this.mousemoveHandler);
+    this.quill.off(Quill.events.TEXT_CHANGE, this.hideWhenTextChange);
   }
 }

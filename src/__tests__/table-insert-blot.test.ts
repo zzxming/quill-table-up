@@ -249,14 +249,28 @@ describe('set contents', () => {
     );
   });
 
-  it('should display an empty table', async () => {
+  it('should get correct prop', async () => {
     const quill = createQuillWithTableModule(`<p><br></p>`);
-    quill.setContents(createTableDeltaOps(2, 2, true, 100, { isEmpty: true }));
+    quill.setContents(createTableDeltaOps(3, 3, { full: false, width: 200, align: 'center' }));
     await vi.runAllTimersAsync();
     expect(quill.root).toEqualHTML(
       `
         <p><br></p>
-        ${createTableHTML(2, 2, true, 100, { isEmpty: true })}
+        ${createTableHTML(3, 3, { full: false, width: 200, align: 'center' })}
+        <p><br></p>
+      `,
+      { ignoreAttrs: ['class', 'contenteditable'] },
+    );
+  });
+
+  it('should display an empty table', async () => {
+    const quill = createQuillWithTableModule(`<p><br></p>`);
+    quill.setContents(createTableDeltaOps(2, 2, {}, { isEmpty: true }));
+    await vi.runAllTimersAsync();
+    expect(quill.root).toEqualHTML(
+      `
+        <p><br></p>
+        ${createTableHTML(2, 2, {}, { isEmpty: true })}
         <p><br></p>
       `,
       { ignoreAttrs: ['class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
@@ -301,7 +315,7 @@ describe('set contents', () => {
 describe('column width calculate', () => {
   it('should calculate correct width', async () => {
     const quill = createQuillWithTableModule(`<p><br></p>`);
-    quill.setContents(createTableDeltaOps(3, 3, false, 100));
+    quill.setContents(createTableDeltaOps(3, 3, { full: false }));
     await vi.runAllTimersAsync();
     expect(quill.root.querySelectorAll('table')[0].style.width).toBe('300px');
   });

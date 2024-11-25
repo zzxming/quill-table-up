@@ -18,24 +18,24 @@ export class TableSelection {
   selectedEditorScrollX = 0;
   selectedEditorScrollY = 0;
   selectedTds: TableCellInnerFormat[] = [];
-  cellSelectWrap: HTMLDivElement;
-  cellSelect: HTMLDivElement;
+  cellSelectWrap: HTMLElement;
+  cellSelect: HTMLElement;
   dragging: boolean = false;
   scrollHandler: [HTMLElement, (...args: any[]) => void][] = [];
   selectingHandler = this.mouseDownHandler.bind(this);
   tableMenu: TableMenuCommon;
 
-  constructor(public tableModule: TableUp, public table: HTMLElement, public quill: Quill, options: Partial<TableSelectionOptions> = {}) {
+  constructor(tableModule: TableUp, public table: HTMLElement, public quill: Quill, options: Partial<TableSelectionOptions> = {}) {
     this.options = this.resolveOptions(options);
 
-    this.cellSelectWrap = this.tableModule.addContainer('ql-table-selection');
+    this.cellSelectWrap = tableModule.addContainer('ql-table-selection');
     this.cellSelect = this.helpLinesInitial();
 
     const resizeObserver = new ResizeObserver(() => this.hideSelection());
     resizeObserver.observe(this.table);
 
     this.quill.root.addEventListener('mousedown', this.selectingHandler, false);
-    this.tableMenu = new this.options.tableMenuClass(this.tableModule, quill, this.options.tableMenu);
+    this.tableMenu = new this.options.tableMenuClass(tableModule, quill, this.options.tableMenu);
   }
 
   resolveOptions(options: Partial<TableSelectionOptions>) {

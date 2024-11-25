@@ -2,7 +2,7 @@ import type { Parchment as TypeParchment } from 'quill';
 import type { BlockEmbed as TypeBlockEmbed } from 'quill/blots/block';
 import type { TableColValue } from '../utils';
 import Quill from 'quill';
-import { blotName, findParentBlots } from '../utils';
+import { blotName, findParentBlot, findParentBlots } from '../utils';
 import { TableCellInnerFormat } from './table-cell-inner-format';
 
 const BlockEmbed = Quill.import('blots/block/embed') as typeof TypeBlockEmbed;
@@ -12,10 +12,13 @@ export class TableColFormat extends BlockEmbed {
   static tagName = 'col';
 
   static create(value: TableColValue) {
-    const { width, tableId, colId, full } = value;
+    const { width, tableId, colId, full, align } = value;
     const node = super.create() as HTMLElement;
     node.setAttribute('width', `${Number.parseFloat(width)}${full ? '%' : 'px'}`);
     full && (node.dataset.full = String(full));
+    if (align && align !== 'left') {
+      node.dataset.align = align;
+    }
     node.dataset.tableId = tableId;
     node.dataset.colId = colId;
     node.setAttribute('contenteditable', 'false');
@@ -51,9 +54,23 @@ export class TableColFormat extends BlockEmbed {
     return Object.hasOwn(this.domNode.dataset, 'full');
   }
 
+  get align() {
+    return this.domNode.dataset.align || '';
+  }
+
+  set align(value: string) {
+    if (value === 'right' || value === 'center') {
+      this.domNode.dataset.align = value;
+    }
+    else {
+      this.domNode.removeAttribute('data-align');
+    }
+  }
+
   static value(domNode: HTMLElement) {
     const { tableId, colId } = domNode.dataset;
     const width = domNode.getAttribute('width');
+    const align = domNode.dataset.align;
     const full = Object.hasOwn(domNode.dataset, 'full');
     const value: Record<string, any> = {
       tableId,
@@ -61,6 +78,7 @@ export class TableColFormat extends BlockEmbed {
       full,
     };
     width && (value.width = Number.parseFloat(width));
+    align && (value.align = align);
     return value;
   }
 
@@ -78,9 +96,12 @@ export class TableColFormat extends BlockEmbed {
   optimize(context: Record< string, any>) {
     const parent = this.parent;
     if (parent != null && parent.statics.blotName !== blotName.tableColgroup) {
-      const { tableId, full } = this;
-      this.wrap(blotName.tableColgroup, { tableId, full });
+      const value = TableColFormat.value(this.domNode);
+      this.wrap(blotName.tableColgroup, value);
     }
+
+    const tableColgroup = findParentBlot(this, blotName.tableColgroup);
+    tableColgroup.align = this.align;
 
     super.optimize(context);
   }
@@ -111,15 +132,7 @@ export class TableColFormat extends BlockEmbed {
       const cellInners = tableBodyBlot.descendants(TableCellInnerFormat);
       if (cellInners.length > 0) {
         const cellInnerBlot = cellInners[0];
-        const value: Record<string, any> = {
-          tableId: cellInnerBlot.tableId,
-          rowId: cellInnerBlot.rowId,
-          colId: cellInnerBlot.colId,
-          rowspan: cellInnerBlot.rowspan,
-          colspan: cellInnerBlot.colspan,
-          backgroundColor: cellInnerBlot.backgroundColor,
-          height: cellInnerBlot.height,
-        };
+        const value = TableCellInnerFormat.formats(cellInnerBlot.domNode);
         const newBlock = this.scroll.create('block') as TypeParchment.BlockBlot;
         const newTableCellInner = newBlock.wrap(blotName.tableCellInner, value);
         const newTableCell = newTableCellInner.wrap(blotName.tableCell, value);

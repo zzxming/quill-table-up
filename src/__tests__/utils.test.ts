@@ -485,7 +485,7 @@ describe('test override format', () => {
     expect(quill.root).toEqualHTML(
       `
         <p><br></p>
-        ${createTableHTML(2, 2, true, 100, { isEmpty: true })}
+        ${createTableHTML(2, 2, {}, { isEmpty: true })}
         <p><br></p>
       `,
       { ignoreAttrs: ['class', 'style', 'data-table-id', 'contenteditable'] },

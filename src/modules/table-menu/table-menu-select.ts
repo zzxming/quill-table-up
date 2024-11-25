@@ -8,6 +8,7 @@ export class TableMenuSelect extends TableMenuCommon {
     super(tableModule, quill, options);
 
     this.menu = this.buildTools();
+    this.tableModule.addContainer(this.menu);
   }
 
   updateTools() {
@@ -23,32 +24,6 @@ export class TableMenuSelect extends TableMenuCommon {
         top: `${y}px`,
       });
     });
-    // const { boundary, selectedTds } = this.tableModule.tableSelection;
-    // this.selectedTds = selectedTds;
-    // const style: Record<string, any> = {
-    //   display: 'flex',
-    //   left: 0,
-    //   top: 0,
-    // };
-    // const containerRect = this.quill.container.getBoundingClientRect();
-    // style.left = containerRect.left + boundary.x + (boundary.width / 2);
-    // style.top = containerRect.top + boundary.y + boundary.height;
-    // style.transform = `translate(-50%, 20%)`;
-
-    // Object.assign(this.menu.style, {
-    //   ...style,
-    //   left: `${style.left + window.scrollX}px`,
-    //   top: `${style.top + window.scrollY}px`,
-    // });
-
-    // // limit menu in viewport
-    // const menuRect = this.menu.getBoundingClientRect();
-    // const { left: limitLeft, top: limitTop, leftLimited } = limitDomInViewPort(menuRect);
-    // Object.assign(this.menu.style, {
-    //   left: `${limitLeft + window.scrollX}px`,
-    //   top: `${limitTop + window.scrollY}px`,
-    //   transform: leftLimited ? `translate(0%, 20%)` : null,
-    // });
   }
 
   destroy() {

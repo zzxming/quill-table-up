@@ -1,7 +1,9 @@
 import type TableUp from '../index';
+import type { TableMainFormat } from '../index';
+import Quill from 'quill';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { TableCellInnerFormat, TableSelection } from '../index';
-import { createTable, createTableHTML, createTaleColHTML } from './utils';
+import { createTable, createTableBodyHTML, createTableHTML, createTaleColHTML, datasetAlign, datasetFull } from './utils';
 
 beforeEach(() => {
   vi.useFakeTimers();
@@ -730,7 +732,7 @@ describe('cell attribute', () => {
       `
         <p><br></p>
         <div>
-          <table cellpadding="0" cellspacing="0" data-full="true">
+          <table cellpadding="0" cellspacing="0"${datasetFull(true)} style="margin-right: auto;">
             ${createTaleColHTML(3)}
             <tbody>
               ${
@@ -757,6 +759,149 @@ describe('cell attribute', () => {
       `
         <p><br></p>
         ${createTableHTML(3, 3)}
+        <p><br></p>
+      `,
+      { ignoreAttrs: ['class', 'data-table-id', 'contenteditable'] },
+    );
+  });
+
+  it('undo set border color', async () => {
+    const quill = await createTable(3, 3);
+    const tableModule = quill.getModule('tableUp') as TableUp;
+    const table = quill.root.querySelector('table')!;
+    tableModule.tableSelection = new TableSelection(tableModule, table, quill);
+    const tds = quill.scroll.descendants(TableCellInnerFormat, 0);
+    const selectedTds = [tds[0], tds[1], tds[2]];
+    tableModule.setCellAttrs(selectedTds, 'border-color', 'red');
+    await vi.runAllTimersAsync();
+    expect(quill.root).toEqualHTML(
+      `
+        <p><br></p>
+        <div>
+          <table cellpadding="0" cellspacing="0"${datasetFull(true)} style="margin-right: auto;">
+            ${createTaleColHTML(3)}
+            <tbody>
+              ${
+                new Array(3).fill(0).map((_, i) => `
+                  <tr data-row-id="${i + 1}">
+                    ${
+                      new Array(3).fill(0).map((_, j) => `<td rowspan="1" colspan="1" data-row-id="${i + 1}" data-col-id="${j + 1}"${i === 0 ? ' style="border-color: red;"' : ''}>
+                        <div data-rowspan="1" data-colspan="1" data-row-id="${i + 1}" data-col-id="${j + 1}"${i === 0 ? ' data-border-color="red"' : ''}><p>${i * 3 + j + 1}</p></div>
+                      </td>`).join('\n')
+                    }
+                  </tr>
+                `).join('\n')
+              }
+            </tbody>
+          </table>
+        </div>
+        <p><br></p>
+      `,
+      { ignoreAttrs: ['class', 'data-table-id', 'contenteditable'] },
+    );
+    quill.history.undo();
+    await vi.runAllTimersAsync();
+    expect(quill.root).toEqualHTML(
+      `
+        <p><br></p>
+        ${createTableHTML(3, 3)}
+        <p><br></p>
+      `,
+      { ignoreAttrs: ['class', 'data-table-id', 'contenteditable'] },
+    );
+  });
+
+  it('undo and redo table width change', async () => {
+    const quill = await createTable(3, 3, { full: false, width: 100 });
+    const table = quill.root.querySelector('table')!;
+    const tableBlot = Quill.find(table) as TableMainFormat;
+    const cols = tableBlot.getCols();
+    for (const col of cols) {
+      col.width = 120;
+    }
+    await vi.runAllTimersAsync();
+    expect(quill.root).toEqualHTML(
+      `
+        <p><br></p>
+        ${createTableHTML(3, 3, { full: false, width: 120 })}
+        <p><br></p>
+      `,
+      { ignoreAttrs: ['class', 'contenteditable'] },
+    );
+
+    quill.history.undo();
+    await vi.runAllTimersAsync();
+    expect(quill.root).toEqualHTML(
+      `
+        <p><br></p>
+        ${createTableHTML(3, 3, { full: false, width: 100 })}
+        <p><br></p>
+      `,
+      { ignoreAttrs: ['class', 'contenteditable'] },
+    );
+
+    quill.history.redo();
+    await vi.runAllTimersAsync();
+    expect(quill.root).toEqualHTML(
+      `
+        <p><br></p>
+        ${createTableHTML(3, 3, { full: false, width: 120 })}
+        <p><br></p>
+      `,
+      { ignoreAttrs: ['class', 'contenteditable'] },
+    );
+  });
+
+  it('undo table align change', async () => {
+    const quill = await createTable(3, 3, { full: false, width: 100 });
+    const table = quill.root.querySelector('table')!;
+    const tableBlot = Quill.find(table) as TableMainFormat;
+    const cols = tableBlot.getCols();
+    for (const col of cols) {
+      col.align = 'center';
+    }
+    await vi.runAllTimersAsync();
+    expect(quill.root).toEqualHTML(
+      `
+        <p><br></p>
+        <div>
+          <table cellpadding="0" cellspacing="0"${datasetAlign('center')} style="margin-right: auto; width: 300px; margin-left: auto;">
+            ${createTaleColHTML(3, { align: 'center', full: false, width: 100 })}
+            ${createTableBodyHTML(3, 3)}
+          </table>
+        </div>
+        <p><br></p>
+      `,
+      { ignoreAttrs: ['class', 'data-table-id', 'contenteditable'] },
+    );
+
+    quill.history.undo();
+    await vi.runAllTimersAsync();
+    expect(quill.root).toEqualHTML(
+      `
+        <p><br></p>
+        <div>
+          <table cellpadding="0" cellspacing="0" style="margin-right: auto; width: 300px;">
+            ${createTaleColHTML(3, { full: false, width: 100 })}
+            ${createTableBodyHTML(3, 3)}
+          </table>
+        </div>
+        <p><br></p>
+      `,
+      { ignoreAttrs: ['class', 'data-table-id', 'contenteditable'] },
+    );
+
+    quill.history.redo();
+    await vi.runAllTimersAsync();
+    expect(quill.root).toEqualHTML(
+      `
+        <p><br></p>
+        <div>
+          <table cellpadding="0" cellspacing="0"${datasetAlign('center')} style="margin-right: auto; width: 300px; margin-left: auto;">
+            ${createTaleColHTML(3, { align: 'center', full: false, width: 100 })}
+            ${createTableBodyHTML(3, 3)}
+          </table>
+        </div>
         <p><br></p>
       `,
       { ignoreAttrs: ['class', 'data-table-id', 'contenteditable'] },
