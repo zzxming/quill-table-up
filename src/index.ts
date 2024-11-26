@@ -52,7 +52,7 @@ interface QuillTheme extends BaseTheme {
 }
 
 export class TableUp {
-  static moduleName = 'tableUp';
+  static moduleName = 'table-up';
   static toolName: string = blotName.tableWrapper;
   static keyboradHandler = {
     'forbid remove table by backspace': {
