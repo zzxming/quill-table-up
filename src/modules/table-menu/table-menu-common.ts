@@ -2,7 +2,7 @@ import type Quill from 'quill';
 import type { TableUp } from '../..';
 import type { TableMenuOptions, TableMenuTexts, ToolOption, TooltipInstance } from '../../utils';
 import { createTooltip, debounce, defaultColorMap, isArray, isFunction, randomId } from '../../utils';
-import { defaultTools, menuColorSelectClassName, usedColors } from './constants';
+import { colorClassName, defaultTools, menuColorSelectClassName, usedColors } from './constants';
 
 export type TableMenuOptionsInput = Partial<Omit<TableMenuOptions, 'texts'> & { texts?: Partial<TableMenuTexts> }>;
 export class TableMenuCommon {
@@ -26,9 +26,8 @@ export class TableMenuCommon {
     catch {}
 
     this.updateUsedColor = debounce((color?: string) => {
-      if (color) {
-        usedColors.add(color);
-      }
+      if (!color) return;
+      usedColors.add(color);
       if (usedColors.size > 10) {
         const saveColors = Array.from(usedColors).slice(-10);
         usedColors.clear();
@@ -36,17 +35,19 @@ export class TableMenuCommon {
       }
 
       localStorage.setItem(this.options.localstorageKey, JSON.stringify(Array.from(usedColors)));
-      const usedColorWrappers = Array.from(document.querySelectorAll(`.${this.colorItemClass}.table-color-used`));
+      const usedColorWrappers = Array.from(document.querySelectorAll(`.${this.colorItemClass}.${colorClassName.used}`));
       for (const usedColorWrapper of usedColorWrappers) {
         if (!usedColorWrapper) continue;
 
-        usedColorWrapper.innerHTML = '';
-        for (const recordColor of usedColors) {
-          const colorItem = document.createElement('div');
-          colorItem.classList.add('table-color-item');
-          colorItem.style.backgroundColor = recordColor;
-          usedColorWrapper.appendChild(colorItem);
+        const colorItem = usedColorWrapper.querySelectorAll(`.${colorClassName.item}[style*="background-color: ${color}"]`);
+        for (const item of Array.from(colorItem)) {
+          item.remove();
         }
+
+        const newColorItem = document.createElement('div');
+        newColorItem.classList.add(colorClassName.item);
+        newColorItem.style.backgroundColor = String(color);
+        usedColorWrapper.appendChild(newColorItem);
       }
     }, 1000);
   }
@@ -125,17 +126,17 @@ export class TableMenuCommon {
 
   createColorChoose({ handle, key }: ToolOption) {
     const colorSelectWrapper = document.createElement('div');
-    colorSelectWrapper.classList.add('table-color-select-wrapper');
+    colorSelectWrapper.classList.add(colorClassName.selectWrapper);
 
     if (this.options.defaultColorMap.length > 0) {
       const colorMap = document.createElement('div');
-      colorMap.classList.add('table-color-map');
+      colorMap.classList.add(colorClassName.map);
       for (const colors of this.options.defaultColorMap) {
         const colorMapRow = document.createElement('div');
-        colorMapRow.classList.add('table-color-map-row');
+        colorMapRow.classList.add(colorClassName.mapRow);
         for (const color of colors) {
           const colorItem = document.createElement('div');
-          colorItem.classList.add('table-color-item');
+          colorItem.classList.add(colorClassName.item);
           colorItem.style.backgroundColor = color;
           colorMapRow.appendChild(colorItem);
         }
@@ -145,24 +146,24 @@ export class TableMenuCommon {
     }
 
     const colorMapRow = document.createElement('div');
-    colorMapRow.classList.add('table-color-map-row');
+    colorMapRow.classList.add(colorClassName.mapRow);
     Object.assign(colorMapRow.style, {
       marginTop: '4px',
     });
     const transparentColor = document.createElement('div');
-    transparentColor.classList.add('table-color-btn', 'table-color-transparent');
+    transparentColor.classList.add(colorClassName.btn, 'table-color-transparent');
     transparentColor.textContent = this.options.texts.transparent;
     transparentColor.addEventListener('click', () => {
       handle(this.tableModule, this.getSelectedTds(), 'transparent');
     });
     const clearColor = document.createElement('div');
-    clearColor.classList.add('table-color-btn', 'table-color-clear');
+    clearColor.classList.add(colorClassName.btn, 'table-color-clear');
     clearColor.textContent = this.options.texts.clear;
     clearColor.addEventListener('click', () => {
       handle(this.tableModule, this.getSelectedTds(), null);
     });
     const label = document.createElement('label');
-    label.classList.add('table-color-btn', 'table-color-custom');
+    label.classList.add(colorClassName.btn, 'table-color-custom');
     const customColor = document.createElement('span');
     customColor.textContent = this.options.texts.custom;
     const input = document.createElement('input');
@@ -189,11 +190,10 @@ export class TableMenuCommon {
 
     if (usedColors.size > 0) {
       const usedColorWrap = document.createElement('div');
-      usedColorWrap.classList.add('table-color-used');
-      usedColorWrap.classList.add(this.colorItemClass);
+      usedColorWrap.classList.add(colorClassName.used, this.colorItemClass);
       for (const recordColor of usedColors) {
         const colorItem = document.createElement('div');
-        colorItem.classList.add('table-color-item');
+        colorItem.classList.add(colorClassName.item);
         colorItem.style.backgroundColor = recordColor;
         usedColorWrap.appendChild(colorItem);
       }
@@ -206,6 +206,7 @@ export class TableMenuCommon {
       const selectedTds = this.getSelectedTds();
       if (item && color && selectedTds.length > 0) {
         this.tableModule.setCellAttrs(selectedTds, key!, color);
+        if (item.closest(`.${colorClassName.item}`)) return;
         this.updateUsedColor(color);
       }
     });
