@@ -4,6 +4,7 @@ import Quill from 'quill';
 import { type TableCellFormat, TableRowFormat } from '../../formats';
 import { blotName, findParentBlot, findParentBlots } from '../../utils';
 import { TableResizeCommon } from './table-resize-common';
+import { isTableAlignRight } from './utils';
 
 export class TableResizeLine extends TableResizeCommon {
   colResizer: HTMLElement;
@@ -85,9 +86,13 @@ export class TableResizeLine extends TableResizeCommon {
     const tableBodyect = tableBodyBlot.domNode.getBoundingClientRect();
     const tableCellRect = tableCellBlot.domNode.getBoundingClientRect();
     const rootRect = this.quill.root.getBoundingClientRect();
+    let left = tableCellRect.right - rootRect.x;
+    if (isTableAlignRight(this.tableMain)) {
+      left = tableCellRect.left - rootRect.x;
+    }
     Object.assign(this.colResizer.style, {
       top: `${tableBodyect.y - rootRect.y}px`,
-      left: `${tableCellRect.right - rootRect.x}px`,
+      left: `${left}px`,
       height: `${tableBodyect.height}px`,
     });
 

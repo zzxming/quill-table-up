@@ -1,6 +1,7 @@
 import type Quill from 'quill';
 import type { TableMainFormat } from '../../formats';
 import { tableUpEvent, tableUpSize } from '../../utils';
+import { isTableAlignRight } from './utils';
 
 export class TableResizeCommon {
   colIndex: number = -1;
@@ -17,8 +18,7 @@ export class TableResizeCommon {
   handleRowMouseMoveFunc = this.handleRowMouseMove.bind(this);
   handleRowMouseDownFunc = this.handleRowMouseDown.bind(this);
 
-  constructor(public quill: Quill) {
-  }
+  constructor(public quill: Quill) {}
 
   findCurrentColIndex(_e: MouseEvent) {
     return -1;
@@ -87,31 +87,45 @@ export class TableResizeCommon {
     e.preventDefault();
     if (!this.dragColBreak || !this.tableMain || this.colIndex === -1) return;
     const cols = this.tableMain.getCols();
-    const rect = cols[this.colIndex].domNode.getBoundingClientRect();
+    const changeColRect = cols[this.colIndex].domNode.getBoundingClientRect();
     const tableRect = this.tableMain.domNode.getBoundingClientRect();
     let resX = e.clientX;
 
+    // table full not handle align right
     if (this.tableMain.full) {
       // max width = current col.width + next col.width
       // if current col is last. max width = current col.width
       const minWidth = (tableUpSize.colMinWidthPre / 100) * tableRect.width;
       let maxRange = tableRect.right;
-      if (resX > rect.right && cols[this.colIndex + 1]) {
-        maxRange = Math.max(cols[this.colIndex + 1].domNode.getBoundingClientRect().right - minWidth, rect.left + minWidth);
+      if (resX > changeColRect.right && cols[this.colIndex + 1]) {
+        maxRange = Math.max(cols[this.colIndex + 1].domNode.getBoundingClientRect().right - minWidth, changeColRect.left + minWidth);
       }
-      const minRange = rect.x + minWidth;
+      const minRange = changeColRect.x + minWidth;
       resX = Math.min(Math.max(resX, minRange), maxRange);
     }
     else {
-      if (resX - rect.x < tableUpSize.colMinWidthPx) {
-        resX = rect.x + tableUpSize.colMinWidthPx;
+      // when table align right, mousemove to the left, the col width will be increase
+      if (isTableAlignRight(this.tableMain)) {
+        if (changeColRect.right - resX < tableUpSize.colMinWidthPx) {
+          resX = changeColRect.right - tableUpSize.colMinWidthPx;
+        }
+      }
+      else {
+        if (resX - changeColRect.x < tableUpSize.colMinWidthPx) {
+          resX = changeColRect.x + tableUpSize.colMinWidthPx;
+        }
       }
     }
+
+    let width = resX - changeColRect.x;
+    if (isTableAlignRight(this.tableMain)) {
+      width = changeColRect.right - resX;
+    }
     this.dragColBreak.style.left = `${resX}px`;
-    this.dragColBreak.dataset.w = String(resX - rect.x);
+    this.dragColBreak.dataset.w = String(width);
     return {
       left: resX,
-      width: resX - rect.x,
+      width,
     };
   };
 

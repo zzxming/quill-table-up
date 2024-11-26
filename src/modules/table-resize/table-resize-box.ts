@@ -5,6 +5,7 @@ import type { TableResizeBoxOptions } from '../../utils';
 import Quill from 'quill';
 import { addScrollEvent, clearScrollEvent } from '../../utils';
 import { TableResizeCommon } from './table-resize-common';
+import { isTableAlignRight } from './utils';
 
 export class TableResizeBox extends TableResizeCommon {
   options: TableResizeBoxOptions;
@@ -16,6 +17,7 @@ export class TableResizeBox extends TableResizeCommon {
   tableRows: TableRowFormat[] = [];
   rowHeadWrapper: HTMLElement | null = null;
   colHeadWrapper: HTMLElement | null = null;
+  corner: HTMLElement | null = null;
   scrollHandler: [HTMLElement, (e: Event) => void][] = [];
 
   constructor(public tableModule: TableUp, public table: HTMLElement, quill: Quill, options: Partial<TableResizeBoxOptions>) {
@@ -47,7 +49,7 @@ export class TableResizeBox extends TableResizeCommon {
       const tableSelection = this.tableModule.tableSelection;
       tableSelection.selectedTds = tableSelection.computeSelectedTds(
         { x: clientX, y: clientY },
-        { x: isX ? tableRect.right : clientX, y: isX ? clientY : tableRect.bottom },
+        { x: isX ? tableRect[isTableAlignRight(this.tableMain) ? 'left' : 'right'] : clientX, y: isX ? clientY : tableRect.bottom },
       );
       tableSelection.showSelection();
     }
@@ -141,6 +143,28 @@ export class TableResizeBox extends TableResizeCommon {
       top: `${tableNodeY - rootRect.y}px`,
       left: `${tableNodeX - rootRect.x}px`,
     });
+
+    let cornerTranslateX = -1 * this.options.size;
+    let rowHeadWrapperTranslateX = -1 * this.options.size;
+    if (isTableAlignRight(this.tableMain)) {
+      this.root.classList.add('table-align-right');
+      cornerTranslateX = Math.min(tableWrapperRect.width, tableMainRect.width);
+      rowHeadWrapperTranslateX = Math.min(tableWrapperRect.width, tableMainRect.width);
+    }
+    else {
+      this.root.classList.remove('table-align-right');
+    }
+
+    if (this.corner) {
+      Object.assign(this.corner.style, {
+        transform: `translateY(${-1 * this.options.size}px) translateX(${cornerTranslateX}px)`,
+      });
+    }
+    if (this.rowHeadWrapper) {
+      Object.assign(this.rowHeadWrapper.style, {
+        transform: `translateX(${rowHeadWrapperTranslateX}px)`,
+      });
+    }
   }
 
   showTool() {
@@ -149,17 +173,15 @@ export class TableResizeBox extends TableResizeCommon {
     this.root.innerHTML = '';
     const tableWrapperRect = this.tableWrapper.domNode.getBoundingClientRect();
     const tableMainRect = this.tableMain.domNode.getBoundingClientRect();
-    this.update();
 
     if (this.tableCols.length > 0 && this.tableRows.length > 0) {
-      const corner = document.createElement('div');
-      corner.classList.add('ql-table-resizer-corner');
-      Object.assign(corner.style, {
+      this.corner = document.createElement('div');
+      this.corner.classList.add('ql-table-resizer-corner');
+      Object.assign(this.corner.style, {
         width: `${this.options.size}px`,
         height: `${this.options.size}px`,
-        transform: `translate(-${this.options.size}px, -${this.options.size}px)`,
       });
-      corner.addEventListener('click', () => {
+      this.corner.addEventListener('click', () => {
         const tableRect = this.table.getBoundingClientRect();
         if (this.tableModule.tableSelection) {
           const tableSelection = this.tableModule.tableSelection;
@@ -170,7 +192,7 @@ export class TableResizeBox extends TableResizeCommon {
           tableSelection.showSelection();
         }
       });
-      this.root.appendChild(corner);
+      this.root.appendChild(this.corner);
     }
 
     if (this.tableCols.length > 0) {
@@ -190,7 +212,7 @@ export class TableResizeBox extends TableResizeCommon {
       colHead.classList.add('ql-table-col-wrapper');
       Object.assign(colHeadWrapper.style, {
         transform: `translateY(-${this.options.size}px)`,
-        width: `${tableWrapperRect.width}px`,
+        maxWidth: `${tableWrapperRect.width}px`,
         height: `${this.options.size}px`,
       });
       Object.assign(colHead.style, {
@@ -220,7 +242,7 @@ export class TableResizeBox extends TableResizeCommon {
       Object.assign(rowHeadWrapper.style, {
         transform: `translateX(-${this.options.size}px)`,
         width: `${this.options.size}px`,
-        height: `${tableWrapperRect.height}px`,
+        maxHeight: `${tableWrapperRect.height}px`,
       });
       Object.assign(rowHead.style, {
         height: `${tableMainRect.height}px`,
@@ -233,6 +255,7 @@ export class TableResizeBox extends TableResizeCommon {
       this.bindRowEvents();
     }
 
+    this.update();
     addScrollEvent.call(this, this.quill.root, () => {
       this.update();
     });

@@ -70,6 +70,17 @@
   .ql-table-resizer {
     position: absolute;
     z-index: 0;
+    &.table-align-right {
+      .ql-table-col-separator {
+        left: -2px;
+      }
+      .ql-table-resizer-corner {
+        border-left-width: 1px;
+        border-right-width: 1px;
+        border-top-left-radius: 0;
+        border-top-right-radius: 50%;
+      }
+    }
     &-row,
     &-col {
       position: absolute;
@@ -166,8 +177,8 @@
       left: 0px;
       background-color: #f3f4f5;
       border: 1px solid #ccc;
-      border-right: none;
-      border-bottom: none;
+      border-right-width: 0;
+      border-bottom-width: 0;
       border-top-left-radius: 50%;
       cursor: pointer;
     }

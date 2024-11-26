@@ -12,7 +12,7 @@ export const blotName = {
 
 export const tableUpSize = {
   colMinWidthPre: 5,
-  colMinWidthPx: 26,
+  colMinWidthPx: 40,
   rowMinHeightPx: 36,
 };
 
