@@ -114,7 +114,7 @@ export class TableMenuCommon {
 
         // add text
         const tipText = this.options.tipTexts[name] || tip;
-        if (tipText && tip) {
+        if (this.options.tipText && tipText && tip) {
           this.createTipText(item, tipText);
         }
       }
