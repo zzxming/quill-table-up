@@ -40,6 +40,9 @@ export class TableAlign {
             if (this.tableModule.tableResize) {
               this.tableModule.tableResize.update();
             }
+            if (this.tableModule.tableScrollbar) {
+              this.tableModule.tableScrollbar.update();
+            }
           });
         }
       });
