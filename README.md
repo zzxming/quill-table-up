@@ -8,12 +8,12 @@ Enhancement of quill table module
 
 - [x] complete UI operation process
 - [x] insert/delete row/column/table; merge/split cells
-- [x] support insert header/list/video/image/code-block
-- [x] control cells width/height/background color
+- [x] support all origin quill formats
+- [x] control cells width/height/background color/border color
 - [x] 100 percent table width or fixed pixel width
 - [x] line break in cells
-- [x] not effect on other formats
 - [x] redo and undo
+- [x] support whole table align left/center/right
 
 ## Usage
 
@@ -40,13 +40,9 @@ const quill = new Quill('#editor', {
       // ...
       [ // use picker to enable the customSelect option
         { [TableUp.toolName]: [] }
-        // or
-        // { 'table-up': [] }
       ],
     ],
     [TableUp.moduleName]: {},
-    // or
-    // tableUp: {},
   },
 });
 ```
@@ -92,14 +88,14 @@ const defaultTexts = {
 
 ### TableMenu Options
 
-| attribute       | description                        | type                     | default                 |
-| --------------- | ---------------------------------- | ------------------------ | ----------------------- |
-| tipText         | display tip text when hover icon   | `boolean`                | `true`                  |
-| tipTexts        | the text to replace tools tip text | `Record<string, string>` | `{}`                    |
-| localstorageKey | used color save localstorage key   | `string`                 | `__table-bg-used-color` |
-| tools           | menu items                         | `Tool[]`                 | `defaultTools`          |
-| defaultColorMap | color map                          | `string[][]`             | in source code          |
-| texts           | the text that menu needs           | `TableMenuTexts`         | `defaultTexts`          |
+| attribute       | description                                                                                                                                                                           | type                     | default                 |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------ | ----------------------- |
+| tipText         | when `tableMenuClass` set `TableUp.TableMenuSelect`, display tip text when hover icon. when `tableMenuClass` set `TableUp.TableMenuContextmenu`(default), display tip text after icon | `boolean`                | `true`                  |
+| tipTexts        | the text to replace tools tip text                                                                                                                                                    | `Record<string, string>` | `{}`                    |
+| localstorageKey | used color save localstorage key                                                                                                                                                      | `string`                 | `__table-bg-used-color` |
+| tools           | menu items                                                                                                                                                                            | `Tool[]`                 | `defaultTools`          |
+| defaultColorMap | color map                                                                                                                                                                             | `string[][]`             | in source code          |
+| texts           | the text that menu needs                                                                                                                                                              | `TableMenuTexts`         | `defaultTexts`          |
 
 <details>
   <summary> types and default value </summary>
@@ -202,10 +198,12 @@ const defaultTools = [
 interface TableMenuTexts {
   custom: string;
   clear: string;
+  transparent: string;
 }
 const defaultTexts = {
   custom: 'Custom',
   clear: 'Clear',
+  transparent: 'Transparent',
 };
 ```
 
