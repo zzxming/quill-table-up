@@ -150,18 +150,19 @@ export class TableMenuCommon {
       marginTop: '4px',
     });
     const transparentColor = document.createElement('div');
-    transparentColor.classList.add('table-color-transparent');
+    transparentColor.classList.add('table-color-btn', 'table-color-transparent');
     transparentColor.textContent = this.options.texts.transparent;
     transparentColor.addEventListener('click', () => {
       handle(this.tableModule, this.getSelectedTds(), 'transparent');
     });
     const clearColor = document.createElement('div');
-    clearColor.classList.add('table-color-clear');
+    clearColor.classList.add('table-color-btn', 'table-color-clear');
     clearColor.textContent = this.options.texts.clear;
     clearColor.addEventListener('click', () => {
       handle(this.tableModule, this.getSelectedTds(), null);
     });
     const label = document.createElement('label');
+    label.classList.add('table-color-btn', 'table-color-custom');
     const customColor = document.createElement('span');
     customColor.textContent = this.options.texts.custom;
     const input = document.createElement('input');
@@ -180,7 +181,6 @@ export class TableMenuCommon {
     }, false);
     label.appendChild(customColor);
     label.appendChild(input);
-    label.classList.add('table-color-custom');
 
     colorMapRow.appendChild(transparentColor);
     colorMapRow.appendChild(clearColor);
