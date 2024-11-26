@@ -1646,10 +1646,10 @@
       }
       this.scrollHandler = [];
   }
-  const handleIfTransitionend = (domNode, duration, handler, options) => {
+  const handleIfTransitionend = (domNode, duration, handler, options, lastTimer) => {
       domNode.addEventListener('transitionend', handler, options);
       // handle remove when transition set none
-      setTimeout(() => {
+      return setTimeout(() => {
           handler();
       }, duration);
   };
@@ -1967,7 +1967,7 @@
   };
   const tableUpSize = {
       colMinWidthPre: 5,
-      colMinWidthPx: 26,
+      colMinWidthPx: 40,
       rowMinHeightPx: 36,
   };
   const tableUpEvent = {
@@ -3139,11 +3139,7 @@
           this.quill = quill;
           this.tableBlot = Quill.find(table);
           this.tableWrapperBlot = this.tableBlot.parent;
-          if (!this.tableBlot.full) {
-              this.alignBox = this.buildTool();
-              this.cleanup = autoUpdate(this.tableWrapperBlot.domNode, this.alignBox, () => this.update());
-              this.update();
-          }
+          this.alignBox = this.buildTool();
       }
       buildTool() {
           const alignBox = this.tableModule.addContainer('ql-table-align');
@@ -3169,10 +3165,16 @@
                           if (this.tableModule.tableResize) {
                               this.tableModule.tableResize.update();
                           }
+                          if (this.tableModule.tableScrollbar) {
+                              this.tableModule.tableScrollbar.update();
+                          }
                       });
                   }
               });
               alignBox.appendChild(item);
+          }
+          if (!this.cleanup) {
+              this.cleanup = autoUpdate(this.tableWrapperBlot.domNode, alignBox, () => this.update());
           }
           return alignBox;
       }
@@ -3182,10 +3184,28 @@
               col.align = align;
           }
       }
-      update() {
+      show() {
           if (!this.alignBox)
               return;
           Object.assign(this.alignBox.style, { display: 'flex' });
+      }
+      hide() {
+          if (!this.alignBox)
+              return;
+          Object.assign(this.alignBox.style, { display: null });
+          if (this.cleanup) {
+              this.cleanup();
+              this.cleanup = undefined;
+          }
+      }
+      update() {
+          if (!this.alignBox)
+              return;
+          if (this.tableBlot.full || this.tableBlot.domNode.offsetWidth >= this.quill.root.offsetWidth) {
+              this.hide();
+              return;
+          }
+          this.show();
           computePosition(this.tableWrapperBlot.domNode, this.alignBox, {
               placement: 'top',
               middleware: [flip(), shift({ limiter: limitShift() }), offset(8)],
@@ -3197,10 +3217,7 @@
           });
       }
       destroy() {
-          if (this.cleanup) {
-              this.cleanup();
-              this.cleanup = undefined;
-          }
+          this.hide();
           if (this.alignBox) {
               this.alignBox.remove();
               this.alignBox = undefined;
@@ -3344,6 +3361,14 @@
           },
       },
   ];
+  const colorClassName = {
+      used: 'table-color-used',
+      item: 'table-color-item',
+      btn: 'table-color-btn',
+      map: 'table-color-map',
+      mapRow: 'table-color-map-row',
+      selectWrapper: 'table-color-select-wrapper',
+  };
 
   class TableMenuCommon {
       tableModule;
@@ -3367,26 +3392,27 @@
           }
           catch { }
           this.updateUsedColor = debounce((color) => {
-              if (color) {
-                  usedColors.add(color);
-              }
+              if (!color)
+                  return;
+              usedColors.add(color);
               if (usedColors.size > 10) {
                   const saveColors = Array.from(usedColors).slice(-10);
                   usedColors.clear();
                   saveColors.map(v => usedColors.add(v));
               }
               localStorage.setItem(this.options.localstorageKey, JSON.stringify(Array.from(usedColors)));
-              const usedColorWrappers = Array.from(document.querySelectorAll(`.${this.colorItemClass}.table-color-used`));
+              const usedColorWrappers = Array.from(document.querySelectorAll(`.${this.colorItemClass}.${colorClassName.used}`));
               for (const usedColorWrapper of usedColorWrappers) {
                   if (!usedColorWrapper)
                       continue;
-                  usedColorWrapper.innerHTML = '';
-                  for (const recordColor of usedColors) {
-                      const colorItem = document.createElement('div');
-                      colorItem.classList.add('table-color-item');
-                      colorItem.style.backgroundColor = recordColor;
-                      usedColorWrapper.appendChild(colorItem);
+                  const colorItem = usedColorWrapper.querySelectorAll(`.${colorClassName.item}[style*="background-color: ${color}"]`);
+                  for (const item of Array.from(colorItem)) {
+                      item.remove();
                   }
+                  const newColorItem = document.createElement('div');
+                  newColorItem.classList.add(colorClassName.item);
+                  newColorItem.style.backgroundColor = String(color);
+                  usedColorWrapper.appendChild(newColorItem);
               }
           }, 1000);
       }
@@ -3449,7 +3475,7 @@
                   }
                   // add text
                   const tipText = this.options.tipTexts[name] || tip;
-                  if (tipText && tip) {
+                  if (this.options.tipText && tipText && tip) {
                       this.createTipText(item, tipText);
                   }
               }
@@ -3460,16 +3486,16 @@
       ;
       createColorChoose({ handle, key }) {
           const colorSelectWrapper = document.createElement('div');
-          colorSelectWrapper.classList.add('table-color-select-wrapper');
+          colorSelectWrapper.classList.add(colorClassName.selectWrapper);
           if (this.options.defaultColorMap.length > 0) {
               const colorMap = document.createElement('div');
-              colorMap.classList.add('table-color-map');
+              colorMap.classList.add(colorClassName.map);
               for (const colors of this.options.defaultColorMap) {
                   const colorMapRow = document.createElement('div');
-                  colorMapRow.classList.add('table-color-map-row');
+                  colorMapRow.classList.add(colorClassName.mapRow);
                   for (const color of colors) {
                       const colorItem = document.createElement('div');
-                      colorItem.classList.add('table-color-item');
+                      colorItem.classList.add(colorClassName.item);
                       colorItem.style.backgroundColor = color;
                       colorMapRow.appendChild(colorItem);
                   }
@@ -3478,23 +3504,24 @@
               colorSelectWrapper.appendChild(colorMap);
           }
           const colorMapRow = document.createElement('div');
-          colorMapRow.classList.add('table-color-map-row');
+          colorMapRow.classList.add(colorClassName.mapRow);
           Object.assign(colorMapRow.style, {
               marginTop: '4px',
           });
           const transparentColor = document.createElement('div');
-          transparentColor.classList.add('table-color-transparent');
+          transparentColor.classList.add(colorClassName.btn, 'table-color-transparent');
           transparentColor.textContent = this.options.texts.transparent;
           transparentColor.addEventListener('click', () => {
               handle(this.tableModule, this.getSelectedTds(), 'transparent');
           });
           const clearColor = document.createElement('div');
-          clearColor.classList.add('table-color-clear');
+          clearColor.classList.add(colorClassName.btn, 'table-color-clear');
           clearColor.textContent = this.options.texts.clear;
           clearColor.addEventListener('click', () => {
               handle(this.tableModule, this.getSelectedTds(), null);
           });
           const label = document.createElement('label');
+          label.classList.add(colorClassName.btn, 'table-color-custom');
           const customColor = document.createElement('span');
           customColor.textContent = this.options.texts.custom;
           const input = document.createElement('input');
@@ -3513,18 +3540,16 @@
           }, false);
           label.appendChild(customColor);
           label.appendChild(input);
-          label.classList.add('table-color-custom');
           colorMapRow.appendChild(transparentColor);
           colorMapRow.appendChild(clearColor);
           colorMapRow.appendChild(label);
           colorSelectWrapper.appendChild(colorMapRow);
           if (usedColors.size > 0) {
               const usedColorWrap = document.createElement('div');
-              usedColorWrap.classList.add('table-color-used');
-              usedColorWrap.classList.add(this.colorItemClass);
+              usedColorWrap.classList.add(colorClassName.used, this.colorItemClass);
               for (const recordColor of usedColors) {
                   const colorItem = document.createElement('div');
-                  colorItem.classList.add('table-color-item');
+                  colorItem.classList.add(colorClassName.item);
                   colorItem.style.backgroundColor = recordColor;
                   usedColorWrap.appendChild(colorItem);
               }
@@ -3536,6 +3561,8 @@
               const selectedTds = this.getSelectedTds();
               if (item && color && selectedTds.length > 0) {
                   this.tableModule.setCellAttrs(selectedTds, key, color);
+                  if (item.closest(`.${colorClassName.item}`))
+                      return;
                   this.updateUsedColor(color);
               }
           });
@@ -3682,6 +3709,8 @@
       }
   }
 
+  const isTableAlignRight = (tableMainBlot) => !tableMainBlot.full && tableMainBlot.align === 'right';
+
   class TableResizeCommon {
       quill;
       colIndex = -1;
@@ -3707,7 +3736,7 @@
           if (!this.dragColBreak || !this.tableMain || this.colIndex === -1)
               return;
           const cols = this.tableMain.getCols();
-          const w = Number.parseInt(this.dragColBreak.dataset.w);
+          const w = Number.parseInt(this.dragColBreak.dataset.w || '0');
           const isFull = this.tableMain.full;
           if (isFull) {
               let pre = (w / this.tableMain.domNode.getBoundingClientRect().width) * 100;
@@ -3763,31 +3792,43 @@
           if (!this.dragColBreak || !this.tableMain || this.colIndex === -1)
               return;
           const cols = this.tableMain.getCols();
-          const rect = cols[this.colIndex].domNode.getBoundingClientRect();
+          const changeColRect = cols[this.colIndex].domNode.getBoundingClientRect();
           const tableRect = this.tableMain.domNode.getBoundingClientRect();
           let resX = e.clientX;
+          // table full not handle align right
           if (this.tableMain.full) {
               // max width = current col.width + next col.width
               // if current col is last. max width = current col.width
               const minWidth = (tableUpSize.colMinWidthPre / 100) * tableRect.width;
-              const maxRange = resX > rect.right
-                  ? cols[this.colIndex + 1]
-                      ? Math.max(cols[this.colIndex + 1].domNode.getBoundingClientRect().right - minWidth, rect.left + minWidth)
-                      : tableRect.right
-                  : Infinity;
-              const minRange = rect.x + minWidth;
+              let maxRange = tableRect.right;
+              if (resX > changeColRect.right && cols[this.colIndex + 1]) {
+                  maxRange = Math.max(cols[this.colIndex + 1].domNode.getBoundingClientRect().right - minWidth, changeColRect.left + minWidth);
+              }
+              const minRange = changeColRect.x + minWidth;
               resX = Math.min(Math.max(resX, minRange), maxRange);
           }
           else {
-              if (resX - rect.x < tableUpSize.colMinWidthPx) {
-                  resX = rect.x + tableUpSize.colMinWidthPx;
+              // when table align right, mousemove to the left, the col width will be increase
+              if (isTableAlignRight(this.tableMain)) {
+                  if (changeColRect.right - resX < tableUpSize.colMinWidthPx) {
+                      resX = changeColRect.right - tableUpSize.colMinWidthPx;
+                  }
+              }
+              else {
+                  if (resX - changeColRect.x < tableUpSize.colMinWidthPx) {
+                      resX = changeColRect.x + tableUpSize.colMinWidthPx;
+                  }
               }
           }
+          let width = resX - changeColRect.x;
+          if (isTableAlignRight(this.tableMain)) {
+              width = changeColRect.right - resX;
+          }
           this.dragColBreak.style.left = `${resX}px`;
-          this.dragColBreak.dataset.w = String(resX - rect.x);
+          this.dragColBreak.dataset.w = String(width);
           return {
               left: resX,
-              width: resX - rect.x,
+              width,
           };
       }
       ;
@@ -3849,7 +3890,7 @@
       handleRowMouseUp() {
           if (!this.tableMain || !this.dragRowBreak || this.rowIndex === -1)
               return;
-          const h = Number.parseInt(this.dragRowBreak.dataset.h);
+          const h = Number.parseInt(this.dragRowBreak.dataset.h || '0');
           const rows = this.tableMain.getRows();
           rows[this.rowIndex].setHeight(`${h}px`);
           this.rowHeightChange(this.rowIndex, h);
@@ -3931,6 +3972,7 @@
       tableRows = [];
       rowHeadWrapper = null;
       colHeadWrapper = null;
+      corner = null;
       scrollHandler = [];
       constructor(tableModule, table, quill, options) {
           super(quill);
@@ -3959,7 +4001,7 @@
           const tableRect = this.table.getBoundingClientRect();
           if (this.tableModule.tableSelection) {
               const tableSelection = this.tableModule.tableSelection;
-              tableSelection.selectedTds = tableSelection.computeSelectedTds({ x: clientX, y: clientY }, { x: isX ? tableRect.right : clientX, y: isX ? clientY : tableRect.bottom });
+              tableSelection.selectedTds = tableSelection.computeSelectedTds({ x: isX ? tableRect.left : clientX, y: isX ? clientY : tableRect.top }, { x: isX ? tableRect.right : clientX, y: isX ? clientY : tableRect.bottom });
               tableSelection.showSelection();
           }
       }
@@ -3973,7 +4015,7 @@
       }
       handleColMouseDownFunc = function (e) {
           const value = this.handleColMouseDown(e);
-          if (value) {
+          if (value && this.dragColBreak) {
               Object.assign(this.dragColBreak.style, {
                   top: `${value.top - this.options.size}px`,
                   left: `${value.left}px`,
@@ -4006,7 +4048,7 @@
       }
       handleRowMouseDownFunc = function (e) {
           const value = this.handleRowMouseDown(e);
-          if (value) {
+          if (value && this.dragRowBreak) {
               Object.assign(this.dragRowBreak.style, {
                   top: `${value.top}px`,
                   left: `${value.left - this.options.size}px`,
@@ -4040,6 +4082,26 @@
               top: `${tableNodeY - rootRect.y}px`,
               left: `${tableNodeX - rootRect.x}px`,
           });
+          let cornerTranslateX = -1 * this.options.size;
+          let rowHeadWrapperTranslateX = -1 * this.options.size;
+          if (isTableAlignRight(this.tableMain)) {
+              this.root.classList.add('table-align-right');
+              cornerTranslateX = Math.min(tableWrapperRect.width, tableMainRect.width);
+              rowHeadWrapperTranslateX = Math.min(tableWrapperRect.width, tableMainRect.width);
+          }
+          else {
+              this.root.classList.remove('table-align-right');
+          }
+          if (this.corner) {
+              Object.assign(this.corner.style, {
+                  transform: `translateY(${-1 * this.options.size}px) translateX(${cornerTranslateX}px)`,
+              });
+          }
+          if (this.rowHeadWrapper) {
+              Object.assign(this.rowHeadWrapper.style, {
+                  transform: `translateX(${rowHeadWrapperTranslateX}px)`,
+              });
+          }
       }
       showTool() {
           this.tableCols = this.tableMain.getCols();
@@ -4047,16 +4109,14 @@
           this.root.innerHTML = '';
           const tableWrapperRect = this.tableWrapper.domNode.getBoundingClientRect();
           const tableMainRect = this.tableMain.domNode.getBoundingClientRect();
-          this.update();
           if (this.tableCols.length > 0 && this.tableRows.length > 0) {
-              const corner = document.createElement('div');
-              corner.classList.add('ql-table-resizer-corner');
-              Object.assign(corner.style, {
+              this.corner = document.createElement('div');
+              this.corner.classList.add('ql-table-resizer-corner');
+              Object.assign(this.corner.style, {
                   width: `${this.options.size}px`,
                   height: `${this.options.size}px`,
-                  transform: `translate(-${this.options.size}px, -${this.options.size}px)`,
               });
-              corner.addEventListener('click', () => {
+              this.corner.addEventListener('click', () => {
                   const tableRect = this.table.getBoundingClientRect();
                   if (this.tableModule.tableSelection) {
                       const tableSelection = this.tableModule.tableSelection;
@@ -4064,7 +4124,7 @@
                       tableSelection.showSelection();
                   }
               });
-              this.root.appendChild(corner);
+              this.root.appendChild(this.corner);
           }
           if (this.tableCols.length > 0) {
               let colHeadStr = '';
@@ -4083,7 +4143,7 @@
               colHead.classList.add('ql-table-col-wrapper');
               Object.assign(colHeadWrapper.style, {
                   transform: `translateY(-${this.options.size}px)`,
-                  width: `${tableWrapperRect.width}px`,
+                  maxWidth: `${tableWrapperRect.width}px`,
                   height: `${this.options.size}px`,
               });
               Object.assign(colHead.style, {
@@ -4111,7 +4171,7 @@
               Object.assign(rowHeadWrapper.style, {
                   transform: `translateX(-${this.options.size}px)`,
                   width: `${this.options.size}px`,
-                  height: `${tableWrapperRect.height}px`,
+                  maxHeight: `${tableWrapperRect.height}px`,
               });
               Object.assign(rowHead.style, {
                   height: `${tableMainRect.height}px`,
@@ -4123,6 +4183,7 @@
               this.rowHeadWrapper = rowHeadWrapper;
               this.bindRowEvents();
           }
+          this.update();
           addScrollEvent.call(this, this.quill.root, () => {
               this.update();
           });
@@ -4215,9 +4276,13 @@
           const tableBodyect = tableBodyBlot.domNode.getBoundingClientRect();
           const tableCellRect = tableCellBlot.domNode.getBoundingClientRect();
           const rootRect = this.quill.root.getBoundingClientRect();
+          let left = tableCellRect.right - rootRect.x;
+          if (isTableAlignRight(this.tableMain)) {
+              left = tableCellRect.left - rootRect.x;
+          }
           Object.assign(this.colResizer.style, {
               top: `${tableBodyect.y - rootRect.y}px`,
-              left: `${tableCellRect.right - rootRect.x}px`,
+              left: `${left}px`,
               height: `${tableBodyect.height}px`,
           });
           const cols = this.tableMain.getCols();
@@ -4330,8 +4395,7 @@
               };
           this.calculateSize();
           this.ob = new ResizeObserver(() => {
-              this.calculateSize();
-              this.setScrollbarPosition();
+              this.update();
           });
           this.ob.observe(table);
           this.scrollbar = this.createScrollbar();
@@ -4339,17 +4403,31 @@
           addScrollEvent.call(this, this.quill.root, () => this.setScrollbarPosition());
           this.showScrollbar();
       }
+      update() {
+          this.calculateSize();
+          this.setScrollbarPosition();
+      }
       setScrollbarPosition() {
           const { scrollLeft: editorScrollX, scrollTop: editorScrollY } = this.quill.root;
-          const { offsetWidth: containerOffsetWidth, offsetHeight: containerOffsetHeight, offsetLeft: containerOffsetLeft, offsetTop: containerOffsetTop } = this.container;
-          const { offsetHeight: tableOffsetHeight, offsetWidth: tableOffsetWidth } = this.table;
+          const { offsetLeft: containerOffsetLeft, offsetTop: containerOffsetTop } = this.container;
+          const { width: containerWidth, height: containerHeight } = this.container.getBoundingClientRect();
+          const { width: tableWidth, height: tableHeight } = this.table.getBoundingClientRect();
+          let x = containerOffsetLeft;
+          let y = containerOffsetTop;
+          if (this.isVertical) {
+              x += Math.min(containerWidth, tableWidth);
+          }
+          else {
+              y += Math.min(containerHeight, tableHeight);
+          }
+          // table align right effect
+          const tableMainBlot = Quill.find(this.table);
+          if (tableMainBlot && tableMainBlot.align !== 'left') {
+              x += this.table.offsetLeft - containerOffsetLeft;
+          }
           Object.assign(this.scrollbar.style, {
-              [this.propertyMap.size]: `${this.isVertical ? containerOffsetHeight : containerOffsetWidth}px`,
-              transform: `translate(${(this.isVertical
-                ? Math.min(containerOffsetWidth, tableOffsetWidth) + containerOffsetLeft
-                : containerOffsetLeft) - editorScrollX}px, ${(this.isVertical
-                ? containerOffsetTop
-                : Math.min(containerOffsetHeight, tableOffsetHeight) + containerOffsetTop) - editorScrollY}px)`,
+              [this.propertyMap.size]: `${this.isVertical ? containerHeight : containerWidth}px`,
+              transform: `translate(${x - editorScrollX}px, ${y - editorScrollY}px)`,
           });
           this.containerScrollHandler(this.container);
       }
@@ -4368,7 +4446,7 @@
       createScrollbar() {
           const scrollbar = document.createElement('div');
           scrollbar.classList.add('ql-table-scrollbar');
-          scrollbar.classList.add(this.isVertical ? 'vertical' : 'horizontal');
+          scrollbar.classList.add(this.isVertical ? 'vertical' : 'horizontal', 'transparent');
           Object.assign(scrollbar.style, {
               display: 'none',
           });
@@ -4424,31 +4502,32 @@
           addScrollEvent.call(this, this.container, () => {
               this.containerScrollHandler(this.container);
           });
-          addScrollEvent.call(this, this.quill.root, () => {
-              this.setScrollbarPosition();
-          });
           scrollbar.appendChild(this.thumb);
           return scrollbar;
       }
       containerScrollHandler(wrap) {
-          if (wrap) {
-              const offset = wrap[this.propertyMap.offset] - this.gap;
-              this.move = wrap[this.propertyMap.scrollDirection] * 100 / offset * (this.isVertical ? this.ratioY : this.ratioX);
-              Object.assign(this.thumb.style, {
-                  [this.propertyMap.size]: this.isVertical ? this.sizeHeight : this.sizeWidth,
-                  transform: `translate${this.propertyMap.axis}(${this.move}%)`,
-              });
-          }
+          const offset = wrap[this.propertyMap.offset] - this.gap;
+          this.move = wrap[this.propertyMap.scrollDirection] * 100 / offset * (this.isVertical ? this.ratioY : this.ratioX);
+          Object.assign(this.thumb.style, {
+              [this.propertyMap.size]: this.isVertical ? this.sizeHeight : this.sizeWidth,
+              transform: `translate${this.propertyMap.axis}(${this.move}%)`,
+          });
       }
       // eslint-disable-next-line unicorn/consistent-function-scoping
       showScrollbar = debounce(() => {
           this.cursorLeave = false;
-          this.scrollbar.style.display = (this.isVertical ? this.sizeHeight : this.sizeWidth) ? 'block' : 'none';
+          this.scrollbar.classList.remove('transparent');
+          handleIfTransitionend(this.scrollbar, 150, () => {
+              this.scrollbar.style.display = (this.isVertical ? this.sizeHeight : this.sizeWidth) ? 'block' : 'none';
+          });
       }, 200);
       // eslint-disable-next-line unicorn/consistent-function-scoping
       hideScrollbar = debounce(() => {
           this.cursorLeave = true;
-          this.scrollbar.style.display = this.cursorDown && (this.isVertical ? this.sizeHeight : this.sizeWidth) ? 'block' : 'none';
+          this.scrollbar.classList.add('transparent');
+          handleIfTransitionend(this.scrollbar, 150, () => {
+              this.scrollbar.style.display = this.cursorDown && (this.isVertical ? this.sizeHeight : this.sizeWidth) ? 'block' : 'none';
+          });
       }, 200);
       destroy() {
           this.ob.disconnect();
@@ -4474,6 +4553,12 @@
           ];
           for (const item of this.scrollbar) {
               this.scrollbarContainer.appendChild(item.scrollbar);
+          }
+      }
+      update() {
+          for (const scrollbar of this.scrollbar) {
+              scrollbar.calculateSize();
+              scrollbar.setScrollbarPosition();
           }
       }
       destroy() {
@@ -4504,14 +4589,16 @@
       scrollHandler = [];
       selectingHandler = this.mouseDownHandler.bind(this);
       tableMenu;
+      resizeObserver;
       constructor(tableModule, table, quill, options = {}) {
           this.table = table;
           this.quill = quill;
           this.options = this.resolveOptions(options);
           this.cellSelectWrap = tableModule.addContainer('ql-table-selection');
           this.cellSelect = this.helpLinesInitial();
-          const resizeObserver = new ResizeObserver(() => this.hideSelection());
-          resizeObserver.observe(this.table);
+          this.resizeObserver = new ResizeObserver(() => this.hideSelection());
+          this.resizeObserver.observe(this.table);
+          this.resizeObserver.observe(this.quill.root);
           this.quill.root.addEventListener('mousedown', this.selectingHandler, false);
           this.tableMenu = new this.options.tableMenuClass(tableModule, quill, this.options.tableMenu);
       }
@@ -4635,6 +4722,8 @@
               document.body.removeEventListener('mousemove', mouseMoveHandler, false);
               document.body.removeEventListener('mouseup', mouseUpHandler, false);
               this.dragging = false;
+              this.startScrollX = 0;
+              this.startScrollY = 0;
               this.tableMenu.updateTools();
           };
           document.body.addEventListener('mousemove', mouseMoveHandler, false);
@@ -4696,6 +4785,7 @@
           clearScrollEvent.call(this);
       }
       destroy() {
+          this.resizeObserver.disconnect();
           this.hideSelection();
           this.tableMenu.destroy();
           this.cellSelectWrap.remove();
@@ -4751,7 +4841,7 @@
           : isForbidInTable(current.parent)
       : false;
   class TableUp {
-      static moduleName = 'tableUp';
+      static moduleName = 'table-up';
       static toolName = blotName.tableWrapper;
       static keyboradHandler = {
           'forbid remove table by backspace': {
@@ -4764,7 +4854,7 @@
                   const blot = line[0];
                   if (blot.prev instanceof TableWrapperFormat) {
                       blot.prev.remove();
-                      return true;
+                      return false;
                   }
                   if (context.format[blotName.tableCellInner]) {
                       const offset = blot.offset(findParentBlot(blot, blotName.tableCellInner));
@@ -4908,6 +4998,7 @@
               if (tableNode) {
                   if (this.table === tableNode) {
                       this.tableSelection && this.tableSelection.showSelection();
+                      this.tableAlign && this.tableAlign.update();
                       return;
                   }
                   if (this.table)
@@ -5113,11 +5204,11 @@
           }
           if (this.tableScrollbar) {
               this.tableScrollbar.destroy();
-              this.tableSelection = undefined;
+              this.tableScrollbar = undefined;
           }
           if (this.tableAlign) {
               this.tableAlign.destroy();
-              this.tableSelection = undefined;
+              this.tableAlign = undefined;
           }
           this.table = undefined;
           if (this.options.resizerSetOuter) {
@@ -5673,6 +5764,7 @@
   exports.findParentBlots = findParentBlots;
   exports.getRelativeRect = getRelativeRect;
   exports.isRectanglesIntersect = isRectanglesIntersect;
+  exports.isTableAlignRight = isTableAlignRight;
   exports.randomId = randomId;
   exports.tableCantInsert = tableCantInsert;
   exports.tableUpEvent = tableUpEvent;

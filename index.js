@@ -6,27 +6,28 @@ Quill.register({
   [`modules/${TableUp.moduleName}`]: TableUp,
 }, true);
 
+const toolbarConfig = [
+  ['bold', 'italic', 'underline', 'strike'],
+  ['blockquote', 'code-block', 'code'],
+  ['link', 'image', 'video', 'formula'],
+  [{ list: 'ordered' }, { list: 'bullet' }, { list: 'check' }],
+  [{ script: 'sub' }, { script: 'super' }],
+  [{ indent: '-1' }, { indent: '+1' }],
+  [{ direction: 'rtl' }],
+  [{ size: ['small', false, 'large', 'huge'] }],
+  [{ header: [1, 2, 3, 4, 5, 6, false] }],
+  [{ color: [] }, { background: [] }],
+  [{ font: [] }],
+  [{ align: [] }],
+  [{ [TableUp.toolName]: [] }],
+  ['clean'],
+];
+
 const quill1 = new Quill('#editor1', {
   // debug: 'info',
   theme: 'snow',
   modules: {
-    toolbar: [
-      ['bold', 'italic', 'underline', 'strike'],
-      ['blockquote', 'code-block', 'code'],
-      ['link', 'image', 'video', 'formula'],
-      [{ list: 'ordered' }, { list: 'bullet' }, { list: 'check' }],
-      [{ script: 'sub' }, { script: 'super' }],
-      [{ indent: '-1' }, { indent: '+1' }],
-      [{ direction: 'rtl' }],
-
-      [{ size: ['small', false, 'large', 'huge'] }],
-      [{ header: [1, 2, 3, 4, 5, 6, false] }],
-      [{ color: [] }, { background: [] }],
-      [{ font: [] }],
-      [{ align: [] }],
-      [{ [TableUp.toolName]: [] }],
-      ['clean'],
-    ],
+    toolbar: toolbarConfig,
     [TableUp.moduleName]: {
       full: false,
       resizerSetOuter: false,
@@ -99,23 +100,7 @@ const quill2 = new Quill('#editor2', {
   // debug: 'info',
   theme: 'snow',
   modules: {
-    toolbar: [
-      ['bold', 'italic', 'underline', 'strike'],
-      ['blockquote', 'code-block', 'code'],
-      ['link', 'image', 'video', 'formula'],
-      [{ list: 'ordered' }, { list: 'bullet' }, { list: 'check' }],
-      [{ script: 'sub' }, { script: 'super' }],
-      [{ indent: '-1' }, { indent: '+1' }],
-      [{ direction: 'rtl' }],
-
-      [{ size: ['small', false, 'large', 'huge'] }],
-      [{ header: [1, 2, 3, 4, 5, 6, false] }],
-      [{ color: [] }, { background: [] }],
-      [{ font: [] }],
-      [{ align: [] }],
-      [{ [TableUp.toolName]: [] }],
-      ['clean'],
-    ],
+    toolbar: toolbarConfig,
     [TableUp.moduleName]: {
       full: true,
       resizerSetOuter: true,
@@ -219,9 +204,9 @@ quill1.setContents([
   // { insert: '\n' },
 
   { insert: '\n' },
-  { insert: { 'table-up-col': { tableId: '1', colId: '1', full: false, width: 121, align: 'center' } } },
-  { insert: { 'table-up-col': { tableId: '1', colId: '2', full: false, width: 121, align: 'center' } } },
-  { insert: { 'table-up-col': { tableId: '1', colId: '3', full: false, width: 121, align: 'center' } } },
+  { insert: { 'table-up-col': { tableId: '1', colId: '1', full: false, width: 121 } } },
+  { insert: { 'table-up-col': { tableId: '1', colId: '2', full: false, width: 121 } } },
+  { insert: { 'table-up-col': { tableId: '1', colId: '3', full: false, width: 121 } } },
   { insert: '1' },
   { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '1', rowspan: 1, colspan: 1, height: '37px' } }, insert: '\n' },
   { insert: '2' },

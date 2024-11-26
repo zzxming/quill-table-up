@@ -7,6 +7,18 @@
       name="viewport"
       content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=0, viewport-fit=cover"
     />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"
+      integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+"
+      crossorigin="anonymous"
+    />
+    <script
+      defer
+      src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"
+      integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg"
+      crossorigin="anonymous"
+    ></script>
     <script src="https://cdn.jsdelivr.net/npm/quill@2.0.0/dist/quill.js"></script>
     <link href="https://cdn.jsdelivr.net/npm/quill@2.0.0/dist/quill.bubble.css" rel="stylesheet" />
     <link href="https://cdn.jsdelivr.net/npm/quill@2.0.0/dist/quill.snow.css" rel="stylesheet" />
@@ -24,12 +36,12 @@
     <div style="display: flex; flex-direction: column; max-width: 1200px">
       <div>
         <button id="btn1">console</button>
+        <span>select cell and right click</span>
         <div id="editor1" style="height: 200px"></div>
         <div id="output1"></div>
       </div>
       <div>
         <button id="btn2">console</button>
-        <span>select cell and right click</span>
         <div id="editor2" style="height: 200px"></div>
         <div id="output2"></div>
       </div>
