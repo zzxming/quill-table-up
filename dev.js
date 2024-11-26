@@ -3974,6 +3974,7 @@
       colHeadWrapper = null;
       corner = null;
       scrollHandler = [];
+      lastHeaderSelect = null;
       constructor(tableModule, table, quill, options) {
           super(quill);
           this.tableModule = tableModule;
@@ -4001,8 +4002,26 @@
           const tableRect = this.table.getBoundingClientRect();
           if (this.tableModule.tableSelection) {
               const tableSelection = this.tableModule.tableSelection;
-              tableSelection.selectedTds = tableSelection.computeSelectedTds({ x: isX ? tableRect.left : clientX, y: isX ? clientY : tableRect.top }, { x: isX ? tableRect.right : clientX, y: isX ? clientY : tableRect.bottom });
+              if (!e.shiftKey) {
+                  this.lastHeaderSelect = null;
+              }
+              const currentBoundary = [
+                  { x: isX ? tableRect.left : clientX, y: isX ? clientY : tableRect.top },
+                  { x: isX ? tableRect.right : clientX, y: isX ? clientY : tableRect.bottom },
+              ];
+              if (this.lastHeaderSelect) {
+                  currentBoundary[0] = {
+                      x: Math.min(currentBoundary[0].x, this.lastHeaderSelect[0].x),
+                      y: Math.min(currentBoundary[0].y, this.lastHeaderSelect[0].y),
+                  };
+                  currentBoundary[1] = {
+                      x: Math.max(currentBoundary[1].x, this.lastHeaderSelect[1].x),
+                      y: Math.max(currentBoundary[1].y, this.lastHeaderSelect[1].y),
+                  };
+              }
+              tableSelection.selectedTds = tableSelection.computeSelectedTds(...currentBoundary);
               tableSelection.showSelection();
+              this.lastHeaderSelect = currentBoundary;
           }
       }
       ;
