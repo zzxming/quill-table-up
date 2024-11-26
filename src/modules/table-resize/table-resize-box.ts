@@ -48,8 +48,8 @@ export class TableResizeBox extends TableResizeCommon {
     if (this.tableModule.tableSelection) {
       const tableSelection = this.tableModule.tableSelection;
       tableSelection.selectedTds = tableSelection.computeSelectedTds(
-        { x: clientX, y: clientY },
-        { x: isX ? tableRect[isTableAlignRight(this.tableMain) ? 'left' : 'right'] : clientX, y: isX ? clientY : tableRect.bottom },
+        { x: isX ? tableRect.left : clientX, y: isX ? clientY : tableRect.top },
+        { x: isX ? tableRect.right : clientX, y: isX ? clientY : tableRect.bottom },
       );
       tableSelection.showSelection();
     }

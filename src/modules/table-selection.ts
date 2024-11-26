@@ -170,6 +170,8 @@ export class TableSelection {
       document.body.removeEventListener('mousemove', mouseMoveHandler, false);
       document.body.removeEventListener('mouseup', mouseUpHandler, false);
       this.dragging = false;
+      this.startScrollX = 0;
+      this.startScrollY = 0;
       this.tableMenu.updateTools();
     };
 
