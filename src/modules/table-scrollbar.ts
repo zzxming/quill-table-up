@@ -109,7 +109,7 @@ export class Scrollbar {
   createScrollbar() {
     const scrollbar = document.createElement('div');
     scrollbar.classList.add('ql-table-scrollbar');
-    scrollbar.classList.add(this.isVertical ? 'vertical' : 'horizontal');
+    scrollbar.classList.add(this.isVertical ? 'vertical' : 'horizontal', 'transparent');
     Object.assign(scrollbar.style, {
       display: 'none',
     });
@@ -183,13 +183,19 @@ export class Scrollbar {
   // eslint-disable-next-line unicorn/consistent-function-scoping
   showScrollbar = debounce(() => {
     this.cursorLeave = false;
-    this.scrollbar.style.display = (this.isVertical ? this.sizeHeight : this.sizeWidth) ? 'block' : 'none';
+    this.scrollbar.classList.remove('transparent');
+    handleIfTransitionend(this.scrollbar, 150, () => {
+      this.scrollbar.style.display = (this.isVertical ? this.sizeHeight : this.sizeWidth) ? 'block' : 'none';
+    });
   }, 200);
 
   // eslint-disable-next-line unicorn/consistent-function-scoping
   hideScrollbar = debounce(() => {
     this.cursorLeave = true;
-    this.scrollbar.style.display = this.cursorDown && (this.isVertical ? this.sizeHeight : this.sizeWidth) ? 'block' : 'none';
+    this.scrollbar.classList.add('transparent');
+    handleIfTransitionend(this.scrollbar, 150, () => {
+      this.scrollbar.style.display = this.cursorDown && (this.isVertical ? this.sizeHeight : this.sizeWidth) ? 'block' : 'none';
+    });
   }, 200);
 
   destroy() {

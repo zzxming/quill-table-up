@@ -384,8 +384,12 @@
 .ql-table-scrollbar {
   position: absolute;
   z-index: 1;
+  transition: opacity 0.15s linear;
   &-container {
     position: relative;
+  }
+  &.transparent {
+    opacity: 0;
   }
   &.vertical {
     top: 2px;
