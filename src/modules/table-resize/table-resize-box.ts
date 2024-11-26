@@ -7,6 +7,10 @@ import { addScrollEvent, clearScrollEvent } from '../../utils';
 import { TableResizeCommon } from './table-resize-common';
 import { isTableAlignRight } from './utils';
 
+interface Point {
+  x: number;
+  y: number;
+};
 export class TableResizeBox extends TableResizeCommon {
   options: TableResizeBoxOptions;
   root!: HTMLElement;
@@ -19,6 +23,7 @@ export class TableResizeBox extends TableResizeCommon {
   colHeadWrapper: HTMLElement | null = null;
   corner: HTMLElement | null = null;
   scrollHandler: [HTMLElement, (e: Event) => void][] = [];
+  lastHeaderSelect: [Point, Point] | null = null;
 
   constructor(public tableModule: TableUp, public table: HTMLElement, quill: Quill, options: Partial<TableResizeBoxOptions>) {
     super(quill);
@@ -47,11 +52,27 @@ export class TableResizeBox extends TableResizeCommon {
     const tableRect = this.table.getBoundingClientRect();
     if (this.tableModule.tableSelection) {
       const tableSelection = this.tableModule.tableSelection;
-      tableSelection.selectedTds = tableSelection.computeSelectedTds(
+      if (!e.shiftKey) {
+        this.lastHeaderSelect = null;
+      }
+      const currentBoundary: [Point, Point] = [
         { x: isX ? tableRect.left : clientX, y: isX ? clientY : tableRect.top },
         { x: isX ? tableRect.right : clientX, y: isX ? clientY : tableRect.bottom },
-      );
+      ];
+      if (this.lastHeaderSelect) {
+        currentBoundary[0] = {
+          x: Math.min(currentBoundary[0].x, this.lastHeaderSelect[0].x),
+          y: Math.min(currentBoundary[0].y, this.lastHeaderSelect[0].y),
+        };
+        currentBoundary[1] = {
+          x: Math.max(currentBoundary[1].x, this.lastHeaderSelect[1].x),
+          y: Math.max(currentBoundary[1].y, this.lastHeaderSelect[1].y),
+        };
+      }
+
+      tableSelection.selectedTds = tableSelection.computeSelectedTds(...currentBoundary);
       tableSelection.showSelection();
+      this.lastHeaderSelect = currentBoundary;
     }
   };
 
