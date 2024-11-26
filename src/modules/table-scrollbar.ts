@@ -1,6 +1,7 @@
-import type Quill from 'quill';
 import type TableUp from '..';
-import { addScrollEvent, clearScrollEvent, debounce } from '../utils';
+import type { TableMainFormat } from '../formats';
+import Quill from 'quill';
+import { addScrollEvent, clearScrollEvent, debounce, handleIfTransitionend } from '../utils';
 
 export class Scrollbar {
   minSize: number = 20;
@@ -22,8 +23,8 @@ export class Scrollbar {
 
   ob: ResizeObserver;
   container: HTMLElement;
-  scrollbar: HTMLDivElement;
-  thumb: HTMLDivElement = document.createElement('div');
+  scrollbar: HTMLElement;
+  thumb: HTMLElement = document.createElement('div');
   scrollHandler: [HTMLElement, (e: Event) => void][] = [];
   propertyMap: { readonly size: 'height'; readonly offset: 'offsetHeight'; readonly scrollDirection: 'scrollTop'; readonly scrollSize: 'scrollHeight'; readonly axis: 'Y'; readonly direction: 'top'; readonly client: 'clientY' } | { readonly size: 'width'; readonly offset: 'offsetWidth'; readonly scrollDirection: 'scrollLeft'; readonly scrollSize: 'scrollWidth'; readonly axis: 'X'; readonly direction: 'left'; readonly client: 'clientX' };
   constructor(public quill: Quill, public isVertical: boolean, public table: HTMLElement, public scrollbarContainer: HTMLElement) {
@@ -49,8 +50,7 @@ export class Scrollbar {
         } as const;
     this.calculateSize();
     this.ob = new ResizeObserver(() => {
-      this.calculateSize();
-      this.setScrollbarPosition();
+      this.update();
     });
     this.ob.observe(table);
     this.scrollbar = this.createScrollbar();
@@ -59,23 +59,35 @@ export class Scrollbar {
     this.showScrollbar();
   }
 
+  update() {
+    this.calculateSize();
+    this.setScrollbarPosition();
+  }
+
   setScrollbarPosition() {
     const { scrollLeft: editorScrollX, scrollTop: editorScrollY } = this.quill.root;
-    const { offsetWidth: containerOffsetWidth, offsetHeight: containerOffsetHeight, offsetLeft: containerOffsetLeft, offsetTop: containerOffsetTop } = this.container;
-    const { offsetHeight: tableOffsetHeight, offsetWidth: tableOffsetWidth } = this.table;
+    const { offsetLeft: containerOffsetLeft, offsetTop: containerOffsetTop } = this.container;
+    const { width: containerWidth, height: containerHeight } = this.container.getBoundingClientRect();
+    const { width: tableWidth, height: tableHeight } = this.table.getBoundingClientRect();
+
+    let x = containerOffsetLeft;
+    let y = containerOffsetTop;
+    if (this.isVertical) {
+      x += Math.min(containerWidth, tableWidth);
+    }
+    else {
+      y += Math.min(containerHeight, tableHeight);
+    }
+
+    // table align right effect
+    const tableMainBlot = Quill.find(this.table) as TableMainFormat | null;
+    if (tableMainBlot && tableMainBlot.align !== 'left') {
+      x += this.table.offsetLeft - containerOffsetLeft;
+    }
+
     Object.assign(this.scrollbar.style, {
-      [this.propertyMap.size]: `${this.isVertical ? containerOffsetHeight : containerOffsetWidth}px`,
-      transform: `translate(${
-        (
-          this.isVertical
-            ? Math.min(containerOffsetWidth, tableOffsetWidth) + containerOffsetLeft
-            : containerOffsetLeft
-        ) - editorScrollX}px, ${
-        (
-          this.isVertical
-            ? containerOffsetTop
-            : Math.min(containerOffsetHeight, tableOffsetHeight) + containerOffsetTop
-        ) - editorScrollY}px)`,
+      [this.propertyMap.size]: `${this.isVertical ? containerHeight : containerWidth}px`,
+      transform: `translate(${x - editorScrollX}px, ${y - editorScrollY}px)`,
     });
     this.containerScrollHandler(this.container);
   }
@@ -97,7 +109,7 @@ export class Scrollbar {
   createScrollbar() {
     const scrollbar = document.createElement('div');
     scrollbar.classList.add('ql-table-scrollbar');
-    scrollbar.classList.add(this.isVertical ? 'vertical' : 'horizontal');
+    scrollbar.classList.add(this.isVertical ? 'vertical' : 'horizontal', 'transparent');
     Object.assign(scrollbar.style, {
       display: 'none',
     });
@@ -154,35 +166,36 @@ export class Scrollbar {
     addScrollEvent.call(this, this.container, () => {
       this.containerScrollHandler(this.container);
     });
-    addScrollEvent.call(this, this.quill.root, () => {
-      this.setScrollbarPosition();
-    });
 
     scrollbar.appendChild(this.thumb);
     return scrollbar;
   }
 
   containerScrollHandler(wrap: HTMLElement) {
-    if (wrap) {
-      const offset = wrap[this.propertyMap.offset] - this.gap;
-      this.move = wrap[this.propertyMap.scrollDirection] * 100 / offset * (this.isVertical ? this.ratioY : this.ratioX);
-      Object.assign(this.thumb.style, {
-        [this.propertyMap.size]: this.isVertical ? this.sizeHeight : this.sizeWidth,
-        transform: `translate${this.propertyMap.axis}(${this.move}%)`,
-      });
-    }
+    const offset = wrap[this.propertyMap.offset] - this.gap;
+    this.move = wrap[this.propertyMap.scrollDirection] * 100 / offset * (this.isVertical ? this.ratioY : this.ratioX);
+    Object.assign(this.thumb.style, {
+      [this.propertyMap.size]: this.isVertical ? this.sizeHeight : this.sizeWidth,
+      transform: `translate${this.propertyMap.axis}(${this.move}%)`,
+    });
   }
 
   // eslint-disable-next-line unicorn/consistent-function-scoping
   showScrollbar = debounce(() => {
     this.cursorLeave = false;
-    this.scrollbar.style.display = (this.isVertical ? this.sizeHeight : this.sizeWidth) ? 'block' : 'none';
+    this.scrollbar.classList.remove('transparent');
+    handleIfTransitionend(this.scrollbar, 150, () => {
+      this.scrollbar.style.display = (this.isVertical ? this.sizeHeight : this.sizeWidth) ? 'block' : 'none';
+    });
   }, 200);
 
   // eslint-disable-next-line unicorn/consistent-function-scoping
   hideScrollbar = debounce(() => {
     this.cursorLeave = true;
-    this.scrollbar.style.display = this.cursorDown && (this.isVertical ? this.sizeHeight : this.sizeWidth) ? 'block' : 'none';
+    this.scrollbar.classList.add('transparent');
+    handleIfTransitionend(this.scrollbar, 150, () => {
+      this.scrollbar.style.display = this.cursorDown && (this.isVertical ? this.sizeHeight : this.sizeWidth) ? 'block' : 'none';
+    });
   }, 200);
 
   destroy() {
@@ -204,6 +217,13 @@ export class TableVitrualScroll {
     ];
     for (const item of this.scrollbar) {
       this.scrollbarContainer.appendChild(item.scrollbar);
+    }
+  }
+
+  update() {
+    for (const scrollbar of this.scrollbar) {
+      scrollbar.calculateSize();
+      scrollbar.setScrollbarPosition();
     }
   }
 

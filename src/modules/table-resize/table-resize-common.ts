@@ -1,6 +1,7 @@
 import type Quill from 'quill';
 import type { TableMainFormat } from '../../formats';
 import { tableUpEvent, tableUpSize } from '../../utils';
+import { isTableAlignRight } from './utils';
 
 export class TableResizeCommon {
   colIndex: number = -1;
@@ -17,8 +18,7 @@ export class TableResizeCommon {
   handleRowMouseMoveFunc = this.handleRowMouseMove.bind(this);
   handleRowMouseDownFunc = this.handleRowMouseDown.bind(this);
 
-  constructor(public quill: Quill) {
-  }
+  constructor(public quill: Quill) {}
 
   findCurrentColIndex(_e: MouseEvent) {
     return -1;
@@ -29,7 +29,7 @@ export class TableResizeCommon {
   handleColMouseUp() {
     if (!this.dragColBreak || !this.tableMain || this.colIndex === -1) return;
     const cols = this.tableMain.getCols();
-    const w = Number.parseInt(this.dragColBreak.dataset.w!);
+    const w = Number.parseInt(this.dragColBreak.dataset.w || '0');
     const isFull = this.tableMain.full;
     if (isFull) {
       let pre = (w / this.tableMain.domNode.getBoundingClientRect().width) * 100;
@@ -75,7 +75,7 @@ export class TableResizeCommon {
       this.colWidthChange(this.colIndex, w, isFull);
     }
 
-    document.body.removeChild(this.dragColBreak!);
+    document.body.removeChild(this.dragColBreak);
     this.dragColBreak = null;
     document.removeEventListener('mouseup', this.handleColMouseUpFunc);
     document.removeEventListener('mousemove', this.handleColMouseMoveFunc);
@@ -87,32 +87,45 @@ export class TableResizeCommon {
     e.preventDefault();
     if (!this.dragColBreak || !this.tableMain || this.colIndex === -1) return;
     const cols = this.tableMain.getCols();
-    const rect = cols[this.colIndex].domNode.getBoundingClientRect();
+    const changeColRect = cols[this.colIndex].domNode.getBoundingClientRect();
     const tableRect = this.tableMain.domNode.getBoundingClientRect();
     let resX = e.clientX;
 
+    // table full not handle align right
     if (this.tableMain.full) {
       // max width = current col.width + next col.width
       // if current col is last. max width = current col.width
       const minWidth = (tableUpSize.colMinWidthPre / 100) * tableRect.width;
-      const maxRange = resX > rect.right
-        ? cols[this.colIndex + 1]
-          ? Math.max(cols[this.colIndex + 1].domNode.getBoundingClientRect().right - minWidth, rect.left + minWidth)
-          : tableRect.right
-        : Infinity;
-      const minRange = rect.x + minWidth;
+      let maxRange = tableRect.right;
+      if (resX > changeColRect.right && cols[this.colIndex + 1]) {
+        maxRange = Math.max(cols[this.colIndex + 1].domNode.getBoundingClientRect().right - minWidth, changeColRect.left + minWidth);
+      }
+      const minRange = changeColRect.x + minWidth;
       resX = Math.min(Math.max(resX, minRange), maxRange);
     }
     else {
-      if (resX - rect.x < tableUpSize.colMinWidthPx) {
-        resX = rect.x + tableUpSize.colMinWidthPx;
+      // when table align right, mousemove to the left, the col width will be increase
+      if (isTableAlignRight(this.tableMain)) {
+        if (changeColRect.right - resX < tableUpSize.colMinWidthPx) {
+          resX = changeColRect.right - tableUpSize.colMinWidthPx;
+        }
+      }
+      else {
+        if (resX - changeColRect.x < tableUpSize.colMinWidthPx) {
+          resX = changeColRect.x + tableUpSize.colMinWidthPx;
+        }
       }
     }
-    this.dragColBreak!.style.left = `${resX}px`;
-    this.dragColBreak!.dataset.w = String(resX - rect.x);
+
+    let width = resX - changeColRect.x;
+    if (isTableAlignRight(this.tableMain)) {
+      width = changeColRect.right - resX;
+    }
+    this.dragColBreak.style.left = `${resX}px`;
+    this.dragColBreak.dataset.w = String(width);
     return {
       left: resX,
-      width: resX - rect.x,
+      width,
     };
   };
 
@@ -178,13 +191,13 @@ export class TableResizeCommon {
 
   handleRowMouseUp() {
     if (!this.tableMain || !this.dragRowBreak || this.rowIndex === -1) return;
-    const h = Number.parseInt(this.dragRowBreak.dataset.h!);
+    const h = Number.parseInt(this.dragRowBreak.dataset.h || '0');
 
     const rows = this.tableMain.getRows();
     rows[this.rowIndex].setHeight(`${h}px`);
     this.rowHeightChange(this.rowIndex, h);
 
-    document.body.removeChild(this.dragRowBreak!);
+    document.body.removeChild(this.dragRowBreak);
     this.dragRowBreak = null;
     document.removeEventListener('mouseup', this.handleRowMouseUpFunc);
     document.removeEventListener('mousemove', this.handleRowMouseMoveFunc);

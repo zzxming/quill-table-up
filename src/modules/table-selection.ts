@@ -24,6 +24,7 @@ export class TableSelection {
   scrollHandler: [HTMLElement, (...args: any[]) => void][] = [];
   selectingHandler = this.mouseDownHandler.bind(this);
   tableMenu: TableMenuCommon;
+  resizeObserver: ResizeObserver;
 
   constructor(tableModule: TableUp, public table: HTMLElement, public quill: Quill, options: Partial<TableSelectionOptions> = {}) {
     this.options = this.resolveOptions(options);
@@ -31,8 +32,9 @@ export class TableSelection {
     this.cellSelectWrap = tableModule.addContainer('ql-table-selection');
     this.cellSelect = this.helpLinesInitial();
 
-    const resizeObserver = new ResizeObserver(() => this.hideSelection());
-    resizeObserver.observe(this.table);
+    this.resizeObserver = new ResizeObserver(() => this.hideSelection());
+    this.resizeObserver.observe(this.table);
+    this.resizeObserver.observe(this.quill.root);
 
     this.quill.root.addEventListener('mousedown', this.selectingHandler, false);
     this.tableMenu = new this.options.tableMenuClass(tableModule, quill, this.options.tableMenu);
@@ -168,6 +170,8 @@ export class TableSelection {
       document.body.removeEventListener('mousemove', mouseMoveHandler, false);
       document.body.removeEventListener('mouseup', mouseUpHandler, false);
       this.dragging = false;
+      this.startScrollX = 0;
+      this.startScrollY = 0;
       this.tableMenu.updateTools();
     };
 
@@ -238,6 +242,7 @@ export class TableSelection {
   }
 
   destroy() {
+    this.resizeObserver.disconnect();
     this.hideSelection();
     this.tableMenu.destroy();
     this.cellSelectWrap.remove();

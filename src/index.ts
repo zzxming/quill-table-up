@@ -52,7 +52,7 @@ interface QuillTheme extends BaseTheme {
 }
 
 export class TableUp {
-  static moduleName = 'tableUp';
+  static moduleName = 'table-up';
   static toolName: string = blotName.tableWrapper;
   static keyboradHandler = {
     'forbid remove table by backspace': {
@@ -65,7 +65,7 @@ export class TableUp {
         const blot = line[0] as TypeParchment.BlockBlot;
         if (blot.prev instanceof TableWrapperFormat) {
           blot.prev.remove();
-          return true;
+          return false;
         }
 
         if (context.format[blotName.tableCellInner]) {
@@ -74,6 +74,7 @@ export class TableUp {
             return false;
           }
         }
+
         return true;
       },
     },
@@ -227,6 +228,7 @@ export class TableUp {
         if (tableNode) {
           if (this.table === tableNode) {
             this.tableSelection && this.tableSelection.showSelection();
+            this.tableAlign && this.tableAlign.update();
             return;
           }
           if (this.table) this.hideTableTools();
@@ -458,11 +460,11 @@ export class TableUp {
     }
     if (this.tableScrollbar) {
       this.tableScrollbar.destroy();
-      this.tableSelection = undefined;
+      this.tableScrollbar = undefined;
     }
     if (this.tableAlign) {
       this.tableAlign.destroy();
-      this.tableSelection = undefined;
+      this.tableAlign = undefined;
     }
 
     this.table = undefined;

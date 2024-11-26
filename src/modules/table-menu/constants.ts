@@ -127,3 +127,12 @@ export const defaultTools: Tool[] = [
     },
   },
 ];
+
+export const colorClassName = {
+  used: 'table-color-used',
+  item: 'table-color-item',
+  btn: 'table-color-btn',
+  map: 'table-color-map',
+  mapRow: 'table-color-map-row',
+  selectWrapper: 'table-color-select-wrapper',
+};
