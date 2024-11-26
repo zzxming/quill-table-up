@@ -64,8 +64,8 @@ export class TableResizeBox extends TableResizeCommon {
 
   handleColMouseDownFunc = function (this: TableResizeBox, e: MouseEvent) {
     const value = this.handleColMouseDown(e);
-    if (value) {
-      Object.assign(this.dragColBreak!.style, {
+    if (value && this.dragColBreak) {
+      Object.assign(this.dragColBreak.style, {
         top: `${value.top - this.options.size}px`,
         left: `${value.left}px`,
         height: `${value.height + this.options.size}px`,
@@ -103,8 +103,8 @@ export class TableResizeBox extends TableResizeCommon {
 
   handleRowMouseDownFunc = function (this: TableResizeBox, e: MouseEvent) {
     const value = this.handleRowMouseDown(e);
-    if (value) {
-      Object.assign(this.dragRowBreak!.style, {
+    if (value && this.dragRowBreak) {
+      Object.assign(this.dragRowBreak.style, {
         top: `${value.top}px`,
         left: `${value.left - this.options.size}px`,
         width: `${value.width + this.options.size}px`,
