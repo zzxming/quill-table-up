@@ -4019,9 +4019,11 @@
                       y: Math.max(currentBoundary[1].y, this.lastHeaderSelect[1].y),
                   };
               }
+              else {
+                  this.lastHeaderSelect = currentBoundary;
+              }
               tableSelection.selectedTds = tableSelection.computeSelectedTds(...currentBoundary);
               tableSelection.showSelection();
-              this.lastHeaderSelect = currentBoundary;
           }
       }
       ;
