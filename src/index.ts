@@ -407,9 +407,10 @@ export class TableUp {
         if (
           op.attributes && op.attributes.background
           && op.attributes[blotName.tableCellInner]
-          && !(op.attributes[blotName.tableCellInner] as Record<string, any>).backgroundColor
         ) {
-          (op.attributes[blotName.tableCellInner] as Record<string, any>).backgroundColor = op.attributes.background;
+          const cellAttrs = op.attributes[blotName.tableCellInner] as Record<string, any>;
+          if (!cellAttrs.style) cellAttrs.style = '';
+          (op.attributes[blotName.tableCellInner] as Record<string, any>).style = `background:${op.attributes.background};${cellAttrs.style}`;
         }
       }
       return delta;
@@ -679,10 +680,10 @@ export class TableUp {
     );
   }
 
-  setCellAttrs(selectedTds: TableCellInnerFormat[], attr: string, value?: any) {
+  setCellAttrs(selectedTds: TableCellInnerFormat[], attr: string, value?: any, isStyle: boolean = false) {
     if (selectedTds.length === 0) return;
     for (const td of selectedTds) {
-      td.setFormatValue(attr, value);
+      td.setFormatValue(attr, value, isStyle);
     }
   }
 

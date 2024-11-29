@@ -30,7 +30,7 @@ export class TableRowFormat extends ContainerFormat {
 
   setHeight(value: string) {
     this.foreachCellInner((cellInner) => {
-      cellInner.height = value;
+      cellInner.setFormatValue('height', value, true);
     });
   }
 

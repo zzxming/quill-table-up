@@ -71,6 +71,8 @@ export interface TableCellValue {
   colId: string;
   rowspan: number;
   colspan: number;
+  style?: string;
+  // TODO: remove attributes that are not used
   backgroundColor?: string;
   borderColor?: string;
   height?: string;

@@ -113,7 +113,7 @@ export const defaultTools: Tool[] = [
     tip: 'Set background color',
     key: 'background-color',
     handle: (tableModule, selectedTds, color) => {
-      tableModule.setCellAttrs(selectedTds, 'background-color', color);
+      tableModule.setCellAttrs(selectedTds, 'background-color', color, true);
     },
   },
   {
@@ -123,7 +123,7 @@ export const defaultTools: Tool[] = [
     tip: 'Set border color',
     key: 'border-color',
     handle: (tableModule, selectedTds, color) => {
-      tableModule.setCellAttrs(selectedTds, 'border-color', color);
+      tableModule.setCellAttrs(selectedTds, 'border-color', color, true);
     },
   },
 ];

@@ -205,7 +205,7 @@ export class TableMenuCommon {
       const color = item.style.backgroundColor;
       const selectedTds = this.getSelectedTds();
       if (item && color && selectedTds.length > 0) {
-        this.tableModule.setCellAttrs(selectedTds, key!, color);
+        this.tableModule.setCellAttrs(selectedTds, key!, color, true);
         if (item.closest(`.${colorClassName.item}`)) return;
         this.updateUsedColor(color);
       }

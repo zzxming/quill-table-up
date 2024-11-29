@@ -1,26 +1,51 @@
 import type { TableCellValue } from '../utils';
+import type { TableCellInnerFormat } from './table-cell-inner-format';
 import type { TableRowFormat } from './table-row-format';
 import { blotName } from '../utils';
 import { ContainerFormat } from './container-format';
-import { TableCellInnerFormat } from './table-cell-inner-format';
 import { getValidCellspan } from './utils';
 
 export class TableCellFormat extends ContainerFormat {
   static blotName = blotName.tableCell;
   static tagName = 'td';
   static className = 'ql-table-cell';
+  static allowDataAttrs = new Set(['table-id', 'row-id', 'col-id']);
+  static allowAttrs = new Set(['rowspan', 'colspan']);
+
+  // keep `isAllowStyle` and `allowStyle` same with TableCellInnerFormat
+  static allowStyle = new Set(['background-color', 'border', 'height']);
+  static isAllowStyle(str: string): boolean {
+    for (const style of this.allowStyle) {
+      if (str.startsWith(style)) {
+        return true;
+      }
+    }
+    return false;
+  }
 
   static create(value: TableCellValue) {
-    const { tableId, rowId, colId, rowspan, colspan, backgroundColor, borderColor, height } = value;
+    const {
+      tableId,
+      rowId,
+      colId,
+      rowspan,
+      colspan,
+      style,
+      // TODO: remove attributes that are not used
+      backgroundColor,
+      borderColor,
+      height,
+    } = value;
     const node = super.create() as HTMLElement;
     node.dataset.tableId = tableId;
     node.dataset.rowId = rowId;
     node.dataset.colId = colId;
     node.setAttribute('rowspan', String(getValidCellspan(rowspan)));
     node.setAttribute('colspan', String(getValidCellspan(colspan)));
-    height && (node.style.height = height);
     backgroundColor && (node.style.backgroundColor = backgroundColor);
     borderColor && (node.style.borderColor = borderColor);
+    style && (node.style.cssText = style);
+    height && (node.style.height = height);
     return node;
   }
 
@@ -35,20 +60,27 @@ export class TableCellFormat extends ContainerFormat {
       rowspan: getValidCellspan(rowspan),
       colspan: getValidCellspan(colspan),
     };
-    const { height, backgroundColor, borderColor } = domNode.style;
-    height && (value.height = height);
-    backgroundColor && (value.backgroundColor = backgroundColor);
-    borderColor && (value.borderColor = borderColor);
+
+    const inlineStyles: Record<string, any> = {};
+    for (let i = 0; i < domNode.style.length; i++) {
+      const property = domNode.style[i];
+      const value = domNode.style[property as keyof CSSStyleDeclaration] as string;
+      if (this.isAllowStyle(String(property)) && !['initial', 'inherit'].includes(value)) {
+        inlineStyles[property] = value;
+      }
+    }
+    const entries = Object.entries(inlineStyles);
+    if (entries.length > 0) {
+      value.style = entries.map(([key, value]) => `${key}:${value}`).join(';');
+    }
+
     return value;
   }
 
-  allowDataAttrs = new Set(['table-id', 'row-id', 'col-id']);
-  allowAttrs = new Set(['rowspan', 'colspan']);
-  allowStyle = new Set(['background-color', 'border-color', 'height']);
   setFormatValue(name: string, value?: any) {
-    if (this.allowAttrs.has(name) || this.allowDataAttrs.has(name)) {
+    if (this.statics.allowAttrs.has(name) || this.statics.allowDataAttrs.has(name)) {
       let attrName = name;
-      if (this.allowDataAttrs.has(name)) {
+      if (this.statics.allowDataAttrs.has(name)) {
         attrName = `data-${name}`;
       }
       if (value) {
@@ -58,7 +90,7 @@ export class TableCellFormat extends ContainerFormat {
         this.domNode.removeAttribute(attrName);
       }
     }
-    else if (this.allowStyle.has(name)) {
+    else if (this.statics.isAllowStyle(name)) {
       Object.assign(this.domNode.style, {
         [name]: value,
       });
@@ -85,16 +117,8 @@ export class TableCellFormat extends ContainerFormat {
     return Number(this.domNode.getAttribute('colspan'));
   }
 
-  get backgroundColor() {
-    return this.domNode.dataset.backgroundColor || '';
-  }
-
-  get height() {
-    return this.domNode.style.height;
-  }
-
   getCellInner() {
-    return this.descendants(TableCellInnerFormat)[0];
+    return this.children.head as TableCellInnerFormat;
   }
 
   checkMerge(): boolean {
