@@ -5,6 +5,7 @@ import type { TableCellFormat } from './table-cell-format';
 import Quill from 'quill';
 import { blotName, findParentBlot, findParentBlots } from '../utils';
 import { ContainerFormat } from './container-format';
+import { getValidCellspan } from './utils';
 
 const Block = Quill.import('blots/block') as TypeParchment.BlotConstructor;
 const BlockEmbed = Quill.import('blots/block/embed') as TypeParchment.BlotConstructor;
@@ -24,8 +25,8 @@ export class TableCellInnerFormat extends ContainerFormat {
     node.dataset.tableId = tableId;
     node.dataset.rowId = rowId;
     node.dataset.colId = colId;
-    node.dataset.rowspan = String(rowspan || 1);
-    node.dataset.colspan = String(colspan || 1);
+    node.dataset.rowspan = String(getValidCellspan(rowspan));
+    node.dataset.colspan = String(getValidCellspan(colspan));
     height && (node.dataset.height = height);
     backgroundColor && (node.dataset.backgroundColor = backgroundColor);
     borderColor && (node.dataset.borderColor = borderColor);
@@ -38,8 +39,8 @@ export class TableCellInnerFormat extends ContainerFormat {
       tableId,
       rowId,
       colId,
-      rowspan: Number(rowspan),
-      colspan: Number(colspan),
+      rowspan: Number(getValidCellspan(rowspan)),
+      colspan: Number(getValidCellspan(colspan)),
     };
     height && (value.height = height);
     backgroundColor && (value.backgroundColor = backgroundColor);

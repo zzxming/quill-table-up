@@ -3,6 +3,7 @@ import type { TableRowFormat } from './table-row-format';
 import { blotName } from '../utils';
 import { ContainerFormat } from './container-format';
 import { TableCellInnerFormat } from './table-cell-inner-format';
+import { getValidCellspan } from './utils';
 
 export class TableCellFormat extends ContainerFormat {
   static blotName = blotName.tableCell;
@@ -15,8 +16,8 @@ export class TableCellFormat extends ContainerFormat {
     node.dataset.tableId = tableId;
     node.dataset.rowId = rowId;
     node.dataset.colId = colId;
-    node.setAttribute('rowspan', String(rowspan || 1));
-    node.setAttribute('colspan', String(colspan || 1));
+    node.setAttribute('rowspan', String(getValidCellspan(rowspan)));
+    node.setAttribute('colspan', String(getValidCellspan(colspan)));
     height && (node.style.height = height);
     backgroundColor && (node.style.backgroundColor = backgroundColor);
     borderColor && (node.style.borderColor = borderColor);
@@ -31,8 +32,8 @@ export class TableCellFormat extends ContainerFormat {
       tableId,
       rowId,
       colId,
-      rowspan: Number.isNaN(rowspan) ? 1 : rowspan,
-      colspan: Number.isNaN(colspan) ? 1 : colspan,
+      rowspan: getValidCellspan(rowspan),
+      colspan: getValidCellspan(colspan),
     };
     const { height, backgroundColor, borderColor } = domNode.style;
     height && (value.height = height);

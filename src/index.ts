@@ -414,7 +414,7 @@ export class TableUp {
       }
       return delta;
     });
-
+    // TODO: paste into table. need break table
     const matchCell = (node: Node, delta: TypeDelta) => {
       const cell = node as HTMLElement;
       const cellFormat = TableCellFormat.formats(cell);
@@ -438,12 +438,7 @@ export class TableUp {
       const ops = [];
       for (const op of delta.ops) {
         if (typeof op.insert === 'string') {
-          const texts = op.insert.replaceAll(/\n+/g, '\n').split('\n');
-          for (const text of texts) {
-            if (text) {
-              ops.push({ insert: text }, { insert: '\n', attributes: { [blotName.tableCellInner]: value } });
-            }
-          }
+          ops.push({ insert: op.insert, attributes: { [blotName.tableCellInner]: value } });
         }
       }
       return new Delta(ops);
