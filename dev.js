@@ -1542,10 +1542,6 @@
     });
   };
 
-  const isFunction = (val) => typeof val === 'function';
-  const isBoolean = (val) => typeof val === 'boolean';
-  const isArray = Array.isArray;
-  const isString = (val) => typeof val === 'string';
   const randomId = () => Math.random().toString(36).slice(2);
   const debounce = (fn, delay) => {
       let timestamp;
@@ -2048,6 +2044,12 @@
       ],
   ];
 
+  const isFunction = (val) => typeof val === 'function';
+  const isBoolean = (val) => typeof val === 'boolean';
+  const isArray = Array.isArray;
+  const isString = (val) => typeof val === 'string';
+  const isValidCellspan = (val) => !Number.isNaN(val) && Number(val) > 0;
+
   const Parchment$2 = Quill.import('parchment');
   const Container = Quill.import('blots/container');
   const Block$2 = Quill.import('blots/block');
@@ -2225,6 +2227,8 @@
       }
   }
 
+  const getValidCellspan = (value) => isValidCellspan(value) ? value : 1;
+
   const Block = Quill.import('blots/block');
   const BlockEmbed$1 = Quill.import('blots/block/embed');
   const allowAttrs = ['table-id', 'row-id', 'col-id', 'rowspan', 'colspan', 'background-color', 'border-color', 'height'];
@@ -2239,8 +2243,8 @@
           node.dataset.tableId = tableId;
           node.dataset.rowId = rowId;
           node.dataset.colId = colId;
-          node.dataset.rowspan = String(rowspan || 1);
-          node.dataset.colspan = String(colspan || 1);
+          node.dataset.rowspan = String(getValidCellspan(rowspan));
+          node.dataset.colspan = String(getValidCellspan(colspan));
           height && (node.dataset.height = height);
           backgroundColor && (node.dataset.backgroundColor = backgroundColor);
           borderColor && (node.dataset.borderColor = borderColor);
@@ -2252,8 +2256,8 @@
               tableId,
               rowId,
               colId,
-              rowspan: Number(rowspan),
-              colspan: Number(colspan),
+              rowspan: Number(getValidCellspan(rowspan)),
+              colspan: Number(getValidCellspan(colspan)),
           };
           height && (value.height = height);
           backgroundColor && (value.backgroundColor = backgroundColor);
@@ -2655,8 +2659,8 @@
           node.dataset.tableId = tableId;
           node.dataset.rowId = rowId;
           node.dataset.colId = colId;
-          node.setAttribute('rowspan', String(rowspan || 1));
-          node.setAttribute('colspan', String(colspan || 1));
+          node.setAttribute('rowspan', String(getValidCellspan(rowspan)));
+          node.setAttribute('colspan', String(getValidCellspan(colspan)));
           height && (node.style.height = height);
           backgroundColor && (node.style.backgroundColor = backgroundColor);
           borderColor && (node.style.borderColor = borderColor);
@@ -2670,8 +2674,8 @@
               tableId,
               rowId,
               colId,
-              rowspan: Number.isNaN(rowspan) ? 1 : rowspan,
-              colspan: Number.isNaN(colspan) ? 1 : colspan,
+              rowspan: getValidCellspan(rowspan),
+              colspan: getValidCellspan(colspan),
           };
           const { height, backgroundColor, borderColor } = domNode.style;
           height && (value.height = height);
@@ -5120,6 +5124,22 @@
           let colIds = [];
           let cellCount = 0;
           let colCount = 0;
+          // handle paste html or text into table cell
+          const pasteElementIntoCell = (node, delta, _scroll) => {
+              const range = this.quill.getSelection(true);
+              const formats = this.quill.getFormat(range);
+              const tableCellInnerValue = formats[blotName.tableCellInner];
+              if (tableCellInnerValue) {
+                  for (const op of delta.ops) {
+                      if (!op.attributes)
+                          op.attributes = {};
+                      op.attributes[blotName.tableCellInner] = tableCellInnerValue;
+                  }
+              }
+              return delta;
+          };
+          this.quill.clipboard.addMatcher(Node.TEXT_NODE, pasteElementIntoCell);
+          this.quill.clipboard.addMatcher(Node.ELEMENT_NODE, pasteElementIntoCell);
           this.quill.clipboard.addMatcher('table', (node, delta) => {
               if (delta.ops.length === 0)
                   return delta;
@@ -5170,6 +5190,7 @@
               }
               return delta;
           });
+          // TODO: paste into table. need break table
           const matchCell = (node, delta) => {
               const cell = node;
               const cellFormat = TableCellFormat.formats(cell);
@@ -5190,12 +5211,7 @@
               const ops = [];
               for (const op of delta.ops) {
                   if (typeof op.insert === 'string') {
-                      const texts = op.insert.replaceAll(/\n+/g, '\n').split('\n');
-                      for (const text of texts) {
-                          if (text) {
-                              ops.push({ insert: text }, { insert: '\n', attributes: { [blotName.tableCellInner]: value } });
-                          }
-                      }
+                      ops.push({ insert: op.insert, attributes: { [blotName.tableCellInner]: value } });
                   }
               }
               return new Delta(ops);
