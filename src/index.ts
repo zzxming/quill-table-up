@@ -341,6 +341,22 @@ export class TableUp {
     let cellCount = 0;
     let colCount = 0;
 
+    // handle paste html or text into table cell
+    const pasteElementIntoCell = (node: Node, delta: TypeDelta, _scroll: TypeParchment.ScrollBlot) => {
+      const range = this.quill.getSelection(true);
+      const formats = this.quill.getFormat(range);
+      const tableCellInnerValue = formats[blotName.tableCellInner];
+      if (tableCellInnerValue) {
+        for (const op of delta.ops) {
+          if (!op.attributes) op.attributes = {};
+          op.attributes[blotName.tableCellInner] = tableCellInnerValue;
+        }
+      }
+      return delta;
+    };
+    this.quill.clipboard.addMatcher(Node.TEXT_NODE, pasteElementIntoCell);
+    this.quill.clipboard.addMatcher(Node.ELEMENT_NODE, pasteElementIntoCell);
+
     this.quill.clipboard.addMatcher('table', (node, delta) => {
       if (delta.ops.length === 0) return delta;
 
@@ -398,7 +414,7 @@ export class TableUp {
       }
       return delta;
     });
-
+    // TODO: paste into table. need break table
     const matchCell = (node: Node, delta: TypeDelta) => {
       const cell = node as HTMLElement;
       const cellFormat = TableCellFormat.formats(cell);
@@ -422,12 +438,7 @@ export class TableUp {
       const ops = [];
       for (const op of delta.ops) {
         if (typeof op.insert === 'string') {
-          const texts = op.insert.replaceAll(/\n+/g, '\n').split('\n');
-          for (const text of texts) {
-            if (text) {
-              ops.push({ insert: text }, { insert: '\n', attributes: { [blotName.tableCellInner]: value } });
-            }
-          }
+          ops.push({ insert: op.insert, attributes: { [blotName.tableCellInner]: value } });
         }
       }
       return new Delta(ops);
