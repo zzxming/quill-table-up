@@ -341,6 +341,22 @@ export class TableUp {
     let cellCount = 0;
     let colCount = 0;
 
+    // handle paste html or text into table cell
+    const pasteElementIntoCell = (node: Node, delta: TypeDelta, _scroll: TypeParchment.ScrollBlot) => {
+      const range = this.quill.getSelection(true);
+      const formats = this.quill.getFormat(range);
+      const tableCellInnerValue = formats[blotName.tableCellInner];
+      if (tableCellInnerValue) {
+        for (const op of delta.ops) {
+          if (!op.attributes) op.attributes = {};
+          op.attributes[blotName.tableCellInner] = tableCellInnerValue;
+        }
+      }
+      return delta;
+    };
+    this.quill.clipboard.addMatcher(Node.TEXT_NODE, pasteElementIntoCell);
+    this.quill.clipboard.addMatcher(Node.ELEMENT_NODE, pasteElementIntoCell);
+
     this.quill.clipboard.addMatcher('table', (node, delta) => {
       if (delta.ops.length === 0) return delta;
 
