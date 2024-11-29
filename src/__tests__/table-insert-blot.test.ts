@@ -281,9 +281,9 @@ describe('set contents', () => {
     const quill = await createTable(3, 2);
     const tableModule = quill.getModule('tableUp') as TableUp;
     const tds = quill.scroll.descendants(TableCellInnerFormat, 0);
-    tableModule.setCellAttrs([tds[0], tds[1]], 'background-color', 'red');
-    tableModule.setCellAttrs([tds[2], tds[3]], 'border-color', 'red');
-    tableModule.setCellAttrs([tds[4], tds[5]], 'height', '50px');
+    tableModule.setCellAttrs([tds[0], tds[1]], 'background-color', 'red', true);
+    tableModule.setCellAttrs([tds[2], tds[3]], 'border-color', 'red', true);
+    tableModule.setCellAttrs([tds[4], tds[5]], 'height', '50px', true);
     await vi.runAllTimersAsync();
     const delta = quill.getContents();
     const insertGetHTML = quill.root.innerHTML;
@@ -292,17 +292,17 @@ describe('set contents', () => {
       { insert: { 'table-up-col': { tableId: '1', colId: '1', full: true, width: 50 } } },
       { insert: { 'table-up-col': { tableId: '1', colId: '2', full: true, width: 50 } } },
       { insert: '1' },
-      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '1', rowspan: 1, colspan: 1, backgroundColor: 'red' } }, insert: '\n' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '1', rowspan: 1, colspan: 1, style: 'background-color: red;' } }, insert: '\n' },
       { insert: '2' },
-      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '2', rowspan: 1, colspan: 1, backgroundColor: 'red' } }, insert: '\n' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '2', rowspan: 1, colspan: 1, style: 'background-color: red;' } }, insert: '\n' },
       { insert: '3' },
-      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '1', rowspan: 1, colspan: 1, borderColor: 'red' } }, insert: '\n' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '1', rowspan: 1, colspan: 1, style: 'border-color: red;' } }, insert: '\n' },
       { insert: '4' },
-      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '2', rowspan: 1, colspan: 1, borderColor: 'red' } }, insert: '\n' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '2', rowspan: 1, colspan: 1, style: 'border-color: red;' } }, insert: '\n' },
       { insert: '5' },
-      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '3', colId: '1', rowspan: 1, colspan: 1, height: '50px' } }, insert: '\n' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '3', colId: '1', rowspan: 1, colspan: 1, style: 'height: 50px;' } }, insert: '\n' },
       { insert: '6' },
-      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '3', colId: '2', rowspan: 1, colspan: 1, height: '50px' } }, insert: '\n' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '3', colId: '2', rowspan: 1, colspan: 1, style: 'height: 50px;' } }, insert: '\n' },
       { insert: '\n' },
     ]);
     quill.setContents([{ insert: '\n' }]);

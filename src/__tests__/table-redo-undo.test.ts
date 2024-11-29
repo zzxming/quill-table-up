@@ -726,7 +726,7 @@ describe('cell attribute', () => {
     tableModule.tableSelection = new TableSelection(tableModule, table, quill);
     const tds = quill.scroll.descendants(TableCellInnerFormat, 0);
     const selectedTds = [tds[0], tds[1], tds[2]];
-    tableModule.setCellAttrs(selectedTds, 'background-color', 'rgb(253, 235, 255)');
+    tableModule.setCellAttrs(selectedTds, 'background-color', 'rgb(253, 235, 255)', true);
     await vi.runAllTimersAsync();
     expect(quill.root).toEqualHTML(
       `
@@ -740,7 +740,7 @@ describe('cell attribute', () => {
                   <tr data-row-id="${i + 1}">
                     ${
                       new Array(3).fill(0).map((_, j) => `<td rowspan="1" colspan="1" data-row-id="${i + 1}" data-col-id="${j + 1}"${i === 0 ? ' style="background-color: rgb(253, 235, 255);"' : ''}>
-                        <div data-rowspan="1" data-colspan="1" data-row-id="${i + 1}" data-col-id="${j + 1}"${i === 0 ? ' data-background-color="rgb(253, 235, 255)"' : ''}><p>${i * 3 + j + 1}</p></div>
+                        <div data-rowspan="1" data-colspan="1" data-row-id="${i + 1}" data-col-id="${j + 1}"${i === 0 ? ' data-style="background-color: rgb(253, 235, 255);"' : ''}><p>${i * 3 + j + 1}</p></div>
                       </td>`).join('\n')
                     }
                   </tr>
@@ -772,7 +772,7 @@ describe('cell attribute', () => {
     tableModule.tableSelection = new TableSelection(tableModule, table, quill);
     const tds = quill.scroll.descendants(TableCellInnerFormat, 0);
     const selectedTds = [tds[0], tds[1], tds[2]];
-    tableModule.setCellAttrs(selectedTds, 'border-color', 'red');
+    tableModule.setCellAttrs(selectedTds, 'border-color', 'red', true);
     await vi.runAllTimersAsync();
     expect(quill.root).toEqualHTML(
       `
@@ -786,7 +786,7 @@ describe('cell attribute', () => {
                   <tr data-row-id="${i + 1}">
                     ${
                       new Array(3).fill(0).map((_, j) => `<td rowspan="1" colspan="1" data-row-id="${i + 1}" data-col-id="${j + 1}"${i === 0 ? ' style="border-color: red;"' : ''}>
-                        <div data-rowspan="1" data-colspan="1" data-row-id="${i + 1}" data-col-id="${j + 1}"${i === 0 ? ' data-border-color="red"' : ''}><p>${i * 3 + j + 1}</p></div>
+                        <div data-rowspan="1" data-colspan="1" data-row-id="${i + 1}" data-col-id="${j + 1}"${i === 0 ? ' data-style="border-color: red;"' : ''}><p>${i * 3 + j + 1}</p></div>
                       </td>`).join('\n')
                     }
                   </tr>

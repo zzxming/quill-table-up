@@ -5,7 +5,7 @@ import TableUp, { updateTableConstants } from '..';
 import { TableBodyFormat, TableCellFormat, TableCellInnerFormat, TableColFormat, TableMainFormat, TableRowFormat, TableWrapperFormat } from '../formats';
 import { TableSelection } from '../modules';
 import { blotName, findParentBlot, findParentBlots } from '../utils';
-import { createTable, createTableHTML, createTaleColHTML, normalizeHTML } from './utils';
+import { createTable, createTableHTML, createTaleColHTML, datasetFull, getColWidthStyle, normalizeHTML } from './utils';
 
 beforeEach(() => {
   vi.useFakeTimers();
@@ -18,64 +18,99 @@ const createOverridesTable = (html: string, options = true, moduleOptions = {}, 
   updateTableConstants({
     blotName: {
       tableCol: 'a-col',
+      tableCell: 'a-cell',
       tableCellInner: 'a-cell-inner',
     },
   });
+
+  // rename `colId` to `column`
   class TableColFormatOverride extends TableColFormat {
     static create(value: any) {
-      const { width, tableId, colId, column, full } = value;
-      const node = super.create(value) as HTMLElement;
-      node.setAttribute('width', `${Number.parseFloat(width)}${full ? '%' : 'px'}`);
-      full && (node.dataset.full = String(full));
-      node.dataset.tableId = tableId;
+      const { colId, column } = value;
+      const node = super.create(value);
       node.dataset.colId = colId || column;
       node.setAttribute('contenteditable', 'false');
       return node;
     }
 
     static value(domNode: HTMLElement) {
-      const { tableId, colId } = domNode.dataset;
-      const width = domNode.getAttribute('width');
-      const full = Object.hasOwn(domNode.dataset, 'full');
-      const value: Record<string, any> = {
-        tableId,
-        column: colId,
-        full,
-      };
-      width && (value.width = Number.parseFloat(width));
+      const value = super.value(domNode);
+      value.column = value.colId;
+      delete value.colId;
       return value;
     }
   }
-  class TableCellInnerFormatOverride extends TableCellInnerFormat {
+  // rename `rowId` to `row`, `colId` to `cell`
+  class TableCellFormatOverride extends TableCellFormat {
+    static allowDataAttrs = new Set(['table-id', 'row', 'cell']);
     static create(value: any) {
-      let { tableId, rowId, colId, row, cell, rowspan, colspan, backgroundColor, height } = value;
-      rowId = rowId || row;
-      colId = colId || cell;
-      const node = super.create(value) as HTMLElement;
-      node.dataset.tableId = tableId;
-      node.dataset.rowId = rowId;
-      node.dataset.colId = colId;
-      node.dataset.rowspan = String(rowspan || 1);
-      node.dataset.colspan = String(colspan || 1);
-      height && (node.dataset.height = height);
-      backgroundColor && (node.dataset.backgroundColor = backgroundColor);
+      const node = super.create(value);
+      let { rowId, colId, row, cell } = value;
+      row = row || rowId;
+      cell = cell || colId;
+      node.dataset.row = row;
+      node.dataset.cell = cell;
+      node.removeAttribute('data-row-id');
+      node.removeAttribute('data-col-id');
       return node;
     }
 
-    formats(): Record<string, any> {
-      const { tableId, rowId, colId, rowspan, colspan, backgroundColor, height } = this;
-      const value: Record<string, any> = {
-        tableId,
-        row: rowId,
-        cell: colId,
-        rowspan,
-        colspan,
-      };
-      height && (value.height = height);
-      backgroundColor && (value.backgroundColor = backgroundColor);
-      return {
-        [this.statics.blotName]: value,
-      };
+    static formats(domNode: HTMLElement) {
+      const value = super.formats(domNode);
+      const { row, cell } = domNode.dataset;
+      value.row = row;
+      value.cell = cell;
+      delete value.rowId;
+      delete value.colId;
+      return value;
+    }
+
+    get rowId() {
+      return this.domNode.dataset.row!;
+    }
+
+    get colId() {
+      return this.domNode.dataset.cell!;
+    }
+  }
+  class TableCellInnerFormatOverride extends TableCellInnerFormat {
+    static allowDataAttrs = new Set(['table-id', 'row', 'cell', 'rowspan', 'colspan']);
+    static create(value: any) {
+      const node = super.create(value);
+      let { rowId, colId, row, cell } = value;
+      row = row || rowId;
+      cell = cell || colId;
+      node.dataset.row = row;
+      node.dataset.cell = cell;
+      node.removeAttribute('data-row-id');
+      node.removeAttribute('data-col-id');
+      return node;
+    }
+
+    static formats(domNode: HTMLElement) {
+      const value = super.formats(domNode);
+      const { row, cell } = domNode.dataset;
+      value.row = row;
+      value.cell = cell;
+      delete value.rowId;
+      delete value.colId;
+      return value;
+    }
+
+    get rowId() {
+      return this.domNode.dataset.row!;
+    }
+
+    set rowId(value) {
+      this.setFormatValue('row', value);
+    }
+
+    get colId() {
+      return this.domNode.dataset.cell!;
+    }
+
+    set colId(value) {
+      this.setFormatValue('cell', value);
     }
   }
   class TableUpOverride extends TableUp {
@@ -83,6 +118,7 @@ const createOverridesTable = (html: string, options = true, moduleOptions = {}, 
       super.register();
       Quill.register({
         'formats/a-col': TableColFormatOverride,
+        'formats/a-cell': TableCellFormatOverride,
         'formats/a-cell-inner': TableCellInnerFormatOverride,
       }, true);
     }
@@ -143,6 +179,7 @@ describe('test utils', () => {
   });
 });
 
+// this test need be last. it's effect `blotName`
 describe('test override format', () => {
   it('should change blotName', async () => {
     updateTableConstants({
@@ -482,10 +519,34 @@ describe('test override format', () => {
         },
       ],
     });
+    const colWidth = getColWidthStyle({ full: true, colNum: 2 });
     expect(quill.root).toEqualHTML(
       `
         <p><br></p>
-        ${createTableHTML(2, 2, {}, { isEmpty: true })}
+        <div>
+          <table cellpadding="0" cellspacing="0"${datasetFull(true)}>
+            <colgroup${datasetFull(true)}>
+              ${new Array(2).fill(0).map((_, i) => `<col ${colWidth} data-col-id="${i + 1}"${datasetFull(true)} />`).join('\n')}
+            </colgroup>
+            <tbody>
+            ${
+              new Array(2).fill(0).map((_, i) => `
+                <tr data-row-id="${i + 1}">
+                  ${
+                    new Array(2).fill(0).map((_, j) => `<td rowspan="1" colspan="1" data-row="${i + 1}" data-cell="${j + 1}">
+                      <div data-rowspan="1" data-colspan="1" data-row="${i + 1}" data-cell="${j + 1}">
+                        <p>
+                          <br>
+                        </p>
+                      </div>
+                    </td>`).join('\n')
+                  }
+                </tr>
+              `).join('\n')
+            }
+          </tbody>
+          </table>
+        </div>
         <p><br></p>
       `,
       { ignoreAttrs: ['class', 'style', 'data-table-id', 'contenteditable'] },
@@ -619,10 +680,34 @@ describe('test override format', () => {
         },
       ],
     });
+    const colWidth = getColWidthStyle({ full: true, colNum: 2 });
     expect(quill.root).toEqualHTML(
       `
         <p><br></p>
-        ${createTableHTML(2, 2)}
+        <div>
+          <table cellpadding="0" cellspacing="0"${datasetFull(true)}>
+            <colgroup${datasetFull(true)}>
+              ${new Array(2).fill(0).map((_, i) => `<col ${colWidth} data-col-id="${i + 1}"${datasetFull(true)} />`).join('\n')}
+            </colgroup>
+            <tbody>
+            ${
+              new Array(2).fill(0).map((_, i) => `
+                <tr data-row-id="${i + 1}">
+                  ${
+                    new Array(2).fill(0).map((_, j) => `<td rowspan="1" colspan="1" data-row="${i + 1}" data-cell="${j + 1}">
+                      <div data-rowspan="1" data-colspan="1" data-row="${i + 1}" data-cell="${j + 1}">
+                        <p>
+                          ${i * 2 + j + 1}
+                        </p>
+                      </div>
+                    </td>`).join('\n')
+                  }
+                </tr>
+              `).join('\n')
+            }
+          </tbody>
+          </table>
+        </div>
         <p><br></p>
       `,
       { ignoreAttrs: ['class', 'style', 'data-table-id', 'contenteditable'] },
