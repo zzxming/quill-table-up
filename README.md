@@ -80,11 +80,11 @@ const defaultTexts = {
 
 ### TableSelection Options
 
-| attribute      | description                                                                                                                            | type               | default           |
-| -------------- | -------------------------------------------------------------------------------------------------------------------------------------- | ------------------ | ----------------- |
-| selectColor    | selector border color                                                                                                                  | `string`           | `#0589f3`         |
-| tableMenu      | module TableMenu options                                                                                                               | `TableMenuOptions` | -                 |
-| tableMenuClass | when select a cell will trigger this class to create menu. module provide two menu module `TableMenuContextmenu` and `TableMenuSelect` | `Constructor`      | `TableMenuSelect` |
+| attribute      | description                                                                                                                            | type               | default                |
+| -------------- | -------------------------------------------------------------------------------------------------------------------------------------- | ------------------ | ---------------------- |
+| selectColor    | selector border color                                                                                                                  | `string`           | `#0589f3`              |
+| tableMenu      | module TableMenu options                                                                                                               | `TableMenuOptions` | -                      |
+| tableMenuClass | when select a cell will trigger this class to create menu. module provide two menu module `TableMenuContextmenu` and `TableMenuSelect` | `Constructor`      | `TableMenuContextmenu` |
 
 ### TableMenu Options
 
