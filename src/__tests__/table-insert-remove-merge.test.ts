@@ -1,6 +1,5 @@
-import type TableUp from '../index';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { TableCellInnerFormat, TableSelection } from '../index';
+import TableUp, { TableCellInnerFormat, TableSelection } from '..';
 import { createQuillWithTableModule, createTable, createTaleColHTML } from './utils';
 
 beforeEach(() => {
@@ -13,7 +12,7 @@ afterEach(() => {
 describe('merge and split cell', () => {
   it('merge cells', async () => {
     const quill = createQuillWithTableModule(`<p><br></p>`);
-    const tableModule = quill.getModule('tableUp') as TableUp;
+    const tableModule = quill.getModule(TableUp.moduleName) as TableUp;
     tableModule.insertTable(3, 3);
     await vi.runAllTimersAsync();
     const table = quill.root.querySelector('table')!;
@@ -59,7 +58,7 @@ describe('merge and split cell', () => {
 
   it('merge cells and clear rowspan or colspan', async () => {
     const quill = createQuillWithTableModule(`<p><br></p>`);
-    const tableModule = quill.getModule('tableUp') as TableUp;
+    const tableModule = quill.getModule(TableUp.moduleName) as TableUp;
     tableModule.insertTable(2, 5);
     await vi.runAllTimersAsync();
     const table = quill.root.querySelector('table')!;
@@ -108,7 +107,7 @@ describe('merge and split cell', () => {
 
   it('merge cells across rowspan and colspan', async () => {
     const quill = createQuillWithTableModule(`<p><br></p>`);
-    const tableModule = quill.getModule('tableUp') as TableUp;
+    const tableModule = quill.getModule(TableUp.moduleName) as TableUp;
     tableModule.insertTable(6, 7);
     await vi.runAllTimersAsync();
     const table = quill.root.querySelector('table')!;
@@ -180,7 +179,7 @@ describe('merge and split cell', () => {
 
   it('split cell', async () => {
     const quill = createQuillWithTableModule(`<p><br></p>`);
-    const tableModule = quill.getModule('tableUp') as TableUp;
+    const tableModule = quill.getModule(TableUp.moduleName) as TableUp;
     tableModule.insertTable(3, 3);
     await vi.runAllTimersAsync();
     const table = quill.root.querySelector('table')!;
@@ -231,7 +230,7 @@ describe('merge and split cell', () => {
 
   it('merge cells should sort correct colId', async () => {
     const quill = await createTable(5, 5);
-    const tableModule = quill.getModule('tableUp') as TableUp;
+    const tableModule = quill.getModule(TableUp.moduleName) as TableUp;
     const table = quill.root.querySelector('table')!;
     tableModule.tableSelection = new TableSelection(tableModule, table, quill);
     const tds = quill.scroll.descendants(TableCellInnerFormat, 0);
@@ -316,7 +315,7 @@ describe('merge and split cell', () => {
 describe('remove column from table', () => {
   it('remove column', async () => {
     const quill = createQuillWithTableModule(`<p><br></p>`);
-    const tableModule = quill.getModule('tableUp') as TableUp;
+    const tableModule = quill.getModule(TableUp.moduleName) as TableUp;
     tableModule.insertTable(3, 3);
     await vi.runAllTimersAsync();
     const table = quill.root.querySelector('table')!;
@@ -352,7 +351,7 @@ describe('remove column from table', () => {
 
   it('remove column in not full table', async () => {
     const quill = await createTable(1, 3, { full: false });
-    const tableModule = quill.getModule('tableUp') as TableUp;
+    const tableModule = quill.getModule(TableUp.moduleName) as TableUp;
     await vi.runAllTimersAsync();
     const table = quill.root.querySelector('table')!;
     tableModule.tableSelection = new TableSelection(tableModule, table, quill);
@@ -385,7 +384,7 @@ describe('remove column from table', () => {
 
   it('remove column. remove colspan start cell and rowspan cell', async () => {
     const quill = createQuillWithTableModule(`<p><br></p>`);
-    const tableModule = quill.getModule('tableUp') as TableUp;
+    const tableModule = quill.getModule(TableUp.moduleName) as TableUp;
     tableModule.insertTable(4, 4);
     await vi.runAllTimersAsync();
     const table = quill.root.querySelector('table')!;
@@ -453,7 +452,7 @@ describe('remove column from table', () => {
 describe('remove row from table', () => {
   it('remove row', async () => {
     const quill = createQuillWithTableModule(`<p><br></p>`);
-    const tableModule = quill.getModule('tableUp') as TableUp;
+    const tableModule = quill.getModule(TableUp.moduleName) as TableUp;
     tableModule.insertTable(3, 3);
     await vi.runAllTimersAsync();
     const table = quill.root.querySelector('table')!;
@@ -485,7 +484,7 @@ describe('remove row from table', () => {
 
   it('remove row. remove rowspan cell at start index', async () => {
     const quill = createQuillWithTableModule(`<p><br></p>`);
-    const tableModule = quill.getModule('tableUp') as TableUp;
+    const tableModule = quill.getModule(TableUp.moduleName) as TableUp;
     tableModule.insertTable(3, 3);
     await vi.runAllTimersAsync();
     const table = quill.root.querySelector('table')!;
@@ -526,7 +525,7 @@ describe('remove row from table', () => {
 describe('insert column into table', () => {
   it('render insert', async () => {
     const quill = createQuillWithTableModule(`<p><br></p>`);
-    const tableModule = quill.getModule('tableUp') as TableUp;
+    const tableModule = quill.getModule(TableUp.moduleName) as TableUp;
     tableModule.insertTable(4, 4);
     await vi.runAllTimersAsync();
     expect(quill.root).toEqualHTML(
@@ -556,7 +555,7 @@ describe('insert column into table', () => {
 
   it('insert column left', async () => {
     const quill = createQuillWithTableModule(`<p><br></p>`);
-    const tableModule = quill.getModule('tableUp') as TableUp;
+    const tableModule = quill.getModule(TableUp.moduleName) as TableUp;
     tableModule.insertTable(2, 2);
     await vi.runAllTimersAsync();
     const table = quill.root.querySelector('table')!;
@@ -594,7 +593,7 @@ describe('insert column into table', () => {
 
   it('insert column left and index is inside colspan cell', async () => {
     const quill = createQuillWithTableModule(`<p><br></p>`);
-    const tableModule = quill.getModule('tableUp') as TableUp;
+    const tableModule = quill.getModule(TableUp.moduleName) as TableUp;
     tableModule.insertTable(2, 2);
     await vi.runAllTimersAsync();
     const table = quill.root.querySelector('table')!;
@@ -639,7 +638,7 @@ describe('insert column into table', () => {
 
   it('insert column right', async () => {
     const quill = createQuillWithTableModule(`<p><br></p>`);
-    const tableModule = quill.getModule('tableUp') as TableUp;
+    const tableModule = quill.getModule(TableUp.moduleName) as TableUp;
     tableModule.insertTable(2, 2);
     await vi.runAllTimersAsync();
     const table = quill.root.querySelector('table')!;
@@ -677,7 +676,7 @@ describe('insert column into table', () => {
 
   it('insert column right and index is inside colspan cell', async () => {
     const quill = createQuillWithTableModule(`<p><br></p>`);
-    const tableModule = quill.getModule('tableUp') as TableUp;
+    const tableModule = quill.getModule(TableUp.moduleName) as TableUp;
     tableModule.insertTable(2, 2);
     await vi.runAllTimersAsync();
     const table = quill.root.querySelector('table')!;
@@ -722,7 +721,7 @@ describe('insert column into table', () => {
 
   it('insert column with colspan cell', async () => {
     const quill = createQuillWithTableModule(`<p><br></p>`);
-    const tableModule = quill.getModule('tableUp') as TableUp;
+    const tableModule = quill.getModule(TableUp.moduleName) as TableUp;
     tableModule.insertTable(2, 2);
     await vi.runAllTimersAsync();
     const table = quill.root.querySelector('table')!;
@@ -768,7 +767,7 @@ describe('insert column into table', () => {
 
   it('insert column with mutiple rowspan', async () => {
     const quill = createQuillWithTableModule(`<p><br></p>`);
-    const tableModule = quill.getModule('tableUp') as TableUp;
+    const tableModule = quill.getModule(TableUp.moduleName) as TableUp;
     tableModule.insertTable(6, 3);
     await vi.runAllTimersAsync();
     const table = quill.root.querySelector('table')!;
@@ -838,7 +837,7 @@ describe('insert column into table', () => {
 
   it('insert column. `tr.insertCell` should find correct index and skip index', async () => {
     const quill = createQuillWithTableModule(`<p><br></p>`);
-    const tableModule = quill.getModule('tableUp') as TableUp;
+    const tableModule = quill.getModule(TableUp.moduleName) as TableUp;
     tableModule.insertTable(4, 5);
     await vi.runAllTimersAsync();
     const table = quill.root.querySelector('table')!;
@@ -908,7 +907,7 @@ describe('insert column into table', () => {
 describe('insert row into table', () => {
   it('insert row top', async () => {
     const quill = createQuillWithTableModule(`<p><br></p>`);
-    const tableModule = quill.getModule('tableUp') as TableUp;
+    const tableModule = quill.getModule(TableUp.moduleName) as TableUp;
     tableModule.insertTable(2, 2);
     await vi.runAllTimersAsync();
     const table = quill.root.querySelector('table')!;
@@ -945,7 +944,7 @@ describe('insert row into table', () => {
 
   it('insert row top and index is inside rowspan cell', async () => {
     const quill = createQuillWithTableModule(`<p><br></p>`);
-    const tableModule = quill.getModule('tableUp') as TableUp;
+    const tableModule = quill.getModule(TableUp.moduleName) as TableUp;
     tableModule.insertTable(3, 5);
     await vi.runAllTimersAsync();
     const table = quill.root.querySelector('table')!;
@@ -1013,7 +1012,7 @@ describe('insert row into table', () => {
 
   it('insert row bottom', async () => {
     const quill = createQuillWithTableModule(`<p><br></p>`);
-    const tableModule = quill.getModule('tableUp') as TableUp;
+    const tableModule = quill.getModule(TableUp.moduleName) as TableUp;
     tableModule.insertTable(2, 2);
     await vi.runAllTimersAsync();
     const table = quill.root.querySelector('table')!;
@@ -1050,7 +1049,7 @@ describe('insert row into table', () => {
 
   it('insert row bottom and index is inside rowspan cell', async () => {
     const quill = createQuillWithTableModule(`<p><br></p>`);
-    const tableModule = quill.getModule('tableUp') as TableUp;
+    const tableModule = quill.getModule(TableUp.moduleName) as TableUp;
     tableModule.insertTable(2, 5);
     await vi.runAllTimersAsync();
     const table = quill.root.querySelector('table')!;
@@ -1109,7 +1108,7 @@ describe('insert row into table', () => {
 describe('unusual delete', () => {
   it('delete head from outside table to inside', async () => {
     const quill = createQuillWithTableModule(`<p><br></p>`);
-    const tableModule = quill.getModule('tableUp') as TableUp;
+    const tableModule = quill.getModule(TableUp.moduleName) as TableUp;
     tableModule.insertTable(5, 5);
     await vi.runAllTimersAsync();
     const table = quill.root.querySelector('table')!;
@@ -1136,7 +1135,7 @@ describe('unusual delete', () => {
 
   it('delete tail from inside table to outside', async () => {
     const quill = createQuillWithTableModule(`<p><br></p>`);
-    const tableModule = quill.getModule('tableUp') as TableUp;
+    const tableModule = quill.getModule(TableUp.moduleName) as TableUp;
     tableModule.insertTable(5, 5);
     await vi.runAllTimersAsync();
     const table = quill.root.querySelector('table')!;
@@ -1203,7 +1202,7 @@ describe('unusual delete', () => {
 
   it('delete table inside cell', async () => {
     const quill = createQuillWithTableModule(`<p><br></p>`);
-    const tableModule = quill.getModule('tableUp') as TableUp;
+    const tableModule = quill.getModule(TableUp.moduleName) as TableUp;
     tableModule.insertTable(5, 5);
     await vi.runAllTimersAsync();
     const table = quill.root.querySelector('table')!;

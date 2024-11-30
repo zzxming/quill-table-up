@@ -12,7 +12,7 @@ import type { TableConstantsData, TableTextOptions, TableUpOptions } from './uti
 import Quill from 'quill';
 import { BlockOverride, BlockquoteOverride, CodeBlockOverride, ContainerFormat, HeaderOverride, ListItemOverride, ScrollOverride, TableBodyFormat, TableCellFormat, TableCellInnerFormat, TableColFormat, TableColgroupFormat, TableMainFormat, TableRowFormat, TableWrapperFormat } from './formats';
 import { TableAlign, TableResizeBox, TableResizeLine, TableSelection, TableVitrualScroll } from './modules';
-import { blotName, createSelectBox, debounce, findParentBlot, findParentBlots, isBoolean, isFunction, isString, randomId, tableUpEvent, tableUpSize } from './utils';
+import { blotName, createSelectBox, debounce, findParentBlot, findParentBlots, isBoolean, isFunction, isString, limitDomInViewPort, randomId, tableUpEvent, tableUpSize } from './utils';
 
 const Delta = Quill.import('delta');
 const Break = Quill.import('blots/break') as TypeParchment.BlotConstructor;
@@ -202,7 +202,18 @@ export class TableUp {
         if (this.picker) {
           this.picker.label.innerHTML = this.options.icon;
           this.buildCustomSelect(this.options.customSelect);
-          this.picker.label.addEventListener('mousedown', this.handleInViewport);
+          this.picker.label.addEventListener('mousedown', () => {
+            if (!this.selector || !this.picker) return;
+            const selectRect = this.selector.getBoundingClientRect();
+            const { leftLimited } = limitDomInViewPort(selectRect);
+            if (leftLimited) {
+              const labelRect = this.picker.label.getBoundingClientRect();
+              Object.assign(this.picker.options.style, { transform: `translateX(calc(-100% + ${labelRect.width}px))` });
+            }
+            else {
+              Object.assign(this.picker.options.style, { transform: undefined });
+            }
+          });
         }
       }
     }
@@ -504,18 +515,6 @@ export class TableUp {
       });
     dom.appendChild(this.selector);
     this.picker.options.appendChild(dom);
-  };
-
-  handleInViewport = () => {
-    if (!this.selector || !this.picker) return;
-    const selectRect = this.selector.getBoundingClientRect();
-    if (selectRect.right >= window.innerWidth) {
-      const labelRect = this.picker.label.getBoundingClientRect();
-      Object.assign(this.picker.options.style, { transform: `translateX(calc(-100% + ${labelRect.width}px))` });
-    }
-    else {
-      Object.assign(this.picker.options.style, { transform: undefined });
-    }
   };
 
   insertTable(rows: number, columns: number) {

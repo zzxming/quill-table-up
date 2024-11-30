@@ -1,6 +1,5 @@
-import type TableUp from '..';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { TableCellInnerFormat } from '..';
+import TableUp, { TableCellInnerFormat } from '..';
 import { createQuillWithTableModule, createTable, createTableDeltaOps, createTableHTML } from './utils';
 
 beforeEach(() => {
@@ -279,7 +278,7 @@ describe('set contents', () => {
 
   it('delta should render save construct', async () => {
     const quill = await createTable(3, 2);
-    const tableModule = quill.getModule('tableUp') as TableUp;
+    const tableModule = quill.getModule(TableUp.moduleName) as TableUp;
     const tds = quill.scroll.descendants(TableCellInnerFormat, 0);
     tableModule.setCellAttrs([tds[0], tds[1]], 'background-color', 'red', true);
     tableModule.setCellAttrs([tds[2], tds[3]], 'border-color', 'red', true);

@@ -28,14 +28,14 @@ export const sortAttributes = (element: HTMLElement) => {
 };
 export const createQuillWithTableModule = (html: string, options = {}, moduleOptions = {}, register = {}) => {
   Quill.register({
-    'modules/tableUp': TableUp,
+    [`modules/${TableUp.moduleName}`]: TableUp,
     ...register,
   }, true);
   const container = document.body.appendChild(document.createElement('div'));
   container.innerHTML = normalizeHTML(html);
   const quill = new Quill(container, {
     modules: {
-      tableUp: {
+      [TableUp.moduleName]: {
         full: true,
         ...options,
       },

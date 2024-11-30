@@ -28,7 +28,7 @@ const createOverridesTable = (html: string, options = true, moduleOptions = {}, 
     static create(value: any) {
       const { colId, column } = value;
       const node = super.create(value);
-      node.dataset.colId = colId || column;
+      node.dataset.colId = column || colId;
       node.setAttribute('contenteditable', 'false');
       return node;
     }
@@ -287,7 +287,7 @@ describe('test override format', () => {
       `,
       { ignoreAttrs: ['class', 'style', 'data-table-id', 'contenteditable'] },
     );
-    const tableModule = quill.getModule('tableUp') as TableUp;
+    const tableModule = quill.getModule(TableUp.moduleName) as TableUp;
     const table = quill.root.querySelector('table')!;
     tableModule.tableSelection = new TableSelection(tableModule, table, quill);
     const tds = quill.scroll.descendants(TableCellInnerFormat, 0);

@@ -34,7 +34,7 @@ const buildDts = async () => {
 };
 const buildTs = async (isDev: boolean = false) => {
   const plugins = [
-    typescript({ tsconfig: './tsconfig.json' }),
+    typescript({ tsconfig: './tsconfig.json', exclude: ['src/__tests__'] }),
     nodeResolve(),
     svg({ stringify: true }),
   ];
