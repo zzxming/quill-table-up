@@ -28,7 +28,7 @@ const createOverridesTable = (html: string, options = true, moduleOptions = {}, 
     static create(value: any) {
       const { colId, column } = value;
       const node = super.create(value);
-      node.dataset.colId = colId || column;
+      node.dataset.colId = column || colId;
       node.setAttribute('contenteditable', 'false');
       return node;
     }
