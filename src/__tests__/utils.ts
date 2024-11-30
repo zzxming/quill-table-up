@@ -101,7 +101,7 @@ type ColOptions = Omit<TableColValue, 'width' | 'tableId' | 'colId'> & { width?:
 export const datasetTableId = (id: string) => `data-table-id="${id}"`;
 export const datasetFull = (full: boolean) => full ? ' data-full="true"' : '';
 export const datasetAlign = (align: string) => align === 'left' ? '' : ` data-align="${align}"`;
-export const getColWidthStyle = (options: Required<Omit<ColOptions, 'align' | 'tableId'>> & { colNum: number }) => {
+export const getColWidthStyle = (options: Required<Omit<ColOptions, 'align' | 'tableId' | 'width'>> & { width?: number; colNum: number }) => {
   const { full, width, colNum } = options;
   let colWidth = `${width}px`;
   if (full) {

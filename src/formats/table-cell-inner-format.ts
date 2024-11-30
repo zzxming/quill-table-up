@@ -10,17 +10,37 @@ import { getValidCellspan } from './utils';
 const Block = Quill.import('blots/block') as TypeParchment.BlotConstructor;
 const BlockEmbed = Quill.import('blots/block/embed') as TypeParchment.BlotConstructor;
 
-export const allowAttrs = ['table-id', 'row-id', 'col-id', 'rowspan', 'colspan', 'background-color', 'border-color', 'height'] as const;
-
 export class TableCellInnerFormat extends ContainerFormat {
   static blotName = blotName.tableCellInner;
   static tagName = 'div';
   static className = 'ql-table-cell-inner';
-
+  static allowDataAttrs: Set<string> = new Set(['table-id', 'row-id', 'col-id', 'rowspan', 'colspan']);
   static defaultChild: TypeParchment.BlotConstructor = Block;
+  declare parent: TableCellFormat;
+  // keep `isAllowStyle` and `allowStyle` same with TableCellFormat
+  static allowStyle = new Set(['background-color', 'border', 'height']);
+  static isAllowStyle(str: string): boolean {
+    for (const style of this.allowStyle) {
+      if (str.startsWith(style)) {
+        return true;
+      }
+    }
+    return false;
+  }
 
   static create(value: TableCellValue) {
-    const { tableId, rowId, colId, rowspan, colspan, backgroundColor, borderColor, height } = value;
+    const {
+      tableId,
+      rowId,
+      colId,
+      rowspan,
+      colspan,
+      style,
+      // TODO: remove attributes that are not used
+      backgroundColor,
+      borderColor,
+      height,
+    } = value;
     const node = super.create() as HTMLElement;
     node.dataset.tableId = tableId;
     node.dataset.rowId = rowId;
@@ -30,11 +50,12 @@ export class TableCellInnerFormat extends ContainerFormat {
     height && (node.dataset.height = height);
     backgroundColor && (node.dataset.backgroundColor = backgroundColor);
     borderColor && (node.dataset.borderColor = borderColor);
+    style && (node.dataset.style = style);
     return node;
   }
 
   static formats(domNode: HTMLElement) {
-    const { tableId, rowId, colId, rowspan, colspan, backgroundColor, borderColor, height } = domNode.dataset;
+    const { tableId, rowId, colId, rowspan, colspan, style } = domNode.dataset;
     const value: Record<string, any> = {
       tableId,
       rowId,
@@ -42,27 +63,32 @@ export class TableCellInnerFormat extends ContainerFormat {
       rowspan: Number(getValidCellspan(rowspan)),
       colspan: Number(getValidCellspan(colspan)),
     };
-    height && (value.height = height);
-    backgroundColor && (value.backgroundColor = backgroundColor);
-    borderColor && (value.borderColor = borderColor);
+    style && (value.style = style);
     return value;
   }
 
-  declare parent: TableCellFormat;
-
-  allowDataAttrs: Set<string> = new Set(allowAttrs);
-  setFormatValue(name: string, value: any) {
-    if (!this.allowDataAttrs.has(name)) return;
-    const attrName = `data-${name}`;
-    if (value) {
-      this.domNode.setAttribute(attrName, value);
+  setFormatValue(name: string, value: any, isStyle: boolean = false) {
+    if (isStyle) {
+      if (!this.statics.isAllowStyle(name)) return;
+      if (this.parent) {
+        this.parent.setFormatValue(name, value);
+        this.domNode.dataset.style = this.parent.domNode.style.cssText;
+      }
     }
     else {
-      this.domNode.removeAttribute(attrName);
+      if (!this.statics.allowDataAttrs.has(name)) return;
+      const attrName = `data-${name}`;
+      if (value) {
+        this.domNode.setAttribute(attrName, value);
+      }
+      else {
+        this.domNode.removeAttribute(attrName);
+      }
+      if (this.parent) {
+        this.parent.setFormatValue(name, value);
+      }
     }
-    if (this.parent) {
-      this.parent.setFormatValue(name, value);
-    }
+
     const blocks = this.descendants(Block, 0);
     for (const child of blocks) {
       (child as TypeBlock).cache = {};
@@ -105,26 +131,6 @@ export class TableCellInnerFormat extends ContainerFormat {
     this.setFormatValue('colspan', value);
   }
 
-  get backgroundColor() {
-    return this.domNode.dataset.backgroundColor || '';
-  }
-
-  set backgroundColor(value: string | null) {
-    this.setFormatValue('background-color', value);
-  }
-
-  get height() {
-    return this.domNode.dataset.height || '';
-  }
-
-  set height(value: string | null) {
-    this.setFormatValue('height', value);
-  }
-
-  get borderColor() {
-    return this.domNode.dataset.borderColor || '';
-  }
-
   getColumnIndex() {
     const table = findParentBlot(this, blotName.tableMain);
     return table.getColIds().indexOf(this.colId);
@@ -140,7 +146,7 @@ export class TableCellInnerFormat extends ContainerFormat {
   }
 
   formats(): Record<string, any> {
-    const value = TableCellInnerFormat.formats(this.domNode);
+    const value = this.statics.formats(this.domNode);
     return {
       [this.statics.blotName]: value,
     };
@@ -161,7 +167,7 @@ export class TableCellInnerFormat extends ContainerFormat {
 
   optimize() {
     const parent = this.parent;
-    const blotValue = TableCellInnerFormat.formats(this.domNode);
+    const blotValue = this.statics.formats(this.domNode);
     // handle BlockEmbed to insert tableCellInner when setContents
     if (this.prev && this.prev instanceof BlockEmbed) {
       const afterBlock = this.scroll.create('block');
@@ -197,8 +203,8 @@ export class TableCellInnerFormat extends ContainerFormat {
   insertBefore(blot: TypeParchment.Blot, ref?: TypeParchment.Blot | null) {
     if (blot.statics.blotName === this.statics.blotName) {
       const cellInnerBlot = blot as TableCellInnerFormat;
-      const cellInnerBlotValue = TableCellInnerFormat.formats(cellInnerBlot.domNode);
-      const selfValue = TableCellInnerFormat.formats(this.domNode);
+      const cellInnerBlotValue = this.statics.formats(cellInnerBlot.domNode);
+      const selfValue = this.statics.formats(this.domNode);
       const isSame = Object.entries(selfValue).every(([key, value]) => value === cellInnerBlotValue[key]);
 
       if (!isSame) {
