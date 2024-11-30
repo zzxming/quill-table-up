@@ -1,8 +1,7 @@
-import type TableUp from '../index';
-import type { TableMainFormat } from '../index';
+import type { TableMainFormat } from '..';
 import Quill from 'quill';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { TableCellInnerFormat, TableSelection } from '../index';
+import TableUp, { TableCellInnerFormat, TableSelection } from '..';
 import { createTable, createTableBodyHTML, createTableHTML, createTaleColHTML, datasetAlign, datasetFull } from './utils';
 
 beforeEach(() => {
@@ -15,7 +14,7 @@ afterEach(() => {
 describe('table undo', () => {
   it('merge all cell undo', async () => {
     const quill = await createTable(3, 3);
-    const tableModule = quill.getModule('tableUp') as TableUp;
+    const tableModule = quill.getModule(TableUp.moduleName) as TableUp;
     const table = quill.root.querySelector('table')!;
     tableModule.tableSelection = new TableSelection(tableModule, table, quill);
     const tds = quill.scroll.descendants(TableCellInnerFormat, 0);
@@ -36,7 +35,7 @@ describe('table undo', () => {
 
   it('merge single column undo', async () => {
     const quill = await createTable(3, 3);
-    const tableModule = quill.getModule('tableUp') as TableUp;
+    const tableModule = quill.getModule(TableUp.moduleName) as TableUp;
     const table = quill.root.querySelector('table')!;
     tableModule.tableSelection = new TableSelection(tableModule, table, quill);
     const tds = quill.scroll.descendants(TableCellInnerFormat, 0);
@@ -57,7 +56,7 @@ describe('table undo', () => {
 
   it('merge last column undo', async () => {
     const quill = await createTable(3, 3);
-    const tableModule = quill.getModule('tableUp') as TableUp;
+    const tableModule = quill.getModule(TableUp.moduleName) as TableUp;
     const table = quill.root.querySelector('table')!;
     tableModule.tableSelection = new TableSelection(tableModule, table, quill);
     const tds = quill.scroll.descendants(TableCellInnerFormat, 0);
@@ -78,7 +77,7 @@ describe('table undo', () => {
 
   it('merge middle column undo', async () => {
     const quill = await createTable(4, 4);
-    const tableModule = quill.getModule('tableUp') as TableUp;
+    const tableModule = quill.getModule(TableUp.moduleName) as TableUp;
     const table = quill.root.querySelector('table')!;
     tableModule.tableSelection = new TableSelection(tableModule, table, quill);
     const tds = quill.scroll.descendants(TableCellInnerFormat, 0);
@@ -99,7 +98,7 @@ describe('table undo', () => {
 
   it('split column undo', async () => {
     const quill = await createTable(3, 3);
-    const tableModule = quill.getModule('tableUp') as TableUp;
+    const tableModule = quill.getModule(TableUp.moduleName) as TableUp;
     const table = quill.root.querySelector('table')!;
     tableModule.tableSelection = new TableSelection(tableModule, table, quill);
     const tds = quill.scroll.descendants(TableCellInnerFormat, 0);
@@ -162,7 +161,7 @@ describe('table undo', () => {
 
   it('split middle column undo', async () => {
     const quill = await createTable(4, 4);
-    const tableModule = quill.getModule('tableUp') as TableUp;
+    const tableModule = quill.getModule(TableUp.moduleName) as TableUp;
     const table = quill.root.querySelector('table')!;
     tableModule.tableSelection = new TableSelection(tableModule, table, quill);
     const tds = quill.scroll.descendants(TableCellInnerFormat, 0);
@@ -240,7 +239,7 @@ describe('table undo', () => {
 
   it('merge single row undo', async () => {
     const quill = await createTable(3, 3);
-    const tableModule = quill.getModule('tableUp') as TableUp;
+    const tableModule = quill.getModule(TableUp.moduleName) as TableUp;
     const table = quill.root.querySelector('table')!;
     tableModule.tableSelection = new TableSelection(tableModule, table, quill);
     const tds = quill.scroll.descendants(TableCellInnerFormat, 0);
@@ -261,7 +260,7 @@ describe('table undo', () => {
 
   it('merge multiple row undo', async () => {
     const quill = await createTable(4, 4);
-    const tableModule = quill.getModule('tableUp') as TableUp;
+    const tableModule = quill.getModule(TableUp.moduleName) as TableUp;
     const table = quill.root.querySelector('table')!;
     tableModule.tableSelection = new TableSelection(tableModule, table, quill);
     const tds = quill.scroll.descendants(TableCellInnerFormat, 0);
@@ -282,7 +281,7 @@ describe('table undo', () => {
 
   it('merge middle row undo', async () => {
     const quill = await createTable(4, 4);
-    const tableModule = quill.getModule('tableUp') as TableUp;
+    const tableModule = quill.getModule(TableUp.moduleName) as TableUp;
     const table = quill.root.querySelector('table')!;
     tableModule.tableSelection = new TableSelection(tableModule, table, quill);
     const tds = quill.scroll.descendants(TableCellInnerFormat, 0);
@@ -303,7 +302,7 @@ describe('table undo', () => {
 
   it('5x5 merge center 3x3 cells undo', async () => {
     const quill = await createTable(5, 5);
-    const tableModule = quill.getModule('tableUp') as TableUp;
+    const tableModule = quill.getModule(TableUp.moduleName) as TableUp;
     const table = quill.root.querySelector('table')!;
     tableModule.tableSelection = new TableSelection(tableModule, table, quill);
     const tds = quill.scroll.descendants(TableCellInnerFormat, 0);
@@ -324,7 +323,7 @@ describe('table undo', () => {
 
   it('4x4 undo split 3x3 at start 1', async () => {
     const quill = await createTable(4, 4);
-    const tableModule = quill.getModule('tableUp') as TableUp;
+    const tableModule = quill.getModule(TableUp.moduleName) as TableUp;
     const table = quill.root.querySelector('table')!;
     tableModule.tableSelection = new TableSelection(tableModule, table, quill);
     const tds = quill.scroll.descendants(TableCellInnerFormat, 0);
@@ -406,7 +405,7 @@ describe('table undo', () => {
 
   it('5x5 undo split 3x3 at end 25 and undo merge 3x3 at end 25', async () => {
     const quill = await createTable(5, 5);
-    const tableModule = quill.getModule('tableUp') as TableUp;
+    const tableModule = quill.getModule(TableUp.moduleName) as TableUp;
     const table = quill.root.querySelector('table')!;
     tableModule.tableSelection = new TableSelection(tableModule, table, quill);
     const tds = quill.scroll.descendants(TableCellInnerFormat, 0);
@@ -503,7 +502,7 @@ describe('table undo', () => {
 
   it('5x5 undo split 4x4 at start 1', async () => {
     const quill = await createTable(5, 5);
-    const tableModule = quill.getModule('tableUp') as TableUp;
+    const tableModule = quill.getModule(TableUp.moduleName) as TableUp;
     const table = quill.root.querySelector('table')!;
     tableModule.tableSelection = new TableSelection(tableModule, table, quill);
     const tds = quill.scroll.descendants(TableCellInnerFormat, 0);
@@ -604,7 +603,7 @@ describe('table undo', () => {
 
   it('5x5 undo insert column right with before empty row at start 1', async () => {
     const quill = await createTable(5, 5);
-    const tableModule = quill.getModule('tableUp') as TableUp;
+    const tableModule = quill.getModule(TableUp.moduleName) as TableUp;
     const table = quill.root.querySelector('table')!;
     tableModule.tableSelection = new TableSelection(tableModule, table, quill);
     const tds = quill.scroll.descendants(TableCellInnerFormat, 0);
@@ -698,7 +697,7 @@ describe('table undo', () => {
 
   it('3x3 undo insert column right at start 1. updateContents insert text between col', async () => {
     const quill = await createTable(3, 3);
-    const tableModule = quill.getModule('tableUp') as TableUp;
+    const tableModule = quill.getModule(TableUp.moduleName) as TableUp;
     const table = quill.root.querySelector('table')!;
     tableModule.tableSelection = new TableSelection(tableModule, table, quill);
     const tds = quill.scroll.descendants(TableCellInnerFormat, 0);
@@ -721,7 +720,7 @@ describe('table undo', () => {
 describe('cell attribute', () => {
   it('undo set bg color', async () => {
     const quill = await createTable(3, 3);
-    const tableModule = quill.getModule('tableUp') as TableUp;
+    const tableModule = quill.getModule(TableUp.moduleName) as TableUp;
     const table = quill.root.querySelector('table')!;
     tableModule.tableSelection = new TableSelection(tableModule, table, quill);
     const tds = quill.scroll.descendants(TableCellInnerFormat, 0);
@@ -767,7 +766,7 @@ describe('cell attribute', () => {
 
   it('undo set border color', async () => {
     const quill = await createTable(3, 3);
-    const tableModule = quill.getModule('tableUp') as TableUp;
+    const tableModule = quill.getModule(TableUp.moduleName) as TableUp;
     const table = quill.root.querySelector('table')!;
     tableModule.tableSelection = new TableSelection(tableModule, table, quill);
     const tds = quill.scroll.descendants(TableCellInnerFormat, 0);
