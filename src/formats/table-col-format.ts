@@ -2,7 +2,7 @@ import type { Parchment as TypeParchment } from 'quill';
 import type { BlockEmbed as TypeBlockEmbed } from 'quill/blots/block';
 import type { TableColValue } from '../utils';
 import Quill from 'quill';
-import { blotName, findParentBlot, findParentBlots } from '../utils';
+import { blotName, findParentBlot, findParentBlots, tableUpSize } from '../utils';
 import { TableCellInnerFormat } from './table-cell-inner-format';
 
 const BlockEmbed = Quill.import('blots/block/embed') as typeof TypeBlockEmbed;
@@ -21,8 +21,22 @@ export class TableColFormat extends BlockEmbed {
     }
     node.dataset.tableId = tableId;
     node.dataset.colId = colId;
-    node.setAttribute('contenteditable', 'false');
     return node;
+  }
+
+  static value(domNode: HTMLElement) {
+    const { tableId, colId } = domNode.dataset;
+    const width = domNode.getAttribute('width') || tableUpSize.colDefaultWidth;
+    const align = domNode.dataset.align;
+    const full = Object.hasOwn(domNode.dataset, 'full');
+    const value: Record<string, any> = {
+      tableId,
+      colId,
+      full,
+    };
+    width && (value.width = Number.parseFloat(width));
+    align && (value.align = align);
+    return value;
   }
 
   constructor(
@@ -33,7 +47,7 @@ export class TableColFormat extends BlockEmbed {
   }
 
   get width(): number {
-    const width = this.domNode.getAttribute('width')!;
+    const width = this.domNode.getAttribute('width') || tableUpSize.colDefaultWidth;
     return Number.parseFloat(width);
   }
 
@@ -65,21 +79,6 @@ export class TableColFormat extends BlockEmbed {
     else {
       this.domNode.removeAttribute('data-align');
     }
-  }
-
-  static value(domNode: HTMLElement) {
-    const { tableId, colId } = domNode.dataset;
-    const width = domNode.getAttribute('width');
-    const align = domNode.dataset.align;
-    const full = Object.hasOwn(domNode.dataset, 'full');
-    const value: Record<string, any> = {
-      tableId,
-      colId,
-      full,
-    };
-    width && (value.width = Number.parseFloat(width));
-    align && (value.align = align);
-    return value;
   }
 
   checkMerge(): boolean {
