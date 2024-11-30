@@ -2231,14 +2231,26 @@
 
   const Block = Quill.import('blots/block');
   const BlockEmbed$1 = Quill.import('blots/block/embed');
-  const allowAttrs = ['table-id', 'row-id', 'col-id', 'rowspan', 'colspan', 'background-color', 'border-color', 'height'];
   class TableCellInnerFormat extends ContainerFormat {
       static blotName = blotName.tableCellInner;
       static tagName = 'div';
       static className = 'ql-table-cell-inner';
+      static allowDataAttrs = new Set(['table-id', 'row-id', 'col-id', 'rowspan', 'colspan']);
       static defaultChild = Block;
+      // keep `isAllowStyle` and `allowStyle` same with TableCellFormat
+      static allowStyle = new Set(['background-color', 'border', 'height']);
+      static isAllowStyle(str) {
+          for (const style of this.allowStyle) {
+              if (str.startsWith(style)) {
+                  return true;
+              }
+          }
+          return false;
+      }
       static create(value) {
-          const { tableId, rowId, colId, rowspan, colspan, backgroundColor, borderColor, height } = value;
+          const { tableId, rowId, colId, rowspan, colspan, style, 
+          // TODO: remove attributes that are not used
+          backgroundColor, borderColor, height, } = value;
           const node = super.create();
           node.dataset.tableId = tableId;
           node.dataset.rowId = rowId;
@@ -2248,10 +2260,11 @@
           height && (node.dataset.height = height);
           backgroundColor && (node.dataset.backgroundColor = backgroundColor);
           borderColor && (node.dataset.borderColor = borderColor);
+          style && (node.dataset.style = style);
           return node;
       }
       static formats(domNode) {
-          const { tableId, rowId, colId, rowspan, colspan, backgroundColor, borderColor, height } = domNode.dataset;
+          const { tableId, rowId, colId, rowspan, colspan, style } = domNode.dataset;
           const value = {
               tableId,
               rowId,
@@ -2259,24 +2272,31 @@
               rowspan: Number(getValidCellspan(rowspan)),
               colspan: Number(getValidCellspan(colspan)),
           };
-          height && (value.height = height);
-          backgroundColor && (value.backgroundColor = backgroundColor);
-          borderColor && (value.borderColor = borderColor);
+          style && (value.style = style);
           return value;
       }
-      allowDataAttrs = new Set(allowAttrs);
-      setFormatValue(name, value) {
-          if (!this.allowDataAttrs.has(name))
-              return;
-          const attrName = `data-${name}`;
-          if (value) {
-              this.domNode.setAttribute(attrName, value);
+      setFormatValue(name, value, isStyle = false) {
+          if (isStyle) {
+              if (!this.statics.isAllowStyle(name))
+                  return;
+              if (this.parent) {
+                  this.parent.setFormatValue(name, value);
+                  this.domNode.dataset.style = this.parent.domNode.style.cssText;
+              }
           }
           else {
-              this.domNode.removeAttribute(attrName);
-          }
-          if (this.parent) {
-              this.parent.setFormatValue(name, value);
+              if (!this.statics.allowDataAttrs.has(name))
+                  return;
+              const attrName = `data-${name}`;
+              if (value) {
+                  this.domNode.setAttribute(attrName, value);
+              }
+              else {
+                  this.domNode.removeAttribute(attrName);
+              }
+              if (this.parent) {
+                  this.parent.setFormatValue(name, value);
+              }
           }
           const blocks = this.descendants(Block, 0);
           for (const child of blocks) {
@@ -2310,21 +2330,6 @@
       set colspan(value) {
           this.setFormatValue('colspan', value);
       }
-      get backgroundColor() {
-          return this.domNode.dataset.backgroundColor || '';
-      }
-      set backgroundColor(value) {
-          this.setFormatValue('background-color', value);
-      }
-      get height() {
-          return this.domNode.dataset.height || '';
-      }
-      set height(value) {
-          this.setFormatValue('height', value);
-      }
-      get borderColor() {
-          return this.domNode.dataset.borderColor || '';
-      }
       getColumnIndex() {
           const table = findParentBlot(this, blotName.tableMain);
           return table.getColIds().indexOf(this.colId);
@@ -2338,7 +2343,7 @@
           super.formatAt(index, length, name, value);
       }
       formats() {
-          const value = TableCellInnerFormat.formats(this.domNode);
+          const value = this.statics.formats(this.domNode);
           return {
               [this.statics.blotName]: value,
           };
@@ -2355,7 +2360,7 @@
       }
       optimize() {
           const parent = this.parent;
-          const blotValue = TableCellInnerFormat.formats(this.domNode);
+          const blotValue = this.statics.formats(this.domNode);
           // handle BlockEmbed to insert tableCellInner when setContents
           if (this.prev && this.prev instanceof BlockEmbed$1) {
               const afterBlock = this.scroll.create('block');
@@ -2389,8 +2394,8 @@
       insertBefore(blot, ref) {
           if (blot.statics.blotName === this.statics.blotName) {
               const cellInnerBlot = blot;
-              const cellInnerBlotValue = TableCellInnerFormat.formats(cellInnerBlot.domNode);
-              const selfValue = TableCellInnerFormat.formats(this.domNode);
+              const cellInnerBlotValue = this.statics.formats(cellInnerBlot.domNode);
+              const selfValue = this.statics.formats(this.domNode);
               const isSame = Object.entries(selfValue).every(([key, value]) => value === cellInnerBlotValue[key]);
               if (!isSame) {
                   const [selfRow, selfCell] = findParentBlots(this, [blotName.tableRow, blotName.tableCell]);
@@ -2456,7 +2461,7 @@
       }
       setHeight(value) {
           this.foreachCellInner((cellInner) => {
-              cellInner.height = value;
+              cellInner.setFormatValue('height', value, true);
           });
       }
       // insert cell at index
@@ -2653,17 +2658,32 @@
       static blotName = blotName.tableCell;
       static tagName = 'td';
       static className = 'ql-table-cell';
+      static allowDataAttrs = new Set(['table-id', 'row-id', 'col-id']);
+      static allowAttrs = new Set(['rowspan', 'colspan']);
+      // keep `isAllowStyle` and `allowStyle` same with TableCellInnerFormat
+      static allowStyle = new Set(['background-color', 'border', 'height']);
+      static isAllowStyle(str) {
+          for (const style of this.allowStyle) {
+              if (str.startsWith(style)) {
+                  return true;
+              }
+          }
+          return false;
+      }
       static create(value) {
-          const { tableId, rowId, colId, rowspan, colspan, backgroundColor, borderColor, height } = value;
+          const { tableId, rowId, colId, rowspan, colspan, style, 
+          // TODO: remove attributes that are not used
+          backgroundColor, borderColor, height, } = value;
           const node = super.create();
           node.dataset.tableId = tableId;
           node.dataset.rowId = rowId;
           node.dataset.colId = colId;
           node.setAttribute('rowspan', String(getValidCellspan(rowspan)));
           node.setAttribute('colspan', String(getValidCellspan(colspan)));
-          height && (node.style.height = height);
           backgroundColor && (node.style.backgroundColor = backgroundColor);
           borderColor && (node.style.borderColor = borderColor);
+          style && (node.style.cssText = style);
+          height && (node.style.height = height);
           return node;
       }
       static formats(domNode) {
@@ -2677,19 +2697,24 @@
               rowspan: getValidCellspan(rowspan),
               colspan: getValidCellspan(colspan),
           };
-          const { height, backgroundColor, borderColor } = domNode.style;
-          height && (value.height = height);
-          backgroundColor && (value.backgroundColor = backgroundColor);
-          borderColor && (value.borderColor = borderColor);
+          const inlineStyles = {};
+          for (let i = 0; i < domNode.style.length; i++) {
+              const property = domNode.style[i];
+              const value = domNode.style[property];
+              if (this.isAllowStyle(String(property)) && !['initial', 'inherit'].includes(value)) {
+                  inlineStyles[property] = value;
+              }
+          }
+          const entries = Object.entries(inlineStyles);
+          if (entries.length > 0) {
+              value.style = entries.map(([key, value]) => `${key}:${value}`).join(';');
+          }
           return value;
       }
-      allowDataAttrs = new Set(['table-id', 'row-id', 'col-id']);
-      allowAttrs = new Set(['rowspan', 'colspan']);
-      allowStyle = new Set(['background-color', 'border-color', 'height']);
       setFormatValue(name, value) {
-          if (this.allowAttrs.has(name) || this.allowDataAttrs.has(name)) {
+          if (this.statics.allowAttrs.has(name) || this.statics.allowDataAttrs.has(name)) {
               let attrName = name;
-              if (this.allowDataAttrs.has(name)) {
+              if (this.statics.allowDataAttrs.has(name)) {
                   attrName = `data-${name}`;
               }
               if (value) {
@@ -2699,7 +2724,7 @@
                   this.domNode.removeAttribute(attrName);
               }
           }
-          else if (this.allowStyle.has(name)) {
+          else if (this.statics.isAllowStyle(name)) {
               Object.assign(this.domNode.style, {
                   [name]: value,
               });
@@ -2720,14 +2745,8 @@
       get colspan() {
           return Number(this.domNode.getAttribute('colspan'));
       }
-      get backgroundColor() {
-          return this.domNode.dataset.backgroundColor || '';
-      }
-      get height() {
-          return this.domNode.style.height;
-      }
       getCellInner() {
-          return this.descendants(TableCellInnerFormat)[0];
+          return this.children.head;
       }
       checkMerge() {
           const { colId, rowId, colspan, rowspan } = this;
@@ -2826,7 +2845,7 @@
       optimize(context) {
           const parent = this.parent;
           if (parent != null && parent.statics.blotName !== blotName.tableColgroup) {
-              const value = TableColFormat.value(this.domNode);
+              const value = this.statics.value(this.domNode);
               this.wrap(blotName.tableColgroup, value);
           }
           const tableColgroup = findParentBlot(this, blotName.tableColgroup);
@@ -3351,7 +3370,7 @@
           tip: 'Set background color',
           key: 'background-color',
           handle: (tableModule, selectedTds, color) => {
-              tableModule.setCellAttrs(selectedTds, 'background-color', color);
+              tableModule.setCellAttrs(selectedTds, 'background-color', color, true);
           },
       },
       {
@@ -3361,7 +3380,7 @@
           tip: 'Set border color',
           key: 'border-color',
           handle: (tableModule, selectedTds, color) => {
-              tableModule.setCellAttrs(selectedTds, 'border-color', color);
+              tableModule.setCellAttrs(selectedTds, 'border-color', color, true);
           },
       },
   ];
@@ -3564,7 +3583,7 @@
               const color = item.style.backgroundColor;
               const selectedTds = this.getSelectedTds();
               if (item && color && selectedTds.length > 0) {
-                  this.tableModule.setCellAttrs(selectedTds, key, color);
+                  this.tableModule.setCellAttrs(selectedTds, key, color, true);
                   if (item.closest(`.${colorClassName.item}`))
                       return;
                   this.updateUsedColor(color);
@@ -5183,9 +5202,11 @@
               cellCount = 0;
               for (const op of delta.ops) {
                   if (op.attributes && op.attributes.background
-                      && op.attributes[blotName.tableCellInner]
-                      && !op.attributes[blotName.tableCellInner].backgroundColor) {
-                      op.attributes[blotName.tableCellInner].backgroundColor = op.attributes.background;
+                      && op.attributes[blotName.tableCellInner]) {
+                      const cellAttrs = op.attributes[blotName.tableCellInner];
+                      if (!cellAttrs.style)
+                          cellAttrs.style = '';
+                      op.attributes[blotName.tableCellInner].style = `background:${op.attributes.background};${cellAttrs.style}`;
                   }
               }
               return delta;
@@ -5429,11 +5450,11 @@
               });
           });
       }
-      setCellAttrs(selectedTds, attr, value) {
+      setCellAttrs(selectedTds, attr, value, isStyle = false) {
           if (selectedTds.length === 0)
               return;
           for (const td of selectedTds) {
-              td.setFormatValue(attr, value);
+              td.setFormatValue(attr, value, isStyle);
           }
       }
       deleteTable() {
@@ -5794,7 +5815,6 @@
   exports.TableUp = TableUp;
   exports.TableVitrualScroll = TableVitrualScroll;
   exports.TableWrapperFormat = TableWrapperFormat;
-  exports.allowAttrs = allowAttrs;
   exports.blotName = blotName;
   exports.default = TableUp;
   exports.findParentBlot = findParentBlot;
