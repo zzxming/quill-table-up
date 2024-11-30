@@ -5020,7 +5020,19 @@
                   if (this.picker) {
                       this.picker.label.innerHTML = this.options.icon;
                       this.buildCustomSelect(this.options.customSelect);
-                      this.picker.label.addEventListener('mousedown', this.handleInViewport);
+                      this.picker.label.addEventListener('mousedown', () => {
+                          if (!this.selector || !this.picker)
+                              return;
+                          const selectRect = this.selector.getBoundingClientRect();
+                          const { leftLimited } = limitDomInViewPort(selectRect);
+                          if (leftLimited) {
+                              const labelRect = this.picker.label.getBoundingClientRect();
+                              Object.assign(this.picker.options.style, { transform: `translateX(calc(-100% + ${labelRect.width}px))` });
+                          }
+                          else {
+                              Object.assign(this.picker.options.style, { transform: undefined });
+                          }
+                      });
                   }
               }
           }
@@ -5295,18 +5307,6 @@
           this.picker.options.appendChild(dom);
       }
       ;
-      handleInViewport = () => {
-          if (!this.selector || !this.picker)
-              return;
-          const selectRect = this.selector.getBoundingClientRect();
-          if (selectRect.right >= window.innerWidth) {
-              const labelRect = this.picker.label.getBoundingClientRect();
-              Object.assign(this.picker.options.style, { transform: `translateX(calc(-100% + ${labelRect.width}px))` });
-          }
-          else {
-              Object.assign(this.picker.options.style, { transform: undefined });
-          }
-      };
       insertTable(rows, columns) {
           if (rows >= 30 || columns >= 30) {
               throw new Error('Both rows and columns must be less than 30.');
