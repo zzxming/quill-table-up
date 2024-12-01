@@ -55,8 +55,17 @@ export class TableColFormat extends BlockEmbed {
   }
 
   get width(): number {
-    const width = this.domNode.getAttribute('width') || tableUpSize.colDefaultWidth;
-    return Number.parseFloat(width);
+    let width: number | string | null = this.domNode.getAttribute('width');
+    if (!width) {
+      width = this.domNode.getBoundingClientRect().width;
+      if (this.full) {
+        const table = this.domNode.closest('table');
+        if (!table) return tableUpSize[this.full ? 'colMinWidthPre' : 'colMinWidthPx'];
+        return width / 100 * table.getBoundingClientRect().width;
+      }
+      return width;
+    }
+    return Number.parseFloat(String(width));
   }
 
   set width(value: string | number) {
