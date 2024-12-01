@@ -11,10 +11,18 @@ export class TableColFormat extends BlockEmbed {
   static blotName = blotName.tableCol;
   static tagName = 'col';
 
+  static validWidth(width: string | number, full: boolean) {
+    let widthNumber = Number.parseFloat(String(width));
+    if (Number.isNaN(widthNumber)) {
+      widthNumber = tableUpSize[full ? 'colMinWidthPre' : 'colMinWidthPx'];
+    }
+    return `${widthNumber}${full ? '%' : 'px'}`;
+  }
+
   static create(value: TableColValue) {
     const { width, tableId, colId, full, align } = value;
     const node = super.create() as HTMLElement;
-    node.setAttribute('width', `${Number.parseFloat(width)}${full ? '%' : 'px'}`);
+    node.setAttribute('width', this.validWidth(width, !!full));
     full && (node.dataset.full = String(full));
     if (align && align !== 'left') {
       node.dataset.align = align;
@@ -52,8 +60,11 @@ export class TableColFormat extends BlockEmbed {
   }
 
   set width(value: string | number) {
-    const width = Number.parseFloat(value as string);
-    this.domNode.setAttribute('width', `${width}${this.full ? '%' : 'px'}`);
+    let width = Number.parseFloat(String(value));
+    if (Number.isNaN(width)) {
+      width = tableUpSize[this.full ? 'colMinWidthPre' : 'colMinWidthPx'];
+    }
+    this.domNode.setAttribute('width', this.statics.validWidth(width, !!this.full));
   }
 
   get tableId() {
