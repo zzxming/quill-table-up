@@ -1,10 +1,10 @@
 import type Quill from 'quill';
 import type { TableUp } from '../..';
-import type { TableMenuOptions, TableMenuTexts, ToolOption, TooltipInstance } from '../../utils';
+import type { TableMenuOptions, ToolOption, TooltipInstance } from '../../utils';
 import { createTooltip, debounce, defaultColorMap, isArray, isFunction, randomId } from '../../utils';
 import { colorClassName, defaultTools, menuColorSelectClassName, usedColors } from './constants';
 
-export type TableMenuOptionsInput = Partial<Omit<TableMenuOptions, 'texts'> & { texts?: Partial<TableMenuTexts> }>;
+export type TableMenuOptionsInput = Partial<Omit<TableMenuOptions, 'texts'>>;
 export class TableMenuCommon {
   options: TableMenuOptions;
   menu: HTMLElement | null = null;
@@ -60,17 +60,8 @@ export class TableMenuCommon {
       localstorageKey: '__table-bg-used-color',
       defaultColorMap,
     }, options);
-    value.texts = Object.assign(this.resolveTexts(options.texts), options.texts);
     return value as TableMenuOptions;
   };
-
-  resolveTexts(texts: Partial<TableMenuTexts> = {}) {
-    return Object.assign({
-      custom: 'Custom',
-      clear: 'Clear',
-      transparent: 'Transparent',
-    }, texts);
-  }
 
   getUsedColors() {
     return usedColors;
@@ -152,20 +143,20 @@ export class TableMenuCommon {
     });
     const transparentColor = document.createElement('div');
     transparentColor.classList.add(colorClassName.btn, 'table-color-transparent');
-    transparentColor.textContent = this.options.texts.transparent;
+    transparentColor.textContent = this.tableModule.options.texts.transparent;
     transparentColor.addEventListener('click', () => {
       handle(this.tableModule, this.getSelectedTds(), 'transparent');
     });
     const clearColor = document.createElement('div');
     clearColor.classList.add(colorClassName.btn, 'table-color-clear');
-    clearColor.textContent = this.options.texts.clear;
+    clearColor.textContent = this.tableModule.options.texts.clear;
     clearColor.addEventListener('click', () => {
       handle(this.tableModule, this.getSelectedTds(), null);
     });
     const label = document.createElement('label');
     label.classList.add(colorClassName.btn, 'table-color-custom');
     const customColor = document.createElement('span');
-    customColor.textContent = this.options.texts.custom;
+    customColor.textContent = this.tableModule.options.texts.custom;
     const input = document.createElement('input');
     input.type = 'color';
     Object.assign(input.style, {

@@ -73,6 +73,9 @@ const defaultTexts = {
   rowText: 'Row',
   colText: 'Column',
   notPositiveNumberError: 'Please enter a positive integer',
+  custom: 'Custom',
+  clear: 'Clear',
+  transparent: 'Transparent',
 };
 ```
 
@@ -95,7 +98,6 @@ const defaultTexts = {
 | localstorageKey | used color save localstorage key                                                                                                                                                      | `string`                 | `__table-bg-used-color` |
 | tools           | menu items                                                                                                                                                                            | `Tool[]`                 | `defaultTools`          |
 | defaultColorMap | color map                                                                                                                                                                             | `string[][]`             | in source code          |
-| texts           | the text that menu needs                                                                                                                                                              | `TableMenuTexts`         | `defaultTexts`          |
 
 <details>
   <summary> types and default value </summary>
@@ -195,16 +197,6 @@ const defaultTools = [
     handle: (tableModule, selectedTds, color) => {},
   },
 ];
-interface TableMenuTexts {
-  custom: string;
-  clear: string;
-  transparent: string;
-}
-const defaultTexts = {
-  custom: 'Custom',
-  clear: 'Clear',
-  transparent: 'Transparent',
-};
 ```
 
 </details>

@@ -13,31 +13,30 @@ export interface ToolOptionBreak {
 }
 export type Tool = ToolOption | ToolOptionBreak;
 
-export interface TableMenuTexts {
-  custom: string;
-  clear: string;
-  transparent: string;
-}
 export interface TableMenuOptions {
   tipText: boolean;
   tipTexts: Record<string, string>;
   tools: Tool[];
   localstorageKey: string;
   defaultColorMap: string[];
-  texts: TableMenuTexts;
 };
 export interface TableSelectionOptions {
   selectColor: string;
   tableMenuClass: Constructor<TableMenuCommon>;
   tableMenu: TableMenuOptions;
 }
-export interface TableTextOptions {
-  customBtnText?: string;
-  confirmText?: string;
-  cancelText?: string;
-  rowText?: string;
-  colText?: string;
-  notPositiveNumberError?: string;
+export interface TableCreatorTextOptions {
+  customBtnText: string;
+  confirmText: string;
+  cancelText: string;
+  rowText: string;
+  colText: string;
+  notPositiveNumberError: string;
+};
+export interface TableTextOptions extends TableCreatorTextOptions {
+  custom: string;
+  clear: string;
+  transparent: string;
 }
 export interface TableResizeBoxOptions {
   size: number;

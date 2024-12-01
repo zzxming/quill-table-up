@@ -35,7 +35,6 @@ const createCell = (scroll: TypeParchment.ScrollBlot, { tableId, rowId, colId }:
 
   return tableCell;
 };
-
 const getCellWidth = (cell: HTMLElement): number => {
   let width = Number.parseFloat(cell.getAttribute('width') || tableUpSize.colDefaultWidth);
   if (Number.isNaN(width)) {
@@ -371,6 +370,9 @@ export class TableUp {
       rowText: 'Row',
       colText: 'Column',
       notPositiveNumberError: 'Please enter a positive integer',
+      custom: 'Custom',
+      clear: 'Clear',
+      transparent: 'Transparent',
     }, options);
   };
 
