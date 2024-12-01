@@ -7,6 +7,7 @@ import {
   offset,
   shift,
 } from '@floating-ui/dom';
+import { isString } from './is';
 import { handleIfTransitionend } from './utils';
 
 interface InputOptions {
@@ -119,7 +120,24 @@ export const createDialog = ({ child, target = document.body, beforeClose = () =
 
   return { dialog, close };
 };
-
+interface ButtonOptions {
+  type: 'confirm' | 'default';
+  content: HTMLElement | string;
+};
+export const createButton = (options?: Partial<ButtonOptions>) => {
+  const { type = 'default', content } = options || {};
+  const btn = document.createElement('button');
+  btn.classList.add('table-up-btn', type);
+  if (content) {
+    if (isString(content)) {
+      btn.textContent = content;
+    }
+    else {
+      btn.appendChild(content);
+    }
+  }
+  return btn;
+};
 interface TableCreatorOptions extends Omit<TableTextOptions, 'customBtn'> {
   row?: number;
   col?: number;
@@ -148,13 +166,8 @@ export const showTableCreator = async (options: TableCreatorOptions = {}) => {
   const control = document.createElement('div');
   control.classList.add('table-creator__control');
 
-  const confirmBtn = document.createElement('button');
-  confirmBtn.classList.add('table-creator__btn', 'confirm');
-  confirmBtn.textContent = options.confirmText || 'Confirm';
-
-  const cancelBtn = document.createElement('button');
-  cancelBtn.classList.add('table-creator__btn', 'cancel');
-  cancelBtn.textContent = options.cancelText || 'Cancel';
+  const confirmBtn = createButton({ type: 'confirm', content: options.confirmText || 'Confirm' });
+  const cancelBtn = createButton({ type: 'default', content: options.cancelText || 'Cancel' });
 
   control.appendChild(confirmBtn);
   control.appendChild(cancelBtn);
