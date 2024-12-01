@@ -32,7 +32,8 @@ export class TableResizeCommon {
     const w = Number.parseInt(this.dragColBreak.dataset.w || '0');
     const isFull = this.tableMain.full;
     if (isFull) {
-      let pre = (w / this.tableMain.domNode.getBoundingClientRect().width) * 100;
+      const tableMainWidth = this.tableMain.domNode.getBoundingClientRect().width;
+      let pre = (w / tableMainWidth) * 100;
       const oldWidthPre = cols[this.colIndex].width;
       if (pre < oldWidthPre) {
         // minus
@@ -44,13 +45,13 @@ export class TableResizeCommon {
           const changeTableCol = cols[i];
           const resultWidth = changeTableCol.width + oldWidthPre - pre;
           changeTableCol.width = `${resultWidth}%`;
-          this.colWidthChange(i, resultWidth, isFull);
+          this.colWidthChange(i, resultWidth / 100 * tableMainWidth, isFull);
         }
         else {
           pre = 100;
         }
         cols[this.colIndex].width = `${pre}%`;
-        this.colWidthChange(this.colIndex, pre, isFull);
+        this.colWidthChange(this.colIndex, pre / 100 * tableMainWidth, isFull);
       }
       else {
         // magnify col
@@ -59,9 +60,9 @@ export class TableResizeCommon {
           const totalWidthNextPre = oldWidthPre + cols[this.colIndex + 1].width;
           pre = Math.min(totalWidthNextPre - tableUpSize.colMinWidthPre, pre);
           cols[this.colIndex].width = `${pre}%`;
-          this.colWidthChange(this.colIndex, pre, isFull);
+          this.colWidthChange(this.colIndex, pre / 100 * tableMainWidth, isFull);
           cols[this.colIndex + 1].width = `${totalWidthNextPre - pre}%`;
-          this.colWidthChange(this.colIndex + 1, totalWidthNextPre - pre, isFull);
+          this.colWidthChange(this.colIndex + 1, (totalWidthNextPre - pre) / 100 * tableMainWidth, isFull);
         }
       }
     }

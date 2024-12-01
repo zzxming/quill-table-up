@@ -82,9 +82,9 @@ export class TableResizeBox extends TableResizeCommon {
     return Array.from(this.root.getElementsByClassName('ql-table-col-separator')).indexOf(e.target as HTMLElement);
   }
 
-  colWidthChange(i: number, w: number, isFull: boolean) {
+  colWidthChange(i: number, w: number, _isFull: boolean) {
     const tableColHeads = Array.from(this.root.getElementsByClassName('ql-table-col-header')) as HTMLElement[];
-    tableColHeads[i].style.width = `${w}${isFull ? '%' : 'px'}`;
+    tableColHeads[i].style.width = `${w}px`;
   }
 
   handleColMouseDownFunc = function (this: TableResizeBox, e: MouseEvent) {
@@ -221,11 +221,8 @@ export class TableResizeBox extends TableResizeCommon {
     if (this.tableCols.length > 0) {
       let colHeadStr = '';
       for (const col of this.tableCols) {
-        let width = col.width + (this.tableMain.full ? '%' : 'px');
-        if (!col.width) {
-          width = `${col.domNode.getBoundingClientRect().width}px`;
-        }
-        colHeadStr += `<div class="ql-table-col-header" style="width: ${width}">
+        const width = col.domNode.getBoundingClientRect().width;
+        colHeadStr += `<div class="ql-table-col-header" style="width: ${width}px">
           <div class="ql-table-col-separator" style="height: ${tableMainRect.height + this.options.size - 3}px"></div>
         </div>`;
       }
