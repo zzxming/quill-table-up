@@ -2,7 +2,7 @@ import type { Parchment as TypeParchment } from 'quill';
 import type { BlockEmbed as TypeBlockEmbed } from 'quill/blots/block';
 import type { TableColValue } from '../utils';
 import Quill from 'quill';
-import { blotName, findParentBlot, findParentBlots } from '../utils';
+import { blotName, findParentBlot, findParentBlots, tableUpSize } from '../utils';
 import { TableCellInnerFormat } from './table-cell-inner-format';
 
 const BlockEmbed = Quill.import('blots/block/embed') as typeof TypeBlockEmbed;
@@ -11,18 +11,40 @@ export class TableColFormat extends BlockEmbed {
   static blotName = blotName.tableCol;
   static tagName = 'col';
 
+  static validWidth(width: string | number, full: boolean) {
+    let widthNumber = Number.parseFloat(String(width));
+    if (Number.isNaN(widthNumber)) {
+      widthNumber = tableUpSize[full ? 'colMinWidthPre' : 'colMinWidthPx'];
+    }
+    return `${widthNumber}${full ? '%' : 'px'}`;
+  }
+
   static create(value: TableColValue) {
     const { width, tableId, colId, full, align } = value;
     const node = super.create() as HTMLElement;
-    node.setAttribute('width', `${Number.parseFloat(width)}${full ? '%' : 'px'}`);
+    node.setAttribute('width', this.validWidth(width, !!full));
     full && (node.dataset.full = String(full));
     if (align && align !== 'left') {
       node.dataset.align = align;
     }
     node.dataset.tableId = tableId;
     node.dataset.colId = colId;
-    node.setAttribute('contenteditable', 'false');
     return node;
+  }
+
+  static value(domNode: HTMLElement) {
+    const { tableId, colId } = domNode.dataset;
+    const width = domNode.getAttribute('width') || tableUpSize.colDefaultWidth;
+    const align = domNode.dataset.align;
+    const full = Object.hasOwn(domNode.dataset, 'full');
+    const value: Record<string, any> = {
+      tableId,
+      colId,
+      full,
+    };
+    width && (value.width = Number.parseFloat(width));
+    align && (value.align = align);
+    return value;
   }
 
   constructor(
@@ -33,13 +55,25 @@ export class TableColFormat extends BlockEmbed {
   }
 
   get width(): number {
-    const width = this.domNode.getAttribute('width')!;
-    return Number.parseFloat(width);
+    let width: number | string | null = this.domNode.getAttribute('width');
+    if (!width) {
+      width = this.domNode.getBoundingClientRect().width;
+      if (this.full) {
+        const table = this.domNode.closest('table');
+        if (!table) return tableUpSize[this.full ? 'colMinWidthPre' : 'colMinWidthPx'];
+        return width / 100 * table.getBoundingClientRect().width;
+      }
+      return width;
+    }
+    return Number.parseFloat(String(width));
   }
 
   set width(value: string | number) {
-    const width = Number.parseFloat(value as string);
-    this.domNode.setAttribute('width', `${width}${this.full ? '%' : 'px'}`);
+    let width = Number.parseFloat(String(value));
+    if (Number.isNaN(width)) {
+      width = tableUpSize[this.full ? 'colMinWidthPre' : 'colMinWidthPx'];
+    }
+    this.domNode.setAttribute('width', this.statics.validWidth(width, !!this.full));
   }
 
   get tableId() {
@@ -65,21 +99,6 @@ export class TableColFormat extends BlockEmbed {
     else {
       this.domNode.removeAttribute('data-align');
     }
-  }
-
-  static value(domNode: HTMLElement) {
-    const { tableId, colId } = domNode.dataset;
-    const width = domNode.getAttribute('width');
-    const align = domNode.dataset.align;
-    const full = Object.hasOwn(domNode.dataset, 'full');
-    const value: Record<string, any> = {
-      tableId,
-      colId,
-      full,
-    };
-    width && (value.width = Number.parseFloat(width));
-    align && (value.align = align);
-    return value;
   }
 
   checkMerge(): boolean {

@@ -1,11 +1,11 @@
 import type Quill from 'quill';
 import type TableUp from '../..';
-import type { TableMenuOptions, TableMenuTexts } from '../../utils';
+import type { TableMenuOptions } from '../../utils';
 import { limitDomInViewPort } from '../../utils';
 import { contextmenuClassName, menuColorSelectClassName } from './constants';
 import { TableMenuCommon } from './table-menu-common';
 
-type TableMenuOptionsInput = Partial<Omit<TableMenuOptions, 'texts'> & { texts?: Partial<TableMenuTexts> }>;
+type TableMenuOptionsInput = Partial<Omit<TableMenuOptions, 'texts'>>;
 export class TableMenuContextmenu extends TableMenuCommon {
   constructor(public tableModule: TableUp, public quill: Quill, options: TableMenuOptionsInput) {
     super(tableModule, quill, options);

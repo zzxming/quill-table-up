@@ -1,4 +1,4 @@
-import type { TableTextOptions } from './types';
+import type { TableCreatorTextOptions } from './types';
 import {
   autoUpdate,
   computePosition,
@@ -7,6 +7,7 @@ import {
   offset,
   shift,
 } from '@floating-ui/dom';
+import { isString } from './is';
 import { handleIfTransitionend } from './utils';
 
 interface InputOptions {
@@ -119,12 +120,29 @@ export const createDialog = ({ child, target = document.body, beforeClose = () =
 
   return { dialog, close };
 };
-
-interface TableCreatorOptions extends Omit<TableTextOptions, 'customBtn'> {
-  row?: number;
-  col?: number;
+interface ButtonOptions {
+  type: 'confirm' | 'default';
+  content: HTMLElement | string;
+};
+export const createButton = (options?: Partial<ButtonOptions>) => {
+  const { type = 'default', content } = options || {};
+  const btn = document.createElement('button');
+  btn.classList.add('table-up-btn', type);
+  if (content) {
+    if (isString(content)) {
+      btn.textContent = content;
+    }
+    else {
+      btn.appendChild(content);
+    }
+  }
+  return btn;
+};
+interface TableCreatorOptions extends Omit<TableCreatorTextOptions, 'customBtnText'> {
+  row: number;
+  col: number;
 }
-export const showTableCreator = async (options: TableCreatorOptions = {}) => {
+export const showTableCreator = async (options: Partial<TableCreatorOptions> = {}) => {
   const box = document.createElement('div');
   box.classList.add('table-creator');
   const inputContent = document.createElement('div');
@@ -134,12 +152,12 @@ export const showTableCreator = async (options: TableCreatorOptions = {}) => {
     item: rowItem,
     input: rowInput,
     errorTip: rowErrorTip,
-  } = createInputItem(options.rowText || '行数', { type: 'number', value: String(options.row || ''), max: 99 });
+  } = createInputItem(options.rowText || 'Row', { type: 'number', value: String(options.row || ''), max: 99 });
   const {
     item: colItem,
     input: colInput,
     errorTip: colErrorTip,
-  } = createInputItem(options.colText || '列数', { type: 'number', value: String(options.col || ''), max: 99 });
+  } = createInputItem(options.colText || 'Column', { type: 'number', value: String(options.col || ''), max: 99 });
 
   inputContent.appendChild(rowItem);
   inputContent.appendChild(colItem);
@@ -148,13 +166,8 @@ export const showTableCreator = async (options: TableCreatorOptions = {}) => {
   const control = document.createElement('div');
   control.classList.add('table-creator__control');
 
-  const confirmBtn = document.createElement('button');
-  confirmBtn.classList.add('table-creator__btn', 'confirm');
-  confirmBtn.textContent = options.confirmText || 'Confirm';
-
-  const cancelBtn = document.createElement('button');
-  cancelBtn.classList.add('table-creator__btn', 'cancel');
-  cancelBtn.textContent = options.cancelText || 'Cancel';
+  const confirmBtn = createButton({ type: 'confirm', content: options.confirmText || 'Confirm' });
+  const cancelBtn = createButton({ type: 'default', content: options.cancelText || 'Cancel' });
 
   control.appendChild(confirmBtn);
   control.appendChild(cancelBtn);
@@ -162,11 +175,11 @@ export const showTableCreator = async (options: TableCreatorOptions = {}) => {
 
   const validateInput = (row: number = Number(rowInput.value), col: number = Number(colInput.value)) => {
     if (Number.isNaN(row) || row <= 0) {
-      rowErrorTip(options.notPositiveNumberError || '请输入正整数');
+      rowErrorTip(options.notPositiveNumberError || 'Please enter a positive integer');
       return;
     }
     if (Number.isNaN(col) || col <= 0) {
-      colErrorTip(options.notPositiveNumberError || '请输入正整数');
+      colErrorTip(options.notPositiveNumberError || 'Please enter a positive integer');
       return;
     }
     return { row, col };
@@ -206,13 +219,13 @@ export const showTableCreator = async (options: TableCreatorOptions = {}) => {
 };
 
 interface TableSelectOptions {
-  row?: number;
-  col?: number;
-  onSelect?: (row: number, col: number) => void;
-  customBtn?: boolean;
-  texts?: TableTextOptions;
+  row: number;
+  col: number;
+  onSelect: (row: number, col: number) => void;
+  customBtn: boolean;
+  texts: Partial<TableCreatorTextOptions>;
 }
-export const createSelectBox = (options: TableSelectOptions = {}) => {
+export const createSelectBox = (options: Partial<TableSelectOptions> = {}) => {
   const selectDom = document.createElement('div');
   selectDom.classList.add('select-box');
 
@@ -271,7 +284,7 @@ export const createSelectBox = (options: TableSelectOptions = {}) => {
     const texts = options.texts || {};
     const selectCustom = document.createElement('div');
     selectCustom.classList.add('select-box__custom');
-    selectCustom.textContent = texts.customBtnText || '自定义行列数';
+    selectCustom.textContent = texts.customBtnText || 'Custom';
     selectCustom.addEventListener('click', async () => {
       const res = await showTableCreator(texts);
       if (res) {

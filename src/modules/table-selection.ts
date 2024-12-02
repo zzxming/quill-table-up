@@ -4,7 +4,7 @@ import type { RelactiveRect, TableSelectionOptions } from '../utils';
 import Quill from 'quill';
 import { TableCellFormat } from '../formats';
 import { addScrollEvent, clearScrollEvent } from '../utils';
-import { TableMenuSelect } from './table-menu';
+import { TableMenuContextmenu } from './table-menu';
 
 const ERROR_LIMIT = 2;
 
@@ -43,7 +43,7 @@ export class TableSelection {
   resolveOptions(options: Partial<TableSelectionOptions>) {
     return Object.assign({
       selectColor: '#0589f3',
-      tableMenuClass: TableMenuSelect,
+      tableMenuClass: TableMenuContextmenu,
       tableMenu: {},
     }, options);
   };

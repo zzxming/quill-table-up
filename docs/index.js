@@ -77,11 +77,6 @@ const quill1 = new Quill('#editor1', {
               'rgb(253, 235, 255)',
             ],
           ],
-          texts: {
-            custom: '自定义',
-            clear: '清除',
-            transparent: '透明',
-          },
         },
       },
       texts: {
@@ -91,6 +86,9 @@ const quill1 = new Quill('#editor1', {
         rowText: '行数',
         colText: '列数',
         notPositiveNumberError: '请输入正整数',
+        custom: '自定义',
+        clear: '清除',
+        transparent: '透明',
       },
     },
   },

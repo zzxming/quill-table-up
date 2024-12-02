@@ -35,6 +35,34 @@ const createCell = (scroll: TypeParchment.ScrollBlot, { tableId, rowId, colId }:
 
   return tableCell;
 };
+const getCellWidth = (cell: HTMLElement): number => {
+  let width = Number.parseFloat(cell.getAttribute('width') || tableUpSize.colDefaultWidth);
+  if (Number.isNaN(width)) {
+    const styleWidth = cell.style.width;
+    width = styleWidth ? Number.parseFloat(styleWidth) : cell.offsetWidth;
+  }
+  return width;
+};
+const calculateCols = (tableNode: HTMLElement, colNums: number): number[] => {
+  const colWidths = new Array(colNums).fill(tableUpSize.colDefaultWidth);
+  // no need consider colspan
+  // word table will have a row at last <!--[if !supportMisalignedColumns]-->
+  // that tr doesn't have colspan and every td have width attribute. but set style "border:none"
+  const rows = Array.from(tableNode.querySelectorAll('tr'));
+  for (const row of rows) {
+    const cells = Array.from(row.querySelectorAll('td'));
+    for (const [index, cell] of cells.entries()) {
+      if (index < colNums) {
+        const cellWidth = getCellWidth(cell);
+        colWidths[index] = cellWidth || colWidths[index];
+      }
+      else {
+        break;
+      }
+    }
+  }
+  return colWidths;
+};
 
 // Blots that cannot be inserted into a table
 export const tableCantInsert: string[] = [blotName.tableCell];
@@ -342,6 +370,9 @@ export class TableUp {
       rowText: 'Row',
       colText: 'Column',
       notPositiveNumberError: 'Please enter a positive integer',
+      custom: 'Custom',
+      clear: 'Clear',
+      transparent: 'Transparent',
     }, options);
   };
 
@@ -372,27 +403,56 @@ export class TableUp {
       if (delta.ops.length === 0) return delta;
 
       // remove quill origin table format
+      const ops: Record<string, any>[] = [];
+      const cols: Record<string, any>[] = [];
       for (let i = 0; i < delta.ops.length; i++) {
-        const { attributes: attrs, insert } = delta.ops[i];
-        if (insert && typeof insert !== 'string' && insert[TableColFormat.blotName] && delta.ops[i + 1].insert === '\n') {
-          delta.ops.splice(i + 1, 1);
-          i -= 1;
+        const { attributes, insert } = delta.ops[i];
+        const { table, [blotName.tableCell]: tableCell, ...attrs } = attributes || {};
+        if (insert && (insert as Record<string, any>)[blotName.tableCol]) {
+          cols.push({ insert });
         }
-        if (attrs && attrs.table) {
-          delete attrs.table;
-        }
-        if (attrs && attrs[TableCellFormat.blotName]) {
-          delete attrs[TableCellFormat.blotName];
+        else {
+          ops.push({ attributes: attrs, insert });
         }
       }
+
+      const colWidths = calculateCols(node as HTMLElement, colIds.length);
+      const newCols = colWidths.reduce((colOps, width, i) => {
+        if (!cols[i]) {
+          colOps.push({
+            insert: {
+              [blotName.tableCol]: {
+                tableId,
+                colId: colIds[i],
+                width,
+                full: false,
+              },
+            },
+          });
+        }
+        else {
+          colOps.push(cols[i]);
+        }
+        return colOps;
+      }, [] as Record<string, any>[]);
+      ops.unshift(...newCols);
       // reset variable to avoid conflict with other table
       tableId = randomId();
       colIds = [];
       cellCount = 0;
       colCount = 0;
       // insert break line before table and after table
-      delta.ops.unshift({ insert: '\n' });
-      delta.ops.push({ insert: '\n' });
+      ops.unshift({ insert: '\n' });
+      ops.push({ insert: '\n' });
+      return new Delta(ops);
+    });
+
+    // remove colgroup end \n
+    this.quill.clipboard.addMatcher('colgroup', (node, delta) => {
+      const last = delta.ops.slice(-1)[0];
+      if (!last.attributes && last.insert === '\n') {
+        return new Delta(delta.ops.slice(0, -1));
+      }
       return delta;
     });
 
@@ -447,6 +507,10 @@ export class TableUp {
           colId,
         },
       );
+      // make sure <!--[if !supportMisalignedColumns]--> display border
+      if (cell.style.border === 'none') {
+        value.style = value.style.replaceAll(/border-(top|right|bottom|left)-style:none;?/g, '');
+      }
       const ops = [];
       for (const op of delta.ops) {
         if (typeof op.insert === 'string') {

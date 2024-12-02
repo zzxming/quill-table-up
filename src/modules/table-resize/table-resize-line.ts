@@ -71,8 +71,8 @@ export class TableResizeLine extends TableResizeCommon {
     return this.curColIndex;
   }
 
-  handleColMouseUpFunc = function (this: TableResizeLine) {
-    this.handleColMouseUp();
+  handleColMouseUpFunc = async function (this: TableResizeLine) {
+    await this.handleColMouseUp();
     this.updateColResizer();
   }.bind(this);
 

@@ -1,4 +1,5 @@
 import type { TableValue } from '../utils';
+import type { TableColgroupFormat } from './table-colgroup-format';
 import { blotName } from '../utils';
 import { ContainerFormat } from './container-format';
 import { TableColFormat } from './table-col-format';
@@ -48,10 +49,6 @@ export class TableMainFormat extends ContainerFormat {
     return Object.hasOwn(this.domNode.dataset, 'full');
   }
 
-  set full(value) {
-    this.domNode[value ? 'setAttribute' : 'removeAttribute']('data-full', '');
-  }
-
   get align() {
     return this.domNode.dataset.align || '';
   }
@@ -64,6 +61,22 @@ export class TableMainFormat extends ContainerFormat {
       this.domNode.removeAttribute('data-align');
     }
     this.updateAlign();
+  }
+
+  cancelFull() {
+    if (!this.full) return;
+    const cols = this.getCols();
+    const tableWidth = this.domNode.getBoundingClientRect().width;
+    for (const col of cols) {
+      col.domNode.removeAttribute('data-full');
+      col.width = col.width / 100 * tableWidth;
+    }
+    const colgroup = this.children.head as TableColgroupFormat;
+    if (colgroup && colgroup.statics.blotName === blotName.tableColgroup) {
+      colgroup.full = false;
+    }
+    this.domNode.removeAttribute('data-full');
+    this.colWidthFillTable();
   }
 
   updateAlign() {
