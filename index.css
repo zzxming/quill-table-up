@@ -309,7 +309,7 @@
 }
 .ql-editor .ql-table {
   display: table;
-  border-collapse: separate;
+  border-collapse: collapse;
   table-layout: fixed;
   width: auto;
 }
@@ -445,4 +445,92 @@
 }
 .tooltip.hidden {
   display: none;
+}
+.table-up-btn {
+  --table-btn-color: #606266;
+  --table-btn-bg-hover: #f3f4f6;
+  --table-btn-color-border: #dcdfe6;
+  --table-btn-border: 0.0625rem solid var(--table-btn-color-border);
+  --table-btn-confirm-color-border: #409eff;
+  --table-btn-confirm-bg: #409eff;
+  --table-btn-confirm-hover: #79bbff;
+  --table-btn-confirm-outline-focus-visible: 0.125rem solid #a0cfff;
+  box-sizing: border-box;
+  display: inline-flex;
+  height: 2rem;
+  line-height: 1;
+  margin: 0;
+  padding: 0.5rem 1rem;
+  border-radius: 0.25rem;
+  border: var(--table-btn-border);
+  color: var(--table-btn-color);
+  background-color: transparent;
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+.table-up-btn + .table-up-btn {
+  margin-left: 0.375rem;
+}
+.table-up-btn:hover {
+  background-color: var(--table-btn-bg-hover);
+}
+.table-up-btn.confirm {
+  border-color: var(--table-btn-confirm-color-border);
+  background-color: var(--table-btn-confirm-bg);
+  color: #fff;
+}
+.table-up-btn.confirm:hover {
+  border-color: var(--table-btn-confirm-hover);
+  background-color: var(--table-btn-confirm-hover);
+}
+.table-up-btn.confirm:focus-visible {
+  outline: var(--table-btn-confirm-outline-focus-visible);
+  outline-offset: 0.0625rem;
+}
+.dialog {
+  --dialog-bg: rgba(0, 0, 0, 0.5);
+  --dialog-color-border: #ebeef5;
+  --dialog-color-boxshadow: rgba(0, 0, 0, 0.12);
+  --dialog-border: 0.0625rem solid var(--dialog-color-border);
+  --dialog-boxshadow: 0 0 0.75rem var(--dialog-color-boxshadow);
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 2000;
+  height: 100%;
+  background-color: var(--dialog-bg);
+  overflow: auto;
+}
+.dialog__overlay {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  padding: 1rem;
+  overflow: auto;
+  text-align: center;
+}
+.dialog__overlay::after {
+  content: '';
+  display: inline-block;
+  height: 100%;
+  width: 0;
+  vertical-align: middle;
+}
+.dialog__content {
+  display: inline-block;
+  max-width: 50vw;
+  width: 100%;
+  vertical-align: middle;
+  background-color: #fff;
+  border-radius: 0.25rem;
+  border: var(--dialog-border);
+  font-size: 1.125rem;
+  box-shadow: var(--dialog-boxshadow);
+  text-align: left;
+  overflow: hidden;
+  box-sizing: border-box;
 }

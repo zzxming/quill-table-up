@@ -1542,6 +1542,12 @@
     });
   };
 
+  const isFunction = (val) => typeof val === 'function';
+  const isBoolean = (val) => typeof val === 'boolean';
+  const isArray = Array.isArray;
+  const isString = (val) => typeof val === 'string';
+  const isValidCellspan = (val) => !Number.isNaN(val) && Number(val) > 0;
+
   const randomId = () => Math.random().toString(36).slice(2);
   const debounce = (fn, delay) => {
       let timestamp;
@@ -1735,34 +1741,44 @@
       zindex += 1;
       return { dialog, close };
   };
+  const createButton = (options) => {
+      const { type = 'default', content } = options || {};
+      const btn = document.createElement('button');
+      btn.classList.add('table-up-btn', type);
+      if (content) {
+          if (isString(content)) {
+              btn.textContent = content;
+          }
+          else {
+              btn.appendChild(content);
+          }
+      }
+      return btn;
+  };
   const showTableCreator = async (options = {}) => {
       const box = document.createElement('div');
       box.classList.add('table-creator');
       const inputContent = document.createElement('div');
       inputContent.classList.add('table-creator__input');
-      const { item: rowItem, input: rowInput, errorTip: rowErrorTip, } = createInputItem(options.rowText || '行数', { type: 'number', value: String(options.row || ''), max: 99 });
-      const { item: colItem, input: colInput, errorTip: colErrorTip, } = createInputItem(options.colText || '列数', { type: 'number', value: String(options.col || ''), max: 99 });
+      const { item: rowItem, input: rowInput, errorTip: rowErrorTip, } = createInputItem(options.rowText || 'Row', { type: 'number', value: String(options.row || ''), max: 99 });
+      const { item: colItem, input: colInput, errorTip: colErrorTip, } = createInputItem(options.colText || 'Column', { type: 'number', value: String(options.col || ''), max: 99 });
       inputContent.appendChild(rowItem);
       inputContent.appendChild(colItem);
       box.appendChild(inputContent);
       const control = document.createElement('div');
       control.classList.add('table-creator__control');
-      const confirmBtn = document.createElement('button');
-      confirmBtn.classList.add('table-creator__btn', 'confirm');
-      confirmBtn.textContent = options.confirmText || 'Confirm';
-      const cancelBtn = document.createElement('button');
-      cancelBtn.classList.add('table-creator__btn', 'cancel');
-      cancelBtn.textContent = options.cancelText || 'Cancel';
+      const confirmBtn = createButton({ type: 'confirm', content: options.confirmText || 'Confirm' });
+      const cancelBtn = createButton({ type: 'default', content: options.cancelText || 'Cancel' });
       control.appendChild(confirmBtn);
       control.appendChild(cancelBtn);
       box.appendChild(control);
       const validateInput = (row = Number(rowInput.value), col = Number(colInput.value)) => {
           if (Number.isNaN(row) || row <= 0) {
-              rowErrorTip(options.notPositiveNumberError || '请输入正整数');
+              rowErrorTip(options.notPositiveNumberError || 'Please enter a positive integer');
               return;
           }
           if (Number.isNaN(col) || col <= 0) {
-              colErrorTip(options.notPositiveNumberError || '请输入正整数');
+              colErrorTip(options.notPositiveNumberError || 'Please enter a positive integer');
               return;
           }
           return { row, col };
@@ -1859,7 +1875,7 @@
           const texts = options.texts || {};
           const selectCustom = document.createElement('div');
           selectCustom.classList.add('select-box__custom');
-          selectCustom.textContent = texts.customBtnText || '自定义行列数';
+          selectCustom.textContent = texts.customBtnText || 'Custom';
           selectCustom.addEventListener('click', async () => {
               const res = await showTableCreator(texts);
               if (res) {
@@ -1964,6 +1980,7 @@
   const tableUpSize = {
       colMinWidthPre: 5,
       colMinWidthPx: 40,
+      colDefaultWidth: '100',
       rowMinHeightPx: 36,
   };
   const tableUpEvent = {
@@ -2043,12 +2060,6 @@
           'rgb(59, 21, 81)',
       ],
   ];
-
-  const isFunction = (val) => typeof val === 'function';
-  const isBoolean = (val) => typeof val === 'boolean';
-  const isArray = Array.isArray;
-  const isString = (val) => typeof val === 'string';
-  const isValidCellspan = (val) => !Number.isNaN(val) && Number(val) > 0;
 
   const Parchment$2 = Quill.import('parchment');
   const Container = Quill.import('blots/container');
@@ -2774,18 +2785,38 @@
       domNode;
       static blotName = blotName.tableCol;
       static tagName = 'col';
+      static validWidth(width, full) {
+          let widthNumber = Number.parseFloat(String(width));
+          if (Number.isNaN(widthNumber)) {
+              widthNumber = tableUpSize[full ? 'colMinWidthPre' : 'colMinWidthPx'];
+          }
+          return `${widthNumber}${full ? '%' : 'px'}`;
+      }
       static create(value) {
           const { width, tableId, colId, full, align } = value;
           const node = super.create();
-          node.setAttribute('width', `${Number.parseFloat(width)}${full ? '%' : 'px'}`);
+          node.setAttribute('width', this.validWidth(width, !!full));
           full && (node.dataset.full = String(full));
           if (align && align !== 'left') {
               node.dataset.align = align;
           }
           node.dataset.tableId = tableId;
           node.dataset.colId = colId;
-          node.setAttribute('contenteditable', 'false');
           return node;
+      }
+      static value(domNode) {
+          const { tableId, colId } = domNode.dataset;
+          const width = domNode.getAttribute('width') || tableUpSize.colDefaultWidth;
+          const align = domNode.dataset.align;
+          const full = Object.hasOwn(domNode.dataset, 'full');
+          const value = {
+              tableId,
+              colId,
+              full,
+          };
+          width && (value.width = Number.parseFloat(width));
+          align && (value.align = align);
+          return value;
       }
       constructor(scroll, domNode) {
           super(scroll, domNode);
@@ -2793,12 +2824,25 @@
           this.domNode = domNode;
       }
       get width() {
-          const width = this.domNode.getAttribute('width');
-          return Number.parseFloat(width);
+          let width = this.domNode.getAttribute('width');
+          if (!width) {
+              width = this.domNode.getBoundingClientRect().width;
+              if (this.full) {
+                  const table = this.domNode.closest('table');
+                  if (!table)
+                      return tableUpSize[this.full ? 'colMinWidthPre' : 'colMinWidthPx'];
+                  return width / 100 * table.getBoundingClientRect().width;
+              }
+              return width;
+          }
+          return Number.parseFloat(String(width));
       }
       set width(value) {
-          const width = Number.parseFloat(value);
-          this.domNode.setAttribute('width', `${width}${this.full ? '%' : 'px'}`);
+          let width = Number.parseFloat(String(value));
+          if (Number.isNaN(width)) {
+              width = tableUpSize[this.full ? 'colMinWidthPre' : 'colMinWidthPx'];
+          }
+          this.domNode.setAttribute('width', this.statics.validWidth(width, !!this.full));
       }
       get tableId() {
           return this.domNode.dataset.tableId;
@@ -2819,20 +2863,6 @@
           else {
               this.domNode.removeAttribute('data-align');
           }
-      }
-      static value(domNode) {
-          const { tableId, colId } = domNode.dataset;
-          const width = domNode.getAttribute('width');
-          const align = domNode.dataset.align;
-          const full = Object.hasOwn(domNode.dataset, 'full');
-          const value = {
-              tableId,
-              colId,
-              full,
-          };
-          width && (value.width = Number.parseFloat(width));
-          align && (value.align = align);
-          return value;
       }
       checkMerge() {
           const next = this.next;
@@ -2939,9 +2969,6 @@
       get full() {
           return Object.hasOwn(this.domNode.dataset, 'full');
       }
-      set full(value) {
-          this.domNode[value ? 'setAttribute' : 'removeAttribute']('data-full', '');
-      }
       get align() {
           return this.domNode.dataset.align || '';
       }
@@ -2953,6 +2980,22 @@
               this.domNode.removeAttribute('data-align');
           }
           this.updateAlign();
+      }
+      cancelFull() {
+          if (!this.full)
+              return;
+          const cols = this.getCols();
+          const tableWidth = this.domNode.getBoundingClientRect().width;
+          for (const col of cols) {
+              col.domNode.removeAttribute('data-full');
+              col.width = col.width / 100 * tableWidth;
+          }
+          const colgroup = this.children.head;
+          if (colgroup && colgroup.statics.blotName === blotName.tableColgroup) {
+              colgroup.full = false;
+          }
+          this.domNode.removeAttribute('data-full');
+          this.colWidthFillTable();
       }
       updateAlign() {
           const value = this.align;
@@ -3023,6 +3066,14 @@
       }
       get full() {
           return Object.hasOwn(this.domNode.dataset, 'full');
+      }
+      set full(value) {
+          if (value) {
+              this.domNode.dataset.full = 'true';
+          }
+          else {
+              this.domNode.removeAttribute('data-full');
+          }
       }
       get align() {
           return this.domNode.dataset.align || '';
@@ -3447,17 +3498,9 @@
               localstorageKey: '__table-bg-used-color',
               defaultColorMap,
           }, options);
-          value.texts = Object.assign(this.resolveTexts(options.texts), options.texts);
           return value;
       }
       ;
-      resolveTexts(texts = {}) {
-          return Object.assign({
-              custom: 'Custom',
-              clear: 'Clear',
-              transparent: 'Transparent',
-          }, texts);
-      }
       getUsedColors() {
           return usedColors;
       }
@@ -3533,20 +3576,20 @@
           });
           const transparentColor = document.createElement('div');
           transparentColor.classList.add(colorClassName.btn, 'table-color-transparent');
-          transparentColor.textContent = this.options.texts.transparent;
+          transparentColor.textContent = this.tableModule.options.texts.transparent;
           transparentColor.addEventListener('click', () => {
               handle(this.tableModule, this.getSelectedTds(), 'transparent');
           });
           const clearColor = document.createElement('div');
           clearColor.classList.add(colorClassName.btn, 'table-color-clear');
-          clearColor.textContent = this.options.texts.clear;
+          clearColor.textContent = this.tableModule.options.texts.clear;
           clearColor.addEventListener('click', () => {
               handle(this.tableModule, this.getSelectedTds(), null);
           });
           const label = document.createElement('label');
           label.classList.add(colorClassName.btn, 'table-color-custom');
           const customColor = document.createElement('span');
-          customColor.textContent = this.options.texts.custom;
+          customColor.textContent = this.tableModule.options.texts.custom;
           const input = document.createElement('input');
           input.type = 'color';
           Object.assign(input.style, {
@@ -3755,14 +3798,48 @@
           return -1;
       }
       colWidthChange(_i, _w, _isFull) { }
-      handleColMouseUp() {
+      async createConfirmDialog() {
+          return new Promise((resolve) => {
+              const content = document.createElement('div');
+              Object.assign(content.style, {
+                  padding: '8px 12px',
+              });
+              const tip = document.createElement('p');
+              tip.textContent = '半分比宽度不足, 如需完成操作需要转换表格为固定宽度，是否继续?';
+              const btnWrapper = document.createElement('div');
+              Object.assign(btnWrapper.style, {
+                  display: 'flex',
+                  justifyContent: 'flex-end',
+                  gap: `6px`,
+              });
+              const cancelBtn = createButton({ content: '取消' });
+              const confirmBtn = createButton({ type: 'confirm', content: '确认' });
+              btnWrapper.appendChild(cancelBtn);
+              btnWrapper.appendChild(confirmBtn);
+              content.appendChild(tip);
+              content.appendChild(btnWrapper);
+              const { close } = createDialog({ child: content });
+              cancelBtn.addEventListener('click', () => {
+                  resolve(false);
+                  close();
+              });
+              confirmBtn.addEventListener('click', () => {
+                  resolve(true);
+                  close();
+              });
+          });
+      }
+      async handleColMouseUp() {
           if (!this.dragColBreak || !this.tableMain || this.colIndex === -1)
               return;
           const cols = this.tableMain.getCols();
           const w = Number.parseInt(this.dragColBreak.dataset.w || '0');
           const isFull = this.tableMain.full;
+          let needUpdate = false;
+          const updateInfo = [];
           if (isFull) {
-              let pre = (w / this.tableMain.domNode.getBoundingClientRect().width) * 100;
+              const tableMainWidth = this.tableMain.domNode.getBoundingClientRect().width;
+              let pre = (w / tableMainWidth) * 100;
               const oldWidthPre = cols[this.colIndex].width;
               if (pre < oldWidthPre) {
                   // minus
@@ -3771,16 +3848,13 @@
                   pre = Math.max(tableUpSize.colMinWidthPre, pre);
                   if (cols[this.colIndex + 1] || cols[this.colIndex - 1]) {
                       const i = cols[this.colIndex + 1] ? this.colIndex + 1 : this.colIndex - 1;
-                      const changeTableCol = cols[i];
-                      const resultWidth = changeTableCol.width + oldWidthPre - pre;
-                      changeTableCol.width = `${resultWidth}%`;
-                      this.colWidthChange(i, resultWidth, isFull);
+                      updateInfo.push({ index: i, width: cols[i].width + oldWidthPre - pre, full: isFull });
                   }
                   else {
                       pre = 100;
                   }
-                  cols[this.colIndex].width = `${pre}%`;
-                  this.colWidthChange(this.colIndex, pre, isFull);
+                  needUpdate = true;
+                  updateInfo.push({ index: this.colIndex, width: pre, full: isFull });
               }
               else {
                   // magnify col
@@ -3788,10 +3862,8 @@
                   if (cols[this.colIndex + 1]) {
                       const totalWidthNextPre = oldWidthPre + cols[this.colIndex + 1].width;
                       pre = Math.min(totalWidthNextPre - tableUpSize.colMinWidthPre, pre);
-                      cols[this.colIndex].width = `${pre}%`;
-                      this.colWidthChange(this.colIndex, pre, isFull);
-                      cols[this.colIndex + 1].width = `${totalWidthNextPre - pre}%`;
-                      this.colWidthChange(this.colIndex + 1, totalWidthNextPre - pre, isFull);
+                      needUpdate = true;
+                      updateInfo.push({ index: this.colIndex, width: pre, full: isFull }, { index: this.colIndex + 1, width: totalWidthNextPre - pre, full: isFull });
                   }
               }
           }
@@ -3799,15 +3871,52 @@
               this.tableMain.domNode.style.width = `${Number.parseFloat(this.tableMain.domNode.style.width)
                 - cols[this.colIndex].domNode.getBoundingClientRect().width
                 + w}px`;
-              cols[this.colIndex].width = `${w}px`;
-              this.colWidthChange(this.colIndex, w, isFull);
+              needUpdate = true;
+              updateInfo.push({ index: this.colIndex, width: w, full: isFull });
           }
           document.body.removeChild(this.dragColBreak);
           this.dragColBreak = null;
           document.removeEventListener('mouseup', this.handleColMouseUpFunc);
           document.removeEventListener('mousemove', this.handleColMouseMoveFunc);
           this.dragging = false;
-          this.quill.emitter.emit(tableUpEvent.AFTER_TABLE_RESIZE);
+          // update col width
+          let updated = true;
+          if (needUpdate) {
+              for (let { index, width, full } of updateInfo) {
+                  // table full maybe change. every time update need check data full and transform width
+                  const tableWidth = this.tableMain.domNode.getBoundingClientRect().width;
+                  let isFull = this.tableMain.full;
+                  if (full !== isFull) {
+                      if (full === true && isFull === false) {
+                          width = width / 100 * tableWidth;
+                      }
+                      else if (full === false && isFull === true) {
+                          width = width / tableWidth * 100;
+                      }
+                  }
+                  // if tableis full and width larger then 100. check user want to change table to fixed width
+                  if (isFull) {
+                      const totalWidth = cols.reduce((total, cur, i) => {
+                          total += i === index ? width : cur.width;
+                          return total;
+                      }, 0);
+                      if (totalWidth > 100) {
+                          if (!await this.createConfirmDialog()) {
+                              updated = false;
+                              break;
+                          }
+                          this.tableMain.cancelFull();
+                          isFull = false;
+                          width = width / 100 * tableWidth;
+                      }
+                  }
+                  cols[index].width = `${width}${isFull ? '%' : 'px'}`;
+                  this.colWidthChange(index, isFull ? width / 100 * tableWidth : width, isFull);
+              }
+          }
+          if (updated) {
+              this.quill.emitter.emit(tableUpEvent.AFTER_TABLE_RESIZE);
+          }
       }
       ;
       handleColMouseMove(e) {
@@ -3870,17 +3979,6 @@
               return;
           const colWidthAttr = cols[this.colIndex].width;
           const width = this.tableMain.full ? colWidthAttr / 100 * fullWidth : colWidthAttr;
-          // if the column already smaller than min width, don't allow drag
-          if (this.tableMain.full) {
-              if (colWidthAttr < tableUpSize.colMinWidthPre) {
-                  return;
-              }
-          }
-          else {
-              if (width < tableUpSize.colMinWidthPx) {
-                  return;
-              }
-          }
           document.addEventListener('mouseup', this.handleColMouseUpFunc);
           document.addEventListener('mousemove', this.handleColMouseMoveFunc);
           this.dragging = true;
@@ -4053,9 +4151,9 @@
       findCurrentColIndex(e) {
           return Array.from(this.root.getElementsByClassName('ql-table-col-separator')).indexOf(e.target);
       }
-      colWidthChange(i, w, isFull) {
+      colWidthChange(i, w, _isFull) {
           const tableColHeads = Array.from(this.root.getElementsByClassName('ql-table-col-header'));
-          tableColHeads[i].style.width = `${w}${isFull ? '%' : 'px'}`;
+          tableColHeads[i].style.width = `${w}px`;
       }
       handleColMouseDownFunc = function (e) {
           const value = this.handleColMouseDown(e);
@@ -4173,11 +4271,8 @@
           if (this.tableCols.length > 0) {
               let colHeadStr = '';
               for (const col of this.tableCols) {
-                  let width = col.width + (this.tableMain.full ? '%' : 'px');
-                  if (!col.width) {
-                      width = `${col.domNode.getBoundingClientRect().width}px`;
-                  }
-                  colHeadStr += `<div class="ql-table-col-header" style="width: ${width}">
+                  const width = col.domNode.getBoundingClientRect().width;
+                  colHeadStr += `<div class="ql-table-col-header" style="width: ${width}px">
           <div class="ql-table-col-separator" style="height: ${tableMainRect.height + this.options.size - 3}px"></div>
         </div>`;
               }
@@ -4306,8 +4401,8 @@
       findCurrentColIndex() {
           return this.curColIndex;
       }
-      handleColMouseUpFunc = function () {
-          this.handleColMouseUp();
+      handleColMouseUpFunc = async function () {
+          await this.handleColMouseUp();
           this.updateColResizer();
       }.bind(this);
       updateColResizer() {
@@ -4649,7 +4744,7 @@
       resolveOptions(options) {
           return Object.assign({
               selectColor: '#0589f3',
-              tableMenuClass: TableMenuSelect,
+              tableMenuClass: TableMenuContextmenu,
               tableMenu: {},
           }, options);
       }
@@ -4875,6 +4970,34 @@
       tableCellInner.appendChild(block);
       tableCell.appendChild(tableCellInner);
       return tableCell;
+  };
+  const getCellWidth = (cell) => {
+      let width = Number.parseFloat(cell.getAttribute('width') || tableUpSize.colDefaultWidth);
+      if (Number.isNaN(width)) {
+          const styleWidth = cell.style.width;
+          width = styleWidth ? Number.parseFloat(styleWidth) : cell.offsetWidth;
+      }
+      return width;
+  };
+  const calculateCols = (tableNode, colNums) => {
+      const colWidths = new Array(colNums).fill(tableUpSize.colDefaultWidth);
+      // no need consider colspan
+      // word table will have a row at last <!--[if !supportMisalignedColumns]-->
+      // that tr doesn't have colspan and every td have width attribute. but set style "border:none"
+      const rows = Array.from(tableNode.querySelectorAll('tr'));
+      for (const row of rows) {
+          const cells = Array.from(row.querySelectorAll('td'));
+          for (const [index, cell] of cells.entries()) {
+              if (index < colNums) {
+                  const cellWidth = getCellWidth(cell);
+                  colWidths[index] = cellWidth || colWidths[index];
+              }
+              else {
+                  break;
+              }
+          }
+      }
+      return colWidths;
   };
   // Blots that cannot be inserted into a table
   const tableCantInsert = [blotName.tableCell];
@@ -5146,6 +5269,9 @@
               rowText: 'Row',
               colText: 'Column',
               notPositiveNumberError: 'Please enter a positive integer',
+              custom: 'Custom',
+              clear: 'Clear',
+              transparent: 'Transparent',
           }, options);
       }
       ;
@@ -5175,27 +5301,54 @@
               if (delta.ops.length === 0)
                   return delta;
               // remove quill origin table format
+              const ops = [];
+              const cols = [];
               for (let i = 0; i < delta.ops.length; i++) {
-                  const { attributes: attrs, insert } = delta.ops[i];
-                  if (insert && typeof insert !== 'string' && insert[TableColFormat.blotName] && delta.ops[i + 1].insert === '\n') {
-                      delta.ops.splice(i + 1, 1);
-                      i -= 1;
+                  const { attributes, insert } = delta.ops[i];
+                  const { table, [blotName.tableCell]: tableCell, ...attrs } = attributes || {};
+                  if (insert && insert[blotName.tableCol]) {
+                      cols.push({ insert });
                   }
-                  if (attrs && attrs.table) {
-                      delete attrs.table;
-                  }
-                  if (attrs && attrs[TableCellFormat.blotName]) {
-                      delete attrs[TableCellFormat.blotName];
+                  else {
+                      ops.push({ attributes: attrs, insert });
                   }
               }
+              const colWidths = calculateCols(node, colIds.length);
+              const newCols = colWidths.reduce((colOps, width, i) => {
+                  if (!cols[i]) {
+                      colOps.push({
+                          insert: {
+                              [blotName.tableCol]: {
+                                  tableId,
+                                  colId: colIds[i],
+                                  width,
+                                  full: false,
+                              },
+                          },
+                      });
+                  }
+                  else {
+                      colOps.push(cols[i]);
+                  }
+                  return colOps;
+              }, []);
+              ops.unshift(...newCols);
               // reset variable to avoid conflict with other table
               tableId = randomId();
               colIds = [];
               cellCount = 0;
               colCount = 0;
               // insert break line before table and after table
-              delta.ops.unshift({ insert: '\n' });
-              delta.ops.push({ insert: '\n' });
+              ops.unshift({ insert: '\n' });
+              ops.push({ insert: '\n' });
+              return new Delta(ops);
+          });
+          // remove colgroup end \n
+          this.quill.clipboard.addMatcher('colgroup', (node, delta) => {
+              const last = delta.ops.slice(-1)[0];
+              if (!last.attributes && last.insert === '\n') {
+                  return new Delta(delta.ops.slice(0, -1));
+              }
               return delta;
           });
           this.quill.clipboard.addMatcher('col', (node) => {
@@ -5241,6 +5394,10 @@
                   rowId,
                   colId,
               });
+              // make sure <!--[if !supportMisalignedColumns]--> display border
+              if (cell.style.border === 'none') {
+                  value.style = value.style.replaceAll(/border-(top|right|bottom|left)-style:none;?/g, '');
+              }
               const ops = [];
               for (const op of delta.ops) {
                   if (typeof op.insert === 'string') {
