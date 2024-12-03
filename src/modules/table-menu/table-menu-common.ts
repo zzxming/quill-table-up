@@ -2,7 +2,7 @@ import type Quill from 'quill';
 import type { TableUp } from '../..';
 import type { TableMenuOptions, ToolOption, TooltipInstance } from '../../utils';
 import { createTooltip, debounce, defaultColorMap, isArray, isFunction, randomId } from '../../utils';
-import { colorClassName, defaultTools, menuColorSelectClassName, usedColors } from './constants';
+import { colorClassName, defaultTools, maxSaveColorCount, menuColorSelectClassName, usedColors } from './constants';
 
 export type TableMenuOptionsInput = Partial<Omit<TableMenuOptions, 'texts'>>;
 export class TableMenuCommon {
@@ -21,15 +21,15 @@ export class TableMenuCommon {
       if (!isArray(colorValue)) {
         colorValue = [];
       }
-      colorValue.map((c: string) => usedColors.add(c));
+      colorValue.slice(-1 * maxSaveColorCount).map((c: string) => usedColors.add(c));
     }
     catch {}
 
     this.updateUsedColor = debounce((color?: string) => {
       if (!color) return;
       usedColors.add(color);
-      if (usedColors.size > 10) {
-        const saveColors = Array.from(usedColors).slice(-10);
+      if (usedColors.size > maxSaveColorCount) {
+        const saveColors = Array.from(usedColors).slice(-1 * maxSaveColorCount);
         usedColors.clear();
         saveColors.map(v => usedColors.add(v));
       }
@@ -37,17 +37,19 @@ export class TableMenuCommon {
       localStorage.setItem(this.options.localstorageKey, JSON.stringify(Array.from(usedColors)));
       const usedColorWrappers = Array.from(document.querySelectorAll(`.${this.colorItemClass}.${colorClassName.used}`));
       for (const usedColorWrapper of usedColorWrappers) {
-        if (!usedColorWrapper) continue;
-
-        const colorItem = usedColorWrapper.querySelectorAll(`.${colorClassName.item}[style*="background-color: ${color}"]`);
-        for (const item of Array.from(colorItem)) {
-          item.remove();
-        }
-
         const newColorItem = document.createElement('div');
         newColorItem.classList.add(colorClassName.item);
         newColorItem.style.backgroundColor = String(color);
-        usedColorWrapper.appendChild(newColorItem);
+        // if already have same color item. doesn't need insert
+        const sameColorItem = Array.from(usedColorWrapper.querySelectorAll(`.${colorClassName.item}[style*="background-color: ${newColorItem.style.backgroundColor}"]`));
+        if (sameColorItem.length <= 0) {
+          usedColorWrapper.appendChild(newColorItem);
+        }
+
+        const colorItem = Array.from(usedColorWrapper.querySelectorAll(`.${colorClassName.item}`)).slice(0, -1 * maxSaveColorCount);
+        for (const item of colorItem) {
+          item.remove();
+        }
       }
     }, 1000);
   }
@@ -197,7 +199,7 @@ export class TableMenuCommon {
       const selectedTds = this.getSelectedTds();
       if (item && color && selectedTds.length > 0) {
         this.tableModule.setCellAttrs(selectedTds, key!, color, true);
-        if (item.closest(`.${colorClassName.item}`)) return;
+        if (!item.closest(`.${colorClassName.item}`)) return;
         this.updateUsedColor(color);
       }
     });

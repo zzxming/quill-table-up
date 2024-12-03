@@ -13,7 +13,6 @@ import SplitCell from '../../svg/split-cell.svg';
 
 export const menuColorSelectClassName = 'color-selector';
 export const contextmenuClassName = 'contextmenu';
-export const usedColors = new Set<string>();
 export const defaultTools: Tool[] = [
   {
     name: 'InsertTop',
@@ -128,6 +127,8 @@ export const defaultTools: Tool[] = [
   },
 ];
 
+export const maxSaveColorCount = 10;
+export const usedColors = new Set<string>();
 export const colorClassName = {
   used: 'table-color-used',
   item: 'table-color-item',
