@@ -3323,7 +3323,6 @@
 
   const menuColorSelectClassName = 'color-selector';
   const contextmenuClassName = 'contextmenu';
-  const usedColors = new Set();
   const defaultTools = [
       {
           name: 'InsertTop',
@@ -3435,6 +3434,8 @@
           },
       },
   ];
+  const maxSaveColorCount = 10;
+  const usedColors = new Set();
   const colorClassName = {
       used: 'table-color-used',
       item: 'table-color-item',
@@ -3462,31 +3463,33 @@
               if (!isArray(colorValue)) {
                   colorValue = [];
               }
-              colorValue.map((c) => usedColors.add(c));
+              colorValue.slice(-1 * maxSaveColorCount).map((c) => usedColors.add(c));
           }
           catch { }
           this.updateUsedColor = debounce((color) => {
               if (!color)
                   return;
               usedColors.add(color);
-              if (usedColors.size > 10) {
-                  const saveColors = Array.from(usedColors).slice(-10);
+              if (usedColors.size > maxSaveColorCount) {
+                  const saveColors = Array.from(usedColors).slice(-1 * maxSaveColorCount);
                   usedColors.clear();
                   saveColors.map(v => usedColors.add(v));
               }
               localStorage.setItem(this.options.localstorageKey, JSON.stringify(Array.from(usedColors)));
               const usedColorWrappers = Array.from(document.querySelectorAll(`.${this.colorItemClass}.${colorClassName.used}`));
               for (const usedColorWrapper of usedColorWrappers) {
-                  if (!usedColorWrapper)
-                      continue;
-                  const colorItem = usedColorWrapper.querySelectorAll(`.${colorClassName.item}[style*="background-color: ${color}"]`);
-                  for (const item of Array.from(colorItem)) {
-                      item.remove();
-                  }
                   const newColorItem = document.createElement('div');
                   newColorItem.classList.add(colorClassName.item);
                   newColorItem.style.backgroundColor = String(color);
-                  usedColorWrapper.appendChild(newColorItem);
+                  // if already have same color item. doesn't need insert
+                  const sameColorItem = Array.from(usedColorWrapper.querySelectorAll(`.${colorClassName.item}[style*="background-color: ${newColorItem.style.backgroundColor}"]`));
+                  if (sameColorItem.length <= 0) {
+                      usedColorWrapper.appendChild(newColorItem);
+                  }
+                  const colorItem = Array.from(usedColorWrapper.querySelectorAll(`.${colorClassName.item}`)).slice(0, -1 * maxSaveColorCount);
+                  for (const item of colorItem) {
+                      item.remove();
+                  }
               }
           }, 1000);
       }
@@ -3627,7 +3630,7 @@
               const selectedTds = this.getSelectedTds();
               if (item && color && selectedTds.length > 0) {
                   this.tableModule.setCellAttrs(selectedTds, key, color, true);
-                  if (item.closest(`.${colorClassName.item}`))
+                  if (!item.closest(`.${colorClassName.item}`))
                       return;
                   this.updateUsedColor(color);
               }
