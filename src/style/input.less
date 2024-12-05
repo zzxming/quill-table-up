@@ -1,6 +1,7 @@
+@import './variables.less';
 @import './functions.less';
 
-.input {
+.@{namespace}-input {
   &__item {
     .setCssVar(input-height,  32px);
     .setCssVar(input-inner-height,  calc(.getCssVar(input-height) [] - 2px));
@@ -52,14 +53,12 @@
       box-shadow: .getCssVar(input-boxshaow-error) [];
     }
   }
-  &__error {
-    &-tip {
-      position: absolute;
-      top: 100%;
-      left: 0;
-      font-size: 12px;
-      color: .getCssVar(input-color-error) [];
-      line-height: 16px;
-    }
+  &__error-tip {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    font-size: 12px;
+    color: .getCssVar(input-color-error) [];
+    line-height: 16px;
   }
 }

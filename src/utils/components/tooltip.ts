@@ -6,6 +6,7 @@ import {
   offset,
   shift,
 } from '@floating-ui/dom';
+import { createBEM } from '../bem';
 import { handleIfTransitionend } from '../utils';
 
 interface ToolTipOptions {
@@ -33,13 +34,14 @@ export interface TooltipInstance {
 };
 export const createTooltip = (target: HTMLElement, options: ToolTipOptions = {}): TooltipInstance | null => {
   const { msg = '', delay = 150, content, direction = 'bottom' } = options;
+  const bem = createBEM('tooltip');
   if (msg || content) {
     if (!tooltipContainer) {
       tooltipContainer = document.createElement('div');
       document.body.appendChild(tooltipContainer);
     }
     const tooltip = document.createElement('div');
-    tooltip.classList.add('tooltip', 'hidden', 'transparent');
+    tooltip.classList.add(bem.b(), 'hidden', 'transparent');
     if (content) {
       tooltip.appendChild(content);
     }

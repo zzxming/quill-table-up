@@ -95,3 +95,5 @@ export const defaultColorMap = [
     'rgb(59, 21, 81)',
   ],
 ];
+
+export const cssNamespace = 'table-up';

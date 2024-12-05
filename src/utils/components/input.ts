@@ -1,3 +1,5 @@
+import { createBEM } from '../bem';
+
 interface InputOptions {
   type?: string;
   value?: string;
@@ -6,21 +8,22 @@ interface InputOptions {
   [key: string]: any;
 };
 export const createInputItem = (label: string, options: InputOptions) => {
+  const bem = createBEM('input');
   options.type || (options.type = 'text');
   options.value || (options.value = '');
 
   const inputItem = document.createElement('div');
-  inputItem.classList.add('input__item');
+  inputItem.classList.add(bem.be('item'));
 
   if (label) {
     const inputLabel = document.createElement('span');
-    inputLabel.classList.add('input__label');
+    inputLabel.classList.add(bem.be('label'));
     inputLabel.textContent = label;
     inputItem.appendChild(inputLabel);
   }
 
   const inputInput = document.createElement('div');
-  inputInput.classList.add('input__input');
+  inputInput.classList.add(bem.be('input'));
   const input = document.createElement('input');
   for (const key in options) {
     input.setAttribute(key, options[key]);
@@ -49,11 +52,11 @@ export const createInputItem = (label: string, options: InputOptions) => {
   const errorTip = (msg: string) => {
     let errorTip: HTMLElement;
     if (inputInput.classList.contains('error')) {
-      errorTip = inputInput.querySelector('.input__error-tip')!;
+      errorTip = inputInput.querySelector(`.${bem.be('error-tip')}`)!;
     }
     else {
       errorTip = document.createElement('span');
-      errorTip.classList.add('input__error-tip');
+      errorTip.classList.add(bem.be('error-tip'));
       inputInput.appendChild(errorTip);
     }
 

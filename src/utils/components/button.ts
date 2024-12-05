@@ -1,3 +1,4 @@
+import { createBEM } from '../bem';
 import { isString } from '../is';
 
 interface ButtonOptions {
@@ -6,8 +7,9 @@ interface ButtonOptions {
 };
 export const createButton = (options?: Partial<ButtonOptions>) => {
   const { type = 'default', content } = options || {};
+  const bem = createBEM('button');
   const btn = document.createElement('button');
-  btn.classList.add('table-up-btn', type);
+  btn.classList.add(bem.b(), type);
   if (content) {
     if (isString(content)) {
       btn.textContent = content;
