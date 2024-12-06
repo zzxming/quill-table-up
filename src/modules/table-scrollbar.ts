@@ -115,7 +115,6 @@ export class Scrollbar {
     });
     this.thumb.classList.add('ql-table-scrollbar-thumb');
 
-    // eslint-disable-next-line unicorn/consistent-function-scoping
     const mouseMoveDocumentHandler = (e: MouseEvent) => {
       if (this.cursorDown === false) return;
       const prevPage = this.thumbState[this.propertyMap.axis];
@@ -180,7 +179,6 @@ export class Scrollbar {
     });
   }
 
-  // eslint-disable-next-line unicorn/consistent-function-scoping
   showScrollbar = debounce(() => {
     this.cursorLeave = false;
     this.scrollbar.classList.remove('transparent');
@@ -189,7 +187,6 @@ export class Scrollbar {
     });
   }, 200);
 
-  // eslint-disable-next-line unicorn/consistent-function-scoping
   hideScrollbar = debounce(() => {
     this.cursorLeave = true;
     this.scrollbar.classList.add('transparent');
