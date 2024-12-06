@@ -1,0 +1,67 @@
+@import './variables.less';
+
+.@{namespace}-color-picker {
+  &__preview {
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+    border-radius: 6px;
+  }
+
+  &__content {
+    .setCssVar(color-picker-bg-color, #ffffff);
+
+    box-sizing: border-box;
+    background: .getCssVar(color-picker-bg-color) [];
+    border-radius: 6px;
+    box-shadow: 0 0 6px #b2b5b8;
+    width: 197px;
+    height: 166px;
+    padding: 8px;
+  }
+
+  &__selector {
+    width: 150px;
+    height: 150px;
+    position: absolute;
+  }
+
+  &__background {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(to top, #000 0%, rgba(0, 0, 0, 0) 100%),
+      linear-gradient(to right, #fff 0%, rgba(255, 255, 255, 0) 100%);
+    &-handle {
+      box-sizing: border-box;
+      position: absolute;
+      top: 0px;
+      left: 150px;
+      border-radius: 100%;
+      width: 10px;
+      height: 10px;
+      border: 1px solid #ffffff;
+      cursor: pointer;
+      transform: translate(-5px, -5px);
+      opacity: 0.85;
+    }
+  }
+
+  &__hue {
+    width: 17px;
+    height: 150px;
+    margin-left: 164px;
+    position: absolute;
+    opacity: 0.85;
+    background: linear-gradient(0deg, red 0, #ff0 17%, #0f0 33%, #0ff 50%, #00f 67%, #f0f 83%, red);
+    &-handle {
+      box-sizing: border-box;
+      position: absolute;
+      width: 21px;
+      transform: translate(-2px, -5px);
+      height: 10px;
+      border: 2px solid #ffffff;
+      opacity: 0.85;
+      cursor: pointer;
+    }
+  }
+}
