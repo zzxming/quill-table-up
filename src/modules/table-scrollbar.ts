@@ -1,7 +1,7 @@
 import type TableUp from '..';
 import type { TableMainFormat } from '../formats';
 import Quill from 'quill';
-import { addScrollEvent, clearScrollEvent, debounce, handleIfTransitionend } from '../utils';
+import { addScrollEvent, clearScrollEvent, debounce } from '../utils';
 
 export class Scrollbar {
   minSize: number = 20;
@@ -184,7 +184,7 @@ export class Scrollbar {
   showScrollbar = debounce(() => {
     this.cursorLeave = false;
     this.scrollbar.classList.remove('transparent');
-    handleIfTransitionend(this.scrollbar, 150, () => {
+    this.scrollbar.addEventListener('transitionend', () => {
       this.scrollbar.style.display = (this.isVertical ? this.sizeHeight : this.sizeWidth) ? 'block' : 'none';
     });
   }, 200);
@@ -193,7 +193,7 @@ export class Scrollbar {
   hideScrollbar = debounce(() => {
     this.cursorLeave = true;
     this.scrollbar.classList.add('transparent');
-    handleIfTransitionend(this.scrollbar, 150, () => {
+    this.scrollbar.addEventListener('transitionend', () => {
       this.scrollbar.style.display = this.cursorDown && (this.isVertical ? this.sizeHeight : this.sizeWidth) ? 'block' : 'none';
     });
   }, 200);
