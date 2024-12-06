@@ -26,6 +26,7 @@ interface ToolTipOptions {
   msg?: string;
   delay?: number;
   content?: HTMLElement;
+  type?: 'hover' | 'click';
 }
 const DISTANCE = 4;
 let tooltipContainer: HTMLElement;
@@ -33,7 +34,7 @@ export interface TooltipInstance {
   destroy: () => void;
 };
 export const createTooltip = (target: HTMLElement, options: ToolTipOptions = {}): TooltipInstance | null => {
-  const { msg = '', delay = 150, content, direction = 'bottom' } = options;
+  const { msg = '', delay = 150, content, direction = 'bottom', type = 'hover' } = options;
   const bem = createBEM('tooltip');
   if (msg || content) {
     if (!tooltipContainer) {
@@ -89,18 +90,60 @@ export const createTooltip = (target: HTMLElement, options: ToolTipOptions = {})
       }, delay);
     };
 
-    const eventListeners = [target, tooltip];
+    const hoverDisplay = () => {
+      const eventListeners = [target, tooltip];
+      const show = () => {
+        for (const listener of eventListeners) {
+          listener.addEventListener('mouseenter', open);
+          listener.addEventListener('mouseleave', close);
+        }
+      };
+      const hide = () => {
+        for (const listener of eventListeners) {
+          listener.removeEventListener('mouseenter', open);
+          listener.removeEventListener('mouseleave', close);
+        }
+      };
+      return {
+        show,
+        hide,
+        destroy: () => {},
+      };
+    };
+    const stopPropagation = (e: Event) => e.stopPropagation();
+    const clickDisplay = () => {
+      // eslint-disable-next-line unicorn/consistent-function-scoping
+      const show = (e: MouseEvent) => {
+        stopPropagation(e);
+        open();
+        document.removeEventListener('click', close);
+        document.addEventListener('click', close, { once: true });
+      };
+      return {
+        show: () => {
+          tooltip.addEventListener('click', stopPropagation);
+          target.addEventListener('click', show);
+        },
+        hide: () => {
+          document.removeEventListener('click', close);
+        },
+        destroy: () => {
+          tooltip.removeEventListener('click', stopPropagation);
+          target.removeEventListener('click', show);
+        },
+      };
+    };
+    const displayMethods = {
+      hover: hoverDisplay,
+      click: clickDisplay,
+    };
 
-    for (const listener of eventListeners) {
-      listener.addEventListener('mouseenter', open);
-      listener.addEventListener('mouseleave', close);
-    }
+    const { show, hide, destroy: destroyDisplay } = displayMethods[type]();
+    show();
 
     const destroy = () => {
-      for (const listener of eventListeners) {
-        listener.removeEventListener('mouseenter', open);
-        listener.removeEventListener('mouseleave', close);
-      }
+      hide();
+      destroyDisplay();
       if (cleanup) cleanup();
       tooltip.remove();
     };
