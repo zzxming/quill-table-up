@@ -147,121 +147,87 @@
         return btn;
     };
 
+    const normalizeValue = function (value, max) {
+        value = Math.min(max, Math.max(0, Number.parseFloat(`${value}`)));
+        // Handle floating point rounding errors
+        if (Math.abs(value - max) < 0.000_001) {
+            return 1;
+        }
+        // Convert into [0, 1] range if it isn't already
+        return (value % max) / Number.parseFloat(max);
+    };
     const validateHSB = (hsb) => {
         return {
             h: Math.min(360, Math.max(0, hsb.h)),
             s: Math.min(100, Math.max(0, hsb.s)),
             b: Math.min(100, Math.max(0, hsb.b)),
-            a: hsb.a ? Math.min(1, Math.max(0, hsb.a)) : 1,
+            a: Math.min(1, Math.max(0, hsb.a)),
         };
     };
     const HEXtoRGB = (hex) => {
-        let hexValue = Number.parseInt(hex.includes('#') ? hex.slice(1) : hex, 16);
-        let alpha = 1;
-        if (hex.length === 8) {
-            alpha = (hexValue & 0xFF) / 255;
-            hexValue = hexValue >> 8;
-        }
-        return { r: hexValue >> 16, g: (hexValue & 0x00_FF_00) >> 8, b: hexValue & 0x00_00_FF, a: alpha };
+        hex = hex.startsWith('#') ? hex.slice(1) : hex;
+        const r = Number.parseInt(hex.slice(0, 2), 16);
+        const g = Number.parseInt(hex.slice(2, 4), 16);
+        const b = Number.parseInt(hex.slice(4, 6), 16);
+        const a = Number((Number.parseInt(hex.slice(6, 8) || 'ff', 16) / 255).toFixed(2));
+        return { r, g, b, a };
     };
     const RGBtoHSB = (rgb) => {
-        const hsb = {
-            h: 0,
-            s: 0,
-            b: 0,
-            a: rgb.a || 1,
-        };
-        const min = Math.min(rgb.r, rgb.g, rgb.b);
-        const max = Math.max(rgb.r, rgb.g, rgb.b);
-        const delta = max - min;
-        hsb.b = max;
-        hsb.s = max !== 0 ? (255 * delta) / max : 0;
-        if (hsb.s !== 0) {
-            if (rgb.r === max) {
-                hsb.h = (rgb.g - rgb.b) / delta;
-            }
-            else if (rgb.g === max) {
-                hsb.h = 2 + (rgb.b - rgb.r) / delta;
-            }
-            else {
-                hsb.h = 4 + (rgb.r - rgb.g) / delta;
-            }
+        let { r, g, b, a } = rgb;
+        r = normalizeValue(r, 255);
+        g = normalizeValue(g, 255);
+        b = normalizeValue(b, 255);
+        const max = Math.max(r, g, b);
+        const min = Math.min(r, g, b);
+        let h;
+        const v = max;
+        const d = max - min;
+        const s = max === 0 ? 0 : d / max;
+        if (max === min) {
+            h = 0; // achromatic
         }
         else {
-            hsb.h = -1;
+            switch (max) {
+                case r: {
+                    h = (g - b) / d + (g < b ? 6 : 0);
+                    break;
+                }
+                case g: {
+                    h = (b - r) / d + 2;
+                    break;
+                }
+                case b: {
+                    h = (r - g) / d + 4;
+                    break;
+                }
+            }
+            h /= 6;
         }
-        hsb.h *= 60;
-        if (hsb.h < 0) {
-            hsb.h += 360;
-        }
-        hsb.s *= 100 / 255;
-        hsb.b *= 100 / 255;
-        return hsb;
+        return { h: h * 360, s: s * 100, b: v * 100, a };
     };
     const HSBtoRGB = (hsb) => {
-        let rgb = {
-            r: 0,
-            g: 0,
-            b: 0,
-            a: hsb.a || 1,
+        let { h, s, b, a } = hsb;
+        h = normalizeValue(h, 360) * 6;
+        s = normalizeValue(s, 100);
+        b = normalizeValue(b, 100);
+        const i = Math.floor(h);
+        const f = h - i;
+        const p = b * (1 - s);
+        const q = b * (1 - f * s);
+        const t = b * (1 - (1 - f) * s);
+        const mod = i % 6;
+        const r = [b, q, p, p, t, b][mod];
+        const g = [t, b, b, q, p, p][mod];
+        const v = [p, p, t, b, b, q][mod];
+        return {
+            r: Math.round(r * 255),
+            g: Math.round(g * 255),
+            b: Math.round(v * 255),
+            a,
         };
-        let h = Math.round(hsb.h);
-        const s = Math.round((hsb.s * 255) / 100);
-        const v = Math.round((hsb.b * 255) / 100);
-        if (s === 0) {
-            rgb = {
-                r: v,
-                g: v,
-                b: v,
-                a: rgb.a,
-            };
-        }
-        else {
-            const t1 = v;
-            const t2 = ((255 - s) * v) / 255;
-            const t3 = ((t1 - t2) * (h % 60)) / 60;
-            if (h === 360)
-                h = 0;
-            if (h < 60) {
-                rgb.r = t1;
-                rgb.b = t2;
-                rgb.g = t2 + t3;
-            }
-            else if (h < 120) {
-                rgb.g = t1;
-                rgb.b = t2;
-                rgb.r = t1 - t3;
-            }
-            else if (h < 180) {
-                rgb.g = t1;
-                rgb.r = t2;
-                rgb.b = t2 + t3;
-            }
-            else if (h < 240) {
-                rgb.b = t1;
-                rgb.r = t2;
-                rgb.g = t1 - t3;
-            }
-            else if (h < 300) {
-                rgb.b = t1;
-                rgb.g = t2;
-                rgb.r = t2 + t3;
-            }
-            else if (h < 360) {
-                rgb.r = t1;
-                rgb.g = t2;
-                rgb.b = t1 - t3;
-            }
-            else {
-                rgb.r = 0;
-                rgb.g = 0;
-                rgb.b = 0;
-            }
-        }
-        return { r: Math.round(rgb.r), g: Math.round(rgb.g), b: Math.round(rgb.b), a: hsb.a || 1 };
     };
     const RGBtoHEX = (rgb) => {
-        const hex = [rgb.r.toString(16), rgb.g.toString(16), rgb.b.toString(16), Math.round((rgb.a || 1) * 255).toString(16)];
+        const hex = [rgb.r.toString(16), rgb.g.toString(16), rgb.b.toString(16), Math.round(rgb.a * 255).toString(16)];
         for (const key in hex) {
             if (hex[key].length === 1) {
                 hex[key] = `0${hex[key]}`;
@@ -272,13 +238,15 @@
     const HSBtoHEX = (hsb) => RGBtoHEX(HSBtoRGB(hsb));
 
     const createColorPicker = (options = {}) => {
+        const contentWidth = 230;
+        const contentHeight = 150;
+        const handleSizeSec = 10;
         let hsbValue = RGBtoHSB(HEXtoRGB(options.color || '#ff0000'));
         const bem = createBEM('color-picker');
         const root = document.createElement('div');
         root.classList.add(bem.b());
         const content = document.createElement('div');
         content.classList.add(bem.be('content'));
-        root.appendChild(content);
         const colorSelector = document.createElement('div');
         colorSelector.classList.add(bem.be('selector'));
         const colorBackground = document.createElement('div');
@@ -300,12 +268,116 @@
         const colorHueHandle = document.createElement('div');
         colorHueHandle.classList.add(bem.be('hue-handle'));
         colorHue.appendChild(colorHueHandle);
+        const action = document.createElement('div');
+        action.classList.add(bem.be('action'));
+        const [colorRInput, colorGInput, colorBInput, colorAInput] = ['r', 'g', 'b', 'a'].map((key) => {
+            const item = document.createElement('div');
+            item.classList.add(bem.be('action-item'), key);
+            const label = document.createElement('label');
+            label.textContent = key.toUpperCase();
+            const colorInput = document.createElement('input');
+            colorInput.classList.add(bem.be('input'));
+            colorInput.addEventListener('input', () => {
+                colorInput.value = colorInput.value.replaceAll(/[^0-9]/g, '');
+            });
+            colorInput.addEventListener('change', () => {
+                let value = Math.round(Number(colorInput.value));
+                if (key === 'a') {
+                    value = value / 100;
+                }
+                const result = validateHSB(RGBtoHSB(Object.assign({}, HSBtoRGB(hsbValue), { [key]: value })));
+                updateValue(result);
+                updateUI();
+            });
+            item.appendChild(label);
+            item.appendChild(colorInput);
+            action.appendChild(item);
+            return colorInput;
+        });
         content.appendChild(colorHue);
         content.appendChild(colorSelector);
         content.appendChild(colorAlpha);
+        root.appendChild(content);
+        root.appendChild(action);
         let colorDragging = false;
         let hueDragging = false;
         let alphaDragging = false;
+        function updateInput() {
+            const hex = HSBtoHEX(hsbValue);
+            for (const [i, input] of [colorRInput, colorGInput, colorBInput].entries()) {
+                input.value = String(Number.parseInt(hex[i * 2] + hex[i * 2 + 1], 16));
+            }
+            colorAInput.value = String((hsbValue.a * 100).toFixed(0));
+        }
+        function updateColorHandle() {
+            Object.assign(colorHandle.style, {
+                left: `${Math.floor((contentWidth * hsbValue.s) / 100)}px`,
+                top: `${Math.floor((contentHeight * (100 - hsbValue.b)) / 100)}px`,
+            });
+        }
+        function updateColorSelector() {
+            colorSelector.style.backgroundColor = `#${RGBtoHEX(HSBtoRGB({
+            h: hsbValue.h,
+            s: 100,
+            b: 100,
+            a: 1,
+        }))}`;
+        }
+        function updateHue() {
+            colorHueHandle.style.top = `${Math.floor(contentHeight - (contentHeight * hsbValue.h) / 360)}px`;
+        }
+        function updateAlphaHandle() {
+            alphaHandle.style.left = `${hsbValue.a * 100}%`;
+        }
+        function updateAlphaBg() {
+            const { r, g, b } = HSBtoRGB(hsbValue);
+            alphaBg.style.background = `linear-gradient(to right, rgba(${r}, ${g}, ${b}, 0) 0%, rgba(${r}, ${g}, ${b}, 1) 100%)`;
+        }
+        function updateUI() {
+            updateColorHandle();
+            updateColorSelector();
+            updateHue();
+            updateAlphaHandle();
+            updateAlphaBg();
+            updateInput();
+        }
+        function updateValue(value) {
+            hsbValue = validateHSB(Object.assign({}, hsbValue, value));
+            updateInput();
+            if (options.onChange) {
+                options.onChange(`#${HSBtoHEX(hsbValue)}`);
+            }
+        }
+        function pickColor(event) {
+            const rect = colorSelector.getBoundingClientRect();
+            const top = rect.top + (window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0);
+            const left = rect.left + document.body.scrollLeft;
+            const saturation = Math.floor((100 * Math.max(0, Math.min(contentWidth, event.pageX - left))) / contentWidth);
+            const brightness = Math.floor((100 * (contentHeight - Math.max(0, Math.min(contentHeight, event.pageY - top)))) / contentHeight);
+            updateValue({
+                s: saturation,
+                b: brightness,
+            });
+            updateUI();
+        }
+        function pickHue(event) {
+            const top = colorHue.getBoundingClientRect().top + (window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0);
+            updateValue({
+                h: Math.floor((360 * (contentHeight - Math.max(0, Math.min(contentHeight, event.pageY - top)))) / contentHeight),
+            });
+            updateUI();
+        }
+        function pickAlpha(event) {
+            const { pageX } = event;
+            const rect = colorAlpha.getBoundingClientRect();
+            let left = pageX - rect.left;
+            left = Math.max(handleSizeSec / 2, left);
+            left = Math.min(left, rect.width - handleSizeSec / 2);
+            updateValue({
+                a: Math.round(((left - 10 / 2) / (rect.width - 10)) * 100) / 100,
+            });
+            updateUI();
+        }
         function onDrag(event) {
             if (colorDragging) {
                 event.preventDefault();
@@ -332,29 +404,6 @@
             pickColor(e);
         }
         colorSelector.addEventListener('mousedown', onColorSelectorMousedown);
-        function updateColorHandle() {
-            Object.assign(colorHandle.style, {
-                left: `${Math.floor((150 * hsbValue.s) / 100)}px`,
-                top: `${Math.floor((150 * (100 - hsbValue.b)) / 100)}px`,
-            });
-        }
-        function pickColor(event) {
-            const rect = colorSelector.getBoundingClientRect();
-            const top = rect.top + (window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0);
-            const left = rect.left + document.body.scrollLeft;
-            const saturation = Math.floor((100 * Math.max(0, Math.min(150, event.pageX - left))) / 150);
-            const brightness = Math.floor((100 * (150 - Math.max(0, Math.min(150, event.pageY - top)))) / 150);
-            hsbValue = validateHSB({
-                h: hsbValue.h,
-                s: saturation,
-                b: brightness,
-                a: hsbValue.a,
-            });
-            updateColorHandle();
-            if (options.onChange) {
-                options.onChange(`#${HSBtoHEX(hsbValue)}`);
-            }
-        }
         function onColorHueDragEnd() {
             document.removeEventListener('mousemove', onDrag);
             document.removeEventListener('mouseup', onColorHueDragEnd);
@@ -367,45 +416,6 @@
             pickHue(event);
         }
         colorHue.addEventListener('mousedown', onColorHueMousedown);
-        function updateHue() {
-            colorHueHandle.style.top = `${Math.floor(150 - (150 * hsbValue.h) / 360)}px`;
-        }
-        function updateColorSelector() {
-            colorSelector.style.backgroundColor = `#${RGBtoHEX(HSBtoRGB({
-            h: hsbValue.h,
-            s: 100,
-            b: 100,
-            a: 1,
-        }))}`;
-        }
-        function pickHue(event) {
-            const top = colorHue.getBoundingClientRect().top + (window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0);
-            hsbValue = validateHSB({
-                h: Math.floor((360 * (150 - Math.max(0, Math.min(150, event.pageY - top)))) / 150),
-                s: hsbValue.s,
-                b: hsbValue.b,
-                a: hsbValue.a,
-            });
-            updateColorSelector();
-            updateHue();
-            updateAlphaBg();
-            if (options.onChange) {
-                options.onChange(`#${HSBtoHEX(hsbValue)}`);
-            }
-        }
-        function pickAlpha(event) {
-            const { pageX } = event;
-            const rect = colorAlpha.getBoundingClientRect();
-            let left = pageX - rect.left;
-            left = Math.max(10 / 2, left);
-            left = Math.min(left, rect.width - 10 / 2);
-            hsbValue.a = Math.round(((left - 10 / 2) / (rect.width - 10)) * 100) / 100;
-            updateAlphaBg();
-            updateAlphaHandle();
-            if (options.onChange) {
-                options.onChange(`#${HSBtoHEX(hsbValue)}`);
-            }
-        }
         function onColorAlphaDragEnd() {
             document.removeEventListener('mousemove', onDrag);
             document.removeEventListener('mouseup', onColorAlphaDragEnd);
@@ -418,18 +428,7 @@
             pickAlpha(event);
         }
         colorAlpha.addEventListener('mousedown', onColorAlphaMousedown);
-        function updateAlphaHandle() {
-            alphaHandle.style.left = `${hsbValue.a * 100}%`;
-        }
-        function updateAlphaBg() {
-            const { r, g, b } = HSBtoRGB(hsbValue);
-            alphaBg.style.background = `linear-gradient(to right, rgba(${r}, ${g}, ${b}, 0) 0%, rgba(${r}, ${g}, ${b}, 1) 100%)`;
-        }
-        updateColorHandle();
-        updateColorSelector();
-        updateHue();
-        updateAlphaHandle();
-        updateAlphaBg();
+        updateUI();
         return root;
     };
 
