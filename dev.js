@@ -147,6 +147,292 @@
         return btn;
     };
 
+    const validateHSB = (hsb) => {
+        return {
+            h: Math.min(360, Math.max(0, hsb.h)),
+            s: Math.min(100, Math.max(0, hsb.s)),
+            b: Math.min(100, Math.max(0, hsb.b)),
+            a: hsb.a ? Math.min(1, Math.max(0, hsb.a)) : 1,
+        };
+    };
+    const HEXtoRGB = (hex) => {
+        let hexValue = Number.parseInt(hex.includes('#') ? hex.slice(1) : hex, 16);
+        let alpha = 1;
+        if (hex.length === 8) {
+            alpha = (hexValue & 0xFF) / 255;
+            hexValue = hexValue >> 8;
+        }
+        return { r: hexValue >> 16, g: (hexValue & 0x00_FF_00) >> 8, b: hexValue & 0x00_00_FF, a: alpha };
+    };
+    const RGBtoHSB = (rgb) => {
+        const hsb = {
+            h: 0,
+            s: 0,
+            b: 0,
+            a: rgb.a || 1,
+        };
+        const min = Math.min(rgb.r, rgb.g, rgb.b);
+        const max = Math.max(rgb.r, rgb.g, rgb.b);
+        const delta = max - min;
+        hsb.b = max;
+        hsb.s = max !== 0 ? (255 * delta) / max : 0;
+        if (hsb.s !== 0) {
+            if (rgb.r === max) {
+                hsb.h = (rgb.g - rgb.b) / delta;
+            }
+            else if (rgb.g === max) {
+                hsb.h = 2 + (rgb.b - rgb.r) / delta;
+            }
+            else {
+                hsb.h = 4 + (rgb.r - rgb.g) / delta;
+            }
+        }
+        else {
+            hsb.h = -1;
+        }
+        hsb.h *= 60;
+        if (hsb.h < 0) {
+            hsb.h += 360;
+        }
+        hsb.s *= 100 / 255;
+        hsb.b *= 100 / 255;
+        return hsb;
+    };
+    const HSBtoRGB = (hsb) => {
+        let rgb = {
+            r: 0,
+            g: 0,
+            b: 0,
+            a: hsb.a || 1,
+        };
+        let h = Math.round(hsb.h);
+        const s = Math.round((hsb.s * 255) / 100);
+        const v = Math.round((hsb.b * 255) / 100);
+        if (s === 0) {
+            rgb = {
+                r: v,
+                g: v,
+                b: v,
+                a: rgb.a,
+            };
+        }
+        else {
+            const t1 = v;
+            const t2 = ((255 - s) * v) / 255;
+            const t3 = ((t1 - t2) * (h % 60)) / 60;
+            if (h === 360)
+                h = 0;
+            if (h < 60) {
+                rgb.r = t1;
+                rgb.b = t2;
+                rgb.g = t2 + t3;
+            }
+            else if (h < 120) {
+                rgb.g = t1;
+                rgb.b = t2;
+                rgb.r = t1 - t3;
+            }
+            else if (h < 180) {
+                rgb.g = t1;
+                rgb.r = t2;
+                rgb.b = t2 + t3;
+            }
+            else if (h < 240) {
+                rgb.b = t1;
+                rgb.r = t2;
+                rgb.g = t1 - t3;
+            }
+            else if (h < 300) {
+                rgb.b = t1;
+                rgb.g = t2;
+                rgb.r = t2 + t3;
+            }
+            else if (h < 360) {
+                rgb.r = t1;
+                rgb.g = t2;
+                rgb.b = t1 - t3;
+            }
+            else {
+                rgb.r = 0;
+                rgb.g = 0;
+                rgb.b = 0;
+            }
+        }
+        return { r: Math.round(rgb.r), g: Math.round(rgb.g), b: Math.round(rgb.b), a: hsb.a || 1 };
+    };
+    const RGBtoHEX = (rgb) => {
+        const hex = [rgb.r.toString(16), rgb.g.toString(16), rgb.b.toString(16), Math.round((rgb.a || 1) * 255).toString(16)];
+        for (const key in hex) {
+            if (hex[key].length === 1) {
+                hex[key] = `0${hex[key]}`;
+            }
+        }
+        return hex.join('');
+    };
+    const HSBtoHEX = (hsb) => RGBtoHEX(HSBtoRGB(hsb));
+
+    const createColorPicker = (options = {}) => {
+        let hsbValue = RGBtoHSB(HEXtoRGB(options.color || '#ff0000'));
+        const bem = createBEM('color-picker');
+        const root = document.createElement('div');
+        root.classList.add(bem.b());
+        const content = document.createElement('div');
+        content.classList.add(bem.be('content'));
+        root.appendChild(content);
+        const colorSelector = document.createElement('div');
+        colorSelector.classList.add(bem.be('selector'));
+        const colorBackground = document.createElement('div');
+        colorBackground.classList.add(bem.be('background'));
+        colorSelector.appendChild(colorBackground);
+        const colorHandle = document.createElement('div');
+        colorHandle.classList.add(bem.be('background-handle'));
+        colorBackground.appendChild(colorHandle);
+        const colorAlpha = document.createElement('div');
+        colorAlpha.classList.add(bem.be('alpha'));
+        const alphaBg = document.createElement('div');
+        alphaBg.classList.add(bem.be('alpha-bg'));
+        const alphaHandle = document.createElement('div');
+        alphaHandle.classList.add(bem.be('alpha-handle'));
+        colorAlpha.appendChild(alphaBg);
+        colorAlpha.appendChild(alphaHandle);
+        const colorHue = document.createElement('div');
+        colorHue.classList.add(bem.be('hue'));
+        const colorHueHandle = document.createElement('div');
+        colorHueHandle.classList.add(bem.be('hue-handle'));
+        colorHue.appendChild(colorHueHandle);
+        content.appendChild(colorHue);
+        content.appendChild(colorSelector);
+        content.appendChild(colorAlpha);
+        let colorDragging = false;
+        let hueDragging = false;
+        let alphaDragging = false;
+        function onDrag(event) {
+            if (colorDragging) {
+                event.preventDefault();
+                pickColor(event);
+            }
+            if (hueDragging) {
+                event.preventDefault();
+                pickHue(event);
+            }
+            if (alphaDragging) {
+                event.preventDefault();
+                pickAlpha(event);
+            }
+        }
+        function onColorSelectorDragEnd() {
+            document.removeEventListener('mousemove', onDrag);
+            document.removeEventListener('mouseup', onColorSelectorDragEnd);
+            colorDragging = false;
+        }
+        function onColorSelectorMousedown(e) {
+            document.addEventListener('mousemove', onDrag);
+            document.addEventListener('mouseup', onColorSelectorDragEnd);
+            colorDragging = true;
+            pickColor(e);
+        }
+        colorSelector.addEventListener('mousedown', onColorSelectorMousedown);
+        function updateColorHandle() {
+            Object.assign(colorHandle.style, {
+                left: `${Math.floor((150 * hsbValue.s) / 100)}px`,
+                top: `${Math.floor((150 * (100 - hsbValue.b)) / 100)}px`,
+            });
+        }
+        function pickColor(event) {
+            const rect = colorSelector.getBoundingClientRect();
+            const top = rect.top + (window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0);
+            const left = rect.left + document.body.scrollLeft;
+            const saturation = Math.floor((100 * Math.max(0, Math.min(150, event.pageX - left))) / 150);
+            const brightness = Math.floor((100 * (150 - Math.max(0, Math.min(150, event.pageY - top)))) / 150);
+            hsbValue = validateHSB({
+                h: hsbValue.h,
+                s: saturation,
+                b: brightness,
+                a: hsbValue.a,
+            });
+            updateColorHandle();
+            if (options.onChange) {
+                options.onChange(`#${HSBtoHEX(hsbValue)}`);
+            }
+        }
+        function onColorHueDragEnd() {
+            document.removeEventListener('mousemove', onDrag);
+            document.removeEventListener('mouseup', onColorHueDragEnd);
+            hueDragging = false;
+        }
+        function onColorHueMousedown(event) {
+            document.addEventListener('mousemove', onDrag);
+            document.addEventListener('mouseup', onColorHueDragEnd);
+            hueDragging = true;
+            pickHue(event);
+        }
+        colorHue.addEventListener('mousedown', onColorHueMousedown);
+        function updateHue() {
+            colorHueHandle.style.top = `${Math.floor(150 - (150 * hsbValue.h) / 360)}px`;
+        }
+        function updateColorSelector() {
+            colorSelector.style.backgroundColor = `#${RGBtoHEX(HSBtoRGB({
+            h: hsbValue.h,
+            s: 100,
+            b: 100,
+            a: 1,
+        }))}`;
+        }
+        function pickHue(event) {
+            const top = colorHue.getBoundingClientRect().top + (window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0);
+            hsbValue = validateHSB({
+                h: Math.floor((360 * (150 - Math.max(0, Math.min(150, event.pageY - top)))) / 150),
+                s: hsbValue.s,
+                b: hsbValue.b,
+                a: hsbValue.a,
+            });
+            updateColorSelector();
+            updateHue();
+            updateAlphaBg();
+            if (options.onChange) {
+                options.onChange(`#${HSBtoHEX(hsbValue)}`);
+            }
+        }
+        function pickAlpha(event) {
+            const { pageX } = event;
+            const rect = colorAlpha.getBoundingClientRect();
+            let left = pageX - rect.left;
+            left = Math.max(10 / 2, left);
+            left = Math.min(left, rect.width - 10 / 2);
+            hsbValue.a = Math.round(((left - 10 / 2) / (rect.width - 10)) * 100) / 100;
+            updateAlphaBg();
+            updateAlphaHandle();
+            if (options.onChange) {
+                options.onChange(`#${HSBtoHEX(hsbValue)}`);
+            }
+        }
+        function onColorAlphaDragEnd() {
+            document.removeEventListener('mousemove', onDrag);
+            document.removeEventListener('mouseup', onColorAlphaDragEnd);
+            alphaDragging = false;
+        }
+        function onColorAlphaMousedown(event) {
+            document.addEventListener('mousemove', onDrag);
+            document.addEventListener('mouseup', onColorAlphaDragEnd);
+            alphaDragging = true;
+            pickAlpha(event);
+        }
+        colorAlpha.addEventListener('mousedown', onColorAlphaMousedown);
+        function updateAlphaHandle() {
+            alphaHandle.style.left = `${hsbValue.a * 100}%`;
+        }
+        function updateAlphaBg() {
+            const { r, g, b } = HSBtoRGB(hsbValue);
+            alphaBg.style.background = `linear-gradient(to right, rgba(${r}, ${g}, ${b}, 0) 0%, rgba(${r}, ${g}, ${b}, 1) 100%)`;
+        }
+        updateColorHandle();
+        updateColorSelector();
+        updateHue();
+        updateAlphaHandle();
+        updateAlphaBg();
+        return root;
+    };
+
     let zindex = 8000;
     const createDialog = ({ child, target = document.body, beforeClose = () => { } } = {}) => {
         const bem = createBEM('dialog');
@@ -1907,6 +2193,153 @@
       });
     };
 
+    const DISTANCE = 4;
+    let tooltipContainer;
+    const createTooltip = (target, options = {}) => {
+        const { msg = '', delay = 150, content, direction = 'bottom', type = 'hover', container, onOpen, onClose, closed, onDestroy } = options;
+        const bem = createBEM('tooltip');
+        if (msg || content) {
+            if (!tooltipContainer) {
+                tooltipContainer = document.createElement('div');
+                document.body.appendChild(tooltipContainer);
+            }
+            const appendTo = container || tooltipContainer;
+            const tooltip = document.createElement('div');
+            tooltip.classList.add(bem.b(), 'hidden', 'transparent');
+            if (content) {
+                tooltip.appendChild(content);
+            }
+            else if (msg) {
+                tooltip.textContent = msg;
+            }
+            let showTimer;
+            let closeTimer;
+            let cleanup;
+            const update = () => {
+                if (cleanup)
+                    cleanup();
+                computePosition(target, tooltip, {
+                    placement: direction,
+                    middleware: [flip(), shift({ limiter: limitShift() }), offset(DISTANCE)],
+                }).then(({ x, y }) => {
+                    Object.assign(tooltip.style, {
+                        left: `${x}px`,
+                        top: `${y}px`,
+                    });
+                });
+            };
+            const transitionendHandler = () => {
+                tooltip.classList.add('hidden');
+                if (appendTo.contains(tooltip)) {
+                    appendTo.removeChild(tooltip);
+                }
+                if (cleanup)
+                    cleanup();
+                if (closed)
+                    closed();
+            };
+            const openTooltip = (force = false) => {
+                if (closeTimer)
+                    clearTimeout(closeTimer);
+                showTimer = setTimeout(() => {
+                    if (onOpen) {
+                        const allow = onOpen(force);
+                        if (!force && allow)
+                            return;
+                    }
+                    appendTo.appendChild(tooltip);
+                    tooltip.removeEventListener('transitionend', transitionendHandler);
+                    tooltip.classList.remove('hidden');
+                    cleanup = autoUpdate(target, tooltip, update);
+                    tooltip.classList.remove('transparent');
+                }, delay);
+            };
+            const closeTooltip = (force = false) => {
+                if (showTimer)
+                    clearTimeout(showTimer);
+                closeTimer = setTimeout(() => {
+                    if (onClose) {
+                        const allow = onClose(force);
+                        if (!force && allow)
+                            return;
+                    }
+                    tooltip.addEventListener('transitionend', transitionendHandler, { once: true });
+                    tooltip.classList.add('transparent');
+                }, delay);
+            };
+            const hoverDisplay = () => {
+                const eventListeners = [target, tooltip];
+                const close = closeTooltip.bind(undefined, false);
+                const open = openTooltip.bind(undefined, false);
+                const prepare = () => {
+                    for (const listener of eventListeners) {
+                        listener.addEventListener('mouseenter', open);
+                        listener.addEventListener('mouseleave', close);
+                    }
+                };
+                return {
+                    prepare,
+                    show: openTooltip,
+                    hide: closeTooltip,
+                    destroy: () => {
+                        for (const listener of eventListeners) {
+                            listener.removeEventListener('mouseenter', open);
+                            listener.removeEventListener('mouseleave', close);
+                        }
+                    },
+                };
+            };
+            const clickDisplay = () => {
+                const close = (e) => {
+                    e.stopPropagation();
+                    closeTooltip(false);
+                };
+                const show = (e) => {
+                    e.stopPropagation();
+                    openTooltip();
+                    document.removeEventListener('click', close);
+                    document.addEventListener('click', close, { once: true });
+                };
+                return {
+                    prepare: () => {
+                        tooltip.addEventListener('click', (e) => e.stopPropagation());
+                        target.addEventListener('click', show);
+                    },
+                    show: openTooltip,
+                    hide: (force = false) => {
+                        closeTooltip(force);
+                        document.removeEventListener('click', close);
+                    },
+                    destroy: () => {
+                        target.removeEventListener('click', show);
+                        document.removeEventListener('click', close);
+                    },
+                };
+            };
+            const displayMethods = {
+                hover: hoverDisplay,
+                click: clickDisplay,
+            };
+            const { prepare, show, hide, destroy: destroyDisplay } = displayMethods[type]();
+            prepare();
+            const destroy = () => {
+                hide(true);
+                if (onDestroy)
+                    onDestroy();
+                destroyDisplay();
+                if (cleanup)
+                    cleanup();
+                tooltip.remove();
+            };
+            return {
+                show,
+                hide,
+                destroy,
+            };
+        }
+        return null;
+    };
+
     const randomId = () => Math.random().toString(36).slice(2);
     const debounce = (fn, delay) => {
         let timestamp;
@@ -2007,94 +2440,6 @@
         }
         this.scrollHandler = [];
     }
-    const handleIfTransitionend = (domNode, duration, handler, options, lastTimer) => {
-        domNode.addEventListener('transitionend', handler, options);
-        // handle remove when transition set none
-        return setTimeout(() => {
-            handler();
-        }, duration);
-    };
-
-    const DISTANCE = 4;
-    let tooltipContainer;
-    const createTooltip = (target, options = {}) => {
-        const { msg = '', delay = 150, content, direction = 'bottom' } = options;
-        const bem = createBEM('tooltip');
-        if (msg || content) {
-            if (!tooltipContainer) {
-                tooltipContainer = document.createElement('div');
-                document.body.appendChild(tooltipContainer);
-            }
-            const tooltip = document.createElement('div');
-            tooltip.classList.add(bem.b(), 'hidden', 'transparent');
-            if (content) {
-                tooltip.appendChild(content);
-            }
-            else if (msg) {
-                tooltip.textContent = msg;
-            }
-            let timer;
-            let cleanup;
-            const update = () => {
-                if (cleanup)
-                    cleanup();
-                computePosition(target, tooltip, {
-                    placement: direction,
-                    middleware: [flip(), shift({ limiter: limitShift() }), offset(DISTANCE)],
-                }).then(({ x, y }) => {
-                    Object.assign(tooltip.style, {
-                        left: `${x}px`,
-                        top: `${y}px`,
-                    });
-                });
-            };
-            const transitionendHandler = () => {
-                tooltip.classList.add('hidden');
-                if (tooltipContainer.contains(tooltip)) {
-                    tooltipContainer.removeChild(tooltip);
-                }
-                if (cleanup)
-                    cleanup();
-            };
-            const open = () => {
-                if (timer)
-                    clearTimeout(timer);
-                timer = setTimeout(() => {
-                    tooltipContainer.appendChild(tooltip);
-                    tooltip.removeEventListener('transitionend', transitionendHandler);
-                    tooltip.classList.remove('hidden');
-                    cleanup = autoUpdate(target, tooltip, update);
-                    tooltip.classList.remove('transparent');
-                }, delay);
-            };
-            const close = () => {
-                if (timer)
-                    clearTimeout(timer);
-                timer = setTimeout(() => {
-                    tooltip.classList.add('transparent');
-                    handleIfTransitionend(tooltip, 150, transitionendHandler, { once: true });
-                }, delay);
-            };
-            const eventListeners = [target, tooltip];
-            for (const listener of eventListeners) {
-                listener.addEventListener('mouseenter', open);
-                listener.addEventListener('mouseleave', close);
-            }
-            const destroy = () => {
-                for (const listener of eventListeners) {
-                    listener.removeEventListener('mouseenter', open);
-                    listener.removeEventListener('mouseleave', close);
-                }
-                if (cleanup)
-                    cleanup();
-                tooltip.remove();
-            };
-            return {
-                destroy,
-            };
-        }
-        return null;
-    };
 
     const Parchment$2 = Quill.import('parchment');
     const Container = Quill.import('blots/container');
@@ -3487,6 +3832,9 @@
         menu = null;
         updateUsedColor;
         colorItemClass = `color-${randomId()}`;
+        colorChooseTooltipOption = {
+            direction: 'top',
+        };
         tooltipItem = [];
         constructor(tableModule, quill, options) {
             this.tableModule = tableModule;
@@ -3564,11 +3912,9 @@
                         iconDom.innerHTML = icon;
                     }
                     item.appendChild(iconDom);
-                    // color choose handler will trigger when the color input event
                     if (isColorChoose && attrKey) {
-                        const colorSelectWrapper = this.createColorChoose({ name, icon, handle, isColorChoose, key: attrKey, tip });
-                        const tooltipItem = createTooltip(item, { content: colorSelectWrapper, direction: 'top' });
-                        tooltipItem && this.tooltipItem.push(tooltipItem);
+                        const tooltipItem = this.createColorChoose(item, { name, icon, handle, isColorChoose, key: attrKey, tip });
+                        this.tooltipItem.push(tooltipItem);
                         item.classList.add(menuColorSelectClassName);
                     }
                     else {
@@ -3588,7 +3934,7 @@
             return toolBox;
         }
         ;
-        createColorChoose({ handle, key }) {
+        createColorChoose(item, { handle, key }) {
             const colorSelectWrapper = document.createElement('div');
             colorSelectWrapper.classList.add(colorClassName.selectWrapper);
             if (this.options.defaultColorMap.length > 0) {
@@ -3624,29 +3970,24 @@
             clearColor.addEventListener('click', () => {
                 handle(this.tableModule, this.getSelectedTds(), null);
             });
-            const label = document.createElement('label');
-            label.classList.add(colorClassName.btn, 'table-color-custom');
-            const customColor = document.createElement('span');
+            const customColor = document.createElement('div');
+            customColor.classList.add(colorClassName.btn, 'table-color-custom');
             customColor.textContent = this.tableModule.options.texts.custom;
-            const input = document.createElement('input');
-            input.type = 'color';
-            Object.assign(input.style, {
-                width: 0,
-                height: 0,
-                padding: 0,
-                border: 0,
-                outline: 'none',
-                opacity: 0,
+            const colorPicker = createColorPicker({
+                onChange: (color) => {
+                    handle(this.tableModule, this.getSelectedTds(), color);
+                    this.updateUsedColor(color);
+                },
             });
-            input.addEventListener('input', () => {
-                handle(this.tableModule, this.getSelectedTds(), input.value);
-                this.updateUsedColor(input.value);
-            }, false);
-            label.appendChild(customColor);
-            label.appendChild(input);
+            const { hide: hideColorPicker, destroy: destroyColorPicker } = createTooltip(customColor, {
+                direction: 'right',
+                type: 'click',
+                content: colorPicker,
+                container: customColor,
+            });
             colorMapRow.appendChild(transparentColor);
             colorMapRow.appendChild(clearColor);
-            colorMapRow.appendChild(label);
+            colorMapRow.appendChild(customColor);
             colorSelectWrapper.appendChild(colorMapRow);
             if (usedColors.size > 0) {
                 const usedColorWrap = document.createElement('div');
@@ -3660,6 +4001,8 @@
                 colorSelectWrapper.appendChild(usedColorWrap);
             }
             colorSelectWrapper.addEventListener('click', (e) => {
+                e.stopPropagation();
+                hideColorPicker();
                 const item = e.target;
                 const color = item.style.backgroundColor;
                 const selectedTds = this.getSelectedTds();
@@ -3670,7 +4013,20 @@
                     this.updateUsedColor(color);
                 }
             });
-            return colorSelectWrapper;
+            return createTooltip(item, {
+                content: colorSelectWrapper,
+                onClose(force) {
+                    const isChild = colorSelectWrapper.contains(colorPicker);
+                    if (force && isChild) {
+                        hideColorPicker();
+                    }
+                    return isChild;
+                },
+                onDestroy() {
+                    destroyColorPicker();
+                },
+                ...this.colorChooseTooltipOption,
+            });
         }
         getSelectedTds() {
             return this.tableModule.tableSelection?.selectedTds || [];
@@ -3686,6 +4042,9 @@
         }
         hideTools() {
             this.menu && Object.assign(this.menu.style, { display: 'none' });
+            for (const tooltip of this.tooltipItem) {
+                tooltip.hide(true);
+            }
         }
         destroy() {
             for (const tooltip of this.tooltipItem)
@@ -3700,6 +4059,9 @@
     class TableMenuContextmenu extends TableMenuCommon {
         tableModule;
         quill;
+        colorChooseTooltipOption = {
+            direction: 'right',
+        };
         constructor(tableModule, quill, options) {
             super(tableModule, quill, options);
             this.tableModule = tableModule;
@@ -4628,7 +4990,6 @@
                 display: 'none',
             });
             this.thumb.classList.add('ql-table-scrollbar-thumb');
-            // eslint-disable-next-line unicorn/consistent-function-scoping
             const mouseMoveDocumentHandler = (e) => {
                 if (this.cursorDown === false)
                     return;
@@ -4690,19 +5051,17 @@
                 transform: `translate${this.propertyMap.axis}(${this.move}%)`,
             });
         }
-        // eslint-disable-next-line unicorn/consistent-function-scoping
         showScrollbar = debounce(() => {
             this.cursorLeave = false;
             this.scrollbar.classList.remove('transparent');
-            handleIfTransitionend(this.scrollbar, 150, () => {
+            this.scrollbar.addEventListener('transitionend', () => {
                 this.scrollbar.style.display = (this.isVertical ? this.sizeHeight : this.sizeWidth) ? 'block' : 'none';
             });
         }, 200);
-        // eslint-disable-next-line unicorn/consistent-function-scoping
         hideScrollbar = debounce(() => {
             this.cursorLeave = true;
             this.scrollbar.classList.add('transparent');
-            handleIfTransitionend(this.scrollbar, 150, () => {
+            this.scrollbar.addEventListener('transitionend', () => {
                 this.scrollbar.style.display = this.cursorDown && (this.isVertical ? this.sizeHeight : this.sizeWidth) ? 'block' : 'none';
             });
         }, 200);
