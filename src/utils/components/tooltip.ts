@@ -7,9 +7,8 @@ import {
   shift,
 } from '@floating-ui/dom';
 import { createBEM } from '../bem';
-import { handleIfTransitionend } from '../utils';
 
-interface ToolTipOptions {
+export interface ToolTipOptions {
   direction?:
     | 'top'
     | 'top-start'
@@ -26,20 +25,29 @@ interface ToolTipOptions {
   msg?: string;
   delay?: number;
   content?: HTMLElement;
+  container?: HTMLElement;
+  type?: 'hover' | 'click';
+  onOpen?: (force?: boolean) => boolean;
+  onClose?: (force?: boolean) => boolean;
+  closed?: () => void;
+  onDestroy?: () => void;
 }
 const DISTANCE = 4;
 let tooltipContainer: HTMLElement;
 export interface TooltipInstance {
   destroy: () => void;
+  show: (force?: boolean) => void;
+  hide: (force?: boolean) => void;
 };
 export const createTooltip = (target: HTMLElement, options: ToolTipOptions = {}): TooltipInstance | null => {
-  const { msg = '', delay = 150, content, direction = 'bottom' } = options;
+  const { msg = '', delay = 150, content, direction = 'bottom', type = 'hover', container, onOpen, onClose, closed, onDestroy } = options;
   const bem = createBEM('tooltip');
   if (msg || content) {
     if (!tooltipContainer) {
       tooltipContainer = document.createElement('div');
       document.body.appendChild(tooltipContainer);
     }
+    const appendTo = container || tooltipContainer;
     const tooltip = document.createElement('div');
     tooltip.classList.add(bem.b(), 'hidden', 'transparent');
     if (content) {
@@ -48,7 +56,9 @@ export const createTooltip = (target: HTMLElement, options: ToolTipOptions = {})
     else if (msg) {
       tooltip.textContent = msg;
     }
-    let timer: ReturnType<typeof setTimeout> | null;
+    let showTimer: ReturnType<typeof setTimeout> | undefined;
+    let closeTimer: ReturnType<typeof setTimeout> | undefined;
+    let closeTransendTimer: ReturnType<typeof setTimeout> | undefined;
     let cleanup: () => void;
     const update = () => {
       if (cleanup) cleanup();
@@ -64,15 +74,23 @@ export const createTooltip = (target: HTMLElement, options: ToolTipOptions = {})
     };
     const transitionendHandler = () => {
       tooltip.classList.add('hidden');
-      if (tooltipContainer.contains(tooltip)) {
-        tooltipContainer.removeChild(tooltip);
+      if (appendTo.contains(tooltip)) {
+        appendTo.removeChild(tooltip);
       }
       if (cleanup) cleanup();
+      if (closed) closed();
     };
-    const open = () => {
-      if (timer) clearTimeout(timer);
-      timer = setTimeout(() => {
-        tooltipContainer.appendChild(tooltip);
+
+    const openTooltip = (force: boolean = false) => {
+      if (closeTimer) clearTimeout(closeTimer);
+      if (closeTransendTimer) clearTimeout(closeTransendTimer);
+
+      showTimer = setTimeout(() => {
+        if (onOpen) {
+          const allow = onOpen(force);
+          if (!force && allow) return;
+        }
+        appendTo.appendChild(tooltip);
         tooltip.removeEventListener('transitionend', transitionendHandler);
         tooltip.classList.remove('hidden');
 
@@ -81,30 +99,86 @@ export const createTooltip = (target: HTMLElement, options: ToolTipOptions = {})
         tooltip.classList.remove('transparent');
       }, delay);
     };
-    const close = () => {
-      if (timer) clearTimeout(timer);
-      timer = setTimeout(() => {
+    const closeTooltip = (force: boolean = false) => {
+      if (showTimer) clearTimeout(showTimer);
+
+      closeTimer = setTimeout(() => {
+        if (onClose) {
+          const allow = onClose(force);
+          if (!force && allow) return;
+        }
+        tooltip.addEventListener('transitionend', transitionendHandler, { once: true });
         tooltip.classList.add('transparent');
-        handleIfTransitionend(tooltip, 150, transitionendHandler, { once: true });
       }, delay);
     };
 
-    const eventListeners = [target, tooltip];
+    const hoverDisplay = () => {
+      const eventListeners = [target, tooltip];
+      const close = closeTooltip.bind(undefined, false);
+      const open = openTooltip.bind(undefined, false);
+      const prepare = () => {
+        for (const listener of eventListeners) {
+          listener.addEventListener('mouseenter', open);
+          listener.addEventListener('mouseleave', close);
+        }
+      };
+      return {
+        prepare,
+        show: openTooltip,
+        hide: closeTooltip,
+        destroy: () => {
+          for (const listener of eventListeners) {
+            listener.removeEventListener('mouseenter', open);
+            listener.removeEventListener('mouseleave', close);
+          }
+        },
+      };
+    };
+    const clickDisplay = () => {
+      const close = (e: MouseEvent) => {
+        e.stopPropagation();
+        closeTooltip(false);
+      };
+      const show = (e: MouseEvent) => {
+        e.stopPropagation();
+        openTooltip();
+        document.removeEventListener('click', close);
+        document.addEventListener('click', close, { once: true });
+      };
+      return {
+        prepare: () => {
+          tooltip.addEventListener('click', (e: Event) => e.stopPropagation());
+          target.addEventListener('click', show);
+        },
+        show: openTooltip,
+        hide: (force: boolean = false) => {
+          closeTooltip(force);
+          document.removeEventListener('click', close);
+        },
+        destroy: () => {
+          target.removeEventListener('click', show);
+          document.removeEventListener('click', close);
+        },
+      };
+    };
+    const displayMethods = {
+      hover: hoverDisplay,
+      click: clickDisplay,
+    };
 
-    for (const listener of eventListeners) {
-      listener.addEventListener('mouseenter', open);
-      listener.addEventListener('mouseleave', close);
-    }
+    const { prepare, show, hide, destroy: destroyDisplay } = displayMethods[type]();
+    prepare();
 
     const destroy = () => {
-      for (const listener of eventListeners) {
-        listener.removeEventListener('mouseenter', open);
-        listener.removeEventListener('mouseleave', close);
-      }
+      hide(true);
+      if (onDestroy) onDestroy();
+      destroyDisplay();
       if (cleanup) cleanup();
       tooltip.remove();
     };
     return {
+      show,
+      hide,
       destroy,
     };
   }

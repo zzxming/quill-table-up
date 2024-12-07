@@ -425,3 +425,16 @@
 @import './select-box.less';
 @import './tooltip.less';
 @import './dialog.less';
+@import './color-picker.less';
+
+.@{namespace}-tooltip {
+  .@{namespace}-color-picker {
+    &__content {
+      .setCssVar(color-picker-bg-color, transparent);
+
+      width: 181px;
+      padding: 8px 0px;
+      box-shadow: none;
+    }
+  }
+}

@@ -8,6 +8,7 @@ export default factory({
     {
       rules: {
         'unicorn/prefer-dom-node-dataset': 'off',
+        'unicorn/consistent-function-scoping': 'off',
         'no-cond-assign': 'off',
         'new-cap': 'off',
       },

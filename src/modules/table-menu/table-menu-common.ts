@@ -1,7 +1,7 @@
 import type Quill from 'quill';
 import type { TableUp } from '../..';
-import type { TableMenuOptions, ToolOption, TooltipInstance } from '../../utils';
-import { createTooltip, debounce, defaultColorMap, isArray, isFunction, randomId } from '../../utils';
+import type { TableMenuOptions, ToolOption, TooltipInstance, ToolTipOptions } from '../../utils';
+import { createColorPicker, createTooltip, debounce, defaultColorMap, isArray, isFunction, randomId } from '../../utils';
 import { colorClassName, defaultTools, maxSaveColorCount, menuColorSelectClassName, usedColors } from './constants';
 
 export type TableMenuOptionsInput = Partial<Omit<TableMenuOptions, 'texts'>>;
@@ -10,6 +10,10 @@ export class TableMenuCommon {
   menu: HTMLElement | null = null;
   updateUsedColor: (this: any, color?: string) => void;
   colorItemClass = `color-${randomId()}`;
+  colorChooseTooltipOption: ToolTipOptions = {
+    direction: 'top',
+  };
+
   tooltipItem: TooltipInstance[] = [];
 
   constructor(public tableModule: TableUp, public quill: Quill, options: TableMenuOptionsInput) {
@@ -92,11 +96,9 @@ export class TableMenuCommon {
         }
         item.appendChild(iconDom);
 
-        // color choose handler will trigger when the color input event
         if (isColorChoose && attrKey) {
-          const colorSelectWrapper = this.createColorChoose({ name, icon, handle, isColorChoose, key: attrKey, tip });
-          const tooltipItem = createTooltip(item, { content: colorSelectWrapper, direction: 'top' });
-          tooltipItem && this.tooltipItem.push(tooltipItem);
+          const tooltipItem = this.createColorChoose(item, { name, icon, handle, isColorChoose, key: attrKey, tip });
+          this.tooltipItem.push(tooltipItem);
           item.classList.add(menuColorSelectClassName);
         }
         else {
@@ -117,7 +119,7 @@ export class TableMenuCommon {
     return toolBox;
   };
 
-  createColorChoose({ handle, key }: ToolOption) {
+  createColorChoose(item: HTMLElement, { handle, key }: ToolOption) {
     const colorSelectWrapper = document.createElement('div');
     colorSelectWrapper.classList.add(colorClassName.selectWrapper);
 
@@ -155,30 +157,25 @@ export class TableMenuCommon {
     clearColor.addEventListener('click', () => {
       handle(this.tableModule, this.getSelectedTds(), null);
     });
-    const label = document.createElement('label');
-    label.classList.add(colorClassName.btn, 'table-color-custom');
-    const customColor = document.createElement('span');
+    const customColor = document.createElement('div');
+    customColor.classList.add(colorClassName.btn, 'table-color-custom');
     customColor.textContent = this.tableModule.options.texts.custom;
-    const input = document.createElement('input');
-    input.type = 'color';
-    Object.assign(input.style, {
-      width: 0,
-      height: 0,
-      padding: 0,
-      border: 0,
-      outline: 'none',
-      opacity: 0,
+    const colorPicker = createColorPicker({
+      onChange: (color) => {
+        handle(this.tableModule, this.getSelectedTds(), color);
+        this.updateUsedColor(color);
+      },
     });
-    input.addEventListener('input', () => {
-      handle(this.tableModule, this.getSelectedTds(), input.value);
-      this.updateUsedColor(input.value);
-    }, false);
-    label.appendChild(customColor);
-    label.appendChild(input);
+    const { hide: hideColorPicker, destroy: destroyColorPicker } = createTooltip(customColor, {
+      direction: 'right',
+      type: 'click',
+      content: colorPicker,
+      container: customColor,
+    })!;
 
     colorMapRow.appendChild(transparentColor);
     colorMapRow.appendChild(clearColor);
-    colorMapRow.appendChild(label);
+    colorMapRow.appendChild(customColor);
     colorSelectWrapper.appendChild(colorMapRow);
 
     if (usedColors.size > 0) {
@@ -194,6 +191,8 @@ export class TableMenuCommon {
     }
 
     colorSelectWrapper.addEventListener('click', (e) => {
+      e.stopPropagation();
+      hideColorPicker();
       const item = e.target as HTMLElement;
       const color = item.style.backgroundColor;
       const selectedTds = this.getSelectedTds();
@@ -203,7 +202,21 @@ export class TableMenuCommon {
         this.updateUsedColor(color);
       }
     });
-    return colorSelectWrapper;
+
+    return createTooltip(item, {
+      content: colorSelectWrapper,
+      onClose(force) {
+        const isChild = colorSelectWrapper.contains(colorPicker);
+        if (force && isChild) {
+          hideColorPicker();
+        }
+        return isChild;
+      },
+      onDestroy() {
+        destroyColorPicker();
+      },
+      ...this.colorChooseTooltipOption,
+    })!;
   }
 
   getSelectedTds() {
@@ -222,6 +235,9 @@ export class TableMenuCommon {
 
   hideTools() {
     this.menu && Object.assign(this.menu.style, { display: 'none' });
+    for (const tooltip of this.tooltipItem) {
+      tooltip.hide(true);
+    }
   }
 
   destroy() {

@@ -1,12 +1,16 @@
 import type Quill from 'quill';
 import type TableUp from '../..';
-import type { TableMenuOptions } from '../../utils';
+import type { TableMenuOptions, ToolTipOptions } from '../../utils';
 import { limitDomInViewPort } from '../../utils';
 import { contextmenuClassName, menuColorSelectClassName } from './constants';
 import { TableMenuCommon } from './table-menu-common';
 
 type TableMenuOptionsInput = Partial<Omit<TableMenuOptions, 'texts'>>;
 export class TableMenuContextmenu extends TableMenuCommon {
+  colorChooseTooltipOption: ToolTipOptions = {
+    direction: 'right',
+  };
+
   constructor(public tableModule: TableUp, public quill: Quill, options: TableMenuOptionsInput) {
     super(tableModule, quill, options);
 
