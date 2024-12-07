@@ -114,8 +114,8 @@ export const createTooltip = (target: HTMLElement, options: ToolTipOptions = {})
 
     const hoverDisplay = () => {
       const eventListeners = [target, tooltip];
-      const close = closeTooltip.bind(this, false);
-      const open = openTooltip.bind(this, false);
+      const close = closeTooltip.bind(undefined, false);
+      const open = openTooltip.bind(undefined, false);
       const prepare = () => {
         for (const listener of eventListeners) {
           listener.addEventListener('mouseenter', open);
