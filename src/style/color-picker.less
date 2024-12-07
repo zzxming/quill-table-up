@@ -16,7 +16,7 @@
     border-radius: 6px;
     box-shadow: 0 0 6px #b2b5b8;
     width: 197px;
-    height: 166px;
+    height: 186px;
     padding: 8px;
   }
 
@@ -47,7 +47,7 @@
   }
 
   &__hue {
-    width: 17px;
+    width: 12px;
     height: 150px;
     margin-left: 164px;
     position: absolute;
@@ -56,12 +56,45 @@
     &-handle {
       box-sizing: border-box;
       position: absolute;
-      width: 21px;
-      transform: translate(-2px, -5px);
+      width: 16px;
       height: 10px;
+      transform: translate(-2px, -5px);
       border: 2px solid #ffffff;
       opacity: 0.85;
       cursor: pointer;
+    }
+  }
+
+  &__alpha {
+    width: 150px;
+    height: 12px;
+    position: absolute;
+    margin-top: 158px;
+    background: linear-gradient(45deg, #ccc 25%, transparent 25%), linear-gradient(135deg, #ccc 25%, transparent 25%),
+      linear-gradient(45deg, transparent 75%, #ccc 75%), linear-gradient(135deg, transparent 75%, #ccc 75%);
+    background-size: 12px 12px;
+    background-position:
+      0 0,
+      6px 0,
+      6px -6px,
+      0 6px;
+    &-bg {
+      position: relative;
+      height: 100%;
+      background: linear-gradient(to right, rgba(255, 255, 255, 0) 0%, #ffffff 100%);
+    }
+    &-handle {
+      box-sizing: border-box;
+      position: absolute;
+      opacity: 0.85;
+      cursor: pointer;
+      top: 0;
+      width: 10px;
+      height: 16px;
+      transform: translate(-5px, -2px);
+      border: 1px solid #ebeef5;
+      background-color: #ffffff;
+      box-shadow: 0 0 2px #0009;
     }
   }
 }

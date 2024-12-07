@@ -21,13 +21,23 @@ export const createColorPicker = (options: Partial<ColorPickerOptions> = {}) => 
 
   const colorBackground = document.createElement('div');
   colorBackground.classList.add(bem.be('background'));
+  colorSelector.appendChild(colorBackground);
 
   const colorHandle = document.createElement('div');
   colorHandle.classList.add(bem.be('background-handle'));
-
   colorBackground.appendChild(colorHandle);
-  colorSelector.appendChild(colorBackground);
-  content.appendChild(colorSelector);
+
+  const colorAlpha = document.createElement('div');
+  colorAlpha.classList.add(bem.be('alpha'));
+
+  const alphaBg = document.createElement('div');
+  alphaBg.classList.add(bem.be('alpha-bg'));
+
+  const alphaHandle = document.createElement('div');
+  alphaHandle.classList.add(bem.be('alpha-handle'));
+
+  colorAlpha.appendChild(alphaBg);
+  colorAlpha.appendChild(alphaHandle);
 
   const colorHue = document.createElement('div');
   colorHue.classList.add(bem.be('hue'));
@@ -37,18 +47,26 @@ export const createColorPicker = (options: Partial<ColorPickerOptions> = {}) => 
 
   colorHue.appendChild(colorHueHandle);
   content.appendChild(colorHue);
+  content.appendChild(colorSelector);
+  content.appendChild(colorAlpha);
 
   let colorDragging = false;
   let hueDragging = false;
+  let alphaDragging = false;
   function onDrag(event: MouseEvent) {
     if (colorDragging) {
-      pickColor(event);
       event.preventDefault();
+      pickColor(event);
     }
 
     if (hueDragging) {
-      pickHue(event);
       event.preventDefault();
+      pickHue(event);
+    }
+
+    if (alphaDragging) {
+      event.preventDefault();
+      pickAlpha(event);
     }
   }
   function onColorSelectorDragEnd() {
@@ -70,7 +88,6 @@ export const createColorPicker = (options: Partial<ColorPickerOptions> = {}) => 
     });
   }
   function pickColor(event: MouseEvent) {
-    event.preventDefault();
     const rect = colorSelector.getBoundingClientRect();
     const top = rect.top + (window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0);
     const left = rect.left + document.body.scrollLeft;
@@ -81,6 +98,7 @@ export const createColorPicker = (options: Partial<ColorPickerOptions> = {}) => 
       h: hsbValue.h,
       s: saturation,
       b: brightness,
+      a: hsbValue.a,
     });
 
     updateColorHandle();
@@ -109,28 +127,68 @@ export const createColorPicker = (options: Partial<ColorPickerOptions> = {}) => 
       h: hsbValue.h,
       s: 100,
       b: 100,
+      a: 1,
     }))}`;
   }
   function pickHue(event: MouseEvent) {
-    event.preventDefault();
     const top = colorHue.getBoundingClientRect().top + (window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0);
 
     hsbValue = validateHSB({
       h: Math.floor((360 * (150 - Math.max(0, Math.min(150, event.pageY - top)))) / 150),
       s: hsbValue.s,
       b: hsbValue.b,
+      a: hsbValue.a,
     });
 
     updateColorSelector();
     updateHue();
+    updateAlphaBg();
 
     if (options.onChange) {
       options.onChange(`#${HSBtoHEX(hsbValue)}`);
     }
   }
 
+  function pickAlpha(event: MouseEvent) {
+    const { pageX } = event;
+    const rect = colorAlpha.getBoundingClientRect();
+    let left = pageX - rect.left;
+    left = Math.max(10 / 2, left);
+    left = Math.min(left, rect.width - 10 / 2);
+
+    hsbValue.a = Math.round(((left - 10 / 2) / (rect.width - 10)) * 100) / 100;
+
+    updateAlphaBg();
+    updateAlphaHandle();
+
+    if (options.onChange) {
+      options.onChange(`#${HSBtoHEX(hsbValue)}`);
+    }
+  }
+  function onColorAlphaDragEnd() {
+    document.removeEventListener('mousemove', onDrag);
+    document.removeEventListener('mouseup', onColorAlphaDragEnd);
+    alphaDragging = false;
+  }
+  function onColorAlphaMousedown(event: MouseEvent) {
+    document.addEventListener('mousemove', onDrag);
+    document.addEventListener('mouseup', onColorAlphaDragEnd);
+    alphaDragging = true;
+    pickAlpha(event);
+  }
+  colorAlpha.addEventListener('mousedown', onColorAlphaMousedown);
+  function updateAlphaHandle() {
+    alphaHandle.style.left = `${hsbValue.a * 100}%`;
+  }
+  function updateAlphaBg() {
+    const { r, g, b } = HSBtoRGB(hsbValue);
+    alphaBg.style.background = `linear-gradient(to right, rgba(${r}, ${g}, ${b}, 0) 0%, rgba(${r}, ${g}, ${b}, 1) 100%)`;
+  }
+
   updateColorHandle();
   updateColorSelector();
   updateHue();
+  updateAlphaHandle();
+  updateAlphaBg();
   return root;
 };
