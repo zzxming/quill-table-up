@@ -1,5 +1,13 @@
 @import './variables.less';
 
+@panelWidth: 230px;
+@panelHeight: 150px;
+@barSize: 12px;
+@handleSize: 16px;
+@handleSizeSec: 10px;
+@barGap: 10px;
+@contentPadding: 8px;
+
 .handle(@isBlock: false) {
   box-sizing: border-box;
   position: absolute;
@@ -13,28 +21,27 @@
 }
 
 .@{namespace}-color-picker {
-  &__preview {
-    width: 20px;
-    height: 20px;
-    cursor: pointer;
-    border-radius: 6px;
-  }
+  .setCssVar(color-picker-bg-color, #ffffff);
+
+  box-sizing: border-box;
+  display: inline-flex;
+  flex-direction: column;
+  width: @panelWidth + @contentPadding * 2 + @barSize + @barGap;
+  padding: @contentPadding;
+  border-radius: 6px;
+  background: .getCssVar(color-picker-bg-color) [];
+  box-shadow: 0 0 6px #b2b5b8;
 
   &__content {
-    .setCssVar(color-picker-bg-color, #ffffff);
-
     box-sizing: border-box;
-    background: .getCssVar(color-picker-bg-color) [];
-    border-radius: 6px;
-    box-shadow: 0 0 6px #b2b5b8;
-    width: 197px;
-    height: 186px;
-    padding: 8px;
+    width: 100%;
+    height: @panelHeight + @contentPadding * 2 + @barSize + @barGap;
+    padding-top: @contentPadding;
   }
 
   &__selector {
-    width: 150px;
-    height: 150px;
+    width: @panelWidth;
+    height: @panelHeight;
     position: absolute;
   }
 
@@ -45,54 +52,83 @@
       linear-gradient(to right, #fff 0%, rgba(255, 255, 255, 0) 100%);
     &-handle {
       .handle();
+      @size: 10px;
       top: 0px;
-      left: 150px;
+      left: @panelWidth;
       border-radius: 100%;
-      width: 10px;
-      height: 10px;
-      transform: translate(-5px, -5px);
+      width: @size;
+      height: @size;
+      transform: translate(-1 * (@size / 2), -1 * (@size / 2));
     }
   }
 
   &__hue {
-    width: 12px;
-    height: 150px;
-    margin-left: 164px;
+    width: @barSize;
+    height: @panelHeight;
+    margin-left: @panelWidth + @barGap;
     position: absolute;
     background: linear-gradient(0deg, red 0, #ff0 17%, #0f0 33%, #0ff 50%, #00f 67%, #f0f 83%, red);
     &-handle {
       .handle(true);
       left: 0;
-      width: 16px;
-      height: 10px;
-      transform: translate(-2px, -5px);
+      width: @handleSize;
+      height: @handleSizeSec;
+      transform: translate(((@barSize - @handleSize) / 2), (-1 * @handleSizeSec / 2));
     }
   }
 
   &__alpha {
-    width: 150px;
-    height: 12px;
+    width: @panelWidth;
+    height: @barSize;
     position: absolute;
-    margin-top: 158px;
+    margin-top: @panelHeight + @barGap;
     background: linear-gradient(45deg, #ccc 25%, transparent 25%), linear-gradient(135deg, #ccc 25%, transparent 25%),
       linear-gradient(45deg, transparent 75%, #ccc 75%), linear-gradient(135deg, transparent 75%, #ccc 75%);
-    background-size: 12px 12px;
+    background-size: @barSize @barSize;
     background-position:
       0 0,
-      6px 0,
-      6px -6px,
-      0 6px;
+      (@barSize / 2) 0,
+      (@barSize / 2) (-1 * @barSize / 2),
+      0 (@barSize / 2);
     &-bg {
       position: relative;
       height: 100%;
-      background: linear-gradient(to right, rgba(255, 255, 255, 0) 0%, #ffffff 100%);
+      background: linear-gradient(to right, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 1) 100%);
     }
     &-handle {
       .handle(true);
       top: 0;
-      width: 10px;
-      height: 16px;
-      transform: translate(-5px, -2px);
+      width: @handleSizeSec;
+      height: @handleSize;
+      transform: translate((-1 * @handleSizeSec / 2), ((@barSize - @handleSize) / 2));
     }
+  }
+  &__action {
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    width: 100%;
+    padding-top: @contentPadding;
+    border-top: 1px solid #e9ecef;
+    &-item {
+      flex: 1;
+      display: inline-flex;
+      align-items: center;
+      font-size: 12px;
+    }
+  }
+
+  &__input {
+    box-sizing: border-box;
+    width: 100%;
+    height: 22px;
+    margin-left: 2px;
+    padding: 2px 0px 2px 4px;
+    background-color: #ffffff;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    outline: none;
+    color: #405057;
   }
 }
