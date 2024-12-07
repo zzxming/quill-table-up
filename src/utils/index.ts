@@ -1,3 +1,4 @@
+export * from './bem';
 export * from './components';
 export * from './constants';
 export * from './is';
