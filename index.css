@@ -429,7 +429,7 @@
 .select-box__custom:hover {
   background-color: var(--select-box-custom-color-bg-hover);
 }
-.tooltip {
+.table-up-tooltip {
   position: absolute;
   z-index: 20;
   padding: 0.25rem 0.75rem;
@@ -440,13 +440,13 @@
   background-color: #303133;
   transition: opacity 0.15s linear;
 }
-.tooltip.transparent {
+.table-up-tooltip.transparent {
   opacity: 0;
 }
-.tooltip.hidden {
+.table-up-tooltip.hidden {
   display: none;
 }
-.table-up-btn {
+.table-up-button {
   --table-btn-color: #606266;
   --table-btn-bg-hover: #f3f4f6;
   --table-btn-color-border: #dcdfe6;
@@ -468,26 +468,26 @@
   font-size: 0.875rem;
   cursor: pointer;
 }
-.table-up-btn + .table-up-btn {
+.table-up-button + .table-up-button {
   margin-left: 0.375rem;
 }
-.table-up-btn:hover {
+.table-up-button:hover {
   background-color: var(--table-btn-bg-hover);
 }
-.table-up-btn.confirm {
+.table-up-button.confirm {
   border-color: var(--table-btn-confirm-color-border);
   background-color: var(--table-btn-confirm-bg);
   color: #fff;
 }
-.table-up-btn.confirm:hover {
+.table-up-button.confirm:hover {
   border-color: var(--table-btn-confirm-hover);
   background-color: var(--table-btn-confirm-hover);
 }
-.table-up-btn.confirm:focus-visible {
+.table-up-button.confirm:focus-visible {
   outline: var(--table-btn-confirm-outline-focus-visible);
   outline-offset: 0.0625rem;
 }
-.dialog {
+.table-up-dialog {
   --dialog-bg: rgba(0, 0, 0, 0.5);
   --dialog-color-border: #ebeef5;
   --dialog-color-boxshadow: rgba(0, 0, 0, 0.12);
@@ -503,7 +503,7 @@
   background-color: var(--dialog-bg);
   overflow: auto;
 }
-.dialog__overlay {
+.table-up-dialog__overlay {
   position: fixed;
   top: 0;
   right: 0;
@@ -513,14 +513,14 @@
   overflow: auto;
   text-align: center;
 }
-.dialog__overlay::after {
+.table-up-dialog__overlay::after {
   content: '';
   display: inline-block;
   height: 100%;
   width: 0;
   vertical-align: middle;
 }
-.dialog__content {
+.table-up-dialog__content {
   display: inline-block;
   max-width: 50vw;
   width: 100%;

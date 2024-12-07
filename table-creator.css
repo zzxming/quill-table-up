@@ -1,4 +1,4 @@
-.input__item {
+.table-up-input__item {
   --input-height: 2rem;
   --input-inner-height: calc(var(--input-height) - 0.125rem);
   --input-color-text: #606266;
@@ -11,14 +11,14 @@
   display: flex;
   align-items: center;
 }
-.input__item + .input__item {
+.table-up-input__item + .table-up-input__item {
   margin-top: 1.125rem;
 }
-.input__label {
+.table-up-input__label {
   width: 5rem;
   flex-shrink: 0;
 }
-.input__input {
+.table-up-input__input {
   box-sizing: border-box;
   position: relative;
   display: flex;
@@ -31,10 +31,10 @@
   box-shadow: var(--input-boxshaow);
   transition: box-shadow 0.2s linear;
 }
-.input__input.focus {
+.table-up-input__input.focus {
   box-shadow: var(--input-boxshaow-focus);
 }
-.input__input input {
+.table-up-input__input input {
   width: 100%;
   height: var(--input-inner-height);
   line-height: var(--input-inner-height);
@@ -45,10 +45,10 @@
   border: 0;
   padding: 0;
 }
-.input__input.error {
+.table-up-input__input.error {
   box-shadow: var(--input-boxshaow-error);
 }
-.input__error-tip {
+.table-up-input__error-tip {
   position: absolute;
   top: 100%;
   left: 0;
