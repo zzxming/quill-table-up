@@ -1,5 +1,17 @@
 @import './variables.less';
 
+.handle(@isBlock: false) {
+  box-sizing: border-box;
+  position: absolute;
+  border: 1px solid #ffffff;
+  cursor: pointer;
+
+  & when(@isBlock) {
+    background-color: #ffffff;
+    box-shadow: 0 0 2px #0009;
+  }
+}
+
 .@{namespace}-color-picker {
   &__preview {
     width: 20px;
@@ -32,17 +44,13 @@
     background: linear-gradient(to top, #000 0%, rgba(0, 0, 0, 0) 100%),
       linear-gradient(to right, #fff 0%, rgba(255, 255, 255, 0) 100%);
     &-handle {
-      box-sizing: border-box;
-      position: absolute;
+      .handle();
       top: 0px;
       left: 150px;
       border-radius: 100%;
       width: 10px;
       height: 10px;
-      border: 1px solid #ffffff;
-      cursor: pointer;
       transform: translate(-5px, -5px);
-      opacity: 0.85;
     }
   }
 
@@ -51,17 +59,13 @@
     height: 150px;
     margin-left: 164px;
     position: absolute;
-    opacity: 0.85;
     background: linear-gradient(0deg, red 0, #ff0 17%, #0f0 33%, #0ff 50%, #00f 67%, #f0f 83%, red);
     &-handle {
-      box-sizing: border-box;
-      position: absolute;
+      .handle(true);
+      left: 0;
       width: 16px;
       height: 10px;
       transform: translate(-2px, -5px);
-      border: 2px solid #ffffff;
-      opacity: 0.85;
-      cursor: pointer;
     }
   }
 
@@ -84,17 +88,11 @@
       background: linear-gradient(to right, rgba(255, 255, 255, 0) 0%, #ffffff 100%);
     }
     &-handle {
-      box-sizing: border-box;
-      position: absolute;
-      opacity: 0.85;
-      cursor: pointer;
+      .handle(true);
       top: 0;
       width: 10px;
       height: 16px;
       transform: translate(-5px, -2px);
-      border: 1px solid #ebeef5;
-      background-color: #ffffff;
-      box-shadow: 0 0 2px #0009;
     }
   }
 }
