@@ -32,6 +32,7 @@ export interface TableCreatorTextOptions {
   rowText: string;
   colText: string;
   notPositiveNumberError: string;
+  perWidthInsufficient: string;
 };
 export interface TableTextOptions extends TableCreatorTextOptions {
   custom: string;

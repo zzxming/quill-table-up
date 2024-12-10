@@ -26,7 +26,7 @@ export class TableResizeBox extends TableResizeCommon {
   lastHeaderSelect: [Point, Point] | null = null;
 
   constructor(public tableModule: TableUp, public table: HTMLElement, quill: Quill, options: Partial<TableResizeBoxOptions>) {
-    super(quill);
+    super(tableModule, quill);
     this.options = this.resolveOptions(options);
     this.tableMain = Quill.find(this.table) as TableMainFormat;
 
@@ -220,9 +220,9 @@ export class TableResizeBox extends TableResizeCommon {
 
     if (this.tableCols.length > 0) {
       let colHeadStr = '';
-      for (const col of this.tableCols) {
+      for (const [index, col] of this.tableCols.entries()) {
         const width = col.domNode.getBoundingClientRect().width;
-        colHeadStr += `<div class="ql-table-col-header" style="width: ${width}px">
+        colHeadStr += `<div class="ql-table-col-header" style="width: ${width + (index === this.tableCols.length - 1 ? 1 : 0)}px">
           <div class="ql-table-col-separator" style="height: ${tableMainRect.height + this.options.size - 3}px"></div>
         </div>`;
       }
