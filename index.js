@@ -31,6 +31,7 @@ const quill1 = new Quill('#editor1', {
     [TableUp.moduleName]: {
       full: false,
       resizerSetOuter: false,
+      scrollbar: false,
       selection: {
         selectColor: '#04f',
         tableMenuClass: window.TableUp.TableMenuContextmenu,
