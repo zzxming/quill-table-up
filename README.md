@@ -9,7 +9,7 @@ Enhancement of quill table module
 - [x] complete UI operation process
 - [x] insert/delete row/column/table; merge/split cells
 - [x] support all origin quill formats
-- [x] control cells width/height/background color/border color
+- [x] control cells width/height/border/background color
 - [x] 100 percent table width or fixed pixel width
 - [x] line break in cells
 - [x] redo and undo
@@ -24,6 +24,7 @@ npm install quill-table-up
 ```js
 import Quill from 'quill';
 import TableUp from 'quill-table-up';
+import 'quill/dist/quill.snow.css';
 import 'quill-table-up/index.css';
 // If using the default customSelect option. You need to import this css
 import 'quill-table-up/table-creator.css';
@@ -42,7 +43,14 @@ const quill = new Quill('#editor', {
         { [TableUp.toolName]: [] }
       ],
     ],
-    [TableUp.moduleName]: {},
+    [TableUp.moduleName]: {
+      scrollbar: true,
+      align: true,
+      resize: 'box',
+      selection: {
+        tableMenuClass: 'contextmenu',
+      }
+    },
   },
 });
 ```
@@ -51,18 +59,19 @@ const quill = new Quill('#editor', {
 
 ### TableUp Options
 
-| attribute       | description                                                                                                                             | type                                    | default             |
-| --------------- | --------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------- | ------------------- |
-| full            | if set `true`. width max will be 100%                                                                                                   | `boolean`                               | `false`             |
-| customBtn       | display a custom button to custom row and column number add a table                                                                     | `boolean`                               | `false`             |
-| resizerSetOuter | if set `true`. table cell resize will be border around table                                                                            | `boolean`                               | `false`             |
-| texts           | the text used to create the table                                                                                                       | `TableTextOptions`                      | `defaultTexts`      |
-| customSelect    | display a custom select to custom row and column number add a table. the DOM returned by the function will replace the default selector | `(tableModule: TableUp) => HTMLElement` | -                   |
-| selection       | moduel TableSelection options                                                                                                           | `TableSelectionOptions`                 | -                   |
-| icon            | picker svg icon string. it will set with `innerHTML`                                                                                    | `string`                                | `origin table icon` |
-| scrollbar       | enable table virtual scrollbar                                                                                                          | `boolean`                               | `true`              |
+| attribute    | description                                                                                                                             | type                                    | default             |
+| ------------ | --------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------- | ------------------- |
+| full         | if set `true`. width max will be 100%                                                                                                   | `boolean`                               | `false`             |
+| customBtn    | display a custom button to custom row and column number add a table                                                                     | `boolean`                               | `false`             |
+| texts        | the text used to create the table                                                                                                       | `TableTextOptions`                      | `defaultTexts`      |
+| customSelect | display a custom select to custom row and column number add a table. the DOM returned by the function will replace the default selector | `(tableModule: TableUp) => HTMLElement` | -                   |
+| selection    | moduel TableSelection options                                                                                                           | `TableSelectionOptions`                 | -                   |
+| icon         | picker svg icon string. it will set with `innerHTML`                                                                                    | `string`                                | `origin table icon` |
+| resize       | enable resize table cell size                                                                                                           | `'line' \| 'box'`                       | -                   |
+| scrollbar    | enable table virtual scrollbar                                                                                                          | `boolean`                               | `true`              |
+| align        | Enable overall table alignment                                                                                                          | `boolean`                               | `true`              |
 
-> I'm not suggest to use `scrollbar` and `resizerSetOuter` at same time, because they will make the `scrollbar` display blink
+> I'm not suggest to use `scrollbar: true` and `resize: 'line'` at same time, because it will make the `scrollbar` display blink. Just like the first editor in [demo](https://zzxming.github.io/quill-table-up/)
 
 <details>
   <summary> default value </summary>
@@ -86,11 +95,11 @@ const defaultTexts = {
 
 ### TableSelection Options
 
-| attribute      | description                                                                                                                            | type               | default                |
-| -------------- | -------------------------------------------------------------------------------------------------------------------------------------- | ------------------ | ---------------------- |
-| selectColor    | selector border color                                                                                                                  | `string`           | `#0589f3`              |
-| tableMenu      | module TableMenu options                                                                                                               | `TableMenuOptions` | -                      |
-| tableMenuClass | when select a cell will trigger this class to create menu. module provide two menu module `TableMenuContextmenu` and `TableMenuSelect` | `Constructor`      | `TableMenuContextmenu` |
+| attribute     | description                                                          | type                        | default   |
+| ------------- | -------------------------------------------------------------------- | --------------------------- | --------- |
+| selectColor   | selector border color                                                | `string`                    | `#0589f3` |
+| tableMenu     | module TableMenu options                                             | `TableMenuOptions`          | -         |
+| tableMenuType | Operation menu trigger type. Different types have different displays | `'select' \| 'contextmenu'` | -         |
 
 ### TableMenu Options
 

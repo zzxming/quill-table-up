@@ -208,7 +208,7 @@ export class Scrollbar {
     this.table.removeEventListener('mouseleave', this.hideScrollbar);
   }
 }
-export class TableVitrualScroll {
+export class TableVitrualScrollbar {
   scrollbarContainer: HTMLElement;
   scrollbar: Scrollbar[];
   constructor(public tableModule: TableUp, public table: HTMLElement, public quill: Quill) {

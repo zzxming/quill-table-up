@@ -1,4 +1,4 @@
-import type { TableCellInnerFormat, TableMenuCommon, TableUp } from '..';
+import type { TableCellInnerFormat, TableUp } from '..';
 
 export interface ToolOption {
   name: string;
@@ -22,7 +22,7 @@ export interface TableMenuOptions {
 };
 export interface TableSelectionOptions {
   selectColor: string;
-  tableMenuClass: Constructor<TableMenuCommon>;
+  tableMenuType?: 'select' | 'contextmenu';
   tableMenu: TableMenuOptions;
 }
 export interface TableCreatorTextOptions {
@@ -38,12 +38,7 @@ export interface TableTextOptions extends TableCreatorTextOptions {
   custom: string;
   clear: string;
   transparent: string;
-}
-export interface TableResizeBoxOptions {
-  size: number;
-}
-// eslint-disable-next-line ts/no-empty-object-type
-export interface TableResizeLineOptions {
+  perWidthInsufficient: string;
 }
 export interface TableUpOptions {
   customSelect?: (tableModule: TableUp) => HTMLElement;
@@ -51,12 +46,10 @@ export interface TableUpOptions {
   customBtn: boolean;
   texts: TableTextOptions;
   icon: string;
-  resizerSetOuter: boolean;
   selection?: TableSelectionOptions;
-  resizeBox?: TableResizeBoxOptions ;
-  resizeLine?: TableResizeLineOptions;
+  resize?: 'line' | 'box';
   scrollbar?: boolean;
-  showAlign?: boolean;
+  align?: boolean;
 }
 export interface TableColValue {
   tableId: string;

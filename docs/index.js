@@ -30,11 +30,12 @@ const quill1 = new Quill('#editor1', {
     toolbar: toolbarConfig,
     [TableUp.moduleName]: {
       full: false,
-      resizerSetOuter: false,
-      scrollbar: false,
+      scrollbar: true,
+      align: true,
+      resize: 'line',
       selection: {
         selectColor: '#04f',
-        tableMenuClass: window.TableUp.TableMenuContextmenu,
+        tableMenuType: 'contextmenu',
         tableMenu: {
           localstorageKey: 'used-color',
           tipText: true,
@@ -103,10 +104,12 @@ const quill2 = new Quill('#editor2', {
     toolbar: toolbarConfig,
     [TableUp.moduleName]: {
       full: true,
-      resizerSetOuter: true,
+      scrollbar: true,
+      align: true,
+      resize: 'box',
       selection: {
         selectColor: '#f40',
-        tableMenuClass: window.TableUp.TableMenuSelect,
+        tableMenuType: 'select',
         tableMenu: {
           localstorageKey: 'used-color',
           tipText: true,

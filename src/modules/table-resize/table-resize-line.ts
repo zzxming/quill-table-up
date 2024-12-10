@@ -1,5 +1,4 @@
 import type TableUp from '../..';
-import type { TableResizeLineOptions } from '../../utils';
 import Quill from 'quill';
 import { type TableCellFormat, TableRowFormat } from '../../formats';
 import { blotName, findParentBlot, findParentBlots } from '../../utils';
@@ -11,15 +10,13 @@ export class TableResizeLine extends TableResizeCommon {
   rowResizer: HTMLElement;
   currentTableCell?: HTMLElement;
   dragging = false;
-  options: TableResizeLineOptions;
 
   curColIndex: number = -1;
   curRowIndex: number = -1;
   tableCellBlot?: TableCellFormat;
 
-  constructor(public tableModule: TableUp, quill: Quill, options: Partial<TableResizeLineOptions>) {
+  constructor(public tableModule: TableUp, public table: HTMLElement, quill: Quill) {
     super(tableModule, quill);
-    this.options = this.resolveOptions(options);
     this.colResizer = this.tableModule.addContainer('ql-table-resize-line-col');
     this.rowResizer = this.tableModule.addContainer('ql-table-resize-line-row');
 
@@ -50,10 +47,6 @@ export class TableResizeLine extends TableResizeCommon {
   hideWhenTextChange = () => {
     this.hideResizer();
   };
-
-  resolveOptions(options: Partial<TableResizeLineOptions>) {
-    return Object.assign({}, options);
-  }
 
   findTableCell(e: MouseEvent) {
     for (const el of e.composedPath()) {
@@ -160,6 +153,9 @@ export class TableResizeLine extends TableResizeCommon {
   }
 
   destroy(): void {
+    this.colResizer.remove();
+    this.rowResizer.remove();
+
     this.quill.root.removeEventListener('mousemove', this.mousemoveHandler);
     this.quill.off(Quill.events.TEXT_CHANGE, this.hideWhenTextChange);
   }

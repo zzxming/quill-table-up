@@ -1,7 +1,6 @@
 import type { Parchment as TypeParchment } from 'quill';
 import type TableUp from '../..';
 import type { TableColFormat, TableMainFormat, TableRowFormat } from '../..';
-import type { TableResizeBoxOptions } from '../../utils';
 import Quill from 'quill';
 import { addScrollEvent, clearScrollEvent } from '../../utils';
 import { TableResizeCommon } from './table-resize-common';
@@ -12,7 +11,6 @@ interface Point {
   y: number;
 };
 export class TableResizeBox extends TableResizeCommon {
-  options: TableResizeBoxOptions;
   root!: HTMLElement;
   tableMain: TableMainFormat;
   tableWrapper!: TypeParchment.Parent;
@@ -24,10 +22,10 @@ export class TableResizeBox extends TableResizeCommon {
   corner: HTMLElement | null = null;
   scrollHandler: [HTMLElement, (e: Event) => void][] = [];
   lastHeaderSelect: [Point, Point] | null = null;
+  size: number = 12;
 
-  constructor(public tableModule: TableUp, public table: HTMLElement, quill: Quill, options: Partial<TableResizeBoxOptions>) {
+  constructor(public tableModule: TableUp, public table: HTMLElement, quill: Quill) {
     super(tableModule, quill);
-    this.options = this.resolveOptions(options);
     this.tableMain = Quill.find(this.table) as TableMainFormat;
 
     if (!this.tableMain) return;
@@ -39,12 +37,6 @@ export class TableResizeBox extends TableResizeCommon {
       this.showTool();
     });
     this.resizeObserver.observe(this.table);
-  }
-
-  resolveOptions(options: Partial<TableResizeBoxOptions>) {
-    return Object.assign({
-      size: 12,
-    }, options);
   }
 
   handleResizerHeader(isX: boolean, e: MouseEvent) {
@@ -91,9 +83,9 @@ export class TableResizeBox extends TableResizeCommon {
     const value = this.handleColMouseDown(e);
     if (value && this.dragColBreak) {
       Object.assign(this.dragColBreak.style, {
-        top: `${value.top - this.options.size}px`,
+        top: `${value.top - this.size}px`,
         left: `${value.left}px`,
-        height: `${value.height + this.options.size}px`,
+        height: `${value.height + this.size}px`,
       });
     }
     return value;
@@ -131,8 +123,8 @@ export class TableResizeBox extends TableResizeCommon {
     if (value && this.dragRowBreak) {
       Object.assign(this.dragRowBreak.style, {
         top: `${value.top}px`,
-        left: `${value.left - this.options.size}px`,
-        width: `${value.width + this.options.size}px`,
+        left: `${value.left - this.size}px`,
+        width: `${value.width + this.size}px`,
       });
     }
     return value;
@@ -167,8 +159,8 @@ export class TableResizeBox extends TableResizeCommon {
       left: `${tableNodeX - rootRect.x}px`,
     });
 
-    let cornerTranslateX = -1 * this.options.size;
-    let rowHeadWrapperTranslateX = -1 * this.options.size;
+    let cornerTranslateX = -1 * this.size;
+    let rowHeadWrapperTranslateX = -1 * this.size;
     if (isTableAlignRight(this.tableMain)) {
       this.root.classList.add('table-align-right');
       cornerTranslateX = Math.min(tableWrapperRect.width, tableMainRect.width);
@@ -180,7 +172,7 @@ export class TableResizeBox extends TableResizeCommon {
 
     if (this.corner) {
       Object.assign(this.corner.style, {
-        transform: `translateY(${-1 * this.options.size}px) translateX(${cornerTranslateX}px)`,
+        transform: `translateY(${-1 * this.size}px) translateX(${cornerTranslateX}px)`,
       });
     }
     if (this.rowHeadWrapper) {
@@ -201,8 +193,8 @@ export class TableResizeBox extends TableResizeCommon {
       this.corner = document.createElement('div');
       this.corner.classList.add('ql-table-resizer-corner');
       Object.assign(this.corner.style, {
-        width: `${this.options.size}px`,
-        height: `${this.options.size}px`,
+        width: `${this.size}px`,
+        height: `${this.size}px`,
       });
       this.corner.addEventListener('click', () => {
         const tableRect = this.table.getBoundingClientRect();
@@ -223,7 +215,7 @@ export class TableResizeBox extends TableResizeCommon {
       for (const [index, col] of this.tableCols.entries()) {
         const width = col.domNode.getBoundingClientRect().width;
         colHeadStr += `<div class="ql-table-col-header" style="width: ${width + (index === this.tableCols.length - 1 ? 1 : 0)}px">
-          <div class="ql-table-col-separator" style="height: ${tableMainRect.height + this.options.size - 3}px"></div>
+          <div class="ql-table-col-separator" style="height: ${tableMainRect.height + this.size - 3}px"></div>
         </div>`;
       }
       const colHeadWrapper = document.createElement('div');
@@ -231,9 +223,9 @@ export class TableResizeBox extends TableResizeCommon {
       const colHead = document.createElement('div');
       colHead.classList.add('ql-table-col-wrapper');
       Object.assign(colHeadWrapper.style, {
-        transform: `translateY(-${this.options.size}px)`,
+        transform: `translateY(-${this.size}px)`,
         maxWidth: `${tableWrapperRect.width}px`,
-        height: `${this.options.size}px`,
+        height: `${this.size}px`,
       });
       Object.assign(colHead.style, {
         width: `${tableMainRect.width}px`,
@@ -250,9 +242,8 @@ export class TableResizeBox extends TableResizeCommon {
       let rowHeadStr = '';
       for (const [index, row] of this.tableRows.entries()) {
         const height = `${row.domNode.getBoundingClientRect().height}px`;
-        console.log(height, index);
         rowHeadStr += `<div class="ql-table-row-header" style="height: ${Number.parseFloat(height) + (index === this.tableRows.length - 1 ? 1 : 0)}px">
-          <div class="ql-table-row-separator" style="width: ${tableMainRect.width + this.options.size - 3}px"></div>
+          <div class="ql-table-row-separator" style="width: ${tableMainRect.width + this.size - 3}px"></div>
         </div>`;
       }
       const rowHeadWrapper = document.createElement('div');
@@ -261,8 +252,8 @@ export class TableResizeBox extends TableResizeCommon {
       rowHead.classList.add('ql-table-row-wrapper');
 
       Object.assign(rowHeadWrapper.style, {
-        transform: `translateX(-${this.options.size}px)`,
-        width: `${this.options.size}px`,
+        transform: `translateX(-${this.size}px)`,
+        width: `${this.size}px`,
         maxHeight: `${tableWrapperRect.height}px`,
       });
       Object.assign(rowHead.style, {

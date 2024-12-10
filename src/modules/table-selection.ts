@@ -1,15 +1,18 @@
-import type { TableMenuCommon, TableUp } from '..';
+import type { TableUp } from '..';
 import type { TableCellInnerFormat, TableMainFormat } from '../formats';
-import type { RelactiveRect, TableSelectionOptions } from '../utils';
+import type { Constructor, RelactiveRect, TableSelectionOptions } from '../utils';
+import type { TableMenuCommon } from './table-menu';
 import Quill from 'quill';
 import { TableCellFormat } from '../formats';
 import { addScrollEvent, clearScrollEvent } from '../utils';
-import { TableMenuContextmenu } from './table-menu';
+import { TableMenuContextmenu, TableMenuSelect } from './table-menu';
 
 const ERROR_LIMIT = 2;
-
+interface TableSelectionOptionsResolved extends TableSelectionOptions {
+  menuConstructor: Constructor;
+}
 export class TableSelection {
-  options: TableSelectionOptions;
+  options: TableSelectionOptionsResolved;
   boundary: RelactiveRect | null = null;
   startScrollX: number = 0;
   startScrollY: number = 0;
@@ -23,7 +26,7 @@ export class TableSelection {
   dragging: boolean = false;
   scrollHandler: [HTMLElement, (...args: any[]) => void][] = [];
   selectingHandler = this.mouseDownHandler.bind(this);
-  tableMenu: TableMenuCommon;
+  tableMenu?: TableMenuCommon;
   resizeObserver: ResizeObserver;
 
   constructor(tableModule: TableUp, public table: HTMLElement, public quill: Quill, options: Partial<TableSelectionOptions> = {}) {
@@ -37,15 +40,25 @@ export class TableSelection {
     this.resizeObserver.observe(this.quill.root);
 
     this.quill.root.addEventListener('mousedown', this.selectingHandler, false);
-    this.tableMenu = new this.options.tableMenuClass(tableModule, quill, this.options.tableMenu);
+    if (this.options.menuConstructor) {
+      this.tableMenu = new this.options.menuConstructor(tableModule, quill, this.options.tableMenu);
+    }
   }
 
-  resolveOptions(options: Partial<TableSelectionOptions>) {
+  resolveOptions(options: Partial<TableSelectionOptions>): TableSelectionOptionsResolved {
+    let menuConstructor: Constructor | undefined;
+    if (options.tableMenuType) {
+      menuConstructor = {
+        contextmenu: TableMenuContextmenu,
+        select: TableMenuSelect,
+      }[options.tableMenuType];
+    }
+
     return Object.assign({
       selectColor: '#0589f3',
-      tableMenuClass: TableMenuContextmenu,
+      menuConstructor,
       tableMenu: {},
-    }, options);
+    } as TableSelectionOptionsResolved, options);
   };
 
   helpLinesInitial() {
@@ -145,7 +158,9 @@ export class TableSelection {
     this.startScrollY = tableScrollY;
     this.selectedTds = this.computeSelectedTds(startPoint, startPoint);
     this.showSelection();
-    this.tableMenu.hideTools();
+    if (this.tableMenu) {
+      this.tableMenu.hideTools();
+    }
 
     const mouseMoveHandler = (mousemoveEvent: MouseEvent) => {
       const { button, target, clientX, clientY } = mousemoveEvent;
@@ -172,7 +187,9 @@ export class TableSelection {
       this.dragging = false;
       this.startScrollX = 0;
       this.startScrollY = 0;
-      this.tableMenu.updateTools();
+      if (this.tableMenu) {
+        this.tableMenu.updateTools();
+      }
     };
 
     document.body.addEventListener('mousemove', mouseMoveHandler, false);
@@ -200,7 +217,7 @@ export class TableSelection {
       width: `${tableWrapperRect.width + 2}px`,
       height: `${tableWrapperRect.height + 2}px`,
     });
-    if (!this.dragging) {
+    if (!this.dragging && this.tableMenu) {
       this.tableMenu.updateTools();
     }
   }
@@ -237,15 +254,19 @@ export class TableSelection {
     this.boundary = null;
     this.selectedTds = [];
     this.cellSelectWrap && Object.assign(this.cellSelectWrap.style, { display: 'none' });
-    this.tableMenu.hideTools();
+    if (this.tableMenu) {
+      this.tableMenu.hideTools();
+    }
     clearScrollEvent.call(this);
   }
 
   destroy() {
     this.resizeObserver.disconnect();
     this.hideSelection();
-    this.tableMenu.destroy();
     this.cellSelectWrap.remove();
+    if (this.tableMenu) {
+      this.tableMenu.destroy();
+    }
     clearScrollEvent.call(this);
 
     this.quill.root.removeEventListener('mousedown', this.selectingHandler, false);
@@ -253,7 +274,7 @@ export class TableSelection {
   }
 }
 
-export function isRectanglesIntersect(a: Omit<RelactiveRect, 'width' | 'height'>, b: Omit<RelactiveRect, 'width' | 'height'>, tolerance = 4) {
+function isRectanglesIntersect(a: Omit<RelactiveRect, 'width' | 'height'>, b: Omit<RelactiveRect, 'width' | 'height'>, tolerance = 4) {
   const { x: minAx, y: minAy, x1: maxAx, y1: maxAy } = a;
   const { x: minBx, y: minBy, x1: maxBx, y1: maxBy } = b;
   const notOverlapX = maxAx <= minBx + tolerance || minAx + tolerance >= maxBx;
@@ -261,7 +282,7 @@ export function isRectanglesIntersect(a: Omit<RelactiveRect, 'width' | 'height'>
   return !(notOverlapX || notOverlapY);
 }
 
-export function getRelativeRect(targetRect: Omit<RelactiveRect, 'x1' | 'y1'>, container: HTMLElement) {
+function getRelativeRect(targetRect: Omit<RelactiveRect, 'x1' | 'y1'>, container: HTMLElement) {
   const containerRect = container.getBoundingClientRect();
 
   return {

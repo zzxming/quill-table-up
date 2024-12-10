@@ -8,11 +8,12 @@ import type Toolbar from 'quill/modules/toolbar';
 import type BaseTheme from 'quill/themes/base';
 import type Picker from 'quill/ui/picker';
 import type { TableResizeCommon } from './modules';
-import type { TableConstantsData, TableTextOptions, TableUpOptions } from './utils';
+import type { Constructor, TableConstantsData, TableTextOptions, TableUpOptions } from './utils';
 import Quill from 'quill';
 import { BlockOverride, BlockquoteOverride, CodeBlockOverride, ContainerFormat, HeaderOverride, ListItemOverride, ScrollOverride, TableBodyFormat, TableCellFormat, TableCellInnerFormat, TableColFormat, TableColgroupFormat, TableMainFormat, TableRowFormat, TableWrapperFormat } from './formats';
-import { TableAlign, TableResizeBox, TableResizeLine, TableSelection, TableVitrualScroll } from './modules';
-import { blotName, createSelectBox, debounce, findParentBlot, findParentBlots, isBoolean, isFunction, isString, limitDomInViewPort, randomId, tableUpEvent, tableUpSize } from './utils';
+import { TableAlign, TableResizeBox, TableResizeLine, TableSelection, TableVitrualScrollbar } from './modules';
+
+import { blotName, createSelectBox, debounce, findParentBlot, findParentBlots, isFunction, isString, limitDomInViewPort, randomId, tableUpEvent, tableUpSize } from './utils';
 
 const Delta = Quill.import('delta');
 const Break = Quill.import('blots/break') as TypeParchment.BlotConstructor;
@@ -65,8 +66,8 @@ const calculateCols = (tableNode: HTMLElement, colNums: number): number[] => {
 };
 
 // Blots that cannot be inserted into a table
-export const tableCantInsert: string[] = [blotName.tableCell];
-const isForbidInTableBlot = (blot: TypeParchment.Blot) => tableCantInsert.includes(blot.statics.blotName);
+export const tableCantInsert: Set<string> = new Set([blotName.tableCellInner]);
+const isForbidInTableBlot = (blot: TypeParchment.Blot) => tableCantInsert.has(blot.statics.blotName);
 const isForbidInTable = (current: TypeParchment.Blot): boolean =>
   current && current.parent
     ? isForbidInTableBlot(current.parent)
@@ -78,7 +79,9 @@ type QuillThemePicker = (Picker & { options: HTMLElement });
 interface QuillTheme extends BaseTheme {
   pickers: QuillThemePicker[];
 }
-
+interface TableOptionsResolved extends TableUpOptions {
+  resizeConstructor: Constructor;
+}
 export class TableUp {
   static moduleName = 'table-up';
   static toolName: string = blotName.tableWrapper;
@@ -197,7 +200,8 @@ export class TableUp {
   }
 
   quill: Quill;
-  options: TableUpOptions;
+  options: TableOptionsResolved;
+
   toolBox: HTMLDivElement;
   fixTableByLisenter = debounce(this.balanceTables, 100);
   selector?: HTMLElement;
@@ -206,7 +210,7 @@ export class TableUp {
   table?: HTMLElement;
   tableSelection?: TableSelection;
   tableResize?: TableResizeCommon;
-  tableScrollbar?: TableVitrualScroll;
+  tableScrollbar?: TableVitrualScrollbar;
   tableAlign?: TableAlign;
   get statics(): any {
     return this.constructor;
@@ -216,7 +220,7 @@ export class TableUp {
     this.quill = quill;
     this.options = this.resolveOptions(options || {});
 
-    if (isBoolean(this.options.scrollbar) && !this.options.scrollbar) {
+    if (!this.options.scrollbar) {
       this.quill.container.classList.add('ql-table-scrollbar--origin');
     }
 
@@ -324,9 +328,6 @@ export class TableUp {
         }
       }
     });
-    if (!this.options.resizerSetOuter) {
-      this.tableResize = new TableResizeLine(this, quill, this.options.resizeLine || {});
-    }
     this.quill.on(tableUpEvent.AFTER_TABLE_RESIZE, () => {
       this.tableSelection && this.tableSelection.hideSelection();
     });
@@ -350,16 +351,24 @@ export class TableUp {
     }
   }
 
-  resolveOptions(options: Partial<TableUpOptions>) {
+  resolveOptions(options: Partial<TableUpOptions>): TableOptionsResolved {
+    let resizeConstructor: Constructor | undefined;
+    if (options && options.resize) {
+      resizeConstructor = {
+        line: TableResizeLine,
+        box: TableResizeBox,
+      }[options.resize];
+    }
+
     return Object.assign({
-      customBtn: true,
+      customBtn: false,
       texts: this.resolveTexts(options.texts || {}),
       full: false,
-      resizerSetOuter: true,
       icon: icons.table,
+      align: true,
       scrollbar: true,
-      showAlign: true,
-    } as TableUpOptions, options);
+      resizeConstructor,
+    } as TableOptionsResolved, options);
   };
 
   resolveTexts(options: Partial<TableTextOptions>) {
@@ -528,15 +537,17 @@ export class TableUp {
   showTableTools(table: HTMLElement, quill: Quill) {
     if (table) {
       this.table = table;
-      this.tableSelection = new TableSelection(this, table, quill, this.options.selection || {});
-      if (this.options.showAlign) {
+      if (this.options.selection) {
+        this.tableSelection = new TableSelection(this, table, quill, this.options.selection);
+      }
+      if (this.options.align) {
         this.tableAlign = new TableAlign(this, table, quill);
       }
       if (this.options.scrollbar) {
-        this.tableScrollbar = new TableVitrualScroll(this, table, quill);
+        this.tableScrollbar = new TableVitrualScrollbar(this, table, quill);
       }
-      if (this.options.resizerSetOuter) {
-        this.tableResize = new TableResizeBox(this, table, quill, this.options.resizeBox || {});
+      if (this.options.resizeConstructor) {
+        this.tableResize = new this.options.resizeConstructor(this, table, quill);
       }
     }
   }
@@ -554,12 +565,11 @@ export class TableUp {
       this.tableAlign.destroy();
       this.tableAlign = undefined;
     }
-
-    this.table = undefined;
-    if (this.options.resizerSetOuter) {
-      this.tableResize && this.tableResize.destroy();
+    if (this.tableResize) {
+      this.tableResize.destroy();
       this.tableResize = undefined;
     }
+    this.table = undefined;
   }
 
   async buildCustomSelect(customSelect?: (module: TableUp) => HTMLElement | Promise<HTMLElement>) {
@@ -581,6 +591,13 @@ export class TableUp {
     dom.appendChild(this.selector);
     this.picker.options.appendChild(dom);
   };
+
+  setCellAttrs(selectedTds: TableCellInnerFormat[], attr: string, value?: any, isStyle: boolean = false) {
+    if (selectedTds.length === 0) return;
+    for (const td of selectedTds) {
+      td.setFormatValue(attr, value, isStyle);
+    }
+  }
 
   insertTable(rows: number, columns: number) {
     if (rows >= 30 || columns >= 30) {
@@ -742,13 +759,6 @@ export class TableUp {
         });
       },
     );
-  }
-
-  setCellAttrs(selectedTds: TableCellInnerFormat[], attr: string, value?: any, isStyle: boolean = false) {
-    if (selectedTds.length === 0) return;
-    for (const td of selectedTds) {
-      td.setFormatValue(attr, value, isStyle);
-    }
   }
 
   deleteTable() {
@@ -1081,6 +1091,8 @@ export class TableUp {
 }
 
 export const updateTableConstants = (data: Partial<TableConstantsData>) => {
+  tableCantInsert.delete(blotName.tableCellInner);
+
   Object.assign(blotName, data.blotName || {});
   Object.assign(tableUpSize, data.tableUpSize || {});
   Object.assign(tableUpEvent, data.tableUpEvent || {});
