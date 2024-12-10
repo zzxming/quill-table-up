@@ -1,7 +1,8 @@
+@import './variables.less';
 @import './functions.less';
 
 .ql-snow {
-  .select-box {
+  .@{namespace}-select-box {
     .setCssVar(select-box-color-bg-hover, rgb(245, 245, 245));
     .setCssVar(select-box-color-bg-active, rgb(224, 242, 254));
     .setCssVar(select-box-custom-color-text, rgb(13, 13, 13));
@@ -9,7 +10,7 @@
     .setCssVar(select-box-custom-color-bg-hover, rgb(235, 235, 235));
   }
 }
-.select-box {
+.@{namespace}-select-box {
   .setCssVar(select-box-color-border, #e5e7eb);
   .setCssVar(select-box-border,  1px solid .getCssVar(select-box-color-border) []);
   .setCssVar(select-box-color-active, rgb(14, 165, 233));
