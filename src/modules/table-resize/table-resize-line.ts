@@ -18,7 +18,7 @@ export class TableResizeLine extends TableResizeCommon {
   tableCellBlot?: TableCellFormat;
 
   constructor(public tableModule: TableUp, quill: Quill, options: Partial<TableResizeLineOptions>) {
-    super(quill);
+    super(tableModule, quill);
     this.options = this.resolveOptions(options);
     this.colResizer = this.tableModule.addContainer('ql-table-resize-line-col');
     this.rowResizer = this.tableModule.addContainer('ql-table-resize-line-row');

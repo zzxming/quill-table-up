@@ -37,6 +37,7 @@ export interface TableTextOptions extends TableCreatorTextOptions {
   custom: string;
   clear: string;
   transparent: string;
+  perWidthInsufficient: string;
 }
 export interface TableResizeBoxOptions {
   size: number;

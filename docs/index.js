@@ -90,6 +90,7 @@ const quill1 = new Quill('#editor1', {
         custom: '自定义',
         clear: '清除',
         transparent: '透明',
+        perWidthInsufficient: '百分比宽度不足, 如需完成操作需要转换表格为固定宽度，是否继续?',
       },
     },
   },

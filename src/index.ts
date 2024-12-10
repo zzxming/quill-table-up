@@ -373,6 +373,7 @@ export class TableUp {
       custom: 'Custom',
       clear: 'Clear',
       transparent: 'Transparent',
+      perWidthInsufficient: 'The percentage width is insufficient. To complete the operation, the table needs to be converted to a fixed width. Do you want to continue?',
     }, options);
   };
 
