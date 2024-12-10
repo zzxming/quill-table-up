@@ -355,7 +355,7 @@ export class TableUp {
       customBtn: true,
       texts: this.resolveTexts(options.texts || {}),
       full: false,
-      resizerSetOuter: false,
+      resizerSetOuter: true,
       icon: icons.table,
       scrollbar: true,
       showAlign: true,
