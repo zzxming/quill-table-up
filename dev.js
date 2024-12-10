@@ -4177,6 +4177,7 @@
     const isTableAlignRight = (tableMainBlot) => !tableMainBlot.full && tableMainBlot.align === 'right';
 
     class TableResizeCommon {
+        tableModule;
         quill;
         colIndex = -1;
         tableMain;
@@ -4190,29 +4191,32 @@
         handleRowMouseUpFunc = this.handleRowMouseUp.bind(this);
         handleRowMouseMoveFunc = this.handleRowMouseMove.bind(this);
         handleRowMouseDownFunc = this.handleRowMouseDown.bind(this);
-        constructor(quill) {
+        constructor(tableModule, quill) {
+            this.tableModule = tableModule;
             this.quill = quill;
         }
         findCurrentColIndex(_e) {
             return -1;
         }
         colWidthChange(_i, _w, _isFull) { }
-        async createConfirmDialog() {
+        async createConfirmDialog({ message, confirm, cancel }) {
             return new Promise((resolve) => {
                 const content = document.createElement('div');
                 Object.assign(content.style, {
                     padding: '8px 12px',
+                    fontSize: '14px',
+                    lineHeight: '1.5',
                 });
                 const tip = document.createElement('p');
-                tip.textContent = '半分比宽度不足, 如需完成操作需要转换表格为固定宽度，是否继续?';
+                tip.textContent = message;
                 const btnWrapper = document.createElement('div');
                 Object.assign(btnWrapper.style, {
                     display: 'flex',
                     justifyContent: 'flex-end',
                     gap: `6px`,
                 });
-                const cancelBtn = createButton({ content: '取消' });
-                const confirmBtn = createButton({ type: 'confirm', content: '确认' });
+                const cancelBtn = createButton({ content: cancel });
+                const confirmBtn = createButton({ type: 'confirm', content: confirm });
                 btnWrapper.appendChild(cancelBtn);
                 btnWrapper.appendChild(confirmBtn);
                 content.appendChild(tip);
@@ -4233,7 +4237,7 @@
                 return;
             const cols = this.tableMain.getCols();
             const w = Number.parseInt(this.dragColBreak.dataset.w || '0');
-            const isFull = this.tableMain.full;
+            let isFull = this.tableMain.full;
             let needUpdate = false;
             const updateInfo = [];
             if (isFull) {
@@ -4247,13 +4251,13 @@
                     pre = Math.max(tableUpSize.colMinWidthPre, pre);
                     if (cols[this.colIndex + 1] || cols[this.colIndex - 1]) {
                         const i = cols[this.colIndex + 1] ? this.colIndex + 1 : this.colIndex - 1;
-                        updateInfo.push({ index: i, width: cols[i].width + oldWidthPre - pre, full: isFull });
+                        updateInfo.push({ index: i, width: cols[i].width + oldWidthPre - pre });
                     }
                     else {
                         pre = 100;
                     }
                     needUpdate = true;
-                    updateInfo.push({ index: this.colIndex, width: pre, full: isFull });
+                    updateInfo.push({ index: this.colIndex, width: pre });
                 }
                 else {
                     // magnify col
@@ -4262,7 +4266,7 @@
                         const totalWidthNextPre = oldWidthPre + cols[this.colIndex + 1].width;
                         pre = Math.min(totalWidthNextPre - tableUpSize.colMinWidthPre, pre);
                         needUpdate = true;
-                        updateInfo.push({ index: this.colIndex, width: pre, full: isFull }, { index: this.colIndex + 1, width: totalWidthNextPre - pre, full: isFull });
+                        updateInfo.push({ index: this.colIndex, width: pre }, { index: this.colIndex + 1, width: totalWidthNextPre - pre });
                     }
                 }
             }
@@ -4271,51 +4275,52 @@
                 - cols[this.colIndex].domNode.getBoundingClientRect().width
                 + w}px`;
                 needUpdate = true;
-                updateInfo.push({ index: this.colIndex, width: w, full: isFull });
+                updateInfo.push({ index: this.colIndex, width: w });
             }
             document.body.removeChild(this.dragColBreak);
             this.dragColBreak = null;
             document.removeEventListener('mouseup', this.handleColMouseUpFunc);
             document.removeEventListener('mousemove', this.handleColMouseMoveFunc);
             this.dragging = false;
-            // update col width
-            let updated = true;
             if (needUpdate) {
-                for (let { index, width, full } of updateInfo) {
-                    // table full maybe change. every time update need check data full and transform width
-                    const tableWidth = this.tableMain.domNode.getBoundingClientRect().width;
-                    let isFull = this.tableMain.full;
-                    if (full !== isFull) {
-                        if (full === true && isFull === false) {
-                            width = width / 100 * tableWidth;
+                const tableWidth = this.tableMain.domNode.getBoundingClientRect().width;
+                if (isFull) {
+                    // if full table and percentage width is larger than 100%. check if convert to fixed px
+                    let resultWidth = 0;
+                    const skipColIndex = new Set(updateInfo.map(({ index, width }) => {
+                        resultWidth += width;
+                        return index;
+                    }));
+                    for (const [index, col] of cols.entries()) {
+                        if (skipColIndex.has(index))
+                            continue;
+                        resultWidth += col.width;
+                    }
+                    if (resultWidth > 100) {
+                        if (!await this.createConfirmDialog({
+                            message: this.tableModule.options.texts.perWidthInsufficient,
+                            confirm: this.tableModule.options.texts.confirmText,
+                            cancel: this.tableModule.options.texts.cancelText,
+                        })) {
+                            return;
                         }
-                        else if (full === false && isFull === true) {
-                            width = width / tableWidth * 100;
+                        this.tableMain.cancelFull();
+                        isFull = false;
+                        for (const [i, info] of updateInfo.entries()) {
+                            const { width, index } = info;
+                            updateInfo[i] = {
+                                index,
+                                width: width / 100 * tableWidth,
+                            };
                         }
                     }
-                    // if tableis full and width larger then 100. check user want to change table to fixed width
-                    if (isFull) {
-                        const totalWidth = cols.reduce((total, cur, i) => {
-                            total += i === index ? width : cur.width;
-                            return total;
-                        }, 0);
-                        if (totalWidth > 100) {
-                            if (!await this.createConfirmDialog()) {
-                                updated = false;
-                                break;
-                            }
-                            this.tableMain.cancelFull();
-                            isFull = false;
-                            width = width / 100 * tableWidth;
-                        }
-                    }
+                }
+                for (const { index, width } of updateInfo) {
                     cols[index].width = `${width}${isFull ? '%' : 'px'}`;
                     this.colWidthChange(index, isFull ? width / 100 * tableWidth : width, isFull);
                 }
             }
-            if (updated) {
-                this.quill.emitter.emit(tableUpEvent.AFTER_TABLE_RESIZE);
-            }
+            this.quill.emitter.emit(tableUpEvent.AFTER_TABLE_RESIZE);
         }
         ;
         handleColMouseMove(e) {
@@ -4496,7 +4501,7 @@
         scrollHandler = [];
         lastHeaderSelect = null;
         constructor(tableModule, table, quill, options) {
-            super(quill);
+            super(tableModule, quill);
             this.tableModule = tableModule;
             this.table = table;
             this.options = this.resolveOptions(options);
@@ -4669,9 +4674,9 @@
             }
             if (this.tableCols.length > 0) {
                 let colHeadStr = '';
-                for (const col of this.tableCols) {
+                for (const [index, col] of this.tableCols.entries()) {
                     const width = col.domNode.getBoundingClientRect().width;
-                    colHeadStr += `<div class="ql-table-col-header" style="width: ${width}px">
+                    colHeadStr += `<div class="ql-table-col-header" style="width: ${width + (index === this.tableCols.length - 1 ? 1 : 0)}px">
           <div class="ql-table-col-separator" style="height: ${tableMainRect.height + this.options.size - 3}px"></div>
         </div>`;
                 }
@@ -4751,7 +4756,7 @@
         curRowIndex = -1;
         tableCellBlot;
         constructor(tableModule, quill, options) {
-            super(quill);
+            super(tableModule, quill);
             this.tableModule = tableModule;
             this.options = this.resolveOptions(options);
             this.colResizer = this.tableModule.addContainer('ql-table-resize-line-col');
@@ -5673,6 +5678,7 @@
                 custom: 'Custom',
                 clear: 'Clear',
                 transparent: 'Transparent',
+                perWidthInsufficient: 'The percentage width is insufficient. To complete the operation, the table needs to be converted to a fixed width. Do you want to continue?',
             }, options);
         }
         ;
