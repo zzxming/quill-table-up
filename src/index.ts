@@ -527,7 +527,9 @@ export class TableUp {
   showTableTools(table: HTMLElement, quill: Quill) {
     if (table) {
       this.table = table;
-      this.tableSelection = new TableSelection(this, table, quill, this.options.selection || {});
+      if (this.options.selection) {
+        this.tableSelection = new TableSelection(this, table, quill, this.options.selection);
+      }
       if (this.options.showAlign) {
         this.tableAlign = new TableAlign(this, table, quill);
       }

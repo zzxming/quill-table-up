@@ -4,7 +4,6 @@ import type { RelactiveRect, TableSelectionOptions } from '../utils';
 import Quill from 'quill';
 import { TableCellFormat } from '../formats';
 import { addScrollEvent, clearScrollEvent } from '../utils';
-import { TableMenuContextmenu } from './table-menu';
 
 const ERROR_LIMIT = 2;
 
@@ -23,7 +22,7 @@ export class TableSelection {
   dragging: boolean = false;
   scrollHandler: [HTMLElement, (...args: any[]) => void][] = [];
   selectingHandler = this.mouseDownHandler.bind(this);
-  tableMenu: TableMenuCommon;
+  tableMenu?: TableMenuCommon;
   resizeObserver: ResizeObserver;
 
   constructor(tableModule: TableUp, public table: HTMLElement, public quill: Quill, options: Partial<TableSelectionOptions> = {}) {
@@ -37,13 +36,14 @@ export class TableSelection {
     this.resizeObserver.observe(this.quill.root);
 
     this.quill.root.addEventListener('mousedown', this.selectingHandler, false);
-    this.tableMenu = new this.options.tableMenuClass(tableModule, quill, this.options.tableMenu);
+    if (this.options.tableMenuClass) {
+      this.tableMenu = new this.options.tableMenuClass(tableModule, quill, this.options.tableMenu);
+    }
   }
 
   resolveOptions(options: Partial<TableSelectionOptions>) {
     return Object.assign({
       selectColor: '#0589f3',
-      tableMenuClass: TableMenuContextmenu,
       tableMenu: {},
     }, options);
   };
@@ -145,7 +145,9 @@ export class TableSelection {
     this.startScrollY = tableScrollY;
     this.selectedTds = this.computeSelectedTds(startPoint, startPoint);
     this.showSelection();
-    this.tableMenu.hideTools();
+    if (this.tableMenu) {
+      this.tableMenu.hideTools();
+    }
 
     const mouseMoveHandler = (mousemoveEvent: MouseEvent) => {
       const { button, target, clientX, clientY } = mousemoveEvent;
@@ -172,7 +174,9 @@ export class TableSelection {
       this.dragging = false;
       this.startScrollX = 0;
       this.startScrollY = 0;
-      this.tableMenu.updateTools();
+      if (this.tableMenu) {
+        this.tableMenu.updateTools();
+      }
     };
 
     document.body.addEventListener('mousemove', mouseMoveHandler, false);
@@ -200,7 +204,7 @@ export class TableSelection {
       width: `${tableWrapperRect.width + 2}px`,
       height: `${tableWrapperRect.height + 2}px`,
     });
-    if (!this.dragging) {
+    if (!this.dragging && this.tableMenu) {
       this.tableMenu.updateTools();
     }
   }
@@ -237,15 +241,19 @@ export class TableSelection {
     this.boundary = null;
     this.selectedTds = [];
     this.cellSelectWrap && Object.assign(this.cellSelectWrap.style, { display: 'none' });
-    this.tableMenu.hideTools();
+    if (this.tableMenu) {
+      this.tableMenu.hideTools();
+    }
     clearScrollEvent.call(this);
   }
 
   destroy() {
     this.resizeObserver.disconnect();
     this.hideSelection();
-    this.tableMenu.destroy();
     this.cellSelectWrap.remove();
+    if (this.tableMenu) {
+      this.tableMenu.destroy();
+    }
     clearScrollEvent.call(this);
 
     this.quill.root.removeEventListener('mousedown', this.selectingHandler, false);

@@ -22,7 +22,7 @@ export interface TableMenuOptions {
 };
 export interface TableSelectionOptions {
   selectColor: string;
-  tableMenuClass: Constructor<TableMenuCommon>;
+  tableMenuClass?: Constructor<TableMenuCommon>;
   tableMenu: TableMenuOptions;
 }
 export interface TableCreatorTextOptions {
