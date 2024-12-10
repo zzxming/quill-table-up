@@ -4701,9 +4701,10 @@
             }
             if (this.tableRows.length > 0) {
                 let rowHeadStr = '';
-                for (const row of this.tableRows) {
+                for (const [index, row] of this.tableRows.entries()) {
                     const height = `${row.domNode.getBoundingClientRect().height}px`;
-                    rowHeadStr += `<div class="ql-table-row-header" style="height: ${height}">
+                    console.log(height, index);
+                    rowHeadStr += `<div class="ql-table-row-header" style="height: ${Number.parseFloat(height) + (index === this.tableRows.length - 1 ? 1 : 0)}px">
           <div class="ql-table-row-separator" style="width: ${tableMainRect.width + this.options.size - 3}px"></div>
         </div>`;
                 }

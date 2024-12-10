@@ -98,6 +98,10 @@
 .ql-container .ql-table-resizer .ql-table-col-header {
   height: 100%;
   cursor: pointer;
+  border-right-color: transparent;
+}
+.ql-container .ql-table-resizer .ql-table-col-header:last-child {
+  border-right-color: #ccc;
 }
 .ql-container .ql-table-resizer .ql-table-col-separator {
   position: absolute;
@@ -131,6 +135,10 @@
 .ql-container .ql-table-resizer .ql-table-row-header {
   width: 100%;
   cursor: pointer;
+  border-bottom-color: transparent;
+}
+.ql-container .ql-table-resizer .ql-table-row-header:last-child {
+  border-bottom-color: #ccc;
 }
 .ql-container .ql-table-resizer .ql-table-row-separator {
   position: absolute;
