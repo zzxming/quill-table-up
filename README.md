@@ -62,6 +62,8 @@ const quill = new Quill('#editor', {
 | icon            | picker svg icon string. it will set with `innerHTML`                                                                                    | `string`                                | `origin table icon` |
 | scrollbar       | enable table virtual scrollbar                                                                                                          | `boolean`                               | `true`              |
 
+> I'm not suggest to use `scrollbar` and `resizerSetOuter` at same time, because they will make the `scrollbar` display blink
+
 <details>
   <summary> default value </summary>
 

@@ -13,6 +13,7 @@ export class Scrollbar {
   ratioX: number = 1;
   sizeWidth: string = '';
   sizeHeight: string = '';
+  size: string = '';
   thumbState: {
     X: number;
     Y: number;
@@ -104,6 +105,7 @@ export class Scrollbar {
 
     this.sizeWidth = width + this.gap < offsetWidth ? `${width}px` : '';
     this.sizeHeight = height + this.gap < offsetHeight ? `${height}px` : '';
+    this.size = this.isVertical ? this.sizeHeight : this.sizeWidth;
   }
 
   createScrollbar() {
@@ -174,26 +176,30 @@ export class Scrollbar {
     const offset = wrap[this.propertyMap.offset] - this.gap;
     this.move = wrap[this.propertyMap.scrollDirection] * 100 / offset * (this.isVertical ? this.ratioY : this.ratioX);
     Object.assign(this.thumb.style, {
-      [this.propertyMap.size]: this.isVertical ? this.sizeHeight : this.sizeWidth,
+      [this.propertyMap.size]: this.size,
       transform: `translate${this.propertyMap.axis}(${this.move}%)`,
     });
   }
 
   showScrollbar = debounce(() => {
     this.cursorLeave = false;
-    this.scrollbar.classList.remove('transparent');
-    this.scrollbar.addEventListener('transitionend', () => {
-      this.scrollbar.style.display = (this.isVertical ? this.sizeHeight : this.sizeWidth) ? 'block' : 'none';
+    this.scrollbar.removeEventListener('transitionend', this.hideScrollbarTransitionend);
+    this.scrollbar.style.display = this.size ? 'block' : 'none';
+    requestAnimationFrame(() => {
+      this.scrollbar.classList.remove('transparent');
     });
   }, 200);
 
   hideScrollbar = debounce(() => {
     this.cursorLeave = true;
+    this.scrollbar.removeEventListener('transitionend', this.hideScrollbarTransitionend);
+    this.scrollbar.addEventListener('transitionend', this.hideScrollbarTransitionend, { once: true });
     this.scrollbar.classList.add('transparent');
-    this.scrollbar.addEventListener('transitionend', () => {
-      this.scrollbar.style.display = this.cursorDown && (this.isVertical ? this.sizeHeight : this.sizeWidth) ? 'block' : 'none';
-    });
   }, 200);
+
+  hideScrollbarTransitionend = () => {
+    this.scrollbar.style.display = (this.cursorDown && this.size) ? 'block' : 'none';
+  };
 
   destroy() {
     this.ob.disconnect();
