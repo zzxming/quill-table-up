@@ -35,7 +35,7 @@ export class TableAlign {
 
           this.quill.once(Quill.events.SCROLL_OPTIMIZE, () => {
             if (this.tableModule.tableSelection) {
-              this.tableModule.tableSelection.hideSelection();
+              this.tableModule.tableSelection.hide();
             }
             if (this.tableModule.tableResize) {
               this.tableModule.tableResize.update();

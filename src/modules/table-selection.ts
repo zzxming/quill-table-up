@@ -1,13 +1,11 @@
-import type { TableMenuCommon, TableUp } from '..';
+import type { TableUp } from '..';
 import type { TableCellInnerFormat, TableMainFormat } from '../formats';
-import type { RelactiveRect, TableSelectionOptions } from '../utils';
+import type { InternalModule, RelactiveRect, TableSelectionOptions } from '../utils';
 import Quill from 'quill';
 import { TableCellFormat } from '../formats';
 import { addScrollEvent, clearScrollEvent } from '../utils';
-import { TableMenuContextmenu } from './table-menu';
 
 const ERROR_LIMIT = 2;
-
 export class TableSelection {
   options: TableSelectionOptions;
   boundary: RelactiveRect | null = null;
@@ -15,15 +13,15 @@ export class TableSelection {
   startScrollY: number = 0;
   selectedTableScrollX: number = 0;
   selectedTableScrollY: number = 0;
-  selectedEditorScrollX = 0;
-  selectedEditorScrollY = 0;
+  selectedEditorScrollX: number = 0;
+  selectedEditorScrollY: number = 0;
   selectedTds: TableCellInnerFormat[] = [];
   cellSelectWrap: HTMLElement;
   cellSelect: HTMLElement;
   dragging: boolean = false;
   scrollHandler: [HTMLElement, (...args: any[]) => void][] = [];
   selectingHandler = this.mouseDownHandler.bind(this);
-  tableMenu: TableMenuCommon;
+  tableMenu?: InternalModule;
   resizeObserver: ResizeObserver;
 
   constructor(tableModule: TableUp, public table: HTMLElement, public quill: Quill, options: Partial<TableSelectionOptions> = {}) {
@@ -32,20 +30,21 @@ export class TableSelection {
     this.cellSelectWrap = tableModule.addContainer('ql-table-selection');
     this.cellSelect = this.helpLinesInitial();
 
-    this.resizeObserver = new ResizeObserver(() => this.hideSelection());
+    this.resizeObserver = new ResizeObserver(() => this.hide());
     this.resizeObserver.observe(this.table);
     this.resizeObserver.observe(this.quill.root);
 
     this.quill.root.addEventListener('mousedown', this.selectingHandler, false);
-    this.tableMenu = new this.options.tableMenuClass(tableModule, quill, this.options.tableMenu);
+    if (this.options.tableMenu) {
+      this.tableMenu = new this.options.tableMenu(tableModule, quill, this.options.tableMenuOptions);
+    }
   }
 
-  resolveOptions(options: Partial<TableSelectionOptions>) {
+  resolveOptions(options: Partial<TableSelectionOptions>): TableSelectionOptions {
     return Object.assign({
       selectColor: '#0589f3',
-      tableMenuClass: TableMenuContextmenu,
-      tableMenu: {},
-    }, options);
+      tableMenuOptions: {},
+    } as TableSelectionOptions, options);
   };
 
   helpLinesInitial() {
@@ -144,8 +143,10 @@ export class TableSelection {
     this.startScrollX = tableScrollX;
     this.startScrollY = tableScrollY;
     this.selectedTds = this.computeSelectedTds(startPoint, startPoint);
-    this.showSelection();
-    this.tableMenu.hideTools();
+    this.show();
+    if (this.tableMenu) {
+      this.tableMenu.hide();
+    }
 
     const mouseMoveHandler = (mousemoveEvent: MouseEvent) => {
       const { button, target, clientX, clientY } = mousemoveEvent;
@@ -164,7 +165,7 @@ export class TableSelection {
       if (this.selectedTds.length > 1) {
         this.quill.blur();
       }
-      this.updateSelection();
+      this.update();
     };
     const mouseUpHandler = () => {
       document.body.removeEventListener('mousemove', mouseMoveHandler, false);
@@ -172,14 +173,16 @@ export class TableSelection {
       this.dragging = false;
       this.startScrollX = 0;
       this.startScrollY = 0;
-      this.tableMenu.updateTools();
+      if (this.tableMenu) {
+        this.tableMenu.update();
+      }
     };
 
     document.body.addEventListener('mousemove', mouseMoveHandler, false);
     document.body.addEventListener('mouseup', mouseUpHandler, false);
   }
 
-  updateSelection() {
+  update() {
     if (this.selectedTds.length === 0 || !this.boundary) return;
     const { x: editorScrollX, y: editorScrollY } = this.getQuillViewScroll();
     const { x: tableScrollX, y: tableScrollY } = this.getTableViewScroll();
@@ -200,8 +203,8 @@ export class TableSelection {
       width: `${tableWrapperRect.width + 2}px`,
       height: `${tableWrapperRect.height + 2}px`,
     });
-    if (!this.dragging) {
-      this.tableMenu.updateTools();
+    if (!this.dragging && this.tableMenu) {
+      this.tableMenu.update();
     }
   }
 
@@ -219,33 +222,37 @@ export class TableSelection {
     };
   }
 
-  showSelection() {
+  show() {
     clearScrollEvent.call(this);
 
     Object.assign(this.cellSelectWrap.style, { display: 'block' });
-    this.updateSelection();
+    this.update();
 
     addScrollEvent.call(this, this.quill.root, () => {
-      this.updateSelection();
+      this.update();
     });
     addScrollEvent.call(this, this.table.parentElement!, () => {
-      this.updateSelection();
+      this.update();
     });
   }
 
-  hideSelection() {
+  hide() {
     this.boundary = null;
     this.selectedTds = [];
     this.cellSelectWrap && Object.assign(this.cellSelectWrap.style, { display: 'none' });
-    this.tableMenu.hideTools();
+    if (this.tableMenu) {
+      this.tableMenu.hide();
+    }
     clearScrollEvent.call(this);
   }
 
   destroy() {
     this.resizeObserver.disconnect();
-    this.hideSelection();
-    this.tableMenu.destroy();
+    this.hide();
     this.cellSelectWrap.remove();
+    if (this.tableMenu) {
+      this.tableMenu.destroy();
+    }
     clearScrollEvent.call(this);
 
     this.quill.root.removeEventListener('mousedown', this.selectingHandler, false);
@@ -253,7 +260,7 @@ export class TableSelection {
   }
 }
 
-export function isRectanglesIntersect(a: Omit<RelactiveRect, 'width' | 'height'>, b: Omit<RelactiveRect, 'width' | 'height'>, tolerance = 4) {
+function isRectanglesIntersect(a: Omit<RelactiveRect, 'width' | 'height'>, b: Omit<RelactiveRect, 'width' | 'height'>, tolerance = 4) {
   const { x: minAx, y: minAy, x1: maxAx, y1: maxAy } = a;
   const { x: minBx, y: minBy, x1: maxBx, y1: maxBy } = b;
   const notOverlapX = maxAx <= minBx + tolerance || minAx + tolerance >= maxBx;
@@ -261,7 +268,7 @@ export function isRectanglesIntersect(a: Omit<RelactiveRect, 'width' | 'height'>
   return !(notOverlapX || notOverlapY);
 }
 
-export function getRelativeRect(targetRect: Omit<RelactiveRect, 'x1' | 'y1'>, container: HTMLElement) {
+function getRelativeRect(targetRect: Omit<RelactiveRect, 'x1' | 'y1'>, container: HTMLElement) {
   const containerRect = container.getBoundingClientRect();
 
   return {

@@ -21,14 +21,12 @@
       "import": "./dist/index.js"
     },
     "./index.css": "./dist/index.css",
-    "./table-creator.css": "./dist/table-creator.css",
-    "./*": "./*"
+    "./table-creator.css": "./dist/table-creator.css"
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "files": [
-    "dist",
-    "src"
+    "dist"
   ],
   "scripts": {
     "lint": "eslint . --cache",

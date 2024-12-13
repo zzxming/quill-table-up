@@ -29,13 +29,13 @@ export class TableMenuContextmenu extends TableMenuCommon {
       if (!this.menu) {
         this.menu = this.buildTools();
       }
-      this.updateTools({ x: e.clientX, y: e.clientY });
+      this.update({ x: e.clientX, y: e.clientY });
       document.addEventListener('click', () => {
-        this.hideTools();
+        this.hide();
       }, { once: true });
     }
     else {
-      this.hideTools();
+      this.hide();
     }
   };
 
@@ -56,9 +56,9 @@ export class TableMenuContextmenu extends TableMenuCommon {
     item.appendChild(tipTextDom);
   }
 
-  updateTools(position?: { x: number; y: number }) {
+  update(position?: { x: number; y: number }) {
     if (!this.menu || !this.tableModule.tableSelection || !this.tableModule.tableSelection.boundary) return;
-    super.updateTools();
+    super.update();
     const style: Record<string, any> = {
       display: 'flex',
       left: 0,
@@ -66,7 +66,7 @@ export class TableMenuContextmenu extends TableMenuCommon {
     };
 
     if (!position) {
-      return this.hideTools();
+      return this.hide();
     }
     const { x, y } = position;
     style.left = x;
@@ -88,10 +88,7 @@ export class TableMenuContextmenu extends TableMenuCommon {
   }
 
   destroy() {
-    for (const tooltip of this.tooltipItem) tooltip.destroy();
     this.quill.root.removeEventListener('contextmenu', this.listenContextmenu);
-    if (!this.menu) return;
-    this.menu.remove();
-    this.menu = null;
+    super.destroy();
   }
 }

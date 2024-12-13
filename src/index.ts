@@ -5,14 +5,10 @@ import type { Delta as TypeDelta } from 'quill/core';
 import type { Context } from 'quill/modules/keyboard';
 import type Keyboard from 'quill/modules/keyboard';
 import type Toolbar from 'quill/modules/toolbar';
-import type BaseTheme from 'quill/themes/base';
-import type Picker from 'quill/ui/picker';
-import type { TableResizeCommon } from './modules';
-import type { TableConstantsData, TableTextOptions, TableUpOptions } from './utils';
+import type { InternalModule, InternalTableSelectionModule, QuillTheme, QuillThemePicker, TableConstantsData, TableTextOptions, TableUpOptions } from './utils';
 import Quill from 'quill';
 import { BlockOverride, BlockquoteOverride, CodeBlockOverride, ContainerFormat, HeaderOverride, ListItemOverride, ScrollOverride, TableBodyFormat, TableCellFormat, TableCellInnerFormat, TableColFormat, TableColgroupFormat, TableMainFormat, TableRowFormat, TableWrapperFormat } from './formats';
-import { TableAlign, TableResizeBox, TableResizeLine, TableSelection, TableVitrualScroll } from './modules';
-import { blotName, createSelectBox, debounce, findParentBlot, findParentBlots, isBoolean, isFunction, isString, limitDomInViewPort, randomId, tableUpEvent, tableUpSize } from './utils';
+import { blotName, createSelectBox, debounce, findParentBlot, findParentBlots, isFunction, isString, limitDomInViewPort, randomId, tableUpEvent, tableUpSize } from './utils';
 
 const Delta = Quill.import('delta');
 const Break = Quill.import('blots/break') as TypeParchment.BlotConstructor;
@@ -65,19 +61,14 @@ const calculateCols = (tableNode: HTMLElement, colNums: number): number[] => {
 };
 
 // Blots that cannot be inserted into a table
-export const tableCantInsert: string[] = [blotName.tableCell];
-const isForbidInTableBlot = (blot: TypeParchment.Blot) => tableCantInsert.includes(blot.statics.blotName);
+export const tableCantInsert: Set<string> = new Set([blotName.tableCellInner]);
+const isForbidInTableBlot = (blot: TypeParchment.Blot) => tableCantInsert.has(blot.statics.blotName);
 const isForbidInTable = (current: TypeParchment.Blot): boolean =>
   current && current.parent
     ? isForbidInTableBlot(current.parent)
       ? true
       : isForbidInTable(current.parent)
     : false;
-
-type QuillThemePicker = (Picker & { options: HTMLElement });
-interface QuillTheme extends BaseTheme {
-  pickers: QuillThemePicker[];
-}
 
 export class TableUp {
   static moduleName = 'table-up';
@@ -201,13 +192,11 @@ export class TableUp {
   toolBox: HTMLDivElement;
   fixTableByLisenter = debounce(this.balanceTables, 100);
   selector?: HTMLElement;
-  picker?: (Picker & { options: HTMLElement });
-  range?: Range | null;
   table?: HTMLElement;
-  tableSelection?: TableSelection;
-  tableResize?: TableResizeCommon;
-  tableScrollbar?: TableVitrualScroll;
-  tableAlign?: TableAlign;
+  tableSelection?: InternalTableSelectionModule;
+  tableResize?: InternalModule;
+  tableScrollbar?: InternalModule;
+  tableAlign?: InternalModule;
   get statics(): any {
     return this.constructor;
   }
@@ -216,7 +205,7 @@ export class TableUp {
     this.quill = quill;
     this.options = this.resolveOptions(options || {});
 
-    if (isBoolean(this.options.scrollbar) && !this.options.scrollbar) {
+    if (!this.options.scrollbar) {
       this.quill.container.classList.add('ql-table-scrollbar--origin');
     }
 
@@ -226,20 +215,20 @@ export class TableUp {
     if (toolbar && (this.quill.theme as QuillTheme).pickers) {
       const [, select] = (toolbar.controls as [string, HTMLElement][] || []).find(([name]) => name === this.statics.toolName) || [];
       if (select && select.tagName.toLocaleLowerCase() === 'select') {
-        this.picker = (this.quill.theme as QuillTheme).pickers.find(picker => picker.select === select);
-        if (this.picker) {
-          this.picker.label.innerHTML = this.options.icon;
-          this.buildCustomSelect(this.options.customSelect);
-          this.picker.label.addEventListener('mousedown', () => {
-            if (!this.selector || !this.picker) return;
+        const picker = (this.quill.theme as QuillTheme).pickers.find(picker => picker.select === select);
+        if (picker) {
+          picker.label.innerHTML = this.options.icon;
+          this.buildCustomSelect(this.options.customSelect, picker);
+          picker.label.addEventListener('mousedown', () => {
+            if (!this.selector || !picker) return;
             const selectRect = this.selector.getBoundingClientRect();
             const { leftLimited } = limitDomInViewPort(selectRect);
             if (leftLimited) {
-              const labelRect = this.picker.label.getBoundingClientRect();
-              Object.assign(this.picker.options.style, { transform: `translateX(calc(-100% + ${labelRect.width}px))` });
+              const labelRect = picker.label.getBoundingClientRect();
+              Object.assign(picker.options.style, { transform: `translateX(calc(-100% + ${labelRect.width}px))` });
             }
             else {
-              Object.assign(this.picker.options.style, { transform: undefined });
+              Object.assign(picker.options.style, { transform: undefined });
             }
           });
         }
@@ -266,7 +255,7 @@ export class TableUp {
         const tableNode = path.find(node => node.tagName && node.tagName.toUpperCase() === 'TABLE' && node.classList.contains('ql-table'));
         if (tableNode) {
           if (this.table === tableNode) {
-            this.tableSelection && this.tableSelection.showSelection();
+            this.tableSelection && this.tableSelection.show();
             this.tableAlign && this.tableAlign.update();
             return;
           }
@@ -324,11 +313,8 @@ export class TableUp {
         }
       }
     });
-    if (!this.options.resizerSetOuter) {
-      this.tableResize = new TableResizeLine(this, quill, this.options.resizeLine || {});
-    }
     this.quill.on(tableUpEvent.AFTER_TABLE_RESIZE, () => {
-      this.tableSelection && this.tableSelection.hideSelection();
+      this.tableSelection && this.tableSelection.hide();
     });
 
     this.pasteTableHandler();
@@ -350,15 +336,16 @@ export class TableUp {
     }
   }
 
-  resolveOptions(options: Partial<TableUpOptions>) {
+  resolveOptions(options: Partial<TableUpOptions>): TableUpOptions {
     return Object.assign({
-      customBtn: true,
+      customBtn: false,
       texts: this.resolveTexts(options.texts || {}),
       full: false,
-      resizerSetOuter: true,
       icon: icons.table,
-      scrollbar: true,
-      showAlign: true,
+      selectionOptions: {},
+      alignOptions: {},
+      scrollbarOptions: {},
+      resizeOptions: {},
     } as TableUpOptions, options);
   };
 
@@ -528,15 +515,17 @@ export class TableUp {
   showTableTools(table: HTMLElement, quill: Quill) {
     if (table) {
       this.table = table;
-      this.tableSelection = new TableSelection(this, table, quill, this.options.selection || {});
-      if (this.options.showAlign) {
-        this.tableAlign = new TableAlign(this, table, quill);
+      if (this.options.selection) {
+        this.tableSelection = new this.options.selection(this, table, quill, this.options.selectionOptions);
+      }
+      if (this.options.align) {
+        this.tableAlign = new this.options.align(this, table, quill, this.options.alignOptions);
       }
       if (this.options.scrollbar) {
-        this.tableScrollbar = new TableVitrualScroll(this, table, quill);
+        this.tableScrollbar = new this.options.scrollbar(this, table, quill, this.options.scrollbarOptions);
       }
-      if (this.options.resizerSetOuter) {
-        this.tableResize = new TableResizeBox(this, table, quill, this.options.resizeBox || {});
+      if (this.options.resize) {
+        this.tableResize = new this.options.resize(this, table, quill, this.options.resizeOptions);
       }
     }
   }
@@ -554,33 +543,28 @@ export class TableUp {
       this.tableAlign.destroy();
       this.tableAlign = undefined;
     }
-
-    this.table = undefined;
-    if (this.options.resizerSetOuter) {
-      this.tableResize && this.tableResize.destroy();
+    if (this.tableResize) {
+      this.tableResize.destroy();
       this.tableResize = undefined;
     }
+    this.table = undefined;
   }
 
-  async buildCustomSelect(customSelect?: (module: TableUp) => HTMLElement | Promise<HTMLElement>) {
-    if (!this.picker) return;
+  async buildCustomSelect(customSelect: ((module: TableUp, picker: QuillThemePicker) => HTMLElement | Promise<HTMLElement>) | undefined, picker: QuillThemePicker) {
+    if (!customSelect || !isFunction(customSelect)) return;
     const dom = document.createElement('div');
     dom.classList.add('ql-custom-select');
-    this.selector = customSelect && isFunction(customSelect)
-      ? await customSelect(this)
-      : createSelectBox({
-        onSelect: (row: number, col: number) => {
-          this.insertTable(row, col);
-          if (this.picker) {
-            this.picker.close();
-          }
-        },
-        customBtn: this.options.customBtn,
-        texts: this.options.texts,
-      });
+    this.selector = await customSelect(this, picker);
     dom.appendChild(this.selector);
-    this.picker.options.appendChild(dom);
+    picker.options.appendChild(dom);
   };
+
+  setCellAttrs(selectedTds: TableCellInnerFormat[], attr: string, value?: any, isStyle: boolean = false) {
+    if (selectedTds.length === 0) return;
+    for (const td of selectedTds) {
+      td.setFormatValue(attr, value, isStyle);
+    }
+  }
 
   insertTable(rows: number, columns: number) {
     if (rows >= 30 || columns >= 30) {
@@ -588,8 +572,7 @@ export class TableUp {
     }
 
     this.quill.focus();
-    this.range = this.quill.getSelection();
-    const range = this.range;
+    const range = this.quill.getSelection();
     if (range == null) return;
     const [currentBlot] = this.quill.getLeaf(range.index);
     if (!currentBlot) return;
@@ -742,13 +725,6 @@ export class TableUp {
         });
       },
     );
-  }
-
-  setCellAttrs(selectedTds: TableCellInnerFormat[], attr: string, value?: any, isStyle: boolean = false) {
-    if (selectedTds.length === 0) return;
-    for (const td of selectedTds) {
-      td.setFormatValue(attr, value, isStyle);
-    }
   }
 
   deleteTable() {
@@ -1080,7 +1056,9 @@ export class TableUp {
   }
 }
 
-export const updateTableConstants = (data: Partial<TableConstantsData>) => {
+export function updateTableConstants(data: Partial<TableConstantsData>) {
+  tableCantInsert.delete(blotName.tableCellInner);
+
   Object.assign(blotName, data.blotName || {});
   Object.assign(tableUpSize, data.tableUpSize || {});
   Object.assign(tableUpEvent, data.tableUpEvent || {});
@@ -1096,6 +1074,18 @@ export const updateTableConstants = (data: Partial<TableConstantsData>) => {
   TableCellFormat.blotName = blotName.tableCell;
   TableCellInnerFormat.blotName = blotName.tableCellInner;
 };
+export function defaultCustomSelect(tableModule: TableUp, picker: QuillThemePicker) {
+  return createSelectBox({
+    onSelect: (row: number, col: number) => {
+      tableModule.insertTable(row, col);
+      if (picker) {
+        picker.close();
+      }
+    },
+    customBtn: tableModule.options.customBtn,
+    texts: tableModule.options.texts,
+  });
+}
 
 export default TableUp;
 export * from './formats';

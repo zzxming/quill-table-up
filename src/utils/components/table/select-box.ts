@@ -1,4 +1,5 @@
 import type { TableCreatorTextOptions } from '../../types';
+import { createBEM } from '../../bem';
 import { showTableCreator } from './creator';
 
 interface TableSelectOptions {
@@ -9,15 +10,16 @@ interface TableSelectOptions {
   texts: Partial<TableCreatorTextOptions>;
 }
 export const createSelectBox = (options: Partial<TableSelectOptions> = {}) => {
+  const bem = createBEM('select-box');
   const selectDom = document.createElement('div');
-  selectDom.classList.add('select-box');
+  selectDom.classList.add(bem.b());
 
   const selectBlock = document.createElement('div');
-  selectBlock.classList.add('select-box__block');
+  selectBlock.classList.add(bem.be('block'));
   for (let r = 0; r < (options.row || 8); r++) {
     for (let c = 0; c < (options.col || 8); c++) {
       const selectItem = document.createElement('div');
-      selectItem.classList.add('select-box__item');
+      selectItem.classList.add(bem.be('item'));
       selectItem.dataset.row = String(r + 1);
       selectItem.dataset.col = String(c + 1);
       selectBlock.appendChild(selectItem);
@@ -66,7 +68,7 @@ export const createSelectBox = (options: Partial<TableSelectOptions> = {}) => {
   if (options.customBtn) {
     const texts = options.texts || {};
     const selectCustom = document.createElement('div');
-    selectCustom.classList.add('select-box__custom');
+    selectCustom.classList.add(bem.be('custom'));
     selectCustom.textContent = texts.customBtnText || 'Custom';
     selectCustom.addEventListener('click', async () => {
       const res = await showTableCreator(texts);

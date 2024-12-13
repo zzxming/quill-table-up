@@ -1,5 +1,4 @@
 import type TableUp from '../..';
-import type { TableResizeLineOptions } from '../../utils';
 import Quill from 'quill';
 import { type TableCellFormat, TableRowFormat } from '../../formats';
 import { blotName, findParentBlot, findParentBlots } from '../../utils';
@@ -11,19 +10,17 @@ export class TableResizeLine extends TableResizeCommon {
   rowResizer: HTMLElement;
   currentTableCell?: HTMLElement;
   dragging = false;
-  options: TableResizeLineOptions;
 
   curColIndex: number = -1;
   curRowIndex: number = -1;
   tableCellBlot?: TableCellFormat;
 
-  constructor(public tableModule: TableUp, quill: Quill, options: Partial<TableResizeLineOptions>) {
+  constructor(public tableModule: TableUp, public table: HTMLElement, quill: Quill) {
     super(tableModule, quill);
-    this.options = this.resolveOptions(options);
     this.colResizer = this.tableModule.addContainer('ql-table-resize-line-col');
     this.rowResizer = this.tableModule.addContainer('ql-table-resize-line-row');
 
-    this.quill.root.addEventListener('mousemove', this.mousemoveHandler);
+    this.table.addEventListener('mousemove', this.mousemoveHandler);
     this.quill.on(Quill.events.TEXT_CHANGE, this.hideWhenTextChange);
   }
 
@@ -31,12 +28,12 @@ export class TableResizeLine extends TableResizeCommon {
     if (this.dragging) return;
     const tableCell = this.findTableCell(e);
     if (!tableCell) {
-      return this.hideResizer();
+      return this.hide();
     }
     const tableCellBlot = Quill.find(tableCell) as TableCellFormat;
     if (!tableCellBlot) return;
     if (this.currentTableCell !== tableCell) {
-      this.showResizer();
+      this.show();
       this.currentTableCell = tableCell;
       this.tableCellBlot = tableCellBlot;
       this.tableMain = findParentBlot(tableCellBlot, blotName.tableMain);
@@ -48,12 +45,8 @@ export class TableResizeLine extends TableResizeCommon {
   };
 
   hideWhenTextChange = () => {
-    this.hideResizer();
+    this.hide();
   };
-
-  resolveOptions(options: Partial<TableResizeLineOptions>) {
-    return Object.assign({}, options);
-  }
 
   findTableCell(e: MouseEvent) {
     for (const el of e.composedPath()) {
@@ -143,12 +136,12 @@ export class TableResizeLine extends TableResizeCommon {
     });
   }
 
-  showResizer() {
+  show() {
     Object.assign(this.colResizer.style, { display: null });
     Object.assign(this.rowResizer.style, { display: null });
   }
 
-  hideResizer() {
+  hide() {
     this.currentTableCell = undefined;
     this.rowResizer.style.display = 'none';
     this.colResizer.style.display = 'none';
@@ -160,7 +153,10 @@ export class TableResizeLine extends TableResizeCommon {
   }
 
   destroy(): void {
-    this.quill.root.removeEventListener('mousemove', this.mousemoveHandler);
+    this.colResizer.remove();
+    this.rowResizer.remove();
+
+    this.table.removeEventListener('mousemove', this.mousemoveHandler);
     this.quill.off(Quill.events.TEXT_CHANGE, this.hideWhenTextChange);
   }
 }

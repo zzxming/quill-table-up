@@ -228,12 +228,12 @@ export class TableMenuCommon {
     tipTextDom && this.tooltipItem.push(tipTextDom);
   }
 
-  updateTools() {
+  update() {
     if (!this.menu || !this.tableModule.tableSelection || !this.tableModule.tableSelection.boundary) return;
     Object.assign(this.menu.style, { display: 'flex' });
   }
 
-  hideTools() {
+  hide() {
     this.menu && Object.assign(this.menu.style, { display: 'none' });
     for (const tooltip of this.tooltipItem) {
       tooltip.hide(true);

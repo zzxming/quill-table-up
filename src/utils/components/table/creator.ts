@@ -1,4 +1,5 @@
 import type { TableCreatorTextOptions } from '../../types';
+import { createBEM } from '../../bem';
 import { createButton } from '../button';
 import { createDialog } from '../dialog';
 import { createInputItem } from '../input';
@@ -8,10 +9,11 @@ interface TableCreatorOptions extends Omit<TableCreatorTextOptions, 'customBtnTe
   col: number;
 }
 export const showTableCreator = async (options: Partial<TableCreatorOptions> = {}) => {
+  const bem = createBEM('table-creator');
   const box = document.createElement('div');
-  box.classList.add('table-creator');
+  box.classList.add(bem.b());
   const inputContent = document.createElement('div');
-  inputContent.classList.add('table-creator__input');
+  inputContent.classList.add(bem.be('input'));
 
   const {
     item: rowItem,
@@ -29,7 +31,7 @@ export const showTableCreator = async (options: Partial<TableCreatorOptions> = {
   box.appendChild(inputContent);
 
   const control = document.createElement('div');
-  control.classList.add('table-creator__control');
+  control.classList.add(bem.be('control'));
 
   const confirmBtn = createButton({ type: 'confirm', content: options.confirmText || 'Confirm' });
   const cancelBtn = createButton({ type: 'default', content: options.cancelText || 'Cancel' });
