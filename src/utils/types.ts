@@ -1,6 +1,12 @@
 import type Quill from 'quill';
+import type BaseTheme from 'quill/themes/base';
+import type Picker from 'quill/ui/picker';
 import type { TableCellInnerFormat, TableUp } from '..';
 
+export type QuillThemePicker = (Picker & { options: HTMLElement });
+export interface QuillTheme extends BaseTheme {
+  pickers: QuillThemePicker[];
+}
 export interface ToolOption {
   name: string;
   icon: string | ((tableModule: TableUp) => HTMLElement);
@@ -42,7 +48,7 @@ export interface TableTextOptions extends TableCreatorTextOptions {
   perWidthInsufficient: string;
 }
 export interface TableUpOptions {
-  customSelect?: (tableModule: TableUp) => HTMLElement;
+  customSelect?: (tableModule: TableUp, picker: QuillThemePicker) => Promise<HTMLElement> | HTMLElement;
   full: boolean;
   customBtn: boolean;
   texts: TableTextOptions;

@@ -5,9 +5,7 @@ import type { Delta as TypeDelta } from 'quill/core';
 import type { Context } from 'quill/modules/keyboard';
 import type Keyboard from 'quill/modules/keyboard';
 import type Toolbar from 'quill/modules/toolbar';
-import type BaseTheme from 'quill/themes/base';
-import type Picker from 'quill/ui/picker';
-import type { InternalModule, TableConstantsData, TableTextOptions, TableUpOptions } from './utils';
+import type { InternalModule, QuillTheme, QuillThemePicker, TableConstantsData, TableTextOptions, TableUpOptions } from './utils';
 import Quill from 'quill';
 import { BlockOverride, BlockquoteOverride, CodeBlockOverride, ContainerFormat, HeaderOverride, ListItemOverride, ScrollOverride, TableBodyFormat, TableCellFormat, TableCellInnerFormat, TableColFormat, TableColgroupFormat, TableMainFormat, TableRowFormat, TableWrapperFormat } from './formats';
 import { TableSelection } from './modules';
@@ -73,10 +71,6 @@ const isForbidInTable = (current: TypeParchment.Blot): boolean =>
       : isForbidInTable(current.parent)
     : false;
 
-type QuillThemePicker = (Picker & { options: HTMLElement });
-interface QuillTheme extends BaseTheme {
-  pickers: QuillThemePicker[];
-}
 export class TableUp {
   static moduleName = 'table-up';
   static toolName: string = blotName.tableWrapper;
@@ -199,8 +193,6 @@ export class TableUp {
   toolBox: HTMLDivElement;
   fixTableByLisenter = debounce(this.balanceTables, 100);
   selector?: HTMLElement;
-  // TODO: maybe remove this
-  picker?: (Picker & { options: HTMLElement });
   table?: HTMLElement;
   tableSelection?: TableSelection;
   tableResize?: InternalModule;
@@ -224,20 +216,20 @@ export class TableUp {
     if (toolbar && (this.quill.theme as QuillTheme).pickers) {
       const [, select] = (toolbar.controls as [string, HTMLElement][] || []).find(([name]) => name === this.statics.toolName) || [];
       if (select && select.tagName.toLocaleLowerCase() === 'select') {
-        this.picker = (this.quill.theme as QuillTheme).pickers.find(picker => picker.select === select);
-        if (this.picker) {
-          this.picker.label.innerHTML = this.options.icon;
-          this.buildCustomSelect(this.options.customSelect);
-          this.picker.label.addEventListener('mousedown', () => {
-            if (!this.selector || !this.picker) return;
+        const picker = (this.quill.theme as QuillTheme).pickers.find(picker => picker.select === select);
+        if (picker) {
+          picker.label.innerHTML = this.options.icon;
+          this.buildCustomSelect(this.options.customSelect, picker);
+          picker.label.addEventListener('mousedown', () => {
+            if (!this.selector || !picker) return;
             const selectRect = this.selector.getBoundingClientRect();
             const { leftLimited } = limitDomInViewPort(selectRect);
             if (leftLimited) {
-              const labelRect = this.picker.label.getBoundingClientRect();
-              Object.assign(this.picker.options.style, { transform: `translateX(calc(-100% + ${labelRect.width}px))` });
+              const labelRect = picker.label.getBoundingClientRect();
+              Object.assign(picker.options.style, { transform: `translateX(calc(-100% + ${labelRect.width}px))` });
             }
             else {
-              Object.assign(this.picker.options.style, { transform: undefined });
+              Object.assign(picker.options.style, { transform: undefined });
             }
           });
         }
@@ -558,24 +550,13 @@ export class TableUp {
     this.table = undefined;
   }
 
-  async buildCustomSelect(customSelect?: (module: TableUp) => HTMLElement | Promise<HTMLElement>) {
-    if (!this.picker) return;
+  async buildCustomSelect(customSelect: ((module: TableUp, picker: QuillThemePicker) => HTMLElement | Promise<HTMLElement>) | undefined, picker: QuillThemePicker) {
+    if (!customSelect || !isFunction(customSelect)) return;
     const dom = document.createElement('div');
     dom.classList.add('ql-custom-select');
-    this.selector = customSelect && isFunction(customSelect)
-      ? await customSelect(this)
-      : createSelectBox({
-        onSelect: (row: number, col: number) => {
-          this.insertTable(row, col);
-          if (this.picker) {
-            this.picker.close();
-          }
-        },
-        customBtn: this.options.customBtn,
-        texts: this.options.texts,
-      });
+    this.selector = await customSelect(this, picker);
     dom.appendChild(this.selector);
-    this.picker.options.appendChild(dom);
+    picker.options.appendChild(dom);
   };
 
   setCellAttrs(selectedTds: TableCellInnerFormat[], attr: string, value?: any, isStyle: boolean = false) {
@@ -1075,7 +1056,7 @@ export class TableUp {
   }
 }
 
-export const updateTableConstants = (data: Partial<TableConstantsData>) => {
+export function updateTableConstants(data: Partial<TableConstantsData>) {
   tableCantInsert.delete(blotName.tableCellInner);
 
   Object.assign(blotName, data.blotName || {});
@@ -1093,6 +1074,18 @@ export const updateTableConstants = (data: Partial<TableConstantsData>) => {
   TableCellFormat.blotName = blotName.tableCell;
   TableCellInnerFormat.blotName = blotName.tableCellInner;
 };
+export function defaultCustomSelect(tableModule: TableUp, picker: QuillThemePicker) {
+  return createSelectBox({
+    onSelect: (row: number, col: number) => {
+      tableModule.insertTable(row, col);
+      if (picker) {
+        picker.close();
+      }
+    },
+    customBtn: tableModule.options.customBtn,
+    texts: tableModule.options.texts,
+  });
+}
 
 export default TableUp;
 export * from './formats';
