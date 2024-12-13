@@ -23,7 +23,7 @@ npm install quill-table-up
 
 ```js
 import Quill from 'quill';
-import TableUp from 'quill-table-up';
+import TableUp, { TableAlign } from 'quill-table-up';
 import 'quill/dist/quill.snow.css';
 import 'quill-table-up/index.css';
 // If using the default customSelect option. You need to import this css
@@ -45,7 +45,7 @@ const quill = new Quill('#editor', {
     ],
     [TableUp.moduleName]: {
       scrollbar: true,
-      align: true,
+      align: TableAlign,
       resize: 'box',
       selection: {
         tableMenuClass: 'contextmenu',
@@ -69,7 +69,8 @@ const quill = new Quill('#editor', {
 | icon         | picker svg icon string. it will set with `innerHTML`                                                                                    | `string`                                | `origin table icon` |
 | resize       | enable resize table cell size                                                                                                           | `'line' \| 'box'`                       | -                   |
 | scrollbar    | enable table virtual scrollbar                                                                                                          | `boolean`                               | `true`              |
-| align        | Enable overall table alignment                                                                                                          | `boolean`                               | `true`              |
+| align        | table alignment handler. module provides `TableAlign`                                                                                   | `Constructor`                           | -                   |
+| alignOptions | table alignment handler options                                                                                                         | `any`                                   | -                   |
 
 > I'm not suggest to use `scrollbar: true` and `resize: 'line'` at same time, because it will make the `scrollbar` display blink. Just like the first editor in [demo](https://zzxming.github.io/quill-table-up/)
 

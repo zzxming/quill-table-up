@@ -1,3 +1,4 @@
+import type Quill from 'quill';
 import type { TableCellInnerFormat, TableUp } from '..';
 
 export interface ToolOption {
@@ -49,7 +50,8 @@ export interface TableUpOptions {
   selection?: TableSelectionOptions;
   resize?: 'line' | 'box';
   scrollbar?: boolean;
-  align?: boolean;
+  align?: Constructor<InternalModule, [TableUp, HTMLElement, Quill, any]>;
+  alignOptions?: any;
 }
 export interface TableColValue {
   tableId: string;
@@ -89,6 +91,12 @@ export interface RelactiveRect {
   height: number;
 }
 
+export interface InternalModule {
+  show: () => void;
+  hide: () => void;
+  update: () => void;
+  destroy: () => void;
+};
 export type Constructor<T = any, U extends Array<any> = any[]> = new (...args: U) => T;
 
 export interface TableConstantsData {

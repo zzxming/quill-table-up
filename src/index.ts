@@ -8,11 +8,10 @@ import type Toolbar from 'quill/modules/toolbar';
 import type BaseTheme from 'quill/themes/base';
 import type Picker from 'quill/ui/picker';
 import type { TableResizeCommon } from './modules';
-import type { Constructor, TableConstantsData, TableTextOptions, TableUpOptions } from './utils';
+import type { Constructor, InternalModule, TableConstantsData, TableTextOptions, TableUpOptions } from './utils';
 import Quill from 'quill';
 import { BlockOverride, BlockquoteOverride, CodeBlockOverride, ContainerFormat, HeaderOverride, ListItemOverride, ScrollOverride, TableBodyFormat, TableCellFormat, TableCellInnerFormat, TableColFormat, TableColgroupFormat, TableMainFormat, TableRowFormat, TableWrapperFormat } from './formats';
-import { TableAlign, TableResizeBox, TableResizeLine, TableSelection, TableVitrualScrollbar } from './modules';
-
+import { TableResizeBox, TableResizeLine, TableSelection, TableVitrualScrollbar } from './modules';
 import { blotName, createSelectBox, debounce, findParentBlot, findParentBlots, isFunction, isString, limitDomInViewPort, randomId, tableUpEvent, tableUpSize } from './utils';
 
 const Delta = Quill.import('delta');
@@ -211,7 +210,7 @@ export class TableUp {
   tableSelection?: TableSelection;
   tableResize?: TableResizeCommon;
   tableScrollbar?: TableVitrualScrollbar;
-  tableAlign?: TableAlign;
+  tableAlign?: InternalModule;
   get statics(): any {
     return this.constructor;
   }
@@ -365,7 +364,7 @@ export class TableUp {
       texts: this.resolveTexts(options.texts || {}),
       full: false,
       icon: icons.table,
-      align: true,
+      alignOptions: {},
       scrollbar: true,
       resizeConstructor,
     } as TableOptionsResolved, options);
@@ -541,7 +540,7 @@ export class TableUp {
         this.tableSelection = new TableSelection(this, table, quill, this.options.selection);
       }
       if (this.options.align) {
-        this.tableAlign = new TableAlign(this, table, quill);
+        this.tableAlign = new this.options.align(this, table, quill, this.options.alignOptions);
       }
       if (this.options.scrollbar) {
         this.tableScrollbar = new TableVitrualScrollbar(this, table, quill);
