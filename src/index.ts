@@ -389,7 +389,9 @@ export class TableUp {
 
     this.quill.clipboard.addMatcher('table', (node, delta) => {
       if (delta.ops.length === 0) return delta;
-
+      // if current in table. prevent paste table
+      const format = this.quill.getFormat();
+      if (format[blotName.tableCellInner]) return new Delta();
       // remove quill origin table format
       const ops: Record<string, any>[] = [];
       const cols: Record<string, any>[] = [];
