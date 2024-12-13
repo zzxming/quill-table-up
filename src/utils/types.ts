@@ -23,8 +23,8 @@ export interface TableMenuOptions {
 };
 export interface TableSelectionOptions {
   selectColor: string;
-  tableMenuType?: 'select' | 'contextmenu';
-  tableMenu: TableMenuOptions;
+  tableMenu?: Constructor<InternalModule, [TableUp, Quill, Partial<TableMenuOptions>]>;
+  tableMenuOptions: TableMenuOptions;
 }
 export interface TableCreatorTextOptions {
   customBtnText: string;

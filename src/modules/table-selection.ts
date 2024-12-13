@@ -1,18 +1,13 @@
 import type { TableUp } from '..';
 import type { TableCellInnerFormat, TableMainFormat } from '../formats';
-import type { Constructor, RelactiveRect, TableSelectionOptions } from '../utils';
-import type { TableMenuCommon } from './table-menu';
+import type { InternalModule, RelactiveRect, TableSelectionOptions } from '../utils';
 import Quill from 'quill';
 import { TableCellFormat } from '../formats';
 import { addScrollEvent, clearScrollEvent } from '../utils';
-import { TableMenuContextmenu, TableMenuSelect } from './table-menu';
 
 const ERROR_LIMIT = 2;
-interface TableSelectionOptionsResolved extends TableSelectionOptions {
-  menuConstructor: Constructor;
-}
 export class TableSelection {
-  options: TableSelectionOptionsResolved;
+  options: TableSelectionOptions;
   boundary: RelactiveRect | null = null;
   startScrollX: number = 0;
   startScrollY: number = 0;
@@ -26,7 +21,7 @@ export class TableSelection {
   dragging: boolean = false;
   scrollHandler: [HTMLElement, (...args: any[]) => void][] = [];
   selectingHandler = this.mouseDownHandler.bind(this);
-  tableMenu?: TableMenuCommon;
+  tableMenu?: InternalModule;
   resizeObserver: ResizeObserver;
 
   constructor(tableModule: TableUp, public table: HTMLElement, public quill: Quill, options: Partial<TableSelectionOptions> = {}) {
@@ -40,25 +35,16 @@ export class TableSelection {
     this.resizeObserver.observe(this.quill.root);
 
     this.quill.root.addEventListener('mousedown', this.selectingHandler, false);
-    if (this.options.menuConstructor) {
-      this.tableMenu = new this.options.menuConstructor(tableModule, quill, this.options.tableMenu);
+    if (this.options.tableMenu) {
+      this.tableMenu = new this.options.tableMenu(tableModule, quill, this.options.tableMenuOptions);
     }
   }
 
-  resolveOptions(options: Partial<TableSelectionOptions>): TableSelectionOptionsResolved {
-    let menuConstructor: Constructor | undefined;
-    if (options.tableMenuType) {
-      menuConstructor = {
-        contextmenu: TableMenuContextmenu,
-        select: TableMenuSelect,
-      }[options.tableMenuType];
-    }
-
+  resolveOptions(options: Partial<TableSelectionOptions>): TableSelectionOptions {
     return Object.assign({
       selectColor: '#0589f3',
-      menuConstructor,
-      tableMenu: {},
-    } as TableSelectionOptionsResolved, options);
+      tableMenuOptions: {},
+    } as TableSelectionOptions, options);
   };
 
   helpLinesInitial() {
@@ -159,7 +145,7 @@ export class TableSelection {
     this.selectedTds = this.computeSelectedTds(startPoint, startPoint);
     this.showSelection();
     if (this.tableMenu) {
-      this.tableMenu.hideTools();
+      this.tableMenu.hide();
     }
 
     const mouseMoveHandler = (mousemoveEvent: MouseEvent) => {
@@ -188,7 +174,7 @@ export class TableSelection {
       this.startScrollX = 0;
       this.startScrollY = 0;
       if (this.tableMenu) {
-        this.tableMenu.updateTools();
+        this.tableMenu.update();
       }
     };
 
@@ -218,7 +204,7 @@ export class TableSelection {
       height: `${tableWrapperRect.height + 2}px`,
     });
     if (!this.dragging && this.tableMenu) {
-      this.tableMenu.updateTools();
+      this.tableMenu.update();
     }
   }
 
@@ -255,7 +241,7 @@ export class TableSelection {
     this.selectedTds = [];
     this.cellSelectWrap && Object.assign(this.cellSelectWrap.style, { display: 'none' });
     if (this.tableMenu) {
-      this.tableMenu.hideTools();
+      this.tableMenu.hide();
     }
     clearScrollEvent.call(this);
   }

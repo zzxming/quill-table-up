@@ -11,9 +11,9 @@ export class TableMenuSelect extends TableMenuCommon {
     this.tableModule.addContainer(this.menu);
   }
 
-  updateTools() {
+  update() {
     if (!this.menu || !this.tableModule.tableSelection || !this.tableModule.tableSelection.boundary) return;
-    super.updateTools();
+    super.update();
 
     computePosition(this.tableModule.tableSelection.cellSelect, this.menu, {
       placement: 'bottom',
@@ -24,12 +24,5 @@ export class TableMenuSelect extends TableMenuCommon {
         top: `${y}px`,
       });
     });
-  }
-
-  destroy() {
-    for (const tooltip of this.tooltipItem) tooltip.destroy();
-    if (!this.menu) return;
-    this.menu.remove();
-    this.menu = null;
   }
 }

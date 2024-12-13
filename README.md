@@ -23,7 +23,7 @@ npm install quill-table-up
 
 ```js
 import Quill from 'quill';
-import TableUp, { TableAlign, TableResizeBox, TableVirtualScrollbar } from 'quill-table-up';
+import TableUp, { TableAlign, TableMenuContextmenu, TableResizeBox, TableVirtualScrollbar } from 'quill-table-up';
 import 'quill/dist/quill.snow.css';
 import 'quill-table-up/index.css';
 // If using the default customSelect option. You need to import this css
@@ -48,7 +48,7 @@ const quill = new Quill('#editor', {
       align: TableAlign,
       resize: TableResizeBox,
       selection: {
-        tableMenuClass: 'contextmenu',
+        tableMenuClass: TableMenuContextmenu,
       }
     },
   },
@@ -98,11 +98,11 @@ const defaultTexts = {
 
 ### TableSelection Options
 
-| attribute     | description                                                          | type                        | default   |
-| ------------- | -------------------------------------------------------------------- | --------------------------- | --------- |
-| selectColor   | selector border color                                                | `string`                    | `#0589f3` |
-| tableMenu     | module TableMenu options                                             | `TableMenuOptions`          | -         |
-| tableMenuType | Operation menu trigger type. Different types have different displays | `'select' \| 'contextmenu'` | -         |
+| attribute        | description                                                                          | type               | default   |
+| ---------------- | ------------------------------------------------------------------------------------ | ------------------ | --------- |
+| selectColor      | selector border color                                                                | `string`           | `#0589f3` |
+| tableMenu        | the table operate menu. module provides `TableMenuContextmenu` and `TableMenuSelect` | `Constructor`      | -         |
+| tableMenuOptions | module TableMenu options                                                             | `TableMenuOptions` | -         |
 
 ### TableMenu Options
 
