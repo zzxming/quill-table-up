@@ -1,6 +1,6 @@
 /* eslint-disable no-undef */
 const Quill = window.Quill;
-const TableUp = window.TableUp.default;
+const { default: TableUp, TableAlign, TableVirtualScrollbar, TableResizeLine, TableResizeBox, TableMenuContextmenu, TableMenuSelect, defaultCustomSelect, TableSelection } = window.TableUp;
 
 Quill.register({
   [`modules/${TableUp.moduleName}`]: TableUp,
@@ -30,12 +30,16 @@ const quill1 = new Quill('#editor1', {
     toolbar: toolbarConfig,
     [TableUp.moduleName]: {
       full: false,
-      resizerSetOuter: false,
-      scrollbar: false,
-      selection: {
-        selectColor: '#04f',
-        tableMenuClass: window.TableUp.TableMenuContextmenu,
-        tableMenu: {
+      scrollbar: TableVirtualScrollbar,
+      align: TableAlign,
+      resize: TableResizeLine,
+      customSelect: defaultCustomSelect,
+      customBtn: true,
+      selection: TableSelection,
+      selectionOptions: {
+        selectColor: '#f40',
+        tableMenu: TableMenuContextmenu,
+        tableMenuOptions: {
           localstorageKey: 'used-color',
           tipText: true,
           tipTexts: {
@@ -102,15 +106,13 @@ const quill2 = new Quill('#editor2', {
   modules: {
     toolbar: toolbarConfig,
     [TableUp.moduleName]: {
-      full: true,
-      resizerSetOuter: true,
-      selection: {
-        selectColor: '#f40',
-        tableMenuClass: window.TableUp.TableMenuSelect,
-        tableMenu: {
-          localstorageKey: 'used-color',
-          tipText: true,
-        },
+      scrollbar: TableVirtualScrollbar,
+      align: TableAlign,
+      resize: TableResizeBox,
+      customSelect: defaultCustomSelect,
+      selection: TableSelection,
+      selectionOptions: {
+        tableMenu: TableMenuSelect,
       },
     },
   },

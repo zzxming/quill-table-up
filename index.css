@@ -392,51 +392,6 @@
 .ql-table-scrollbar-thumb:hover {
   background-color: #a1a1aa;
 }
-.ql-snow .select-box {
-  --select-box-color-bg-hover: #f5f5f5;
-  --select-box-color-bg-active: #e0f2fe;
-  --select-box-custom-color-text: #0d0d0d;
-  --select-box-custom-color-bg: transparent;
-  --select-box-custom-color-bg-hover: #ebebeb;
-}
-.select-box {
-  --select-box-color-border: #e5e7eb;
-  --select-box-border: 0.0625rem solid var(--select-box-color-border);
-  --select-box-color-active: #0ea5e9;
-  --select-box-color-bg-hover: #f5f5f5;
-  --select-box-color-bg-active: transparent;
-  --select-box-custom-color-text: #f5f5f5;
-  --select-box-custom-color-bg: transparent;
-  --select-box-custom-color-bg-hover: #2c2c2c;
-}
-.select-box__block {
-  display: flex;
-  width: 10rem;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: center;
-}
-.select-box__item {
-  margin: 0.125rem;
-  height: 1rem;
-  width: 1rem;
-  border: var(--select-box-border);
-}
-.select-box__item.active {
-  border-color: var(--select-box-color-active);
-  background-color: var(--select-box-color-bg-active);
-}
-.select-box__custom {
-  padding: 0.5rem;
-  color: var(--select-box-custom-color-text);
-  background-color: var(--select-box-custom-color-bg);
-  font-size: 1rem;
-  text-align: center;
-  cursor: pointer;
-}
-.select-box__custom:hover {
-  background-color: var(--select-box-custom-color-bg-hover);
-}
 .table-up-tooltip {
   position: absolute;
   z-index: 20;

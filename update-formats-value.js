@@ -1,5 +1,5 @@
 import Quill from 'quill';
-import { TableCellFormat, TableCellInnerFormat, TableColFormat, TableUp, updateTableConstants } from 'table-up';
+import { defaultCustomSelect, TableAlign, TableCellFormat, TableCellInnerFormat, TableColFormat, TableMenuContextmenu, TableResizeBox, TableSelection, TableUp, TableVirtualScrollbar, updateTableConstants } from 'table-up';
 
 updateTableConstants({
   blotName: {
@@ -124,7 +124,6 @@ const quill = new Quill('#editor1', {
       [{ script: 'sub' }, { script: 'super' }],
       [{ indent: '-1' }, { indent: '+1' }],
       [{ direction: 'rtl' }],
-
       [{ size: ['small', false, 'large', 'huge'] }],
       [{ header: [1, 2, 3, 4, 5, 6, false] }],
       [{ color: [] }, { background: [] }],
@@ -133,7 +132,16 @@ const quill = new Quill('#editor1', {
       [{ [TableUp.toolName]: [] }],
       ['clean'],
     ],
-    [TableUp.moduleName]: {},
+    [TableUp.moduleName]: {
+      scrollbar: TableVirtualScrollbar,
+      align: TableAlign,
+      resize: TableResizeBox,
+      customSelect: defaultCustomSelect,
+      selection: TableSelection,
+      selectionOptions: {
+        tableMenu: TableMenuContextmenu,
+      },
+    },
   },
 });
 
