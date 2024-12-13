@@ -49,7 +49,8 @@ export interface TableUpOptions {
   icon: string;
   selection?: TableSelectionOptions;
   resize?: 'line' | 'box';
-  scrollbar?: boolean;
+  scrollbar?: Constructor<InternalModule, [TableUp, HTMLElement, Quill, any]>;
+  scrollbarOptions?: any;
   align?: Constructor<InternalModule, [TableUp, HTMLElement, Quill, any]>;
   alignOptions?: any;
 }

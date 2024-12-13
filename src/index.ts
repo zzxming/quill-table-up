@@ -11,7 +11,7 @@ import type { TableResizeCommon } from './modules';
 import type { Constructor, InternalModule, TableConstantsData, TableTextOptions, TableUpOptions } from './utils';
 import Quill from 'quill';
 import { BlockOverride, BlockquoteOverride, CodeBlockOverride, ContainerFormat, HeaderOverride, ListItemOverride, ScrollOverride, TableBodyFormat, TableCellFormat, TableCellInnerFormat, TableColFormat, TableColgroupFormat, TableMainFormat, TableRowFormat, TableWrapperFormat } from './formats';
-import { TableResizeBox, TableResizeLine, TableSelection, TableVitrualScrollbar } from './modules';
+import { TableResizeBox, TableResizeLine, TableSelection } from './modules';
 import { blotName, createSelectBox, debounce, findParentBlot, findParentBlots, isFunction, isString, limitDomInViewPort, randomId, tableUpEvent, tableUpSize } from './utils';
 
 const Delta = Quill.import('delta');
@@ -209,7 +209,7 @@ export class TableUp {
   table?: HTMLElement;
   tableSelection?: TableSelection;
   tableResize?: TableResizeCommon;
-  tableScrollbar?: TableVitrualScrollbar;
+  tableScrollbar?: InternalModule;
   tableAlign?: InternalModule;
   get statics(): any {
     return this.constructor;
@@ -365,7 +365,7 @@ export class TableUp {
       full: false,
       icon: icons.table,
       alignOptions: {},
-      scrollbar: true,
+      scrollbarOptions: {},
       resizeConstructor,
     } as TableOptionsResolved, options);
   };
@@ -543,7 +543,7 @@ export class TableUp {
         this.tableAlign = new this.options.align(this, table, quill, this.options.alignOptions);
       }
       if (this.options.scrollbar) {
-        this.tableScrollbar = new TableVitrualScrollbar(this, table, quill);
+        this.tableScrollbar = new this.options.scrollbar(this, table, quill, this.options.scrollbarOptions);
       }
       if (this.options.resizeConstructor) {
         this.tableResize = new this.options.resizeConstructor(this, table, quill);

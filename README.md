@@ -23,7 +23,7 @@ npm install quill-table-up
 
 ```js
 import Quill from 'quill';
-import TableUp, { TableAlign } from 'quill-table-up';
+import TableUp, { TableAlign, TableVirtualScrollbar } from 'quill-table-up';
 import 'quill/dist/quill.snow.css';
 import 'quill-table-up/index.css';
 // If using the default customSelect option. You need to import this css
@@ -31,7 +31,7 @@ import 'quill-table-up/table-creator.css';
 
 Quill.register({ [`modules/${TableUp.moduleName}`]: TableUp }, true);
 // or
-// Quill.register({ 'modules/tableUp': TableUp }, true);
+// Quill.register({ 'modules/table-up': TableUp }, true);
 
 const quill = new Quill('#editor', {
   // ...
@@ -44,7 +44,7 @@ const quill = new Quill('#editor', {
       ],
     ],
     [TableUp.moduleName]: {
-      scrollbar: true,
+      scrollbar: TableVirtualScrollbar,
       align: TableAlign,
       resize: 'box',
       selection: {
@@ -59,20 +59,21 @@ const quill = new Quill('#editor', {
 
 ### TableUp Options
 
-| attribute    | description                                                                                                                             | type                                    | default             |
-| ------------ | --------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------- | ------------------- |
-| full         | if set `true`. width max will be 100%                                                                                                   | `boolean`                               | `false`             |
-| customBtn    | display a custom button to custom row and column number add a table                                                                     | `boolean`                               | `false`             |
-| texts        | the text used to create the table                                                                                                       | `TableTextOptions`                      | `defaultTexts`      |
-| customSelect | display a custom select to custom row and column number add a table. the DOM returned by the function will replace the default selector | `(tableModule: TableUp) => HTMLElement` | -                   |
-| selection    | moduel TableSelection options                                                                                                           | `TableSelectionOptions`                 | -                   |
-| icon         | picker svg icon string. it will set with `innerHTML`                                                                                    | `string`                                | `origin table icon` |
-| resize       | enable resize table cell size                                                                                                           | `'line' \| 'box'`                       | -                   |
-| scrollbar    | enable table virtual scrollbar                                                                                                          | `boolean`                               | `true`              |
-| align        | table alignment handler. module provides `TableAlign`                                                                                   | `Constructor`                           | -                   |
-| alignOptions | table alignment handler options                                                                                                         | `any`                                   | -                   |
+| attribute        | description                                                                                                                             | type                                    | default             |
+| ---------------- | --------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------- | ------------------- |
+| full             | if set `true`. width max will be 100%                                                                                                   | `boolean`                               | `false`             |
+| customBtn        | display a custom button to custom row and column number add a table                                                                     | `boolean`                               | `false`             |
+| texts            | the text used to create the table                                                                                                       | `TableTextOptions`                      | `defaultTexts`      |
+| customSelect     | display a custom select to custom row and column number add a table. the DOM returned by the function will replace the default selector | `(tableModule: TableUp) => HTMLElement` | -                   |
+| selection        | moduel TableSelection options                                                                                                           | `TableSelectionOptions`                 | -                   |
+| icon             | picker svg icon string. it will set with `innerHTML`                                                                                    | `string`                                | `origin table icon` |
+| resize           | enable resize table cell size                                                                                                           | `'line' \| 'box'`                       | -                   |
+| scrollbar        | table virtual scrollbar handler. module provides `TableVirtualScrollbar`                                                                | `Constructor`                           | -                   |
+| align            | table alignment handler. module provides `TableAlign`                                                                                   | `Constructor`                           | -                   |
+| alignOptions     | table alignment handler options                                                                                                         | `any`                                   | -                   |
+| scrollbarOptions | table virtual scrollbar handler options                                                                                                 | `any`                                   | -                   |
 
-> I'm not suggest to use `scrollbar: true` and `resize: 'line'` at same time, because it will make the `scrollbar` display blink. Just like the first editor in [demo](https://zzxming.github.io/quill-table-up/)
+> I'm not suggest to use `TableVirtualScrollbar` and `resize: 'line'` at same time, because it will make the virtual scrollbar display blink. Just like the first editor in [demo](https://zzxming.github.io/quill-table-up/)
 
 <details>
   <summary> default value </summary>
