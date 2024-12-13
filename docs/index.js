@@ -1,6 +1,6 @@
 /* eslint-disable no-undef */
 const Quill = window.Quill;
-const { default: TableUp, TableAlign, TableVirtualScrollbar } = window.TableUp;
+const { default: TableUp, TableAlign, TableVirtualScrollbar, TableResizeLine, TableResizeBox } = window.TableUp;
 
 Quill.register({
   [`modules/${TableUp.moduleName}`]: TableUp,
@@ -32,7 +32,7 @@ const quill1 = new Quill('#editor1', {
       full: false,
       scrollbar: TableVirtualScrollbar,
       align: TableAlign,
-      resize: 'line',
+      resize: TableResizeLine,
       selection: {
         selectColor: '#04f',
         tableMenuType: 'contextmenu',
@@ -106,7 +106,7 @@ const quill2 = new Quill('#editor2', {
       full: true,
       scrollbar: TableVirtualScrollbar,
       align: TableAlign,
-      resize: 'box',
+      resize: TableResizeBox,
       selection: {
         selectColor: '#f40',
         tableMenuType: 'select',

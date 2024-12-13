@@ -34,7 +34,7 @@ export class TableResizeBox extends TableResizeCommon {
 
     this.root = this.tableModule.addContainer('ql-table-resizer');
     this.resizeObserver = new ResizeObserver(() => {
-      this.showTool();
+      this.show();
     });
     this.resizeObserver.observe(this.table);
   }
@@ -182,7 +182,7 @@ export class TableResizeBox extends TableResizeCommon {
     }
   }
 
-  showTool() {
+  show() {
     this.tableCols = this.tableMain.getCols();
     this.tableRows = this.tableMain.getRows();
     this.root.innerHTML = '';
@@ -273,12 +273,12 @@ export class TableResizeBox extends TableResizeCommon {
     });
   }
 
-  hideTool() {
+  hide() {
     this.root.classList.add('ql-hidden');
   }
 
   destroy() {
-    this.hideTool();
+    this.hide();
     clearScrollEvent.call(this);
     this.resizeObserver.disconnect();
     for (const [dom, handle] of this.scrollHandler) {

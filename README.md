@@ -23,7 +23,7 @@ npm install quill-table-up
 
 ```js
 import Quill from 'quill';
-import TableUp, { TableAlign, TableVirtualScrollbar } from 'quill-table-up';
+import TableUp, { TableAlign, TableResizeBox, TableVirtualScrollbar } from 'quill-table-up';
 import 'quill/dist/quill.snow.css';
 import 'quill-table-up/index.css';
 // If using the default customSelect option. You need to import this css
@@ -46,7 +46,7 @@ const quill = new Quill('#editor', {
     [TableUp.moduleName]: {
       scrollbar: TableVirtualScrollbar,
       align: TableAlign,
-      resize: 'box',
+      resize: TableResizeBox,
       selection: {
         tableMenuClass: 'contextmenu',
       }
@@ -67,13 +67,14 @@ const quill = new Quill('#editor', {
 | customSelect     | display a custom select to custom row and column number add a table. the DOM returned by the function will replace the default selector | `(tableModule: TableUp) => HTMLElement` | -                   |
 | selection        | moduel TableSelection options                                                                                                           | `TableSelectionOptions`                 | -                   |
 | icon             | picker svg icon string. it will set with `innerHTML`                                                                                    | `string`                                | `origin table icon` |
-| resize           | enable resize table cell size                                                                                                           | `'line' \| 'box'`                       | -                   |
+| resize           | table cell resize handler. module provides `TableResizeLine` and `TableResizeBox`                                                       | `Constructor`                           | -                   |
 | scrollbar        | table virtual scrollbar handler. module provides `TableVirtualScrollbar`                                                                | `Constructor`                           | -                   |
 | align            | table alignment handler. module provides `TableAlign`                                                                                   | `Constructor`                           | -                   |
+| resizeOptions    | table cell resize handler options                                                                                                       | `any`                                   | -                   |
 | alignOptions     | table alignment handler options                                                                                                         | `any`                                   | -                   |
 | scrollbarOptions | table virtual scrollbar handler options                                                                                                 | `any`                                   | -                   |
 
-> I'm not suggest to use `TableVirtualScrollbar` and `resize: 'line'` at same time, because it will make the virtual scrollbar display blink. Just like the first editor in [demo](https://zzxming.github.io/quill-table-up/)
+> I'm not suggest to use `TableVirtualScrollbar` and `TableResizeLine` at same time, because it will make the virtual scrollbar display blink. Just like the first editor in [demo](https://zzxming.github.io/quill-table-up/)
 
 <details>
   <summary> default value </summary>

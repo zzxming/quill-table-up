@@ -7,11 +7,10 @@ import type Keyboard from 'quill/modules/keyboard';
 import type Toolbar from 'quill/modules/toolbar';
 import type BaseTheme from 'quill/themes/base';
 import type Picker from 'quill/ui/picker';
-import type { TableResizeCommon } from './modules';
-import type { Constructor, InternalModule, TableConstantsData, TableTextOptions, TableUpOptions } from './utils';
+import type { InternalModule, TableConstantsData, TableTextOptions, TableUpOptions } from './utils';
 import Quill from 'quill';
 import { BlockOverride, BlockquoteOverride, CodeBlockOverride, ContainerFormat, HeaderOverride, ListItemOverride, ScrollOverride, TableBodyFormat, TableCellFormat, TableCellInnerFormat, TableColFormat, TableColgroupFormat, TableMainFormat, TableRowFormat, TableWrapperFormat } from './formats';
-import { TableResizeBox, TableResizeLine, TableSelection } from './modules';
+import { TableSelection } from './modules';
 import { blotName, createSelectBox, debounce, findParentBlot, findParentBlots, isFunction, isString, limitDomInViewPort, randomId, tableUpEvent, tableUpSize } from './utils';
 
 const Delta = Quill.import('delta');
@@ -77,9 +76,6 @@ const isForbidInTable = (current: TypeParchment.Blot): boolean =>
 type QuillThemePicker = (Picker & { options: HTMLElement });
 interface QuillTheme extends BaseTheme {
   pickers: QuillThemePicker[];
-}
-interface TableOptionsResolved extends TableUpOptions {
-  resizeConstructor: Constructor;
 }
 export class TableUp {
   static moduleName = 'table-up';
@@ -199,16 +195,15 @@ export class TableUp {
   }
 
   quill: Quill;
-  options: TableOptionsResolved;
-
+  options: TableUpOptions;
   toolBox: HTMLDivElement;
   fixTableByLisenter = debounce(this.balanceTables, 100);
   selector?: HTMLElement;
+  // TODO: maybe remove this
   picker?: (Picker & { options: HTMLElement });
-  range?: Range | null;
   table?: HTMLElement;
   tableSelection?: TableSelection;
-  tableResize?: TableResizeCommon;
+  tableResize?: InternalModule;
   tableScrollbar?: InternalModule;
   tableAlign?: InternalModule;
   get statics(): any {
@@ -350,15 +345,7 @@ export class TableUp {
     }
   }
 
-  resolveOptions(options: Partial<TableUpOptions>): TableOptionsResolved {
-    let resizeConstructor: Constructor | undefined;
-    if (options && options.resize) {
-      resizeConstructor = {
-        line: TableResizeLine,
-        box: TableResizeBox,
-      }[options.resize];
-    }
-
+  resolveOptions(options: Partial<TableUpOptions>): TableUpOptions {
     return Object.assign({
       customBtn: false,
       texts: this.resolveTexts(options.texts || {}),
@@ -366,8 +353,8 @@ export class TableUp {
       icon: icons.table,
       alignOptions: {},
       scrollbarOptions: {},
-      resizeConstructor,
-    } as TableOptionsResolved, options);
+      resizeOptions: {},
+    } as TableUpOptions, options);
   };
 
   resolveTexts(options: Partial<TableTextOptions>) {
@@ -545,8 +532,8 @@ export class TableUp {
       if (this.options.scrollbar) {
         this.tableScrollbar = new this.options.scrollbar(this, table, quill, this.options.scrollbarOptions);
       }
-      if (this.options.resizeConstructor) {
-        this.tableResize = new this.options.resizeConstructor(this, table, quill);
+      if (this.options.resize) {
+        this.tableResize = new this.options.resize(this, table, quill, this.options.resizeOptions);
       }
     }
   }
@@ -604,8 +591,7 @@ export class TableUp {
     }
 
     this.quill.focus();
-    this.range = this.quill.getSelection();
-    const range = this.range;
+    const range = this.quill.getSelection();
     if (range == null) return;
     const [currentBlot] = this.quill.getLeaf(range.index);
     if (!currentBlot) return;
