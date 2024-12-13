@@ -47,8 +47,21 @@ const buildTs = async (isDev: boolean = false) => {
       plugins,
     },
   );
+  if (!isDev) {
+    await bundle.write({
+      file: resolve(distBundle, 'index.umd.js'),
+      sourcemap: true,
+      format: 'umd',
+      name: 'TableUp',
+      globals: {
+        quill: 'Quill',
+      },
+      exports: 'named',
+    });
+  }
+
   await bundle.write({
-    file: resolve(distBundle, 'index.umd.js'),
+    file: resolve(demoBundle, 'index.umd.js'),
     sourcemap: true,
     format: 'umd',
     name: 'TableUp',
