@@ -23,7 +23,7 @@ npm install quill-table-up
 
 ```js
 import Quill from 'quill';
-import TableUp, { TableAlign, TableMenuContextmenu, TableResizeBox, TableVirtualScrollbar } from 'quill-table-up';
+import TableUp, { TableAlign, TableMenuContextmenu, TableResizeBox, TableSelection, TableVirtualScrollbar } from 'quill-table-up';
 import 'quill/dist/quill.snow.css';
 import 'quill-table-up/index.css';
 // If using the default customSelect option. You need to import this css
@@ -48,8 +48,9 @@ const quill = new Quill('#editor', {
       align: TableAlign,
       resize: TableResizeBox,
       customSelect: defaultCustomSelect,
-      selection: {
-        tableMenuClass: TableMenuContextmenu,
+      selection: TableSelection,
+      selectionOptions: {
+        tableMenu: TableMenuContextmenu,
       }
     },
   },
@@ -66,7 +67,8 @@ const quill = new Quill('#editor', {
 | texts            | the text used to create the table                                                                                           | `TableTextOptions`                                                              | `defaultTexts`      |
 | customSelect     | display a custom select to custom row and column number add a table. module provides default selector `defaultCustomSelect` | `(tableModule: TableUp, picker: Picker) => Promise<HTMLElement> \| HTMLElement` | -                   |
 | customBtn        | display a custom button to custom row and column number add a table. it only when use `defaultCustomSelect` will effect     | `boolean`                                                                       | `false`             |
-| selection        | moduel TableSelection options                                                                                               | `TableSelectionOptions`                                                         | -                   |
+| selection        | table selection handler. module provides `TableSelection`                                                                   | `Constructor`                                                                   | -                   |
+| selectionOptions | table selection options                                                                                                     | `TableSelectionOptions`                                                         | -                   |
 | icon             | picker svg icon string. it will set with `innerHTML`                                                                        | `string`                                                                        | `origin table icon` |
 | resize           | table cell resize handler. module provides `TableResizeLine` and `TableResizeBox`                                           | `Constructor`                                                                   | -                   |
 | scrollbar        | table virtual scrollbar handler. module provides `TableVirtualScrollbar`                                                    | `Constructor`                                                                   | -                   |

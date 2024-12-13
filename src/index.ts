@@ -5,10 +5,9 @@ import type { Delta as TypeDelta } from 'quill/core';
 import type { Context } from 'quill/modules/keyboard';
 import type Keyboard from 'quill/modules/keyboard';
 import type Toolbar from 'quill/modules/toolbar';
-import type { InternalModule, QuillTheme, QuillThemePicker, TableConstantsData, TableTextOptions, TableUpOptions } from './utils';
+import type { InternalModule, InternalTableSelectionModule, QuillTheme, QuillThemePicker, TableConstantsData, TableTextOptions, TableUpOptions } from './utils';
 import Quill from 'quill';
 import { BlockOverride, BlockquoteOverride, CodeBlockOverride, ContainerFormat, HeaderOverride, ListItemOverride, ScrollOverride, TableBodyFormat, TableCellFormat, TableCellInnerFormat, TableColFormat, TableColgroupFormat, TableMainFormat, TableRowFormat, TableWrapperFormat } from './formats';
-import { TableSelection } from './modules';
 import { blotName, createSelectBox, debounce, findParentBlot, findParentBlots, isFunction, isString, limitDomInViewPort, randomId, tableUpEvent, tableUpSize } from './utils';
 
 const Delta = Quill.import('delta');
@@ -194,7 +193,7 @@ export class TableUp {
   fixTableByLisenter = debounce(this.balanceTables, 100);
   selector?: HTMLElement;
   table?: HTMLElement;
-  tableSelection?: TableSelection;
+  tableSelection?: InternalTableSelectionModule;
   tableResize?: InternalModule;
   tableScrollbar?: InternalModule;
   tableAlign?: InternalModule;
@@ -256,7 +255,7 @@ export class TableUp {
         const tableNode = path.find(node => node.tagName && node.tagName.toUpperCase() === 'TABLE' && node.classList.contains('ql-table'));
         if (tableNode) {
           if (this.table === tableNode) {
-            this.tableSelection && this.tableSelection.showSelection();
+            this.tableSelection && this.tableSelection.show();
             this.tableAlign && this.tableAlign.update();
             return;
           }
@@ -315,7 +314,7 @@ export class TableUp {
       }
     });
     this.quill.on(tableUpEvent.AFTER_TABLE_RESIZE, () => {
-      this.tableSelection && this.tableSelection.hideSelection();
+      this.tableSelection && this.tableSelection.hide();
     });
 
     this.pasteTableHandler();
@@ -343,6 +342,7 @@ export class TableUp {
       texts: this.resolveTexts(options.texts || {}),
       full: false,
       icon: icons.table,
+      selectionOptions: {},
       alignOptions: {},
       scrollbarOptions: {},
       resizeOptions: {},
@@ -516,7 +516,7 @@ export class TableUp {
     if (table) {
       this.table = table;
       if (this.options.selection) {
-        this.tableSelection = new TableSelection(this, table, quill, this.options.selection);
+        this.tableSelection = new this.options.selection(this, table, quill, this.options.selectionOptions);
       }
       if (this.options.align) {
         this.tableAlign = new this.options.align(this, table, quill, this.options.alignOptions);

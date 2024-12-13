@@ -13,8 +13,8 @@ export class TableSelection {
   startScrollY: number = 0;
   selectedTableScrollX: number = 0;
   selectedTableScrollY: number = 0;
-  selectedEditorScrollX = 0;
-  selectedEditorScrollY = 0;
+  selectedEditorScrollX: number = 0;
+  selectedEditorScrollY: number = 0;
   selectedTds: TableCellInnerFormat[] = [];
   cellSelectWrap: HTMLElement;
   cellSelect: HTMLElement;
@@ -30,7 +30,7 @@ export class TableSelection {
     this.cellSelectWrap = tableModule.addContainer('ql-table-selection');
     this.cellSelect = this.helpLinesInitial();
 
-    this.resizeObserver = new ResizeObserver(() => this.hideSelection());
+    this.resizeObserver = new ResizeObserver(() => this.hide());
     this.resizeObserver.observe(this.table);
     this.resizeObserver.observe(this.quill.root);
 
@@ -143,7 +143,7 @@ export class TableSelection {
     this.startScrollX = tableScrollX;
     this.startScrollY = tableScrollY;
     this.selectedTds = this.computeSelectedTds(startPoint, startPoint);
-    this.showSelection();
+    this.show();
     if (this.tableMenu) {
       this.tableMenu.hide();
     }
@@ -165,7 +165,7 @@ export class TableSelection {
       if (this.selectedTds.length > 1) {
         this.quill.blur();
       }
-      this.updateSelection();
+      this.update();
     };
     const mouseUpHandler = () => {
       document.body.removeEventListener('mousemove', mouseMoveHandler, false);
@@ -182,7 +182,7 @@ export class TableSelection {
     document.body.addEventListener('mouseup', mouseUpHandler, false);
   }
 
-  updateSelection() {
+  update() {
     if (this.selectedTds.length === 0 || !this.boundary) return;
     const { x: editorScrollX, y: editorScrollY } = this.getQuillViewScroll();
     const { x: tableScrollX, y: tableScrollY } = this.getTableViewScroll();
@@ -222,21 +222,21 @@ export class TableSelection {
     };
   }
 
-  showSelection() {
+  show() {
     clearScrollEvent.call(this);
 
     Object.assign(this.cellSelectWrap.style, { display: 'block' });
-    this.updateSelection();
+    this.update();
 
     addScrollEvent.call(this, this.quill.root, () => {
-      this.updateSelection();
+      this.update();
     });
     addScrollEvent.call(this, this.table.parentElement!, () => {
-      this.updateSelection();
+      this.update();
     });
   }
 
-  hideSelection() {
+  hide() {
     this.boundary = null;
     this.selectedTds = [];
     this.cellSelectWrap && Object.assign(this.cellSelectWrap.style, { display: 'none' });
@@ -248,7 +248,7 @@ export class TableSelection {
 
   destroy() {
     this.resizeObserver.disconnect();
-    this.hideSelection();
+    this.hide();
     this.cellSelectWrap.remove();
     if (this.tableMenu) {
       this.tableMenu.destroy();

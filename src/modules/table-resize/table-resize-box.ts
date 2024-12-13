@@ -66,7 +66,7 @@ export class TableResizeBox extends TableResizeCommon {
       }
 
       tableSelection.selectedTds = tableSelection.computeSelectedTds(...currentBoundary);
-      tableSelection.showSelection();
+      tableSelection.show();
     }
   };
 
@@ -204,7 +204,7 @@ export class TableResizeBox extends TableResizeCommon {
             { x: tableRect.x, y: tableRect.y },
             { x: tableRect.right, y: tableRect.bottom },
           );
-          tableSelection.showSelection();
+          tableSelection.show();
         }
       });
       this.root.appendChild(this.corner);

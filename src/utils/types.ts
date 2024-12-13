@@ -53,13 +53,14 @@ export interface TableUpOptions {
   customBtn: boolean;
   texts: TableTextOptions;
   icon: string;
-  selection?: TableSelectionOptions;
+  selection?: Constructor<InternalTableSelectionModule, [TableUp, HTMLElement, Quill, Partial<TableSelectionOptions>]>;
+  selectionOptions: Partial<TableSelectionOptions>;
   resize?: Constructor<InternalModule, [TableUp, HTMLElement, Quill, any]>;
-  resizeOptions?: any;
+  resizeOptions: any;
   scrollbar?: Constructor<InternalModule, [TableUp, HTMLElement, Quill, any]>;
-  scrollbarOptions?: any;
+  scrollbarOptions: any;
   align?: Constructor<InternalModule, [TableUp, HTMLElement, Quill, any]>;
-  alignOptions?: any;
+  alignOptions: any;
 }
 export interface TableColValue {
   tableId: string;
@@ -106,7 +107,20 @@ export interface InternalModule {
   destroy: () => void;
 };
 export type Constructor<T = any, U extends Array<any> = any[]> = new (...args: U) => T;
-
+export interface InternalTableSelectionModule extends InternalModule {
+  dragging: boolean;
+  boundary: RelactiveRect | null;
+  selectedTds: TableCellInnerFormat[];
+  cellSelect: HTMLElement;
+  tableMenu?: InternalModule;
+  computeSelectedTds: (startPoint: {
+    x: number;
+    y: number;
+  }, endPoint: {
+      x: number;
+      y: number;
+    }) => TableCellInnerFormat[];
+}
 export interface TableConstantsData {
   blotName: Record<string, string>;
   tableUpSize: Record<string, number>;
