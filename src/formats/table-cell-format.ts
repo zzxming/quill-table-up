@@ -31,10 +31,6 @@ export class TableCellFormat extends ContainerFormat {
       rowspan,
       colspan,
       style,
-      // TODO: remove attributes that are not used
-      backgroundColor,
-      borderColor,
-      height,
     } = value;
     const node = super.create() as HTMLElement;
     node.dataset.tableId = tableId;
@@ -42,10 +38,7 @@ export class TableCellFormat extends ContainerFormat {
     node.dataset.colId = colId;
     node.setAttribute('rowspan', String(getValidCellspan(rowspan)));
     node.setAttribute('colspan', String(getValidCellspan(colspan)));
-    backgroundColor && (node.style.backgroundColor = backgroundColor);
-    borderColor && (node.style.borderColor = borderColor);
     style && (node.style.cssText = style);
-    height && (node.style.height = height);
     return node;
   }
 

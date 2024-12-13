@@ -36,10 +36,6 @@ export class TableCellInnerFormat extends ContainerFormat {
       rowspan,
       colspan,
       style,
-      // TODO: remove attributes that are not used
-      backgroundColor,
-      borderColor,
-      height,
     } = value;
     const node = super.create() as HTMLElement;
     node.dataset.tableId = tableId;
@@ -47,9 +43,6 @@ export class TableCellInnerFormat extends ContainerFormat {
     node.dataset.colId = colId;
     node.dataset.rowspan = String(getValidCellspan(rowspan));
     node.dataset.colspan = String(getValidCellspan(colspan));
-    height && (node.dataset.height = height);
-    backgroundColor && (node.dataset.backgroundColor = backgroundColor);
-    borderColor && (node.dataset.borderColor = borderColor);
     style && (node.dataset.style = style);
     return node;
   }

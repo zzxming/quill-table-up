@@ -76,10 +76,6 @@ export interface TableCellValue {
   rowspan: number;
   colspan: number;
   style?: string;
-  // TODO: remove attributes that are not used
-  backgroundColor?: string;
-  borderColor?: string;
-  height?: string;
 };
 export interface TableRowValue {
   tableId: string;
