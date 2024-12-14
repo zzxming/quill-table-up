@@ -97,7 +97,7 @@ const quill1 = new Quill('#editor1', {
         },
       },
       texts: {
-        customBtn: '自定义行列数',
+        customBtnText: '自定义行列数',
         confirmText: '确认',
         cancelText: '取消',
         rowText: '行数',
