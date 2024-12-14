@@ -89,7 +89,7 @@ export class TableAlign {
     this.show();
     computePosition(this.tableWrapperBlot.domNode, this.alignBox, {
       placement: 'top',
-      middleware: [flip(), shift({ limiter: limitShift() }), offset(8)],
+      middleware: [flip(), shift({ limiter: limitShift() }), offset(16)],
     }).then(({ x, y }) => {
       Object.assign(this.alignBox!.style, {
         left: `${x}px`,

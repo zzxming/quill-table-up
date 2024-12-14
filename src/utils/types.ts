@@ -32,6 +32,9 @@ export interface TableSelectionOptions {
   tableMenu?: Constructor<InternalModule, [TableUp, Quill, Partial<TableMenuOptions>]>;
   tableMenuOptions: TableMenuOptions;
 }
+export interface TableResizeScaleOptions {
+  blockSize: number;
+}
 export interface TableCreatorTextOptions {
   customBtnText: string;
   confirmText: string;
@@ -61,6 +64,8 @@ export interface TableUpOptions {
   scrollbarOptions: any;
   align?: Constructor<InternalModule, [TableUp, HTMLElement, Quill, any]>;
   alignOptions: any;
+  resizeScale?: Constructor<InternalModule, [TableUp, HTMLElement, Quill, Partial<TableResizeScaleOptions>]>;
+  resizeScaleOptions: Partial<TableResizeScaleOptions>;
 }
 export interface TableColValue {
   tableId: string;
