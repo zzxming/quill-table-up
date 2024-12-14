@@ -1,0 +1,49 @@
+@import './variables.less';
+
+.@{namespace}-scrollbar {
+  position: absolute;
+  z-index: 1;
+  transition: opacity 0.15s linear;
+  &__container {
+    position: relative;
+  }
+  &.is-transparent {
+    opacity: 0;
+  }
+  &.is-vertical {
+    top: 2px;
+    bottom: 2px;
+    // calculate transform start ql-container left top. -8 = width + gap / 2
+    left: -8px;
+    width: 6px;
+    .@{namespace}-scrollbar__thumb {
+      width: 100%;
+    }
+  }
+  &.is-horizontal {
+    bottom: 2px;
+    left: 2px;
+    right: 2px;
+    height: 6px;
+    .@{namespace}-scrollbar__thumb {
+      height: 100%;
+    }
+  }
+  &__thumb {
+    border-radius: 5px;
+    background-color: #d2d2d2;
+    cursor: pointer;
+    &:hover {
+      background-color: #a1a1aa;
+    }
+  }
+  &--origin.ql-container {
+    .ql {
+      &-table {
+        &-wrapper {
+          scrollbar-width: inherit;
+        }
+      }
+    }
+  }
+}

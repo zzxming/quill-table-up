@@ -10,9 +10,9 @@ import RemoveColumn from '../../svg/remove-column.svg';
 import RemoveRow from '../../svg/remove-row.svg';
 import RemoveTable from '../../svg/remove-table.svg';
 import SplitCell from '../../svg/split-cell.svg';
+import { createBEM } from '../../utils';
 
 export const menuColorSelectClassName = 'color-selector';
-export const contextmenuClassName = 'contextmenu';
 export const defaultTools: Tool[] = [
   {
     name: 'InsertTop',
@@ -129,11 +129,12 @@ export const defaultTools: Tool[] = [
 
 export const maxSaveColorCount = 10;
 export const usedColors = new Set<string>();
+const bem = createBEM('color-map');
 export const colorClassName = {
-  used: 'table-color-used',
-  item: 'table-color-item',
-  btn: 'table-color-btn',
-  map: 'table-color-map',
-  mapRow: 'table-color-map-row',
-  selectWrapper: 'table-color-select-wrapper',
+  selectWrapper: bem.b(),
+  used: bem.bm('used'),
+  item: bem.be('item'),
+  btn: bem.be('btn'),
+  map: bem.be('content'),
+  mapRow: bem.be('content-row'),
 };

@@ -1,7 +1,7 @@
 import type TableUp from '..';
 import type { TableMainFormat } from '../formats';
 import Quill from 'quill';
-import { addScrollEvent, clearScrollEvent, debounce } from '../utils';
+import { addScrollEvent, clearScrollEvent, createBEM, debounce } from '../utils';
 
 export class Scrollbar {
   minSize: number = 20;
@@ -28,6 +28,7 @@ export class Scrollbar {
   thumb: HTMLElement = document.createElement('div');
   scrollHandler: [HTMLElement, (e: Event) => void][] = [];
   propertyMap: { readonly size: 'height'; readonly offset: 'offsetHeight'; readonly scrollDirection: 'scrollTop'; readonly scrollSize: 'scrollHeight'; readonly axis: 'Y'; readonly direction: 'top'; readonly client: 'clientY' } | { readonly size: 'width'; readonly offset: 'offsetWidth'; readonly scrollDirection: 'scrollLeft'; readonly scrollSize: 'scrollWidth'; readonly axis: 'X'; readonly direction: 'left'; readonly client: 'clientX' };
+  bem = createBEM('scrollbar');
   constructor(public quill: Quill, public isVertical: boolean, public table: HTMLElement, public scrollbarContainer: HTMLElement) {
     this.container = table.parentElement!;
     this.propertyMap = this.isVertical
@@ -110,12 +111,12 @@ export class Scrollbar {
 
   createScrollbar() {
     const scrollbar = document.createElement('div');
-    scrollbar.classList.add('ql-table-scrollbar');
-    scrollbar.classList.add(this.isVertical ? 'vertical' : 'horizontal', 'transparent');
+    scrollbar.classList.add(this.bem.b());
+    scrollbar.classList.add(this.isVertical ? this.bem.is('vertical') : this.bem.is('horizontal'), this.bem.is('transparent'));
     Object.assign(scrollbar.style, {
       display: 'none',
     });
-    this.thumb.classList.add('ql-table-scrollbar-thumb');
+    this.thumb.classList.add(this.bem.be('thumb'));
 
     const mouseMoveDocumentHandler = (e: MouseEvent) => {
       if (this.cursorDown === false) return;
@@ -186,7 +187,7 @@ export class Scrollbar {
     this.scrollbar.removeEventListener('transitionend', this.hideScrollbarTransitionend);
     this.scrollbar.style.display = this.size ? 'block' : 'none';
     requestAnimationFrame(() => {
-      this.scrollbar.classList.remove('transparent');
+      this.scrollbar.classList.remove(this.bem.is('transparent'));
     });
   }, 200);
 
@@ -194,7 +195,7 @@ export class Scrollbar {
     this.cursorLeave = true;
     this.scrollbar.removeEventListener('transitionend', this.hideScrollbarTransitionend);
     this.scrollbar.addEventListener('transitionend', this.hideScrollbarTransitionend, { once: true });
-    this.scrollbar.classList.add('transparent');
+    this.scrollbar.classList.add(this.bem.is('transparent'));
   }, 200);
 
   hideScrollbarTransitionend = () => {
@@ -211,8 +212,9 @@ export class Scrollbar {
 export class TableVirtualScrollbar {
   scrollbarContainer: HTMLElement;
   scrollbar: Scrollbar[];
+  bem = createBEM('scrollbar');
   constructor(public tableModule: TableUp, public table: HTMLElement, public quill: Quill) {
-    this.scrollbarContainer = this.tableModule.addContainer('ql-table-scrollbar-container');
+    this.scrollbarContainer = this.tableModule.addContainer(this.bem.be('container'));
 
     this.scrollbar = [
       new Scrollbar(quill, true, table, this.scrollbarContainer),

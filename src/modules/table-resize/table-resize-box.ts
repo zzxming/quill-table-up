@@ -2,7 +2,7 @@ import type { Parchment as TypeParchment } from 'quill';
 import type TableUp from '../..';
 import type { TableColFormat, TableMainFormat, TableRowFormat } from '../..';
 import Quill from 'quill';
-import { addScrollEvent, clearScrollEvent } from '../../utils';
+import { addScrollEvent, clearScrollEvent, createBEM } from '../../utils';
 import { TableResizeCommon } from './table-resize-common';
 import { isTableAlignRight } from './utils';
 
@@ -23,6 +23,7 @@ export class TableResizeBox extends TableResizeCommon {
   scrollHandler: [HTMLElement, (e: Event) => void][] = [];
   lastHeaderSelect: [Point, Point] | null = null;
   size: number = 12;
+  bem = createBEM('resize-box');
 
   constructor(public tableModule: TableUp, public table: HTMLElement, quill: Quill) {
     super(tableModule, quill);
@@ -32,7 +33,7 @@ export class TableResizeBox extends TableResizeCommon {
     this.tableWrapper = this.tableMain.parent;
     if (!this.tableWrapper) return;
 
-    this.root = this.tableModule.addContainer('ql-table-resizer');
+    this.root = this.tableModule.addContainer(this.bem.b());
     this.resizeObserver = new ResizeObserver(() => {
       this.show();
     });
@@ -71,11 +72,11 @@ export class TableResizeBox extends TableResizeCommon {
   };
 
   findCurrentColIndex(e: MouseEvent): number {
-    return Array.from(this.root.getElementsByClassName('ql-table-col-separator')).indexOf(e.target as HTMLElement);
+    return Array.from(this.root.getElementsByClassName(this.bem.be('col-separator'))).indexOf(e.target as HTMLElement);
   }
 
   colWidthChange(i: number, w: number, _isFull: boolean) {
-    const tableColHeads = Array.from(this.root.getElementsByClassName('ql-table-col-header')) as HTMLElement[];
+    const tableColHeads = Array.from(this.root.getElementsByClassName(this.bem.be('col-header'))) as HTMLElement[];
     tableColHeads[i].style.width = `${w}px`;
   }
 
@@ -92,8 +93,8 @@ export class TableResizeBox extends TableResizeCommon {
   }.bind(this);
 
   bindColEvents() {
-    const tableColHeads = Array.from(this.root.getElementsByClassName('ql-table-col-header')) as HTMLElement[];
-    const tableColHeadSeparators = Array.from(this.root.getElementsByClassName('ql-table-col-separator')) as HTMLElement[];
+    const tableColHeads = Array.from(this.root.getElementsByClassName(this.bem.be('col-header'))) as HTMLElement[];
+    const tableColHeadSeparators = Array.from(this.root.getElementsByClassName(this.bem.be('col-separator'))) as HTMLElement[];
 
     addScrollEvent.call(this, this.tableWrapper.domNode, () => {
       this.colHeadWrapper!.scrollLeft = this.tableWrapper.domNode.scrollLeft;
@@ -110,11 +111,11 @@ export class TableResizeBox extends TableResizeCommon {
   }
 
   findCurrentRowIndex(e: MouseEvent): number {
-    return Array.from(this.root.getElementsByClassName('ql-table-row-separator')).indexOf(e.target as HTMLElement);
+    return Array.from(this.root.getElementsByClassName(this.bem.be('row-separator'))).indexOf(e.target as HTMLElement);
   }
 
   rowHeightChange(i: number, h: number) {
-    const tableRowHeads = Array.from(this.root.getElementsByClassName('ql-table-row-header')) as HTMLElement[];
+    const tableRowHeads = Array.from(this.root.getElementsByClassName(this.bem.be('row-header'))) as HTMLElement[];
     tableRowHeads[i].style.height = `${h}px`;
   }
 
@@ -131,8 +132,8 @@ export class TableResizeBox extends TableResizeCommon {
   }.bind(this);
 
   bindRowEvents() {
-    const tableRowHeads = Array.from(this.root.getElementsByClassName('ql-table-row-header')) as HTMLElement[];
-    const tableRowHeadSeparators = Array.from(this.root.getElementsByClassName('ql-table-row-separator')) as HTMLElement[];
+    const tableRowHeads = Array.from(this.root.getElementsByClassName(this.bem.be('row-header'))) as HTMLElement[];
+    const tableRowHeadSeparators = Array.from(this.root.getElementsByClassName(this.bem.be('row-separator'))) as HTMLElement[];
 
     addScrollEvent.call(this, this.tableWrapper.domNode, () => {
       this.rowHeadWrapper!.scrollTop = this.tableWrapper.domNode.scrollTop;
@@ -162,12 +163,12 @@ export class TableResizeBox extends TableResizeCommon {
     let cornerTranslateX = -1 * this.size;
     let rowHeadWrapperTranslateX = -1 * this.size;
     if (isTableAlignRight(this.tableMain)) {
-      this.root.classList.add('table-align-right');
+      this.root.classList.add(this.bem.is('align-right'));
       cornerTranslateX = Math.min(tableWrapperRect.width, tableMainRect.width);
       rowHeadWrapperTranslateX = Math.min(tableWrapperRect.width, tableMainRect.width);
     }
     else {
-      this.root.classList.remove('table-align-right');
+      this.root.classList.remove(this.bem.is('align-right'));
     }
 
     if (this.corner) {
@@ -191,7 +192,7 @@ export class TableResizeBox extends TableResizeCommon {
 
     if (this.tableCols.length > 0 && this.tableRows.length > 0) {
       this.corner = document.createElement('div');
-      this.corner.classList.add('ql-table-resizer-corner');
+      this.corner.classList.add(this.bem.be('corner'));
       Object.assign(this.corner.style, {
         width: `${this.size}px`,
         height: `${this.size}px`,
@@ -214,14 +215,14 @@ export class TableResizeBox extends TableResizeCommon {
       let colHeadStr = '';
       for (const [index, col] of this.tableCols.entries()) {
         const width = col.domNode.getBoundingClientRect().width;
-        colHeadStr += `<div class="ql-table-col-header" style="width: ${width + (index === this.tableCols.length - 1 ? 1 : 0)}px">
-          <div class="ql-table-col-separator" style="height: ${tableMainRect.height + this.size - 3}px"></div>
+        colHeadStr += `<div class="${this.bem.be('col-header')}" style="width: ${width + (index === this.tableCols.length - 1 ? 1 : 0)}px">
+          <div class="${this.bem.be('col-separator')}" style="height: ${tableMainRect.height + this.size - 3}px"></div>
         </div>`;
       }
       const colHeadWrapper = document.createElement('div');
-      colHeadWrapper.classList.add('ql-table-resizer-col');
+      colHeadWrapper.classList.add(this.bem.be('col'));
       const colHead = document.createElement('div');
-      colHead.classList.add('ql-table-col-wrapper');
+      colHead.classList.add(this.bem.be('col-wrapper'));
       Object.assign(colHeadWrapper.style, {
         transform: `translateY(-${this.size}px)`,
         maxWidth: `${tableWrapperRect.width}px`,
@@ -242,14 +243,14 @@ export class TableResizeBox extends TableResizeCommon {
       let rowHeadStr = '';
       for (const [index, row] of this.tableRows.entries()) {
         const height = `${row.domNode.getBoundingClientRect().height}px`;
-        rowHeadStr += `<div class="ql-table-row-header" style="height: ${Number.parseFloat(height) + (index === this.tableRows.length - 1 ? 1 : 0)}px">
-          <div class="ql-table-row-separator" style="width: ${tableMainRect.width + this.size - 3}px"></div>
+        rowHeadStr += `<div class="${this.bem.be('row-header')}" style="height: ${Number.parseFloat(height) + (index === this.tableRows.length - 1 ? 1 : 0)}px">
+          <div class="${this.bem.be('row-separator')}" style="width: ${tableMainRect.width + this.size - 3}px"></div>
         </div>`;
       }
       const rowHeadWrapper = document.createElement('div');
-      rowHeadWrapper.classList.add('ql-table-resizer-row');
+      rowHeadWrapper.classList.add(this.bem.be('row'));
       const rowHead = document.createElement('div');
-      rowHead.classList.add('ql-table-row-wrapper');
+      rowHead.classList.add(this.bem.be('row-wrapper'));
 
       Object.assign(rowHeadWrapper.style, {
         transform: `translateX(-${this.size}px)`,
@@ -274,7 +275,7 @@ export class TableResizeBox extends TableResizeCommon {
   }
 
   hide() {
-    this.root.classList.add('ql-hidden');
+    this.root.classList.add(this.bem.is('hidden'));
   }
 
   destroy() {

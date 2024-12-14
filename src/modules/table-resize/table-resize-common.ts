@@ -1,7 +1,7 @@
 import type Quill from 'quill';
 import type TableUp from '../..';
 import type { TableMainFormat } from '../../formats';
-import { createButton, createDialog, tableUpEvent, tableUpSize } from '../../utils';
+import { createBEM, createButton, createDialog, tableUpEvent, tableUpSize } from '../../utils';
 import { isTableAlignRight } from './utils';
 
 export class TableResizeCommon {
@@ -18,6 +18,8 @@ export class TableResizeCommon {
   handleRowMouseUpFunc = this.handleRowMouseUp.bind(this);
   handleRowMouseMoveFunc = this.handleRowMouseMove.bind(this);
   handleRowMouseDownFunc = this.handleRowMouseDown.bind(this);
+
+  dragBEM = createBEM('drag-line');
 
   constructor(public tableModule: TableUp, public quill: Quill) {}
 
@@ -232,8 +234,8 @@ export class TableResizeCommon {
     this.dragging = true;
 
     const divDom = document.createElement('div');
-    divDom.classList.add('ql-table-drag-line');
-    divDom.classList.add('col');
+    divDom.classList.add(this.dragBEM.b());
+    divDom.classList.add(this.dragBEM.is('col'));
     divDom.dataset.w = String(width);
 
     const styleValue = {
@@ -313,8 +315,8 @@ export class TableResizeCommon {
     const tableMainRect = this.tableMain?.domNode.getBoundingClientRect();
 
     const divDom = document.createElement('div');
-    divDom.classList.add('ql-table-drag-line');
-    divDom.classList.add('row');
+    divDom.classList.add(this.dragBEM.b());
+    divDom.classList.add(this.dragBEM.is('row'));
     divDom.dataset.h = String(height);
 
     const styleValue = {
