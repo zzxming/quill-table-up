@@ -3,6 +3,7 @@ import type { TableColFormat, TableMainFormat, TableRowFormat, TableWrapperForma
 import type { TableResizeScaleOptions } from '../../utils';
 import Quill from 'quill';
 import { addScrollEvent, clearScrollEvent, createBEM, tableUpSize } from '../../utils';
+import { isTableAlignRight } from './utils';
 
 export class TableResizeScale {
   scrollHandler: [HTMLElement, (e: Event) => void][] = [];
@@ -15,7 +16,7 @@ export class TableResizeScale {
   root?: HTMLElement;
   block?: HTMLElement;
   resizeobserver: ResizeObserver = new ResizeObserver(() => this.update());
-  constructor(public tableModule: TableUp, table: HTMLElement, public quill: Quill, options: Partial<TableResizeScaleOptions>) {
+  constructor(public tableModule: TableUp, public table: HTMLElement, public quill: Quill, options: Partial<TableResizeScaleOptions>) {
     this.options = this.resolveOptions(options);
     this.tableMainBlot = Quill.find(table) as TableMainFormat;
 
@@ -47,8 +48,10 @@ export class TableResizeScale {
     let originColWidth: { blot: TableColFormat; width: number }[] = [];
     let originRowHeight: { blot: TableRowFormat; height: number }[] = [];
     const handleMouseMove = (e: MouseEvent) => {
+      if (!this.tableMainBlot) return;
       // divide equally by col count/row count
-      const diffX = e.clientX - this.startX;
+      const isRight = isTableAlignRight(this.tableMainBlot) ? -1 : 1;
+      const diffX = (e.clientX - this.startX) * isRight;
       const diffY = e.clientY - this.startY;
       const itemWidth = Math.floor(diffX / originColWidth.length);
       const itemHeight = Math.floor(diffY / originRowHeight.length);
@@ -111,13 +114,21 @@ export class TableResizeScale {
     Object.assign(this.root.style, {
       width: `${rootWidth}px`,
       height: `${rootHeight}px`,
-      left: `${tableWrapperRect.x - editorRect.x - this.options.blockSize}px`,
-      top: `${tableWrapperRect.y - editorRect.y - this.options.blockSize}px`,
+      left: `${tableRect.x - editorRect.x - this.options.blockSize}px`,
+      top: `${tableRect.y - editorRect.y - this.options.blockSize}px`,
     });
-    Object.assign(this.block.style, {
+    const blockStyle = {
       left: `${tableRect.width + blockSize - scrollLeft}px`,
       top: `${rootHeight - scrollTop}px`,
-    });
+    };
+    if (isTableAlignRight(this.tableMainBlot)) {
+      this.root.classList.add(this.bem.is('align-right'));
+      blockStyle.left = `${this.options.blockSize + -1 * scrollLeft}px`;
+    }
+    else {
+      this.root.classList.remove(this.bem.is('align-right'));
+    }
+    Object.assign(this.block.style, blockStyle);
   }
 
   show() {

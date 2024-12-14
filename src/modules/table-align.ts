@@ -10,6 +10,7 @@ export class TableAlign {
   alignBox?: HTMLElement;
   cleanup?: () => void;
   bem = createBEM('align');
+  resizeObserver = new ResizeObserver(() => this.hide());
   constructor(public tableModule: TableUp, public table: HTMLElement, public quill: Quill) {
     this.tableBlot = Quill.find(table)! as TableMainFormat;
     this.tableWrapperBlot = this.tableBlot.parent as TableWrapperFormat;
@@ -42,6 +43,9 @@ export class TableAlign {
             if (this.tableModule.tableResize) {
               this.tableModule.tableResize.update();
             }
+            if (this.tableModule.tableResizeScale) {
+              this.tableModule.tableResizeScale.update();
+            }
             if (this.tableModule.tableScrollbar) {
               this.tableModule.tableScrollbar.update();
             }
@@ -69,12 +73,13 @@ export class TableAlign {
 
   show() {
     if (!this.alignBox) return;
-    Object.assign(this.alignBox.style, { display: 'flex' });
+    this.alignBox.classList.add(this.bem.bm('active'));
+    this.resizeObserver.observe(this.table);
   }
 
   hide() {
     if (!this.alignBox) return;
-    Object.assign(this.alignBox.style, { display: null });
+    this.alignBox.classList.remove(this.bem.bm('active'));
     if (this.cleanup) {
       this.cleanup();
       this.cleanup = undefined;
@@ -102,6 +107,7 @@ export class TableAlign {
 
   destroy() {
     this.hide();
+    this.resizeObserver.disconnect();
     if (this.alignBox) {
       this.alignBox.remove();
       this.alignBox = undefined;

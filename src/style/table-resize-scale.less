@@ -18,6 +18,13 @@
     cursor: nw-resize;
     pointer-events: all;
   }
+  &.is-align-right {
+    .@{namespace}-scale {
+      &__block {
+        cursor: ne-resize;
+      }
+    }
+  }
   &.is-hidden {
     display: none;
   }
