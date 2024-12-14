@@ -1,0 +1,119 @@
+@import './variables.less';
+
+.@{namespace} {
+  &-menu,
+  &-align {
+    position: absolute;
+    z-index: 1;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 4px;
+    border-radius: 6px;
+    box-shadow: 0 0 8px rgba(0, 0, 0, 0.5);
+    background-color: #ffffff;
+    font-size: 14px;
+    &__item {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 4px;
+      border-radius: 4px;
+      cursor: pointer;
+      &:hover {
+        background-color: #eeeeee;
+      }
+      &.is-break {
+        align-self: stretch;
+        width: 1px;
+        padding: 0px;
+        margin: 2px 4px;
+        background-color: #a3a3a3;
+        cursor: default;
+      }
+    }
+    .icon {
+      display: flex;
+      flex-shrink: 0;
+      font-size: 20px;
+    }
+    span {
+      text-wrap: nowrap;
+    }
+  }
+  &-menu {
+    &.is-contextmenu {
+      flex-direction: column;
+      padding: 4px 8px;
+      .@{namespace}-menu__item {
+        display: flex;
+        justify-content: flex-start;
+        width: 100%;
+        gap: 4px;
+        cursor: pointer;
+      }
+      .is-break {
+        width: 100%;
+        height: 1px;
+        margin: 4px 0px;
+        background-color: #a3a3a3;
+      }
+    }
+  }
+  &-align {
+    .icon {
+      width: 20px;
+      height: 20px;
+    }
+  }
+}
+
+.@{namespace}-color-map {
+  display: flex;
+  flex-direction: column;
+  &--used {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: row-reverse;
+    margin-top: 4px;
+    padding-top: 4px;
+    border-top: 1px solid #ccc;
+  }
+  &__content {
+    display: flex;
+    flex-direction: column;
+    &-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+    }
+  }
+  &__item {
+    width: 14px;
+    height: 14px;
+    margin: 2px;
+    border: 1px solid #a3a3a3;
+    cursor: pointer;
+  }
+  &__btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+    height: 20px;
+    padding: 0 6px;
+    color: #303133;
+    background-color: #fff;
+    cursor: pointer;
+    &:hover {
+      background-color: #edeeef;
+    }
+    &.transparent,
+    &.clear,
+    &.custom {
+    }
+  }
+}

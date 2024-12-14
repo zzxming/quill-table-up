@@ -14,340 +14,6 @@
   }
 }
 
-.ql-container {
-  .ql-table-selection {
-    display: none;
-    position: absolute;
-    overflow: hidden;
-    pointer-events: none;
-    &_line {
-      position: absolute;
-      border: 2px solid;
-      pointer-events: none;
-    }
-  }
-
-  .ql-table-resize-line {
-    &-row,
-    &-col {
-      position: absolute;
-      z-index: 0;
-      &::before,
-      &::after {
-        content: '';
-        display: block;
-        position: absolute;
-        top: 0px;
-        z-index: 1;
-      }
-    }
-    &-row {
-      height: 1px;
-      cursor: ns-resize;
-      &::before,
-      &::after {
-        width: 100%;
-        height: 8px;
-      }
-      &::before {
-        transform: translateY(-8px);
-      }
-    }
-    &-col {
-      width: 1px;
-      cursor: ew-resize;
-      &::before,
-      &::after {
-        height: 100%;
-        width: 8px;
-      }
-      &::before {
-        transform: translateX(-8px);
-      }
-    }
-  }
-
-  .ql-table-resizer {
-    position: absolute;
-    z-index: 0;
-    &.table-align-right {
-      .ql-table-col-separator {
-        left: -2px;
-      }
-      .ql-table-resizer-corner {
-        border-left-width: 1px;
-        border-right-width: 1px;
-        border-top-left-radius: 0;
-        border-top-right-radius: 50%;
-      }
-    }
-    &-row,
-    &-col {
-      position: absolute;
-      top: 0px;
-      left: 0px;
-      overflow: hidden;
-    }
-    .ql-table {
-      &-col,
-      &-row {
-        &-wrapper {
-          display: flex;
-        }
-        &-header {
-          position: relative;
-          flex-shrink: 0;
-          background-color: #f3f4f5;
-          border: 1px solid #ccc;
-        }
-      }
-      &-col {
-        &-wrapper {
-          height: 100%;
-        }
-        &-header {
-          height: 100%;
-          cursor: pointer;
-          border-right-color: transparent;
-          &:last-child {
-            border-right-color: #ccc;
-          }
-        }
-        &-separator {
-          position: absolute;
-          top: 0px;
-          bottom: 0px;
-          right: -2px;
-          width: 2px;
-          cursor: ew-resize;
-          z-index: 0;
-          &::after {
-            right: -6px;
-          }
-          &::before {
-            left: -6px;
-          }
-          &::after,
-          &::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            display: block;
-            width: 8px;
-            height: 100%;
-            z-index: 1;
-          }
-        }
-      }
-      &-row {
-        &-wrapper {
-          flex-direction: column;
-          width: 100%;
-        }
-        &-header {
-          width: 100%;
-          cursor: pointer;
-          border-bottom-color: transparent;
-          &:last-child {
-            border-bottom-color: #ccc;
-          }
-        }
-        &-separator {
-          position: absolute;
-          left: 0px;
-          right: 0px;
-          bottom: -2px;
-          height: 2px;
-          cursor: ns-resize;
-          z-index: 0;
-          &::after {
-            bottom: -6px;
-          }
-          &::before {
-            top: -6px;
-          }
-          &::after,
-          &::before {
-            content: '';
-            position: absolute;
-            left: 0;
-            display: block;
-            width: 100%;
-            height: 8px;
-            z-index: 1;
-          }
-        }
-      }
-    }
-    &-corner {
-      position: absolute;
-      top: 0px;
-      left: 0px;
-      background-color: #f3f4f5;
-      border: 1px solid #ccc;
-      border-right-width: 0;
-      border-bottom-width: 0;
-      border-top-left-radius: 50%;
-      cursor: pointer;
-    }
-  }
-}
-
-.ql-table {
-  &-toolbox {
-    position: absolute;
-    top: 0px;
-    left: 0px;
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
-    pointer-events: none;
-    * {
-      pointer-events: all;
-    }
-  }
-  &-drag-line {
-    position: fixed;
-    z-index: 0;
-    background-color: #409eff;
-    &.col {
-      width: 2px;
-      cursor: ew-resize;
-    }
-    &.row {
-      height: 2px;
-      cursor: ns-resize;
-    }
-  }
-  &-menu,
-  &-align {
-    position: absolute;
-    z-index: 1;
-    display: none;
-    align-items: center;
-    justify-content: center;
-    padding: 4px;
-    border-radius: 6px;
-    box-shadow: 0 0 8px rgba(0, 0, 0, 0.5);
-    background-color: #ffffff;
-    font-size: 14px;
-    &-item {
-      position: relative;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      padding: 4px;
-      border-radius: 4px;
-      cursor: pointer;
-      &:hover {
-        background-color: #eeeeee;
-      }
-      &.break {
-        align-self: stretch;
-        width: 1px;
-        padding: 0px;
-        margin: 2px 4px;
-        background-color: #a3a3a3;
-        cursor: default;
-      }
-    }
-    .icon {
-      display: flex;
-      flex-shrink: 0;
-      font-size: 20px;
-    }
-    span {
-      text-wrap: nowrap;
-    }
-  }
-  &-menu {
-    &.contextmenu {
-      flex-direction: column;
-      padding: 4px 8px;
-      .ql-table-menu-item {
-        display: flex;
-        justify-content: flex-start;
-        width: 100%;
-        gap: 4px;
-        cursor: pointer;
-      }
-      .break {
-        width: 100%;
-        height: 1px;
-        margin: 4px 0px;
-        background-color: #a3a3a3;
-      }
-    }
-  }
-  &-align {
-    .icon {
-      width: 20px;
-      height: 20px;
-    }
-  }
-}
-
-.table-color {
-  &-select-wrapper {
-    display: flex;
-    flex-direction: column;
-  }
-  &-map {
-    display: flex;
-    flex-direction: column;
-    &-row {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 4px;
-    }
-  }
-  &-used {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-direction: row-reverse;
-    margin-top: 4px;
-    padding-top: 4px;
-    border-top: 1px solid #ccc;
-  }
-  &-item {
-    width: 14px;
-    height: 14px;
-    margin: 2px;
-    border: 1px solid #a3a3a3;
-    cursor: pointer;
-  }
-  &-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex: 1;
-    height: 20px;
-    padding: 0 6px;
-    color: #303133;
-    background-color: #fff;
-    cursor: pointer;
-    &:hover {
-      background-color: #edeeef;
-    }
-  }
-  &-transparent,
-  &-clear,
-  &-custom {
-  }
-}
-
-.ql-table-scrollbar--origin.ql-container {
-  .ql {
-    &-table {
-      &-wrapper {
-        scrollbar-width: inherit;
-      }
-    }
-  }
-}
-
 .ql-editor {
   .ql {
     &-table {
@@ -357,9 +23,6 @@
       width: auto;
       &[data-full] {
         width: 100%;
-      }
-      &-dragging {
-        user-select: none;
       }
       &-wrapper {
         width: 100%;
@@ -391,48 +54,23 @@
   }
 }
 
-.ql-table-scrollbar {
-  position: absolute;
-  z-index: 1;
-  transition: opacity 0.15s linear;
-  &-container {
-    position: relative;
-  }
-  &.transparent {
-    opacity: 0;
-  }
-  &.vertical {
-    top: 2px;
-    bottom: 2px;
-    // calculate transform start ql-container left top. -8 = width + gap / 2
-    left: -8px;
-    width: 6px;
-    .ql-table-scrollbar-thumb {
-      width: 100%;
-    }
-  }
-  &.horizontal {
-    bottom: 2px;
-    left: 2px;
-    right: 2px;
-    height: 6px;
-    .ql-table-scrollbar-thumb {
-      height: 100%;
-    }
-  }
-  &-thumb {
-    border-radius: 5px;
-    background-color: #d2d2d2;
-    cursor: pointer;
-    &:hover {
-      background-color: #a1a1aa;
+.@{namespace} {
+  &-toolbox {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    pointer-events: none;
+    * {
+      pointer-events: all;
     }
   }
 }
 
 @import './tooltip.less';
 @import './dialog.less';
-
 @import './color-picker.less';
 
 .@{namespace}-tooltip {
@@ -444,4 +82,8 @@
   }
 }
 
+@import './table-selection.less';
+@import './table-resize.less';
 @import './table-resize-scale.less';
+@import './table-scrollbar.less';
+@import './table-menu.less';

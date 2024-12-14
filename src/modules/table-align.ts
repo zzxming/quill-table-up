@@ -2,12 +2,14 @@ import type TableUp from '..';
 import type { TableMainFormat, TableWrapperFormat } from '../formats';
 import { autoUpdate, computePosition, flip, limitShift, offset, shift } from '@floating-ui/dom';
 import Quill from 'quill';
+import { createBEM } from '../utils';
 
 export class TableAlign {
   tableBlot: TableMainFormat;
   tableWrapperBlot: TableWrapperFormat;
   alignBox?: HTMLElement;
   cleanup?: () => void;
+  bem = createBEM('align');
   constructor(public tableModule: TableUp, public table: HTMLElement, public quill: Quill) {
     this.tableBlot = Quill.find(table)! as TableMainFormat;
     this.tableWrapperBlot = this.tableBlot.parent as TableWrapperFormat;
@@ -16,7 +18,7 @@ export class TableAlign {
   }
 
   buildTool() {
-    const alignBox = this.tableModule.addContainer('ql-table-align');
+    const alignBox = this.tableModule.addContainer(this.bem.b());
     const icons = Quill.import('ui/icons') as Record<string, any>;
     const alignIcons = {
       left: icons.align[''],
@@ -26,7 +28,7 @@ export class TableAlign {
     for (const [align, iconStr] of Object.entries(alignIcons)) {
       const item = document.createElement('span');
       item.dataset.align = align;
-      item.classList.add('ql-table-align-item');
+      item.classList.add(this.bem.be('item'));
       item.innerHTML = `<i class="icon">${iconStr}</i>`;
       item.addEventListener('click', () => {
         const value = item.dataset.align;

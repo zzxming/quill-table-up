@@ -2,7 +2,7 @@ import type Quill from 'quill';
 import type TableUp from '../..';
 import type { TableMenuOptions, ToolTipOptions } from '../../utils';
 import { limitDomInViewPort } from '../../utils';
-import { contextmenuClassName, menuColorSelectClassName } from './constants';
+import { menuColorSelectClassName } from './constants';
 import { TableMenuCommon } from './table-menu-common';
 
 type TableMenuOptionsInput = Partial<Omit<TableMenuOptions, 'texts'>>;
@@ -41,7 +41,7 @@ export class TableMenuContextmenu extends TableMenuCommon {
 
   buildTools(): HTMLElement {
     const menu = super.buildTools();
-    menu.classList.add(contextmenuClassName);
+    menu.classList.add(this.bem.is('contextmenu'));
     const items = menu.getElementsByClassName(menuColorSelectClassName);
     for (const item of Array.from(items)) {
       item.addEventListener('click', e => e.stopPropagation());

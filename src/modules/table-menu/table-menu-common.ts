@@ -1,7 +1,7 @@
 import type Quill from 'quill';
 import type { TableUp } from '../..';
 import type { TableMenuOptions, ToolOption, TooltipInstance, ToolTipOptions } from '../../utils';
-import { createColorPicker, createTooltip, debounce, defaultColorMap, isArray, isFunction, randomId } from '../../utils';
+import { createBEM, createColorPicker, createTooltip, debounce, defaultColorMap, isArray, isFunction, randomId } from '../../utils';
 import { colorClassName, defaultTools, maxSaveColorCount, menuColorSelectClassName, usedColors } from './constants';
 
 export type TableMenuOptionsInput = Partial<Omit<TableMenuOptions, 'texts'>>;
@@ -9,12 +9,12 @@ export class TableMenuCommon {
   options: TableMenuOptions;
   menu: HTMLElement | null = null;
   updateUsedColor: (this: any, color?: string) => void;
+  tooltipItem: TooltipInstance[] = [];
+  bem = createBEM('menu');
   colorItemClass = `color-${randomId()}`;
   colorChooseTooltipOption: ToolTipOptions = {
     direction: 'top',
   };
-
-  tooltipItem: TooltipInstance[] = [];
 
   constructor(public tableModule: TableUp, public quill: Quill, options: TableMenuOptionsInput) {
     this.options = this.resolveOptions(options);
@@ -75,14 +75,14 @@ export class TableMenuCommon {
 
   buildTools(): HTMLElement {
     const toolBox = document.createElement('div');
-    toolBox.classList.add('ql-table-menu');
+    toolBox.classList.add(this.bem.b());
     Object.assign(toolBox.style, { display: 'flex' });
     for (const tool of this.options.tools) {
       const { name, icon, handle, isColorChoose, key: attrKey, tip = '' } = tool as ToolOption;
       const item = document.createElement('span');
-      item.classList.add('ql-table-menu-item');
+      item.classList.add(this.bem.be('item'));
       if (name === 'break') {
-        item.classList.add('break');
+        item.classList.add(this.bem.is('break'));
       }
       else {
         // add icon
@@ -146,19 +146,19 @@ export class TableMenuCommon {
       marginTop: '4px',
     });
     const transparentColor = document.createElement('div');
-    transparentColor.classList.add(colorClassName.btn, 'table-color-transparent');
+    transparentColor.classList.add(colorClassName.btn, 'transparent');
     transparentColor.textContent = this.tableModule.options.texts.transparent;
     transparentColor.addEventListener('click', () => {
       handle(this.tableModule, this.getSelectedTds(), 'transparent');
     });
     const clearColor = document.createElement('div');
-    clearColor.classList.add(colorClassName.btn, 'table-color-clear');
+    clearColor.classList.add(colorClassName.btn, 'clear');
     clearColor.textContent = this.tableModule.options.texts.clear;
     clearColor.addEventListener('click', () => {
       handle(this.tableModule, this.getSelectedTds(), null);
     });
     const customColor = document.createElement('div');
-    customColor.classList.add(colorClassName.btn, 'table-color-custom');
+    customColor.classList.add(colorClassName.btn, 'custom');
     customColor.textContent = this.tableModule.options.texts.custom;
     const colorPicker = createColorPicker({
       onChange: (color) => {

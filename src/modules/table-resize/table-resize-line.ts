@@ -1,7 +1,7 @@
 import type TableUp from '../..';
 import Quill from 'quill';
 import { type TableCellFormat, TableRowFormat } from '../../formats';
-import { blotName, findParentBlot, findParentBlots } from '../../utils';
+import { blotName, createBEM, findParentBlot, findParentBlots } from '../../utils';
 import { TableResizeCommon } from './table-resize-common';
 import { isTableAlignRight } from './utils';
 
@@ -15,10 +15,11 @@ export class TableResizeLine extends TableResizeCommon {
   curRowIndex: number = -1;
   tableCellBlot?: TableCellFormat;
 
+  bem = createBEM('resize-line');
   constructor(public tableModule: TableUp, public table: HTMLElement, quill: Quill) {
     super(tableModule, quill);
-    this.colResizer = this.tableModule.addContainer('ql-table-resize-line-col');
-    this.rowResizer = this.tableModule.addContainer('ql-table-resize-line-row');
+    this.colResizer = this.tableModule.addContainer(this.bem.be('col'));
+    this.rowResizer = this.tableModule.addContainer(this.bem.be('row'));
 
     this.table.addEventListener('mousemove', this.mousemoveHandler);
     this.quill.on(Quill.events.TEXT_CHANGE, this.hideWhenTextChange);
@@ -73,7 +74,7 @@ export class TableResizeLine extends TableResizeCommon {
     if (!this.tableMain || !this.tableCellBlot) return;
     const tableCellBlot = this.tableCellBlot;
     this.tableModule.toolBox.removeChild(this.colResizer);
-    this.colResizer = this.tableModule.addContainer('ql-table-resize-line-col');
+    this.colResizer = this.tableModule.addContainer(this.bem.be('col'));
 
     const [tableBodyBlot] = findParentBlots(tableCellBlot, [blotName.tableBody] as const);
     const tableBodyect = tableBodyBlot.domNode.getBoundingClientRect();
@@ -111,7 +112,7 @@ export class TableResizeLine extends TableResizeCommon {
     if (!this.tableMain || !this.tableCellBlot) return;
     const tableCellBlot = this.tableCellBlot;
     this.tableModule.toolBox.removeChild(this.rowResizer);
-    this.rowResizer = this.tableModule.addContainer('ql-table-resize-line-row');
+    this.rowResizer = this.tableModule.addContainer(this.bem.be('row'));
     const currentRow = tableCellBlot.parent;
     if (!(currentRow instanceof TableRowFormat)) {
       return;

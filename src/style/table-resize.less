@@ -1,0 +1,183 @@
+@import './variables.less';
+
+.@{namespace}-resize-line {
+  &__row,
+  &__col {
+    position: absolute;
+    z-index: 0;
+    &::before,
+    &::after {
+      content: '';
+      display: block;
+      position: absolute;
+      top: 0px;
+      z-index: 1;
+    }
+  }
+  &__row {
+    height: 1px;
+    cursor: ns-resize;
+    &::before,
+    &::after {
+      width: 100%;
+      height: 8px;
+    }
+    &::before {
+      transform: translateY(-8px);
+    }
+  }
+  &__col {
+    width: 1px;
+    cursor: ew-resize;
+    &::before,
+    &::after {
+      height: 100%;
+      width: 8px;
+    }
+    &::before {
+      transform: translateX(-8px);
+    }
+  }
+}
+
+.@{namespace}-resize-box {
+  position: absolute;
+  z-index: 0;
+  &.is-hidden {
+    display: none;
+  }
+  &.is-align-right {
+    .@{namespace}-resize-box__col-separator {
+      left: -2px;
+    }
+    .@{namespace}-resize-box__corner {
+      border-left-width: 1px;
+      border-right-width: 1px;
+      border-top-left-radius: 0;
+      border-top-right-radius: 50%;
+    }
+  }
+  &__row,
+  &__col {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    overflow: hidden;
+  }
+  &__col,
+  &__row {
+    &-wrapper {
+      display: flex;
+    }
+    &-header {
+      position: relative;
+      flex-shrink: 0;
+      background-color: #f3f4f5;
+      border: 1px solid #ccc;
+    }
+  }
+  &__col {
+    &-wrapper {
+      height: 100%;
+    }
+    &-header {
+      height: 100%;
+      cursor: pointer;
+      border-right-color: transparent;
+      &:last-child {
+        border-right-color: #ccc;
+      }
+    }
+    &-separator {
+      position: absolute;
+      top: 0px;
+      bottom: 0px;
+      right: -2px;
+      width: 2px;
+      cursor: ew-resize;
+      z-index: 0;
+      &::after {
+        right: -6px;
+      }
+      &::before {
+        left: -6px;
+      }
+      &::after,
+      &::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        display: block;
+        width: 8px;
+        height: 100%;
+        z-index: 1;
+      }
+    }
+  }
+  &__row {
+    &-wrapper {
+      flex-direction: column;
+      width: 100%;
+    }
+    &-header {
+      width: 100%;
+      cursor: pointer;
+      border-bottom-color: transparent;
+      &:last-child {
+        border-bottom-color: #ccc;
+      }
+    }
+    &-separator {
+      position: absolute;
+      left: 0px;
+      right: 0px;
+      bottom: -2px;
+      height: 2px;
+      cursor: ns-resize;
+      z-index: 0;
+      &::after {
+        bottom: -6px;
+      }
+      &::before {
+        top: -6px;
+      }
+      &::after,
+      &::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        display: block;
+        width: 100%;
+        height: 8px;
+        z-index: 1;
+      }
+    }
+  }
+  &__corner {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    background-color: #f3f4f5;
+    border: 1px solid #ccc;
+    border-right-width: 0;
+    border-bottom-width: 0;
+    border-top-left-radius: 50%;
+    cursor: pointer;
+  }
+}
+
+.@{namespace} {
+  &-drag-line {
+    position: fixed;
+    z-index: 0;
+    background-color: #409eff;
+    &.is-col {
+      width: 2px;
+      cursor: ew-resize;
+    }
+    &.is-row {
+      height: 2px;
+      cursor: ns-resize;
+    }
+  }
+}

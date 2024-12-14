@@ -3,7 +3,7 @@ import type { TableCellInnerFormat, TableMainFormat } from '../formats';
 import type { InternalModule, RelactiveRect, TableSelectionOptions } from '../utils';
 import Quill from 'quill';
 import { TableCellFormat } from '../formats';
-import { addScrollEvent, clearScrollEvent, getRelativeRect, isRectanglesIntersect } from '../utils';
+import { addScrollEvent, clearScrollEvent, createBEM, getRelativeRect, isRectanglesIntersect } from '../utils';
 
 const ERROR_LIMIT = 2;
 export class TableSelection {
@@ -23,11 +23,12 @@ export class TableSelection {
   selectingHandler = this.mouseDownHandler.bind(this);
   tableMenu?: InternalModule;
   resizeObserver: ResizeObserver;
+  bem = createBEM('selection');
 
   constructor(tableModule: TableUp, public table: HTMLElement, public quill: Quill, options: Partial<TableSelectionOptions> = {}) {
     this.options = this.resolveOptions(options);
 
-    this.cellSelectWrap = tableModule.addContainer('ql-table-selection');
+    this.cellSelectWrap = tableModule.addContainer(this.bem.b());
     this.cellSelect = this.helpLinesInitial();
 
     this.resizeObserver = new ResizeObserver(() => this.hide());
@@ -49,7 +50,7 @@ export class TableSelection {
 
   helpLinesInitial() {
     const cellSelect = document.createElement('div');
-    cellSelect.classList.add('ql-table-selection_line');
+    cellSelect.classList.add(this.bem.be('line'));
     Object.assign(cellSelect.style, {
       'border-color': this.options.selectColor,
     });

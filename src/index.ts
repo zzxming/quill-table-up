@@ -8,7 +8,7 @@ import type Toolbar from 'quill/modules/toolbar';
 import type { InternalModule, InternalTableSelectionModule, QuillTheme, QuillThemePicker, TableConstantsData, TableTextOptions, TableUpOptions } from './utils';
 import Quill from 'quill';
 import { BlockOverride, BlockquoteOverride, CodeBlockOverride, ContainerFormat, HeaderOverride, ListItemOverride, ScrollOverride, TableBodyFormat, TableCellFormat, TableCellInnerFormat, TableColFormat, TableColgroupFormat, TableMainFormat, TableRowFormat, TableWrapperFormat } from './formats';
-import { blotName, createSelectBox, debounce, findParentBlot, findParentBlots, isFunction, isString, limitDomInViewPort, randomId, tableUpEvent, tableUpSize } from './utils';
+import { blotName, createBEM, createSelectBox, debounce, findParentBlot, findParentBlots, isFunction, isString, limitDomInViewPort, randomId, tableUpEvent, tableUpSize } from './utils';
 
 const Delta = Quill.import('delta');
 const Break = Quill.import('blots/break') as TypeParchment.BlotConstructor;
@@ -208,10 +208,12 @@ export class TableUp {
     this.options = this.resolveOptions(options || {});
 
     if (!this.options.scrollbar) {
-      this.quill.container.classList.add('ql-table-scrollbar--origin');
+      const scrollbarBEM = createBEM('scrollbar');
+      this.quill.container.classList.add(scrollbarBEM.bm('origin'));
     }
 
-    this.toolBox = this.quill.addContainer('ql-table-toolbox');
+    const toolboxBEM = createBEM('toolbox');
+    this.toolBox = this.quill.addContainer(toolboxBEM.b());
 
     const toolbar = this.quill.getModule('toolbar') as Toolbar;
     if (toolbar && (this.quill.theme as QuillTheme).pickers) {
