@@ -614,3 +614,25 @@
   width: 15.75rem;
   padding: 0.5rem 0;
 }
+.table-up-scale {
+  position: absolute;
+  top: 0;
+  left: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.table-up-scale__block {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform: translate(-100%, -100%);
+  width: 0.75rem;
+  height: 0.75rem;
+  background-color: #f1f5f9;
+  border: 0.0625rem solid #808080;
+  cursor: nw-resize;
+  pointer-events: all;
+}
+.table-up-scale.is-hidden {
+  display: none;
+}
