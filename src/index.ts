@@ -197,6 +197,8 @@ export class TableUp {
   tableResize?: InternalModule;
   tableScrollbar?: InternalModule;
   tableAlign?: InternalModule;
+  tableResizeScale?: InternalModule;
+
   get statics(): any {
     return this.constructor;
   }
@@ -346,6 +348,7 @@ export class TableUp {
       alignOptions: {},
       scrollbarOptions: {},
       resizeOptions: {},
+      resizeScaleOptions: {},
     } as TableUpOptions, options);
   };
 
@@ -529,6 +532,9 @@ export class TableUp {
       if (this.options.resize) {
         this.tableResize = new this.options.resize(this, table, quill, this.options.resizeOptions);
       }
+      if (this.options.resizeScale) {
+        this.tableResizeScale = new this.options.resizeScale(this, table, quill, this.options.resizeScaleOptions);
+      }
     }
   }
 
@@ -548,6 +554,9 @@ export class TableUp {
     if (this.tableResize) {
       this.tableResize.destroy();
       this.tableResize = undefined;
+    }
+    if (this.tableResizeScale) {
+      this.tableResizeScale.destroy();
     }
     this.table = undefined;
   }

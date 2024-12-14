@@ -1,5 +1,4 @@
 import { cssNamespace } from './constants';
-import { isBoolean } from './is';
 
 export const createBEM = (b: string, n: string = cssNamespace) => {
   const prefix = n ? `${n}-` : '';
@@ -19,9 +18,6 @@ export const createBEM = (b: string, n: string = cssNamespace) => {
     /** --n-v */
     cv: (v?: string) => v ? `--${prefix}${v}` : '',
     /** is-n */
-    is: (n: string, status: (boolean | undefined)[] | boolean) => {
-      const state = isBoolean(status) ? status : status.every(Boolean);
-      return state ? `is-${n}` : '';
-    },
+    is: (n: string) => `is-${n}`,
   };
 };
