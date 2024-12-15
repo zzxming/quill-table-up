@@ -1,0 +1,60 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Quill Table Module Demo</title>
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=0, viewport-fit=cover"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"
+      integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+"
+      crossorigin="anonymous"
+    />
+    <script
+      defer
+      src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"
+      integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg"
+      crossorigin="anonymous"
+    ></script>
+    <script src="https://cdn.jsdelivr.net/npm/quill@2.0.0/dist/quill.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/quill@2.0.0/dist/quill.bubble.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/quill@2.0.0/dist/quill.snow.css" rel="stylesheet" />
+    <script type="module" src="./index.umd.js"></script>
+    <link href="./index.css" rel="stylesheet" />
+    <link href="./table-creator.css" rel="stylesheet" />
+    <style>
+      .ql-editor {
+        line-height: 1.4;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div style="display: flex; flex-direction: column; max-width: 1200px; margin: auto">
+      <div id="container1">
+        <button id="btn1">console</button>
+        <div id="editor1" style="height: 600px"></div>
+        <div id="output1"></div>
+      </div>
+      <div id="container2">
+        <button id="btn2">console</button>
+        <div id="editor2" style="height: 600px"></div>
+        <div id="output2"></div>
+      </div>
+      <div id="container3">
+        <button id="btn3">console</button>
+        <div id="editor3" style="height: 600px"></div>
+        <div id="output3"></div>
+      </div>
+      <div id="container4">
+        <button id="btn4">console</button>
+        <div id="editor4" style="height: 600px"></div>
+        <div id="output4"></div>
+      </div>
+    </div>
+    <script type="module" src="./test.js"></script>
+  </body>
+</html>
