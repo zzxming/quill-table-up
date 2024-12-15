@@ -7,7 +7,7 @@ export default defineConfig({
     clearMocks: true,
     environment: 'jsdom',
     setupFiles: ['./vitest.setup.ts'],
-    include: ['**/__tests__/*.{test,spec}.ts'],
+    include: ['**/__tests__/unit/*.{test,spec}.ts'],
     exclude: ['**/dits/**', '**/node_modules/**'],
     coverage: {
       reportsDirectory: resolve(__dirname, 'coverage'),
@@ -15,7 +15,7 @@ export default defineConfig({
       enabled: true,
     },
     typecheck: {
-      include: ['**/__tests__/*.{test,spec}-d.ts'],
+      include: ['**/__tests__/unit/*.{test,spec}-d.ts'],
       enabled: true,
     },
   },

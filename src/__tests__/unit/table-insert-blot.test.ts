@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import TableUp, { TableCellInnerFormat } from '..';
+import TableUp, { TableCellInnerFormat } from '../..';
 import { createQuillWithTableModule, createTable, createTableDeltaOps, createTableHTML } from './utils';
 
 beforeEach(() => {

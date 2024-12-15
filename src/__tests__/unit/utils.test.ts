@@ -1,10 +1,9 @@
 import Quill from 'quill';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import TableUp, { updateTableConstants } from '..';
-
-import { TableBodyFormat, TableCellFormat, TableCellInnerFormat, TableColFormat, TableMainFormat, TableRowFormat, TableWrapperFormat } from '../formats';
-import { TableSelection } from '../modules';
-import { blotName, findParentBlot, findParentBlots } from '../utils';
+import TableUp, { updateTableConstants } from '../..';
+import { TableBodyFormat, TableCellFormat, TableCellInnerFormat, TableColFormat, TableMainFormat, TableRowFormat, TableWrapperFormat } from '../../formats';
+import { TableSelection } from '../../modules';
+import { blotName, findParentBlot, findParentBlots } from '../../utils';
 import { createTable, createTableHTML, createTaleColHTML, datasetFull, getColWidthStyle, normalizeHTML } from './utils';
 
 beforeEach(() => {
