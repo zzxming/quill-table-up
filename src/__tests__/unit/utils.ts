@@ -1,7 +1,7 @@
-import type { TableColValue } from '../index';
+import type { TableColValue } from '../../index';
 import Quill from 'quill';
 import { expect, vi } from 'vitest';
-import TableUp from '../index';
+import TableUp from '../../index';
 
 // eslint-disable-next-line unicorn/prefer-string-replace-all
 export const normalizeHTML = (html: string | { html: string }) => typeof html === 'object' ? html.html : html.replace(/\n\s*/g, '');

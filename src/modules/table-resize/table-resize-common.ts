@@ -161,7 +161,7 @@ export class TableResizeCommon {
       }
 
       for (const { index, width } of updateInfo) {
-        cols[index].width = `${width}${isFull ? '%' : 'px'}`;
+        cols[index].width = `${Math.round(width)}${isFull ? '%' : 'px'}`;
         this.colWidthChange(index, isFull ? width / 100 * tableWidth : width, isFull);
       }
     }
@@ -312,7 +312,7 @@ export class TableResizeCommon {
 
     // set drag init width
     const height = rows[this.rowIndex].domNode.getBoundingClientRect().height;
-    const tableMainRect = this.tableMain?.domNode.getBoundingClientRect();
+    const tableMainRect = this.tableMain.domNode.getBoundingClientRect();
 
     const divDom = document.createElement('div');
     divDom.classList.add(this.dragBEM.b());

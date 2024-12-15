@@ -7,3 +7,8 @@ coverage
 docs/*.css
 docs/*umd.js
 docs/*umd.js.map
+
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
