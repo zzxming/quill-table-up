@@ -33,9 +33,11 @@
     "lint:fix": "eslint . --fix",
     "build": "gulp --require @esbuild-kit/cjs-loader",
     "dev": "gulp --require @esbuild-kit/cjs-loader dev",
-    "test": "vitest",
-    "test:ui": "vitest --ui",
-    "test:cover": "vitest --coverage"
+    "server": "node ./server.js",
+    "test:unit": "vitest",
+    "test:unit-ui": "vitest --ui",
+    "test:e2e": "playwright test",
+    "test:e2e-ui": "playwright test --ui"
   },
   "peerDependencies": {
     "quill": "^2.0.0"
@@ -45,6 +47,7 @@
   },
   "devDependencies": {
     "@esbuild-kit/cjs-loader": "^2.4.4",
+    "@playwright/test": "^1.49.1",
     "@rollup/plugin-node-resolve": "^15.3.0",
     "@rollup/plugin-terser": "^0.4.4",
     "@rollup/plugin-typescript": "^11.1.6",
