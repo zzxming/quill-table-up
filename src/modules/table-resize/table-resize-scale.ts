@@ -74,8 +74,8 @@ export class TableResizeScale {
       this.startX = e.clientX;
       this.startY = e.clientY;
       // save the origin width and height to calculate result width and height
-      originColWidth = this.tableMainBlot.getCols().map(col => ({ blot: col, width: col.width }));
-      originRowHeight = this.tableMainBlot.getRows().map(row => ({ blot: row, height: row.domNode.getBoundingClientRect().height }));
+      originColWidth = this.tableMainBlot.getCols().map(col => ({ blot: col, width: Math.floor(col.width) }));
+      originRowHeight = this.tableMainBlot.getRows().map(row => ({ blot: row, height: Math.floor(row.domNode.getBoundingClientRect().height) }));
       document.addEventListener('mousemove', handleMouseMove);
       document.addEventListener('mouseup', handleMouseUp);
     });
