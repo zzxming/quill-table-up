@@ -13,9 +13,8 @@ test('test TableResizeLine fixed width', async ({ page }) => {
   const cellBounding = (await centerCell.boundingBox())!;
   expect(cellBounding).not.toBeNull();
 
-  // trigger mousemove in table to set resize line position
-  await page.mouse.move(cellBounding.x, cellBounding.y);
   // col
+  await page.mouse.move(cellBounding.x + 10, cellBounding.y + 10);
   const colBoundingBox = (await page.locator('#editor1 .table-up-resize-line__col').boundingBox())!;
   expect(colBoundingBox).not.toBeNull();
   await page.mouse.move(colBoundingBox.x + colBoundingBox.width / 2, colBoundingBox.y + colBoundingBox.height / 2);
@@ -23,9 +22,10 @@ test('test TableResizeLine fixed width', async ({ page }) => {
   await page.mouse.move(colBoundingBox.x + colBoundingBox.width / 2 + 100, colBoundingBox.y + colBoundingBox.height / 2);
   await page.mouse.up();
   expect(page.locator('#editor1 .ql-table-wrapper col').nth(1)).toHaveAttribute('width', `${Math.floor(cellBounding.width) + 100}px`);
-
   await page.mouse.move(cellBounding.x, cellBounding.y);
+
   // row
+  await page.mouse.move(cellBounding.x + 10, cellBounding.y + 10);
   const rowBoundingBox = (await page.locator('#editor1 .table-up-resize-line__row').boundingBox())!;
   expect(rowBoundingBox).not.toBeNull();
   await page.mouse.move(rowBoundingBox.x + rowBoundingBox.width / 2, rowBoundingBox.y + rowBoundingBox.height / 2);
@@ -33,7 +33,6 @@ test('test TableResizeLine fixed width', async ({ page }) => {
   await page.mouse.move(rowBoundingBox.x + rowBoundingBox.width / 2, rowBoundingBox.y + rowBoundingBox.height / 2 + 100);
   await page.mouse.up();
   const cells = await page.locator('#editor1 .ql-table-wrapper tr').nth(1).locator('td').all();
-
   for (const cell of cells) {
     await expect(cell).toHaveCSS('height', `${Math.floor(cellBounding.height) + 100}px`);
   }
@@ -49,7 +48,6 @@ test('test TableResizeBox fixed width', async ({ page }) => {
   // col
   const colBoundingBox = (await page.locator('#editor2 .table-up-resize-box__col-separator').nth(1).boundingBox())!;
   expect(colBoundingBox).not.toBeNull();
-  // -4 for sure click on the separator
   await page.mouse.move(colBoundingBox.x + colBoundingBox.width - 4, colBoundingBox.y + 4);
   await page.mouse.down();
   await page.mouse.move(colBoundingBox.x + colBoundingBox.width - 4 + 100, colBoundingBox.y + 4);
@@ -59,7 +57,6 @@ test('test TableResizeBox fixed width', async ({ page }) => {
   // row
   const rowBoundingBox = (await page.locator('#editor2 .table-up-resize-box__row-separator').nth(1).boundingBox())!;
   expect(rowBoundingBox).not.toBeNull();
-  // -4 for sure click on the separator
   await page.mouse.move(rowBoundingBox.x, rowBoundingBox.y + rowBoundingBox.height - 4);
   await page.mouse.down();
   await page.mouse.move(rowBoundingBox.x, rowBoundingBox.y + rowBoundingBox.height - 4 + 100);
@@ -80,8 +77,7 @@ test('test TableResizeLine full width', async ({ page }) => {
   expect(cellBounding).not.toBeNull();
   expect(tableBounding).not.toBeNull();
 
-  // trigger mousemove in table to set resize line position
-  await page.mouse.move(cellBounding.x, cellBounding.y);
+  await page.mouse.move(cellBounding.x + 10, cellBounding.y + 10);
   const colBoundingBox = (await page.locator('#editor3 .table-up-resize-line__col').boundingBox())!;
   expect(colBoundingBox).not.toBeNull();
   await page.mouse.move(colBoundingBox.x + colBoundingBox.width / 2, colBoundingBox.y + colBoundingBox.height / 2);
@@ -104,8 +100,7 @@ test('test TableResizeBox full width', async ({ page }) => {
 
   const colBoundingBox = (await page.locator('#editor4 .table-up-resize-box__col-separator').nth(1).boundingBox())!;
   expect(colBoundingBox).not.toBeNull();
-  // -4 for sure click on the separator
-  await page.mouse.move(colBoundingBox.x + colBoundingBox.width - 4, colBoundingBox.y);
+  await page.mouse.move(colBoundingBox.x + colBoundingBox.width - 4, colBoundingBox.y + 4);
   await page.mouse.down();
   await page.mouse.move(colBoundingBox.x + colBoundingBox.width - 4 + tableBounding.width * 0.05, colBoundingBox.y);
   await page.mouse.up();
@@ -124,11 +119,11 @@ test('test TableResizeScale', async ({ page }) => {
   expect(scaleBtnBounding).not.toBeNull();
   await page.mouse.move(scaleBtnBounding.x + scaleBtnBounding.width / 2, scaleBtnBounding.y + scaleBtnBounding.height / 2);
   await page.mouse.down();
-  await page.mouse.move(scaleBtnBounding.x + scaleBtnBounding.width / 2 + 90, scaleBtnBounding.y + scaleBtnBounding.height / 2 + 90);
+  await page.mouse.move(scaleBtnBounding.x + scaleBtnBounding.width / 2 - 90, scaleBtnBounding.y + scaleBtnBounding.height / 2 + 90);
   await page.mouse.up();
   const cols = page.locator('#editor1 .ql-table-wrapper col');
   for (const col of await cols.all()) {
-    await expect(col).toHaveAttribute('width', `${Math.floor(cellBounding.width + 30)}px`);
+    await expect(col).toHaveAttribute('width', `${Math.floor(cellBounding.width - 30)}px`);
   }
 
   const cells = page.locator('#editor1 .ql-table-wrapper td');
