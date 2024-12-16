@@ -35,7 +35,7 @@ test('test TableSelection horizontal', async ({ page }) => {
   await page.locator('#editor1 .ql-editor .ql-table td').nth(3).click();
   await expect(selectionLine).toBeVisible();
   await page.mouse.down();
-  await page.mouse.move(cellBounding.x, cellBounding.y);
+  await page.mouse.move(cellBounding.x + 10, cellBounding.y + 10);
   await page.mouse.up();
 
   const mergeCellBounding = (await page.locator('#editor1 .ql-editor .ql-table td').nth(0).boundingBox())!;
@@ -71,7 +71,7 @@ test('test TableSelection vertical', async ({ page }) => {
   await page.locator('#editor1 .ql-editor .ql-table td').nth(0).click();
   await expect(selectionLine).toBeVisible();
   await page.mouse.down();
-  await page.mouse.move(cellBounding.x + cellBounding.width * 2, cellBounding.y);
+  await page.mouse.move(cellBounding.x + cellBounding.width * 2 - 10, cellBounding.y + 10);
   await page.mouse.up();
 
   expect(
