@@ -8,7 +8,7 @@ import type Toolbar from 'quill/modules/toolbar';
 import type { InternalModule, InternalTableSelectionModule, QuillTheme, QuillThemePicker, TableConstantsData, TableTextOptions, TableUpOptions } from './utils';
 import Quill from 'quill';
 import { BlockOverride, BlockquoteOverride, CodeBlockOverride, ContainerFormat, HeaderOverride, ListItemOverride, ScrollOverride, TableBodyFormat, TableCellFormat, TableCellInnerFormat, TableColFormat, TableColgroupFormat, TableMainFormat, TableRowFormat, TableWrapperFormat } from './formats';
-import { blotName, createBEM, createSelectBox, debounce, findParentBlot, findParentBlots, isFunction, isString, limitDomInViewPort, randomId, tableUpEvent, tableUpSize } from './utils';
+import { blotName, createBEM, createSelectBox, debounce, findParentBlot, findParentBlots, isFunction, isObject, isString, limitDomInViewPort, randomId, tableUpEvent, tableUpSize } from './utils';
 
 const Delta = Quill.import('delta');
 const Break = Quill.import('blots/break') as TypeParchment.BlotConstructor;
@@ -442,15 +442,16 @@ export class TableUp {
       return new Delta(ops);
     });
 
-    // remove colgroup end \n
     this.quill.clipboard.addMatcher('colgroup', (node, delta) => {
-      const last = delta.ops.slice(-1)[0];
-      if (!last.attributes && last.insert === '\n') {
-        return new Delta(delta.ops.slice(0, -1));
+      const ops: Record<string, any>[] = [];
+      for (let i = 0; i < delta.ops.length; i++) {
+        const op = delta.ops[i];
+        if (op && isObject(op.insert) && op.insert[blotName.tableCol]) {
+          ops.push(op);
+        }
       }
-      return delta;
+      return new Delta(ops);
     });
-
     this.quill.clipboard.addMatcher('col', (node) => {
       colIds[colCount] = randomId();
       const delta = new Delta().insert({
@@ -481,7 +482,7 @@ export class TableUp {
       }
       return delta;
     });
-    // TODO: paste into table. need break table
+
     const matchCell = (node: Node, delta: TypeDelta) => {
       const cell = node as HTMLElement;
       const cellFormat = TableCellFormat.formats(cell);
@@ -508,8 +509,11 @@ export class TableUp {
       }
       const ops = [];
       for (const op of delta.ops) {
-        if (typeof op.insert === 'string') {
-          ops.push({ insert: op.insert, attributes: { [blotName.tableCellInner]: value } });
+        const { insert, attributes } = op;
+        if (op.insert) {
+          const attrs = { ...attributes };
+          delete attrs[blotName.tableCell];
+          ops.push({ insert, attributes: { ...attrs, [blotName.tableCellInner]: value } });
         }
       }
       return new Delta(ops);
