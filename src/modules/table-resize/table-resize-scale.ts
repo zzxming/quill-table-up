@@ -114,8 +114,8 @@ export class TableResizeScale {
     Object.assign(this.root.style, {
       width: `${rootWidth}px`,
       height: `${rootHeight}px`,
-      left: `${tableRect.x - editorRect.x - this.options.blockSize}px`,
-      top: `${tableRect.y - editorRect.y - this.options.blockSize}px`,
+      left: `${Math.max(tableRect.x, tableWrapperRect.x) - editorRect.x - this.options.blockSize}px`,
+      top: `${Math.max(tableRect.y, tableWrapperRect.y) - editorRect.y - this.options.blockSize}px`,
     });
     const blockStyle = {
       left: `${tableRect.width + blockSize - scrollLeft}px`,
