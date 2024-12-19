@@ -118,6 +118,7 @@ const quill2 = new Quill('#editor2', {
   modules: {
     toolbar: toolbarConfig,
     [TableUp.moduleName]: {
+      full: true,
       scrollbar: TableVirtualScrollbar,
       align: TableAlign,
       resize: TableResizeBox,
