@@ -137,7 +137,7 @@ export class Scrollbar {
       document.removeEventListener('mousemove', mouseMoveDocumentHandler);
       document.removeEventListener('mouseup', mouseUpDocumentHandler);
       if (this.cursorLeave) {
-        this.scrollbar.style.display = 'none';
+        this.hideScrollbar();
       }
     };
     const startDrag = (e: MouseEvent) => {
@@ -193,6 +193,7 @@ export class Scrollbar {
 
   hideScrollbar = debounce(() => {
     this.cursorLeave = true;
+    if (this.cursorDown) return;
     this.scrollbar.removeEventListener('transitionend', this.hideScrollbarTransitionend);
     this.scrollbar.addEventListener('transitionend', this.hideScrollbarTransitionend, { once: true });
     this.scrollbar.classList.add(this.bem.is('transparent'));
