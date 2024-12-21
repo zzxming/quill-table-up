@@ -597,10 +597,11 @@ export class TableUp {
       throw new Error(`Not supported ${currentBlot.statics.blotName} insert into table.`);
     }
 
+    const borderWidth = this.calculateTableCellBorderWidth();
     const rootStyle = getComputedStyle(this.quill.root);
     const paddingLeft = Number.parseInt(rootStyle.paddingLeft);
     const paddingRight = Number.parseInt(rootStyle.paddingRight);
-    const width = Number.parseInt(rootStyle.width) - paddingLeft - paddingRight;
+    const width = Number.parseInt(rootStyle.width) - paddingLeft - paddingRight - borderWidth;
 
     const tableId = randomId();
     const colIds = new Array(columns).fill(0).map(() => randomId());
@@ -645,6 +646,30 @@ export class TableUp {
     this.quill.updateContents(new Delta(delta), Quill.sources.USER);
     this.quill.setSelection(range.index + columns + columns * rows + 1, Quill.sources.SILENT);
     this.quill.focus();
+  }
+
+  calculateTableCellBorderWidth() {
+    const tableStr = `
+      <table class="${TableMainFormat.className}">
+        <tbody>
+          <tr>
+            <td class="${TableCellFormat.className}"></td>
+          </tr>
+        </tbody>
+      </table>
+    `;
+    const div = document.createElement('div');
+    div.className = TableWrapperFormat.className;
+    div.innerHTML = tableStr;
+    div.style.position = 'absolute';
+    div.style.left = '-9999px';
+    div.style.top = '-9999px';
+    div.style.visibility = 'hidden';
+    this.quill.root.appendChild(div);
+    const tempTableStyle = window.getComputedStyle(div.querySelector('td')!);
+    const borderWidth = Number.parseFloat(tempTableStyle.borderWidth) || 0;
+    this.quill.root.removeChild(div);
+    return borderWidth;
   }
 
   // handle unusual delete cell

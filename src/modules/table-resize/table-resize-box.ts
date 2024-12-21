@@ -2,6 +2,7 @@ import type { Parchment as TypeParchment } from 'quill';
 import type TableUp from '../..';
 import type { TableColFormat, TableMainFormat, TableRowFormat } from '../..';
 import Quill from 'quill';
+import { TableBodyFormat } from '../../formats';
 import { addScrollEvent, clearScrollEvent, createBEM } from '../../utils';
 import { TableResizeCommon } from './table-resize-common';
 import { isTableAlignRight } from './utils';
@@ -150,15 +151,17 @@ export class TableResizeBox extends TableResizeCommon {
   }
 
   update() {
-    const tableMainRect = this.tableMain.domNode.getBoundingClientRect();
-    const tableWrapperRect = this.tableWrapper.domNode.getBoundingClientRect();
-    const tableNodeX = Math.max(tableMainRect.x, tableWrapperRect.x);
-    const tableNodeY = Math.max(tableMainRect.y, tableWrapperRect.y);
+    const [tableBodyBlot] = this.tableMain.descendant(TableBodyFormat, this.tableMain.length() - 1);
+    if (!tableBodyBlot) return;
+    const tableBodyRect = tableBodyBlot.domNode.getBoundingClientRect();
     const rootRect = this.quill.root.getBoundingClientRect();
     Object.assign(this.root.style, {
-      top: `${tableNodeY - rootRect.y}px`,
-      left: `${tableNodeX - rootRect.x}px`,
+      top: `${tableBodyRect.y - rootRect.y}px`,
+      left: `${tableBodyRect.x - rootRect.x}px`,
     });
+
+    const tableMainRect = this.tableMain.domNode.getBoundingClientRect();
+    const tableWrapperRect = this.tableWrapper.domNode.getBoundingClientRect();
 
     let cornerTranslateX = -1 * this.size;
     let rowHeadWrapperTranslateX = -1 * this.size;
@@ -213,9 +216,9 @@ export class TableResizeBox extends TableResizeCommon {
 
     if (this.tableCols.length > 0) {
       let colHeadStr = '';
-      for (const [index, col] of this.tableCols.entries()) {
+      for (const [, col] of this.tableCols.entries()) {
         const width = col.domNode.getBoundingClientRect().width;
-        colHeadStr += `<div class="${this.bem.be('col-header')}" style="width: ${width + (index === this.tableCols.length - 1 ? 1 : 0)}px">
+        colHeadStr += `<div class="${this.bem.be('col-header')}" style="width: ${width}px">
           <div class="${this.bem.be('col-separator')}" style="height: ${tableMainRect.height + this.size - 3}px"></div>
         </div>`;
       }
@@ -241,9 +244,9 @@ export class TableResizeBox extends TableResizeCommon {
 
     if (this.tableRows.length > 0) {
       let rowHeadStr = '';
-      for (const [index, row] of this.tableRows.entries()) {
+      for (const [, row] of this.tableRows.entries()) {
         const height = `${row.domNode.getBoundingClientRect().height}px`;
-        rowHeadStr += `<div class="${this.bem.be('row-header')}" style="height: ${Number.parseFloat(height) + (index === this.tableRows.length - 1 ? 1 : 0)}px">
+        rowHeadStr += `<div class="${this.bem.be('row-header')}" style="height: ${Number.parseFloat(height)}px">
           <div class="${this.bem.be('row-separator')}" style="width: ${tableMainRect.width + this.size - 3}px"></div>
         </div>`;
       }

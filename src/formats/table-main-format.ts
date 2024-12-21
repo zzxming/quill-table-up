@@ -8,6 +8,7 @@ import { TableRowFormat } from './table-row-format';
 export class TableMainFormat extends ContainerFormat {
   static blotName = blotName.tableMain;
   static tagName = 'table';
+  static className = 'ql-table';
 
   static create(value: TableValue) {
     const node = super.create() as HTMLElement;
@@ -20,7 +21,6 @@ export class TableMainFormat extends ContainerFormat {
       node.removeAttribute('date-align');
     }
     full && (node.dataset.full = String(full));
-    node.classList.add('ql-table');
     node.setAttribute('cellpadding', '0');
     node.setAttribute('cellspacing', '0');
     return node;
