@@ -46,8 +46,11 @@ test('test TableResizeBox fixed width', async ({ page }) => {
   expect(cellBounding).not.toBeNull();
 
   // col
-  const colBoundingBox = (await page.locator('#editor2 .table-up-resize-box__col-separator').nth(1).boundingBox())!;
+  const colBoundingBox = await page.locator('#editor2 .table-up-resize-box__col-separator').nth(1).boundingBox();
   expect(colBoundingBox).not.toBeNull();
+  if (!colBoundingBox) {
+    throw new Error('colBoundingBox is null');
+  }
   await page.mouse.move(colBoundingBox.x + colBoundingBox.width - 4, colBoundingBox.y + 4);
   await page.mouse.down();
   await page.mouse.move(colBoundingBox.x + colBoundingBox.width - 4 + 100, colBoundingBox.y + 4);
@@ -55,11 +58,14 @@ test('test TableResizeBox fixed width', async ({ page }) => {
   expect(page.locator('#editor2 .ql-table-wrapper col').nth(1)).toHaveAttribute('width', `${Math.floor(cellBounding.width - 4) + 100}px`);
 
   // row
-  const rowBoundingBox = (await page.locator('#editor2 .table-up-resize-box__row-separator').nth(1).boundingBox())!;
+  const rowBoundingBox = await page.locator('#editor2 .table-up-resize-box__row-separator').nth(1).boundingBox();
   expect(rowBoundingBox).not.toBeNull();
-  await page.mouse.move(rowBoundingBox.x, rowBoundingBox.y + rowBoundingBox.height - 4);
+  if (!rowBoundingBox) {
+    throw new Error('rowBoundingBox is null');
+  }
+  await page.mouse.move(rowBoundingBox.x + 4, rowBoundingBox.y + rowBoundingBox.height - 4);
   await page.mouse.down();
-  await page.mouse.move(rowBoundingBox.x, rowBoundingBox.y + rowBoundingBox.height - 4 + 100);
+  await page.mouse.move(rowBoundingBox.x + 4, rowBoundingBox.y + rowBoundingBox.height - 4 + 100);
   await page.mouse.up();
   const cells = await page.locator('#editor2 .ql-table-wrapper tr').nth(1).locator('td').all();
   expect(cells.length).toEqual(3);
@@ -107,6 +113,19 @@ test('test TableResizeBox full width', async ({ page }) => {
   const cols = page.locator('#editor4 .ql-table-wrapper col');
   await expect(cols.nth(1)).toHaveAttribute('width', '30%');
   await expect(cols.nth(2)).toHaveAttribute('width', '20%');
+});
+
+test('test TableResizeBox position', async ({ page }) => {
+  await createTableBySelect(page, 'container2', 3, 3);
+
+  const firstCell = page.locator('#editor2').getByRole('cell').nth(0);
+  await firstCell.click();
+  const firstCellBounding = (await firstCell.boundingBox())!;
+  expect(firstCellBounding).not.toBeNull();
+  const toolBounding = (await page.locator('#editor2 .table-up-toolbox .table-up-resize-box').boundingBox())!;
+  expect(toolBounding).not.toBeNull();
+  expect(firstCellBounding.x).toEqual(toolBounding.x);
+  expect(firstCellBounding.y).toEqual(toolBounding.y);
 });
 
 test('test TableResizeScale', async ({ page }) => {

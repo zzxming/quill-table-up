@@ -13,6 +13,7 @@ test('test TableScrollbar', async ({ page }) => {
   const cellBounding = (await centerCell.boundingBox())!;
   expect(cellBounding).not.toBeNull();
 
+  await page.waitForTimeout(200);
   expect(await page.locator('#editor2 .table-up-scrollbar.is-vertical').isVisible()).toBeFalsy();
   expect(await page.locator('#editor2 .table-up-scrollbar.is-horizontal').isVisible()).toBeFalsy();
 
