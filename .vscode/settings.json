@@ -1,5 +1,5 @@
 {
-  "editor.formatOnSave": true,
+  "editor.formatOnSave": false,
   "editor.tabSize": 2,
   "editor.codeActionsOnSave": {
     "source.fixAll.eslint": "explicit",
@@ -7,9 +7,6 @@
   },
   "prettier.enable": false,
   "eslint.enable": true,
-  "eslint.runtime": "node",
-  "eslint.format.enable": true,
-  "eslint.useFlatConfig": true,
   "eslint.rules.customizations": [
     { "rule": "style/*", "severity": "off" },
     { "rule": "format/*", "severity": "off" },
@@ -40,10 +37,11 @@
     "postcss"
   ],
   "search.exclude": {
-    "docs/dev*": true,
+    "docs/index.umd*": true,
     "docs/*.css": true,
     "**/dist": true,
     "**/node_modules": true,
-    "**/*.md": true
+    "**/*.md": true,
+    "playwright-repoty/**": true
   }
 }
