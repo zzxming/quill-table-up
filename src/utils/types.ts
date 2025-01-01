@@ -36,6 +36,7 @@ export interface TableResizeScaleOptions {
   blockSize: number;
 }
 export interface TableCreatorTextOptions {
+  fullCheckboxText: string;
   customBtnText: string;
   confirmText: string;
   cancelText: string;
@@ -53,6 +54,7 @@ export interface TableTextOptions extends TableCreatorTextOptions {
 export interface TableUpOptions {
   customSelect?: (tableModule: TableUp, picker: QuillThemePicker) => Promise<HTMLElement> | HTMLElement;
   full: boolean;
+  fullSwtich: boolean;
   customBtn: boolean;
   texts: TableTextOptions;
   icon: string;

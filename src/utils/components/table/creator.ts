@@ -9,7 +9,7 @@ interface TableCreatorOptions extends Omit<TableCreatorTextOptions, 'customBtnTe
   col: number;
 }
 export const showTableCreator = async (options: Partial<TableCreatorOptions> = {}) => {
-  const bem = createBEM('table-creator');
+  const bem = createBEM('creator');
   const box = document.createElement('div');
   box.classList.add(bem.b());
   const inputContent = document.createElement('div');

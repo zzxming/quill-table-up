@@ -97,6 +97,7 @@ const quill1 = new Quill('#editor1', {
         },
       },
       texts: {
+        fullCheckboxText: '插入满宽度表格',
         customBtnText: '自定义行列数',
         confirmText: '确认',
         cancelText: '取消',
