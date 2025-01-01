@@ -3,7 +3,7 @@
 @import './input.less';
 @import './select-box.less';
 
-.@{namespace}-table-creator {
+.@{namespace}-creator {
   padding: 24px;
   &__input {
     display: flex;
@@ -13,5 +13,56 @@
   &__control {
     margin-top: 16px;
     text-align: right;
+  }
+  &__checkbox {
+    .setCssVar(active-color, #506eec);
+    .setCssVar(mark-bg-color, #fff);
+    .setCssVar(mark-border-color, #212121);
+
+    display: flex;
+    align-items: center;
+    margin-top: 4px;
+    position: relative;
+    cursor: pointer;
+    font-size: 12px;
+    user-select: none;
+    input {
+      position: absolute;
+      opacity: 0;
+      cursor: pointer;
+      height: 0;
+      width: 0;
+      &:checked ~ .@{namespace}-creator__mark {
+        .setCssVar(mark-bg-color, .getCssVar(active-color) []);
+        .setCssVar(mark-border-color, .getCssVar(active-color) []);
+
+        &:after {
+          display: block;
+        }
+      }
+    }
+  }
+  &__mark {
+    position: relative;
+    top: 0;
+    left: 0;
+    height: 18px;
+    width: 18px;
+    margin-right: 4px;
+    background: .getCssVar(mark-bg-color) [];
+    border: 1px solid .getCssVar(mark-border-color) [];
+    border-radius: 5px;
+    &::after {
+      content: '';
+      position: absolute;
+      display: none;
+      left: 5px;
+      top: 2px;
+      width: 5px;
+      height: 9px;
+      border: solid #fff;
+      border-width: 0 2px 2px 0;
+      transform: rotate(45deg);
+    }
   }
 }

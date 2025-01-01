@@ -345,6 +345,7 @@ export class TableUp {
       customBtn: false,
       texts: this.resolveTexts(options.texts || {}),
       full: false,
+      fullSwtich: true,
       icon: icons.table,
       selectionOptions: {},
       alignOptions: {},
@@ -356,6 +357,7 @@ export class TableUp {
 
   resolveTexts(options: Partial<TableTextOptions>) {
     return Object.assign({
+      fullCheckboxText: 'Insert full width table',
       customBtnText: 'Custom',
       confirmText: 'Confirm',
       cancelText: 'Cancel',
@@ -573,6 +575,25 @@ export class TableUp {
     dom.classList.add('ql-custom-select');
     this.selector = await customSelect(this, picker);
     dom.appendChild(this.selector);
+    if (this.options.fullSwtich) {
+      const bem = createBEM('creator');
+      const isFulllLabel = document.createElement('label');
+      isFulllLabel.classList.add(bem.be('checkbox'));
+      const isFullCheckbox = document.createElement('input');
+      isFullCheckbox.type = 'checkbox';
+      isFullCheckbox.checked = this.options.full;
+      isFullCheckbox.addEventListener('change', () => {
+        this.options.full = isFullCheckbox.checked;
+      });
+      const mark = document.createElement('div');
+      mark.classList.add(bem.be('mark'));
+      const isFullCheckboxText = document.createElement('span');
+      isFullCheckboxText.textContent = this.options.texts.fullCheckboxText;
+      isFulllLabel.appendChild(isFullCheckbox);
+      isFulllLabel.appendChild(mark);
+      isFulllLabel.appendChild(isFullCheckboxText);
+      dom.appendChild(isFulllLabel);
+    }
     picker.options.appendChild(dom);
   };
 
