@@ -345,7 +345,7 @@ export class TableUp {
       customBtn: false,
       texts: this.resolveTexts(options.texts || {}),
       full: false,
-      fullSwtich: true,
+      fullSwitch: true,
       icon: icons.table,
       selectionOptions: {},
       alignOptions: {},
@@ -575,7 +575,7 @@ export class TableUp {
     dom.classList.add('ql-custom-select');
     this.selector = await customSelect(this, picker);
     dom.appendChild(this.selector);
-    if (this.options.fullSwtich) {
+    if (this.options.fullSwitch) {
       const bem = createBEM('creator');
       const isFulllLabel = document.createElement('label');
       isFulllLabel.classList.add(bem.be('checkbox'));
