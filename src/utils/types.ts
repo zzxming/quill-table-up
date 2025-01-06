@@ -54,7 +54,7 @@ export interface TableTextOptions extends TableCreatorTextOptions {
 export interface TableUpOptions {
   customSelect?: (tableModule: TableUp, picker: QuillThemePicker) => Promise<HTMLElement> | HTMLElement;
   full: boolean;
-  fullSwtich: boolean;
+  fullSwitch: boolean;
   customBtn: boolean;
   texts: TableTextOptions;
   icon: string;
