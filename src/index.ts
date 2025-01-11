@@ -1153,5 +1153,15 @@ export function defaultCustomSelect(tableModule: TableUp, picker: QuillThemePick
 export default TableUp;
 export * from './formats';
 export * from './modules';
-export { blotName, findParentBlot, findParentBlots, randomId, tableUpEvent, tableUpSize } from './utils';
+export {
+  blotName,
+  createColorPicker,
+  createSelectBox,
+  createTooltip,
+  findParentBlot,
+  findParentBlots,
+  randomId,
+  tableUpEvent,
+  tableUpSize,
+} from './utils';
 export * from './utils/types';
