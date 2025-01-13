@@ -11,9 +11,6 @@ importers:
       '@floating-ui/dom':
         specifier: ^1.6.12
         version: 1.6.12
-      '@zzxming/eslint-config':
-        specifier: ^0.3.5
-        version: 0.3.5(@typescript-eslint/eslint-plugin@8.18.2(@typescript-eslint/parser@8.18.2(eslint@9.17.0)(typescript@5.5.3))(eslint@9.17.0)(typescript@5.5.3))(@vue/compiler-sfc@3.5.13)(eslint@9.17.0)(typescript@5.5.3)
       quill:
         specifier: ^2.0.0
         version: 2.0.2
@@ -44,10 +41,13 @@ importers:
         version: 8.18.2(eslint@9.17.0)(typescript@5.5.3)
       '@vitest/coverage-v8':
         specifier: ^2.0.5
-        version: 2.0.5(vitest@2.0.5(@types/node@20.14.10)(@vitest/ui@2.0.5)(jsdom@25.0.0)(less@4.2.0)(terser@5.31.2))
+        version: 2.0.5(vitest@2.0.5)
       '@vitest/ui':
         specifier: ^2.0.5
         version: 2.0.5(vitest@2.0.5)
+      '@zzxming/eslint-config':
+        specifier: ^0.3.5
+        version: 0.3.5(@typescript-eslint/eslint-plugin@8.18.2(@typescript-eslint/parser@8.18.2(eslint@9.17.0)(typescript@5.5.3))(eslint@9.17.0)(typescript@5.5.3))(@vue/compiler-sfc@3.5.13)(eslint@9.17.0)(typescript@5.5.3)
       autoprefixer:
         specifier: ^10.4.19
         version: 10.4.19(postcss@8.4.49)
@@ -4290,7 +4290,7 @@ snapshots:
       '@typescript-eslint/types': 8.18.2
       eslint-visitor-keys: 4.2.0
 
-  '@vitest/coverage-v8@2.0.5(vitest@2.0.5(@types/node@20.14.10)(@vitest/ui@2.0.5)(jsdom@25.0.0)(less@4.2.0)(terser@5.31.2))':
+  '@vitest/coverage-v8@2.0.5(vitest@2.0.5)':
     dependencies:
       '@ampproject/remapping': 2.3.0
       '@bcoe/v8-coverage': 0.2.3
