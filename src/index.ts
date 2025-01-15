@@ -375,6 +375,7 @@ export class TableUp {
     let tableId = randomId();
     let rowId = randomId();
     let colIds: string[] = [];
+    let rowspanCount: { rowspan: number; colspan: number }[] = [];
     let cellCount = 0;
     let colCount = 0;
 
@@ -436,6 +437,7 @@ export class TableUp {
       // reset variable to avoid conflict with other table
       tableId = randomId();
       colIds = [];
+      rowspanCount = [];
       cellCount = 0;
       colCount = 0;
       // insert break line before table and after table
@@ -488,11 +490,27 @@ export class TableUp {
     const matchCell = (node: Node, delta: TypeDelta) => {
       const cell = node as HTMLElement;
       const cellFormat = TableCellFormat.formats(cell);
-      if (!colIds[cellCount]) {
+      if (!colIds[cellCount] || !rowspanCount[cellCount]) {
         for (let i = cellCount; i >= 0; i--) {
-          if (!colIds[i]) colIds[i] = randomId();
+          if (!colIds[i]) {
+            colIds[i] = randomId();
+          }
+          if (!rowspanCount[i]) {
+            rowspanCount[i] = { rowspan: 0, colspan: 0 };
+          }
         }
       }
+      if (rowspanCount[cellCount].rowspan > 0) {
+        rowspanCount[cellCount].rowspan -= 1;
+      }
+      else {
+        rowspanCount[cellCount] = { rowspan: 0, colspan: 0 };
+      }
+      const { colspan } = rowspanCount[cellCount];
+      if (cellFormat.rowspan > 1) {
+        rowspanCount[cellCount] = { rowspan: cellFormat.rowspan - 1, colspan: cellFormat.colspan };
+      }
+      cellCount += colspan;
       const colId = colIds[cellCount];
       cellCount += cellFormat.colspan;
 
