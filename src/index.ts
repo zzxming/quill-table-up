@@ -272,7 +272,7 @@ export class TableUp {
       },
       false,
     );
-    this.quill.on(Quill.events.EDITOR_CHANGE, (event: string, range: Range, oldRange: Range) => {
+    this.quill.on(Quill.events.EDITOR_CHANGE, (event: string, range: Range, _oldRange: Range) => {
       if (event === Quill.events.SELECTION_CHANGE && range) {
         const [startBlot] = this.quill.getLine(range.index);
         const [endBlot] = this.quill.getLine(range.index + range.length);
@@ -287,30 +287,30 @@ export class TableUp {
         }
         catch {}
 
-        // TODO: selection some times will be reject mouse drag select
-        // only can select inside table or select all table
-        if (startBlot instanceof TableColFormat) {
-          if (!oldRange) {
-            oldRange = { index: 0, length: 0 };
-          }
-          return this.quill.setSelection(
-            range.index + (oldRange.index > range.index ? -1 : 1),
-            range.length + (oldRange.length === range.length ? 0 : oldRange.length > range.length ? -1 : 1),
-            Quill.sources.USER,
-          );
-        }
-        else if (endBlot instanceof TableColFormat) {
-          return this.quill.setSelection(range.index + 1, range.length + 1, Quill.sources.USER);
-        }
+        // // TODO: selection some times will be reject mouse drag select
+        // // only can select inside table or select all table
+        // if (startBlot instanceof TableColFormat) {
+        //   if (!oldRange) {
+        //     oldRange = { index: 0, length: 0 };
+        //   }
+        //   return this.quill.setSelection(
+        //     range.index + (oldRange.index > range.index ? -1 : 1),
+        //     range.length + (oldRange.length === range.length ? 0 : oldRange.length > range.length ? -1 : 1),
+        //     Quill.sources.USER,
+        //   );
+        // }
+        // else if (endBlot instanceof TableColFormat) {
+        //   return this.quill.setSelection(range.index + 1, range.length + 1, Quill.sources.USER);
+        // }
 
-        if (range.length > 0) {
-          if (startTableBlot && !endTableBlot) {
-            this.quill.setSelection(range.index - 1, range.length + 1, Quill.sources.USER);
-          }
-          else if (endTableBlot && !startTableBlot) {
-            this.quill.setSelection(range.index, range.length + 1, Quill.sources.USER);
-          }
-        }
+        // if (range.length > 0) {
+        //   if (startTableBlot && !endTableBlot) {
+        //     this.quill.setSelection(range.index - 1, range.length + 1, Quill.sources.USER);
+        //   }
+        //   else if (endTableBlot && !startTableBlot) {
+        //     this.quill.setSelection(range.index, range.length + 1, Quill.sources.USER);
+        //   }
+        // }
 
         // if range is not in table. hide table tools
         if (!startTableBlot || !endTableBlot) {
