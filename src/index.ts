@@ -398,52 +398,70 @@ export class TableUp {
 
     this.quill.clipboard.addMatcher('table', (node, delta) => {
       if (delta.ops.length === 0) return delta;
-      // if current in table. prevent paste table
+
       const format = this.quill.getFormat();
-      if (format[blotName.tableCellInner]) return new Delta();
-      // remove quill origin table format
+      const currentCellFormat = format[blotName.tableCellInner];
       const ops: Record<string, any>[] = [];
       const cols: Record<string, any>[] = [];
       for (let i = 0; i < delta.ops.length; i++) {
         const { attributes, insert } = delta.ops[i];
+        // remove quill origin table format and tableCell format
         const { table, [blotName.tableCell]: tableCell, ...attrs } = attributes || {};
-        if (insert && (insert as Record<string, any>)[blotName.tableCol]) {
-          cols.push({ insert });
-        }
-        else {
-          ops.push({ attributes: attrs, insert });
-        }
-      }
-
-      const colWidths = calculateCols(node as HTMLElement, colIds.length);
-      const newCols = colWidths.reduce((colOps, width, i) => {
-        if (!cols[i]) {
-          colOps.push({
-            insert: {
-              [blotName.tableCol]: {
-                tableId,
-                colId: colIds[i],
-                width,
-                full: false,
-              },
+        const hasCol = insert && (insert as Record<string, any>)[blotName.tableCol];
+        if (currentCellFormat) {
+          // if current in cell. no need add col. but need replace paste cell format with current cell format
+          if (hasCol) continue;
+          const { [blotName.tableCellInner]: tableCellInner, ...keepAtttrs } = attrs;
+          ops.push({
+            attributes: {
+              ...keepAtttrs,
+              [blotName.tableCellInner]: currentCellFormat,
             },
+            insert,
           });
         }
         else {
-          colOps.push(cols[i]);
+          if (hasCol) {
+            cols.push({ insert });
+          }
+          else {
+            ops.push({ attributes: attrs, insert });
+          }
         }
-        return colOps;
-      }, [] as Record<string, any>[]);
-      ops.unshift(...newCols);
+      }
+
+      // if current in cell. no need add col
+      if (!currentCellFormat) {
+        const colWidths = calculateCols(node as HTMLElement, colIds.length);
+        const newCols = colWidths.reduce((colOps, width, i) => {
+          if (!cols[i]) {
+            colOps.push({
+              insert: {
+                [blotName.tableCol]: {
+                  tableId,
+                  colId: colIds[i],
+                  width,
+                  full: false,
+                },
+              },
+            });
+          }
+          else {
+            colOps.push(cols[i]);
+          }
+          return colOps;
+        }, [] as Record<string, any>[]);
+        ops.unshift(...newCols);
+        // insert break line before table and after table
+        ops.unshift({ insert: '\n' });
+        ops.push({ insert: '\n' });
+      }
       // reset variable to avoid conflict with other table
       tableId = randomId();
       colIds = [];
       rowspanCount = [];
       cellCount = 0;
       colCount = 0;
-      // insert break line before table and after table
-      ops.unshift({ insert: '\n' });
-      ops.push({ insert: '\n' });
       return new Delta(ops);
     });
 
