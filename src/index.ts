@@ -287,6 +287,7 @@ export class TableUp {
         }
         catch {}
 
+        // TODO: selection some times will be reject mouse drag select
         // only can select inside table or select all table
         if (startBlot instanceof TableColFormat) {
           if (!oldRange) {
@@ -484,6 +485,15 @@ export class TableUp {
           (op.attributes[blotName.tableCellInner] as Record<string, any>).style = `background:${op.attributes.background};${cellAttrs.style}`;
         }
       }
+      // minus rowspan
+      for (const [i, span] of rowspanCount.entries()) {
+        if (span.rowspan > 0) {
+          span.rowspan -= 1;
+        }
+        if (span.rowspan <= 0) {
+          rowspanCount[i] = { rowspan: 0, colspan: 0 };
+        }
+      }
       return delta;
     });
 
@@ -500,17 +510,14 @@ export class TableUp {
           }
         }
       }
-      if (rowspanCount[cellCount].rowspan > 0) {
-        rowspanCount[cellCount].rowspan -= 1;
-      }
-      else {
-        rowspanCount[cellCount] = { rowspan: 0, colspan: 0 };
-      }
+      // skip the colspan of the cell in the previous row
       const { colspan } = rowspanCount[cellCount];
-      if (cellFormat.rowspan > 1) {
-        rowspanCount[cellCount] = { rowspan: cellFormat.rowspan - 1, colspan: cellFormat.colspan };
-      }
       cellCount += colspan;
+      // add current cell rowspan in `rowspanCount` to calculate next row cell
+      if (cellFormat.rowspan > 1) {
+        rowspanCount[cellCount] = { rowspan: cellFormat.rowspan, colspan: cellFormat.colspan };
+      }
+
       const colId = colIds[cellCount];
       cellCount += cellFormat.colspan;
 
@@ -538,7 +545,6 @@ export class TableUp {
       }
       return new Delta(ops);
     };
-
     this.quill.clipboard.addMatcher('td', matchCell);
     this.quill.clipboard.addMatcher('th', matchCell);
   }
