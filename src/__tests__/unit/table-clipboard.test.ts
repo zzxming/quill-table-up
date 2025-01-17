@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { createQuillWithTableModule, createTableHTML, createTaleColHTML } from './utils';
+import { createQuillWithTableModule, createTableDeltaOps, createTableHTML, createTaleColHTML } from './utils';
 
 beforeEach(() => {
   vi.useFakeTimers();
@@ -493,5 +493,116 @@ describe('clipboard content format', () => {
       `,
       { ignoreAttrs: ['class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'contenteditable'] },
     );
+  });
+});
+
+describe('clipboard cell in cell', () => {
+  it('paste simple text into table', async () => {
+    const quill = createQuillWithTableModule(`<p><br></p>`);
+    quill.setContents(createTableDeltaOps(1, 1, { full: false, width: 100 }, { isEmpty: true }));
+    await vi.runAllTimersAsync();
+    const range = { index: 2, length: 0 };
+    quill.setSelection(range);
+    quill.clipboard.onPaste(
+      range,
+      { html: '<html>\r\n<body>\r\n\u003C!--StartFragment--><p>text</p><p>123</p>\u003C!--EndFragment-->\r\n</body>\r\n</html>' },
+    );
+    await vi.runAllTimersAsync();
+    const ops = quill.getContents().ops;
+    const resultOps = [
+      { insert: '\n' },
+      { insert: { 'table-up-col': { full: false, width: 100 } } },
+      { insert: 'text' },
+      { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '123' },
+      { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1 } }, insert: '\n\n' },
+      { insert: '\n' },
+    ];
+    for (const [i, op] of ops.entries()) {
+      expect(op).toMatchObject(resultOps[i]);
+    }
+  });
+
+  it('paste format text into table', async () => {
+    const quill = createQuillWithTableModule(`<p><br></p>`);
+    quill.setContents(createTableDeltaOps(1, 1, { full: false, width: 100 }, { isEmpty: true }));
+    await vi.runAllTimersAsync();
+    const range = { index: 2, length: 0 };
+    quill.setSelection(range);
+    quill.clipboard.onPaste(
+      range,
+      { html: '<html>\r\n<body>\r\n\u003C!--StartFragment--><h1>123</h1><p></p><p><strong style="color: rgb(230, 0, 0); background-color: rgb(0, 0, 0);"><em><s><u>123</u></s></em></strong><sub style="color: rgb(230, 0, 0); background-color: rgb(0, 0, 0);"><strong><em><s><u>qwe</u></s></em></strong></sub></p>\u003C!--EndFragment-->\r\n</body>\r\n</html>' },
+    );
+    await vi.runAllTimersAsync();
+    const ops = quill.getContents().ops;
+    const resultOps = [
+      { insert: '\n' },
+      { insert: { 'table-up-col': { full: false, width: 100 } } },
+      { insert: '123' },
+      { attributes: { 'header': 1, 'table-up-cell-inner': { rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { attributes: { background: '#000000', color: '#e60000' }, insert: '123' },
+      { attributes: { background: '#000000', color: '#e60000', script: 'sub' }, insert: 'qwe' },
+      { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1 } }, insert: '\n\n' },
+      { insert: '\n' },
+    ];
+    for (const [i, op] of ops.entries()) {
+      expect(op).toMatchObject(resultOps[i]);
+    }
+  });
+
+  it('paste cell text into table', async () => {
+    const quill = createQuillWithTableModule(`<p><br></p>`);
+    quill.setContents(createTableDeltaOps(1, 1, { full: false, width: 100 }, { isEmpty: true }));
+    await vi.runAllTimersAsync();
+    const range = { index: 2, length: 0 };
+    quill.setSelection(range);
+    quill.clipboard.onPaste(
+      range,
+      { html: '<html>\r\n<body>\r\n\u003C!--StartFragment--><div class="ql-table-wrapper" data-table-id="8v36875pbr6"><table class="ql-table" data-table-id="8v36875pbr6" data-full="true" cellpadding="0" cellspacing="0" style="margin-right: auto;"><tbody data-table-id="8v36875pbr6"><tr class="ql-table-row" data-table-id="8v36875pbr6" data-row-id="zjhlbpvwjo"><td class="ql-table-cell" data-table-id="8v36875pbr6" data-row-id="zjhlbpvwjo" data-col-id="y0epsy6odnm" rowspan="1" colspan="1"><div class="ql-table-cell-inner" data-table-id="8v36875pbr6" data-row-id="zjhlbpvwjo" data-col-id="y0epsy6odnm" data-rowspan="1" data-colspan="1"><p>5</p><p></p><p>q</p></div></td></tr></tbody></table></div>\u003C!--EndFragment-->\r\n</body>\r\n</html>' },
+    );
+    await vi.runAllTimersAsync();
+    const ops = quill.getContents().ops;
+    const resultOps = [
+      { insert: '\n' },
+      { insert: { 'table-up-col': { full: false, width: 100 } } },
+      { insert: '5' },
+      { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1 } }, insert: '\n\n' },
+      { insert: 'q' },
+      { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1 } }, insert: '\n\n' },
+      { insert: '\n' },
+    ];
+    for (const [i, op] of ops.entries()) {
+      expect(op).toMatchObject(resultOps[i]);
+    }
+  });
+
+  it('paste cell with format text into table', async () => {
+    const quill = createQuillWithTableModule(`<p><br></p>`);
+    quill.setContents(createTableDeltaOps(1, 1, { full: false, width: 100 }, { isEmpty: true }));
+    await vi.runAllTimersAsync();
+    const range = { index: 2, length: 0 };
+    quill.setSelection(range);
+    quill.clipboard.onPaste(
+      range,
+      { html: '<html>\r\n<body>\r\n\u003C!--StartFragment--><div class="ql-table-wrapper" data-table-id="8v36875pbr6"><table class="ql-table" data-table-id="8v36875pbr6" data-full="true" cellpadding="0" cellspacing="0" style="margin-right: auto;"><tbody data-table-id="8v36875pbr6"><tr class="ql-table-row" data-table-id="8v36875pbr6" data-row-id="zjhlbpvwjo"><td class="ql-table-cell" data-table-id="8v36875pbr6" data-row-id="zjhlbpvwjo" data-col-id="gpais2dyp87" rowspan="1" colspan="1"><div class="ql-table-cell-inner" data-table-id="8v36875pbr6" data-row-id="zjhlbpvwjo" data-col-id="gpais2dyp87" data-rowspan="1" data-colspan="1"><h1>123</h1><p></p><p><strong><em><s><u>123</u></s></em></strong><sub><strong><em><s><u>qwe</u></s></em></strong></sub><sup><strong><em><s><u>qwe</u></s></em></strong></sup></p></div></td></tr></tbody></table></div>\u003C!--EndFragment-->\r\n</body>\r\n</html>' },
+    );
+    await vi.runAllTimersAsync();
+    const ops = quill.getContents().ops;
+    const resultOps = [
+      { insert: '\n' },
+      { insert: { 'table-up-col': { full: false, width: 100 } } },
+      { insert: '123' },
+      { attributes: { 'header': 1, 'table-up-cell-inner': { rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { attributes: { underline: true, strike: true, italic: true, bold: true }, insert: '123' },
+      { attributes: { underline: true, strike: true, italic: true, bold: true, script: 'sub' }, insert: 'qwe' },
+      { attributes: { underline: true, strike: true, italic: true, bold: true, script: 'super' }, insert: 'qwe' },
+      { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1 } }, insert: '\n\n' },
+      { insert: '\n' },
+    ];
+    for (const [i, op] of ops.entries()) {
+      expect(op).toMatchObject(resultOps[i]);
+    }
   });
 });
