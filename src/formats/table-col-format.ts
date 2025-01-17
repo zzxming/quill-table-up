@@ -122,6 +122,10 @@ export class TableColFormat extends BlockEmbed {
     const tableColgroup = findParentBlot(this, blotName.tableColgroup);
     tableColgroup.align = this.align;
 
+    if (this.next != null && this.checkMerge()) {
+      this.next.remove();
+    }
+
     super.optimize(context);
   }
 
