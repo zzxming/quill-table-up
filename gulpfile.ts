@@ -106,7 +106,7 @@ const buildTheme = async (isDev: boolean = false) => {
 };
 
 const dev = () => {
-  watch('./src/**/*.ts', parallel(buildTs.bind(undefined, true), buildDts));
+  watch(['./src/**/*.ts', '!./src/**/__tests__/**/*'], parallel(buildTs.bind(undefined, true), buildDts));
   watch('./src/**/*.less', buildTheme.bind(undefined, true));
 };
 task('dev', series(dev));
