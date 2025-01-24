@@ -1,4 +1,3 @@
-import type TypeScroll from 'quill/blots/scroll';
 import Quill from 'quill';
 import { blotName } from '../utils';
 import { ContainerFormat } from './container-format';
@@ -33,7 +32,8 @@ export class TableWrapperFormat extends ContainerFormat {
     return node;
   }
 
-  constructor(public scroll: TypeScroll, node: Node, _value: string) {
+  // quill scroll doesn't extends EventEmitter ts type. `on` and `off` will have dts error
+  constructor(public scroll: any, node: Node, _value: string) {
     super(scroll, node);
     this.scroll.emitter.on(Quill.events.TEXT_CHANGE, this.insertLineAround);
   }
