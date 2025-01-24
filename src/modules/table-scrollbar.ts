@@ -250,6 +250,5 @@ export class TableVirtualScrollbar {
     for (const scrollbar of this.scrollbar) {
       scrollbar.destroy();
     }
-    return null;
   }
 }

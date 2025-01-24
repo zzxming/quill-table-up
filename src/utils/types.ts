@@ -58,7 +58,7 @@ export interface TableUpOptions {
   customBtn: boolean;
   texts: TableTextOptions;
   icon: string;
-  selection?: Constructor<InternalTableSelectionModule, [TableUp, HTMLElement, Quill, Partial<TableSelectionOptions>]>;
+  selection?: Constructor<InternalTableSelectionModule, [TableUp, Quill, Partial<TableSelectionOptions>]>;
   selectionOptions: Partial<TableSelectionOptions>;
   resize?: Constructor<InternalModule, [TableUp, HTMLElement, Quill, any]>;
   resizeOptions: any;
@@ -116,13 +116,17 @@ export interface InternalTableSelectionModule extends InternalModule {
   selectedTds: TableCellInnerFormat[];
   cellSelect: HTMLElement;
   tableMenu?: InternalModule;
-  computeSelectedTds: (startPoint: {
-    x: number;
-    y: number;
-  }, endPoint: {
+  computeSelectedTds: (
+    startPoint: {
       x: number;
       y: number;
-    }) => TableCellInnerFormat[];
+    },
+    endPoint: {
+      x: number;
+      y: number;
+    }
+  ) => TableCellInnerFormat[];
+  updateWithSelectedTds: () => void;
 }
 export interface TableConstantsData {
   blotName: Record<string, string>;

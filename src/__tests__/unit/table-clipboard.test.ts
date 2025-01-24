@@ -21,6 +21,7 @@ describe('clipboard cell structure', () => {
       `
         <p><br></p>
         ${createTableHTML(3, 3, { width: 100, full: false }, { isEmpty: false })}
+        <p><br></p>
       `,
       { ignoreAttrs: ['class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'contenteditable'] },
     );
@@ -78,6 +79,7 @@ describe('clipboard cell structure', () => {
             </tbody>
           </table>
         </div>
+        <p><br></p>
       `,
       { ignoreAttrs: ['class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'contenteditable'] },
     );
@@ -167,6 +169,7 @@ describe('clipboard cell structure', () => {
             </tbody>
           </table>
         </div>
+        <p><br></p>
       `,
       { ignoreAttrs: ['class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'contenteditable'] },
     );
@@ -229,6 +232,7 @@ describe('clipboard cell structure', () => {
             </tbody>
           </table>
         </div>
+        <p><br></p>
       `,
       { ignoreAttrs: ['class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'contenteditable'] },
     );
@@ -490,6 +494,7 @@ describe('clipboard content format', () => {
             </tbody>
           </table>
         </div>
+        <p><br></p>
       `,
       { ignoreAttrs: ['class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'contenteditable'] },
     );

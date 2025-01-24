@@ -1,10 +1,19 @@
 import type { RelactiveRect } from './types';
 
-export function isRectanglesIntersect(a: Omit<RelactiveRect, 'width' | 'height'>, b: Omit<RelactiveRect, 'width' | 'height'>, tolerance = 4) {
+export function isRectanglesIntersect<T extends Omit<RelactiveRect, 'width' | 'height'>>(a: T, b: T, tolerance = 0, edgeJudge: boolean = true) {
   const { x: minAx, y: minAy, x1: maxAx, y1: maxAy } = a;
   const { x: minBx, y: minBy, x1: maxBx, y1: maxBy } = b;
-  const notOverlapX = maxAx <= minBx + tolerance || minAx + tolerance >= maxBx;
-  const notOverlapY = maxAy <= minBy + tolerance || minAy + tolerance >= maxBy;
+
+  let notOverlapX;
+  let notOverlapY;
+  if (edgeJudge) {
+    notOverlapX = maxAx < minBx + tolerance || minAx - tolerance > maxBx;
+    notOverlapY = maxAy < minBy + tolerance || minAy - tolerance > maxBy;
+  }
+  else {
+    notOverlapX = maxAx <= minBx + tolerance || minAx - tolerance >= maxBx;
+    notOverlapY = maxAy <= minBy + tolerance || minAy - tolerance >= maxBy;
+  }
   return !(notOverlapX || notOverlapY);
 }
 
