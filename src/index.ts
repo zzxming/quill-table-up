@@ -215,6 +215,10 @@ export class TableUp {
     const toolboxBEM = createBEM('toolbox');
     this.toolBox = this.quill.addContainer(toolboxBEM.b());
 
+    if (this.options.selection) {
+      this.tableSelection = new this.options.selection(this, this.quill, this.options.selectionOptions);
+    }
+
     const toolbar = this.quill.getModule('toolbar') as Toolbar;
     if (toolbar && (this.quill.theme as QuillTheme).pickers) {
       const [, select] = (toolbar.controls as [string, HTMLElement][] || []).find(([name]) => name === this.statics.toolName) || [];
@@ -264,7 +268,7 @@ export class TableUp {
             return;
           }
           if (this.table) this.hideTableTools();
-          this.showTableTools(tableNode, quill);
+          this.showTableTools(tableNode);
         }
         else if (this.table) {
           this.hideTableTools();
@@ -272,52 +276,6 @@ export class TableUp {
       },
       false,
     );
-    this.quill.on(Quill.events.EDITOR_CHANGE, (event: string, range: Range, _oldRange: Range) => {
-      if (event === Quill.events.SELECTION_CHANGE && range) {
-        const [startBlot] = this.quill.getLine(range.index);
-        const [endBlot] = this.quill.getLine(range.index + range.length);
-        let startTableBlot;
-        let endTableBlot;
-        try {
-          startTableBlot = findParentBlot(startBlot!, blotName.tableMain);
-        }
-        catch {}
-        try {
-          endTableBlot = findParentBlot(endBlot!, blotName.tableMain);
-        }
-        catch {}
-
-        // // TODO: selection some times will be reject mouse drag select
-        // // only can select inside table or select all table
-        // if (startBlot instanceof TableColFormat) {
-        //   if (!oldRange) {
-        //     oldRange = { index: 0, length: 0 };
-        //   }
-        //   return this.quill.setSelection(
-        //     range.index + (oldRange.index > range.index ? -1 : 1),
-        //     range.length + (oldRange.length === range.length ? 0 : oldRange.length > range.length ? -1 : 1),
-        //     Quill.sources.USER,
-        //   );
-        // }
-        // else if (endBlot instanceof TableColFormat) {
-        //   return this.quill.setSelection(range.index + 1, range.length + 1, Quill.sources.USER);
-        // }
-
-        // if (range.length > 0) {
-        //   if (startTableBlot && !endTableBlot) {
-        //     this.quill.setSelection(range.index - 1, range.length + 1, Quill.sources.USER);
-        //   }
-        //   else if (endTableBlot && !startTableBlot) {
-        //     this.quill.setSelection(range.index, range.length + 1, Quill.sources.USER);
-        //   }
-        // }
-
-        // if range is not in table. hide table tools
-        if (!startTableBlot || !endTableBlot) {
-          this.hideTableTools();
-        }
-      }
-    });
     this.quill.on(tableUpEvent.AFTER_TABLE_RESIZE, () => {
       this.tableSelection && this.tableSelection.hide();
     });
@@ -567,32 +525,27 @@ export class TableUp {
     this.quill.clipboard.addMatcher('th', matchCell);
   }
 
-  showTableTools(table: HTMLElement, quill: Quill) {
+  showTableTools(table: HTMLElement) {
     if (table) {
       this.table = table;
-      if (this.options.selection) {
-        this.tableSelection = new this.options.selection(this, table, quill, this.options.selectionOptions);
-      }
+      this.tableSelection?.show();
       if (this.options.align) {
-        this.tableAlign = new this.options.align(this, table, quill, this.options.alignOptions);
+        this.tableAlign = new this.options.align(this, table, this.quill, this.options.alignOptions);
       }
       if (this.options.scrollbar) {
-        this.tableScrollbar = new this.options.scrollbar(this, table, quill, this.options.scrollbarOptions);
+        this.tableScrollbar = new this.options.scrollbar(this, table, this.quill, this.options.scrollbarOptions);
       }
       if (this.options.resize) {
-        this.tableResize = new this.options.resize(this, table, quill, this.options.resizeOptions);
+        this.tableResize = new this.options.resize(this, table, this.quill, this.options.resizeOptions);
       }
       if (this.options.resizeScale) {
-        this.tableResizeScale = new this.options.resizeScale(this, table, quill, this.options.resizeScaleOptions);
+        this.tableResizeScale = new this.options.resizeScale(this, table, this.quill, this.options.resizeScaleOptions);
       }
     }
   }
 
   hideTableTools() {
-    if (this.tableSelection) {
-      this.tableSelection.destroy();
-      this.tableSelection = undefined;
-    }
+    this.tableSelection?.hide();
     if (this.tableScrollbar) {
       this.tableScrollbar.destroy();
       this.tableScrollbar = undefined;

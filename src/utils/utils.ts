@@ -66,6 +66,16 @@ export function findParentBlots<T extends (keyof ParentBlotReturnMap | string)[]
   return resultBlots as any;
 }
 
+export function findAllParentBlot(Blot: TypeParchment.Blot) {
+  const blots: Map<string, TypeParchment.Blot> = new Map();
+  let target = Blot;
+  while (target && target.statics.blotName !== 'scroll') {
+    blots.set(target.statics.blotName, target);
+    target = target.parent;
+  }
+  return blots;
+}
+
 function mixinProps<T = any, U = any>(target: T, source: U) {
   for (const prop of Object.getOwnPropertyNames(source)) {
     if (/^constructor$/.test(prop)) continue;

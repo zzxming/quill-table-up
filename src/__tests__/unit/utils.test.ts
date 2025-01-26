@@ -287,8 +287,7 @@ describe('test override format', () => {
       { ignoreAttrs: ['class', 'style', 'data-table-id', 'contenteditable'] },
     );
     const tableModule = quill.getModule(TableUp.moduleName) as TableUp;
-    const table = quill.root.querySelector('table')!;
-    tableModule.tableSelection = new TableSelection(tableModule, table, quill);
+    tableModule.tableSelection = new TableSelection(tableModule, quill);
     const tds = quill.scroll.descendants(TableCellInnerFormat, 0);
     tableModule.tableSelection.selectedTds = [tds[0], tds[1], tds[2], tds[3]];
     tableModule.mergeCells();

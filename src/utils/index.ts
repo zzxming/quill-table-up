@@ -1,4 +1,5 @@
 export * from './bem';
+export * from './color';
 export * from './components';
 export * from './constants';
 export * from './is';

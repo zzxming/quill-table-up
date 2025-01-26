@@ -49,7 +49,6 @@ const quill1 = new Quill('#editor1', {
       customBtn: true,
       selection: TableSelection,
       selectionOptions: {
-        selectColor: '#f40',
         tableMenu: TableMenuContextmenu,
         tableMenuOptions: {
           localstorageKey: 'used-color',

@@ -2,7 +2,7 @@ import type { Parchment as TypeParchment } from 'quill';
 import type TableUp from '../..';
 import type { TableColFormat, TableMainFormat, TableRowFormat } from '../..';
 import Quill from 'quill';
-import { TableBodyFormat } from '../../formats';
+import { TableBodyFormat, TableCellInnerFormat } from '../../formats';
 import { addScrollEvent, clearScrollEvent, createBEM } from '../../utils';
 import { TableResizeCommon } from './table-resize-common';
 import { isTableAlignRight } from './utils';
@@ -201,14 +201,11 @@ export class TableResizeBox extends TableResizeCommon {
         height: `${this.size}px`,
       });
       this.corner.addEventListener('click', () => {
-        const tableRect = this.table.getBoundingClientRect();
         if (this.tableModule.tableSelection) {
+          const cellInners = this.tableMain.descendants(TableCellInnerFormat);
           const tableSelection = this.tableModule.tableSelection;
-          tableSelection.selectedTds = tableSelection.computeSelectedTds(
-            { x: tableRect.x, y: tableRect.y },
-            { x: tableRect.right, y: tableRect.bottom },
-          );
-          tableSelection.show();
+          tableSelection.selectedTds = cellInners;
+          tableSelection.updateWithSelectedTds();
         }
       });
       this.root.appendChild(this.corner);

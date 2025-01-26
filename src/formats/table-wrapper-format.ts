@@ -1,3 +1,4 @@
+import Quill from 'quill';
 import { blotName } from '../utils';
 import { ContainerFormat } from './container-format';
 import { TableBodyFormat } from './table-body-format';
@@ -31,6 +32,12 @@ export class TableWrapperFormat extends ContainerFormat {
     return node;
   }
 
+  // quill scroll doesn't extends EventEmitter ts type. `on` and `off` will have dts error
+  constructor(public scroll: any, node: Node, _value: string) {
+    super(scroll, node);
+    this.scroll.emitter.on(Quill.events.TEXT_CHANGE, this.insertLineAround);
+  }
+
   get tableId() {
     return this.domNode.dataset.tableId!;
   }
@@ -52,4 +59,18 @@ export class TableWrapperFormat extends ContainerFormat {
       this.remove();
     }
   }
+
+  remove() {
+    super.remove();
+    this.scroll.emitter.off(Quill.events.TEXT_CHANGE, this.insertLineAround);
+  }
+
+  insertLineAround = () => {
+    if (!this.prev) {
+      this.parent.insertBefore(this.scroll.create('block'), this);
+    }
+    if (!this.next) {
+      this.parent.appendChild(this.scroll.create('block'));
+    }
+  };
 }

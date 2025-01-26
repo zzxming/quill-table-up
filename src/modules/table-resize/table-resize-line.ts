@@ -27,6 +27,8 @@ export class TableResizeLine extends TableResizeCommon {
 
   mousemoveHandler = (e: MouseEvent) => {
     if (this.dragging) return;
+    // when mousedown to select mutiple line. if move on resizer will get wrong selection
+    if (this.tableModule.tableSelection && this.tableModule.tableSelection.dragging) return;
     const tableCell = this.findTableCell(e);
     if (!tableCell) {
       return this.hide();
