@@ -213,6 +213,8 @@ export class TableSelection {
 
     const anchorBlot = Quill.find(anchorNode) as TypeParchment.Blot;
     const focusBlot = Quill.find(focusNode) as TypeParchment.Blot;
+    if (!anchorBlot || !focusBlot || anchorBlot.scroll !== this.quill.scroll || focusBlot.scroll !== this.quill.scroll) return;
+
     const anchorNames = findAllParentBlot(anchorBlot);
     const focusNames = findAllParentBlot(focusBlot);
 
@@ -335,7 +337,6 @@ export class TableSelection {
       if (isKeySelectionChange) {
         // limit selection in current cell
         this.setSelectionData(selection, this.lastSelection);
-        return;
       }
       else {
         // mouse selection cover all table
@@ -363,8 +364,12 @@ export class TableSelection {
           focusOffset: endOffset,
         };
         this.setSelectionData(selection, this.lastSelection);
-        return;
       }
+
+      if (this.selectedTds.length > 0) {
+        this.hide();
+      }
+      return;
     }
 
     this.lastSelection = {
@@ -398,7 +403,7 @@ export class TableSelection {
       (tableMain.descendants(TableCellFormat) as TempSortedTableCellFormat[]).map((cell, i) => {
         cell.index = i;
         return cell;
-      }).reverse(),
+      }),
     );
 
     const { x: tableScrollX, y: tableScrollY } = this.getTableViewScroll();
@@ -453,9 +458,9 @@ export class TableSelection {
           findEnd = true;
           break;
         }
-        else if (x < boundary.x && y < boundary.y) {
-          break;
-        }
+        // else if (x < boundary.x && y < boundary.y) {
+        //   break;
+        // }
       }
     }
     for (const cell of [...selectedCells, ...tableCells]) {
