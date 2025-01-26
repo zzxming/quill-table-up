@@ -281,6 +281,7 @@
   padding: 0.5rem 0;
 }
 .ql-container .table-up-selection {
+  --select-color: #0589f340;
   display: none;
   position: absolute;
   overflow: hidden;
@@ -288,8 +289,14 @@
 }
 .ql-container .table-up-selection__line {
   position: absolute;
-  border: 2px solid;
+  background-color: var(--select-color);
   pointer-events: none;
+}
+.ql-container .table-up-selection--selected ::-moz-selection {
+  background-color: initial !important;
+}
+.ql-container .table-up-selection--selected ::selection {
+  background-color: initial !important;
 }
 .table-up-resize-line__row,
 .table-up-resize-line__col {
