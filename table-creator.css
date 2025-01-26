@@ -157,10 +157,10 @@
   position: absolute;
   display: none;
   left: 0.3125rem;
-  top: 0.125rem;
-  width: 0.3125rem;
-  height: 0.5625rem;
+  top: 0.1875rem;
+  width: 0.1875rem;
+  height: 0.5rem;
   border: solid #fff;
-  border-width: 0 0.125rem 0.125rem 0;
+  border-width: 0 0.1875rem 0.1875rem 0;
   transform: rotate(45deg);
 }

@@ -292,12 +292,6 @@
   background-color: var(--select-color);
   pointer-events: none;
 }
-.ql-container .table-up-selection--selected ::-moz-selection {
-  background-color: initial !important;
-}
-.ql-container .table-up-selection--selected ::selection {
-  background-color: initial !important;
-}
 .table-up-resize-line__row,
 .table-up-resize-line__col {
   position: absolute;
