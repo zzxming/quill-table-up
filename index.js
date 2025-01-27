@@ -53,19 +53,6 @@ const quill1 = new Quill('#editor1', {
         tableMenuOptions: {
           localstorageKey: 'used-color',
           tipText: true,
-          tipTexts: {
-            InsertTop: '向上插入一行',
-            InsertRight: '向右插入一列',
-            InsertBottom: '向下插入一行',
-            InsertLeft: '向左插入一列',
-            MergeCell: '合并单元格',
-            SplitCell: '拆分单元格',
-            DeleteRow: '删除当前行',
-            DeleteColumn: '删除当前列',
-            DeleteTable: '删除当前表格',
-            BackgroundColor: '设置背景颜色',
-            BorderColor: '设置边框颜色',
-          },
           defaultColorMap: [
             [
               'rgb(255, 255, 255)',
@@ -107,6 +94,18 @@ const quill1 = new Quill('#editor1', {
         clear: '清除',
         transparent: '透明',
         perWidthInsufficient: '百分比宽度不足, 如需完成操作需要转换表格为固定宽度，是否继续?',
+
+        InsertTop: '向上插入一行',
+        InsertRight: '向右插入一列',
+        InsertBottom: '向下插入一行',
+        InsertLeft: '向左插入一列',
+        MergeCell: '合并单元格',
+        SplitCell: '拆分单元格',
+        DeleteRow: '删除当前行',
+        DeleteColumn: '删除当前列',
+        DeleteTable: '删除当前表格',
+        BackgroundColor: '设置背景颜色',
+        BorderColor: '设置边框颜色',
       },
     },
   },
