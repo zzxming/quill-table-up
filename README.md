@@ -99,6 +99,18 @@ const defaultTexts = {
   clear: 'Clear',
   transparent: 'Transparent',
   perWidthInsufficient: 'The percentage width is insufficient. To complete the operation, the table needs to be converted to a fixed width. Do you want to continue?',
+
+  InsertTop: 'Insert a row above',
+  InsertRight: 'Insert a column right',
+  InsertBottom: 'Insert a row below',
+  InsertLeft: 'Insert a column Left',
+  MergeCell: 'Merge Cell',
+  SplitCell: 'Split Cell',
+  DeleteRow: 'Delete Row',
+  DeleteColumn: 'Delete Column',
+  DeleteTable: 'Delete table',
+  BackgroundColor: 'Set background color',
+  BorderColor: 'Set border color',
 };
 ```
 
@@ -120,13 +132,12 @@ const defaultTexts = {
 
 ### TableMenu Options
 
-| attribute       | description                                                                                                                                                                           | type                     | default                 |
-| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------ | ----------------------- |
-| tipText         | when `tableMenuClass` set `TableUp.TableMenuSelect`, display tip text when hover icon. when `tableMenuClass` set `TableUp.TableMenuContextmenu`(default), display tip text after icon | `boolean`                | `true`                  |
-| tipTexts        | the text to replace tools tip text                                                                                                                                                    | `Record<string, string>` | `{}`                    |
-| localstorageKey | used color save localstorage key                                                                                                                                                      | `string`                 | `__table-bg-used-color` |
-| tools           | menu items                                                                                                                                                                            | `Tool[]`                 | `defaultTools`          |
-| defaultColorMap | color map                                                                                                                                                                             | `string[][]`             | in source code          |
+| attribute       | description                                                                                                                                                                  | type         | default                 |
+| --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------ | ----------------------- |
+| tipText         | when `tableMenuClass` set `TableUp.TableMenuSelect`, display tip text when hover icon. when `tableMenuClass` set `TableUp.TableMenuContextmenu`, display tip text after icon | `boolean`    | `true`                  |
+| localstorageKey | used color save localstorage key                                                                                                                                             | `string`     | `__table-bg-used-color` |
+| tools           | menu items                                                                                                                                                                   | `Tool[]`     | `defaultTools`          |
+| defaultColorMap | color map                                                                                                                                                                    | `string[][]` | in source code          |
 
 <details>
   <summary> types and default value </summary>

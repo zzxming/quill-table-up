@@ -22,7 +22,6 @@ export type Tool = ToolOption | ToolOptionBreak;
 
 export interface TableMenuOptions {
   tipText: boolean;
-  tipTexts: Record<string, string>;
   tools: Tool[];
   localstorageKey: string;
   defaultColorMap: string[];
@@ -45,7 +44,8 @@ export interface TableCreatorTextOptions {
   notPositiveNumberError: string;
   perWidthInsufficient: string;
 };
-export interface TableTextOptions extends TableCreatorTextOptions {
+export type TableMenuTexts = Record<string, string>;
+export interface TableTextOptions extends TableCreatorTextOptions, TableMenuTexts {
   custom: string;
   clear: string;
   transparent: string;
