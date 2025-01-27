@@ -61,7 +61,6 @@ export class TableMenuCommon {
   resolveOptions(options: TableMenuOptionsInput) {
     const value = Object.assign({
       tipText: true,
-      tipTexts: {},
       tools: defaultTools,
       localstorageKey: '__table-bg-used-color',
       defaultColorMap,
@@ -109,7 +108,7 @@ export class TableMenuCommon {
         }
 
         // add text
-        const tipText = this.options.tipTexts[name] || tip;
+        const tipText = this.tableModule.options.texts[name] || tip;
         if (this.options.tipText && tipText && tip) {
           this.createTipText(item, tipText);
         }
