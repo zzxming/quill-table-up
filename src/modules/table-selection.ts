@@ -1,4 +1,4 @@
-import type { Parchment as TypeParchment } from 'quill';
+import type { Parchment as TypeParchment, Range as TypeRange } from 'quill';
 import type { TableUp } from '..';
 import type { TableMainFormat, TableWrapperFormat } from '../formats';
 import type { InternalModule, RelactiveRect, TableSelectionOptions } from '../utils';
@@ -34,6 +34,7 @@ export class TableSelection {
   tableMenu?: InternalModule;
   resizeObserver: ResizeObserver;
   table?: HTMLTableElement;
+  isDisplaySelection = false;
   bem = createBEM('selection');
   shiftKeyDown: boolean = false;
   keySelectionChange: boolean = false;
@@ -79,7 +80,19 @@ export class TableSelection {
       }
     });
     document.addEventListener('selectionchange', this.selectionChangeHandler);
-
+    this.quill.on(Quill.events.SELECTION_CHANGE, (range: TypeRange | null) => {
+      if (range && this.isDisplaySelection) {
+        const formats = this.quill.getFormat(range);
+        const [line] = this.quill.getLine(range.index);
+        let isInChildren = !!formats[blotName.tableCellInner] && !!line;
+        if (isInChildren) {
+          isInChildren &&= this.selectedTds.some(td => td.children.contains(line!));
+        }
+        if (!isInChildren) {
+          this.hide();
+        }
+      }
+    });
     if (this.options.tableMenu) {
       this.tableMenu = new this.options.tableMenu(tableModule, quill, this.options.tableMenuOptions);
     }
@@ -155,7 +168,7 @@ export class TableSelection {
 
     // compare position
     return (nodePosition & Node.DOCUMENT_POSITION_PRECEDING) !== 0;
-  };
+  }
 
   findWrapSelection(points: { node: Node | null; offset: number }[]) {
     let startNode: Node | null = null;
@@ -201,7 +214,7 @@ export class TableSelection {
       selectColor: '#0589f340',
       tableMenuOptions: {},
     } as TableSelectionOptions, options);
-  };
+  }
 
   selectionChangeHandler = () => {
     const selection = window.getSelection();
@@ -632,6 +645,7 @@ export class TableSelection {
     if (!this.table) return;
     clearScrollEvent.call(this);
 
+    this.isDisplaySelection = true;
     this.update();
     addScrollEvent.call(this, this.quill.root, () => {
       this.update();
