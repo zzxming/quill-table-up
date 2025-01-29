@@ -4,6 +4,8 @@ import { ContainerFormat } from './container-format';
 import { TableBodyFormat } from './table-body-format';
 import { TableColgroupFormat } from './table-colgroup-format';
 
+const Parchment = Quill.import('parchment');
+
 export class TableWrapperFormat extends ContainerFormat {
   static blotName = blotName.tableWrapper;
   static tagName = 'div';
@@ -66,10 +68,10 @@ export class TableWrapperFormat extends ContainerFormat {
   }
 
   insertLineAround = () => {
-    if (!this.prev) {
+    if (!this.prev || !(this.prev instanceof Parchment.BlockBlot)) {
       this.parent.insertBefore(this.scroll.create('block'), this);
     }
-    if (!this.next) {
+    if (!this.next || !(this.next instanceof Parchment.BlockBlot)) {
       this.parent.appendChild(this.scroll.create('block'));
     }
   };
