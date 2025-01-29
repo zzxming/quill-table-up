@@ -785,17 +785,14 @@ export class TableUp {
     );
   }
 
-  deleteTable() {
-    if (!this.tableSelection || this.tableSelection.selectedTds.length === 0) return;
-    const selectedTds = this.tableSelection.selectedTds;
+  deleteTable(selectedTds: TableCellInnerFormat[]) {
+    if (selectedTds.length === 0) return;
     const tableBlot = findParentBlot(selectedTds[0], blotName.tableMain);
     tableBlot && tableBlot.remove();
     this.hideTableTools();
   }
 
-  appendRow(isDown: boolean) {
-    if (!this.tableSelection) return;
-    const selectedTds = this.tableSelection.selectedTds;
+  appendRow(selectedTds: TableCellInnerFormat[], isDown: boolean) {
     if (selectedTds.length <= 0) return;
     // find baseTd and baseTr
     const baseTd = selectedTds[isDown ? selectedTds.length - 1 : 0];
@@ -807,9 +804,7 @@ export class TableUp {
     tableBodyBlot.insertRow(insertRowIndex);
   }
 
-  appendCol(isRight: boolean) {
-    if (!this.tableSelection) return;
-    const selectedTds = this.tableSelection.selectedTds;
+  appendCol(selectedTds: TableCellInnerFormat[], isRight: boolean) {
     if (selectedTds.length <= 0) return;
 
     // find insert column index in row
@@ -939,9 +934,7 @@ export class TableUp {
     }
   }
 
-  removeRow() {
-    if (!this.tableSelection) return;
-    const selectedTds = this.tableSelection.selectedTds;
+  removeRow(selectedTds: TableCellInnerFormat[]) {
     if (selectedTds.length <= 0) return;
     const baseTd = selectedTds[0];
     const tableBlot = findParentBlot(baseTd, blotName.tableMain);
@@ -1000,9 +993,7 @@ export class TableUp {
     this.fixTableByRemove(tableBlot);
   }
 
-  removeCol() {
-    if (!this.tableSelection) return;
-    const selectedTds = this.tableSelection.selectedTds;
+  removeCol(selectedTds: TableCellInnerFormat[]) {
     if (selectedTds.length <= 0) return;
     const baseTd = selectedTds[0];
     const tableBlot = findParentBlot(baseTd, blotName.tableMain);
@@ -1045,9 +1036,7 @@ export class TableUp {
     this.fixTableByRemove(tableBlot);
   }
 
-  mergeCells() {
-    if (!this.tableSelection) return;
-    const selectedTds = this.tableSelection.selectedTds;
+  mergeCells(selectedTds: TableCellInnerFormat[]) {
     if (selectedTds.length <= 1) return;
     const counts = selectedTds.reduce(
       (pre, selectTd, index) => {
@@ -1079,9 +1068,7 @@ export class TableUp {
     this.fixTableByRemove(tableBlot);
   }
 
-  splitCell() {
-    if (!this.tableSelection) return;
-    const selectedTds = this.tableSelection.selectedTds;
+  splitCell(selectedTds: TableCellInnerFormat[]) {
     if (selectedTds.length !== 1) return;
     const baseTd = selectedTds[0];
     if (baseTd.colspan === 1 && baseTd.rowspan === 1) return;

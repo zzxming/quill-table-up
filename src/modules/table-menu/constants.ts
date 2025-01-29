@@ -18,8 +18,8 @@ export const defaultTools: Tool[] = [
     name: 'InsertTop',
     icon: InsertTop,
     tip: 'Insert row above',
-    handle: (tableModule) => {
-      tableModule.appendRow(false);
+    handle: (tableModule, selectedTds) => {
+      tableModule.appendRow(selectedTds, false);
       tableModule.hideTableTools();
     },
   },
@@ -27,8 +27,8 @@ export const defaultTools: Tool[] = [
     name: 'InsertRight',
     icon: InsertRight,
     tip: 'Insert column right',
-    handle: (tableModule) => {
-      tableModule.appendCol(true);
+    handle: (tableModule, selectedTds) => {
+      tableModule.appendCol(selectedTds, true);
       tableModule.hideTableTools();
     },
   },
@@ -36,8 +36,8 @@ export const defaultTools: Tool[] = [
     name: 'InsertBottom',
     icon: InsertBottom,
     tip: 'Insert row below',
-    handle: (tableModule) => {
-      tableModule.appendRow(true);
+    handle: (tableModule, selectedTds) => {
+      tableModule.appendRow(selectedTds, true);
       tableModule.hideTableTools();
     },
   },
@@ -45,8 +45,8 @@ export const defaultTools: Tool[] = [
     name: 'InsertLeft',
     icon: InsertLeft,
     tip: 'Insert column Left',
-    handle: (tableModule) => {
-      tableModule.appendCol(false);
+    handle: (tableModule, selectedTds) => {
+      tableModule.appendCol(selectedTds, false);
       tableModule.hideTableTools();
     },
   },
@@ -54,22 +54,20 @@ export const defaultTools: Tool[] = [
     name: 'break',
   },
   {
-
     name: 'MergeCell',
     icon: MergeCell,
     tip: 'Merge Cell',
-    handle: (tableModule) => {
-      tableModule.mergeCells();
+    handle: (tableModule, selectedTds) => {
+      tableModule.mergeCells(selectedTds);
       tableModule.hideTableTools();
     },
   },
   {
-
     name: 'SplitCell',
     icon: SplitCell,
     tip: 'Split Cell',
-    handle: (tableModule) => {
-      tableModule.splitCell();
+    handle: (tableModule, selectedTds) => {
+      tableModule.splitCell(selectedTds);
       tableModule.hideTableTools();
     },
   },
@@ -80,8 +78,8 @@ export const defaultTools: Tool[] = [
     name: 'DeleteRow',
     icon: RemoveRow,
     tip: 'Delete Row',
-    handle: (tableModule) => {
-      tableModule.removeRow();
+    handle: (tableModule, selectedTds) => {
+      tableModule.removeRow(selectedTds);
       tableModule.hideTableTools();
     },
   },
@@ -89,8 +87,8 @@ export const defaultTools: Tool[] = [
     name: 'DeleteColumn',
     icon: RemoveColumn,
     tip: 'Delete Column',
-    handle: (tableModule) => {
-      tableModule.removeCol();
+    handle: (tableModule, selectedTds) => {
+      tableModule.removeCol(selectedTds);
       tableModule.hideTableTools();
     },
   },
@@ -98,8 +96,8 @@ export const defaultTools: Tool[] = [
     name: 'DeleteTable',
     icon: RemoveTable,
     tip: 'Delete table',
-    handle: (tableModule) => {
-      tableModule.deleteTable();
+    handle: (tableModule, selectedTds) => {
+      tableModule.deleteTable(selectedTds);
     },
   },
   {

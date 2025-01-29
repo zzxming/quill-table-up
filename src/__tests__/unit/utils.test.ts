@@ -2,7 +2,6 @@ import Quill from 'quill';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import TableUp, { updateTableConstants } from '../..';
 import { TableBodyFormat, TableCellFormat, TableCellInnerFormat, TableColFormat, TableMainFormat, TableRowFormat, TableWrapperFormat } from '../../formats';
-import { TableSelection } from '../../modules';
 import { blotName, findParentBlot, findParentBlots } from '../../utils';
 import { createTable, createTableHTML, createTaleColHTML, datasetFull, getColWidthStyle, normalizeHTML } from './utils';
 
@@ -287,10 +286,8 @@ describe('test override format', () => {
       { ignoreAttrs: ['class', 'style', 'data-table-id', 'contenteditable'] },
     );
     const tableModule = quill.getModule(TableUp.moduleName) as TableUp;
-    tableModule.tableSelection = new TableSelection(tableModule, quill);
     const tds = quill.scroll.descendants(TableCellInnerFormat, 0);
-    tableModule.tableSelection.selectedTds = [tds[0], tds[1], tds[2], tds[3]];
-    tableModule.mergeCells();
+    tableModule.mergeCells([tds[0], tds[1], tds[2], tds[3]]);
     await vi.runAllTimersAsync();
     expect(quill.getContents()).toMatchObject({
       ops: [

@@ -28,7 +28,7 @@ test('test TableSelection horizontal', async ({ page }) => {
     Number.parseFloat(await selectionLine.evaluate(el => getComputedStyle(el).height)),
   ).toBeCloseTo(cellBounding.height, -1);
 
-  await page.locator('#editor1 .ql-editor .ql-table').click({ button: 'right' });
+  await cell.click({ button: 'right' });
   await page.locator('.table-up-menu.is-contextmenu .table-up-menu__item').filter({ hasText: 'Merge Cell' }).first().click();
 
   await page.locator('#editor1 .ql-editor .ql-table td').nth(3).click();
@@ -64,7 +64,7 @@ test('test TableSelection vertical', async ({ page }) => {
   await page.mouse.down();
   await page.mouse.move(cellBounding.x, cellBounding.y + cellBounding.height * 3);
   await page.mouse.up();
-  await page.locator('#editor1 .ql-editor .ql-table').click({ button: 'right' });
+  await cell.click({ button: 'right' });
   await page.locator('.table-up-menu.is-contextmenu .table-up-menu__item').filter({ hasText: 'Merge Cell' }).first().click();
 
   await page.locator('#editor1 .ql-editor .ql-table td').nth(0).click();
