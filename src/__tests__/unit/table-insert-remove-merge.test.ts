@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import TableUp, { TableCellInnerFormat, TableSelection } from '../..';
+import TableUp, { TableCellInnerFormat } from '../..';
 import { createQuillWithTableModule, createTable, createTaleColHTML } from './utils';
 
 beforeEach(() => {
@@ -15,10 +15,8 @@ describe('merge and split cell', () => {
     const tableModule = quill.getModule(TableUp.moduleName) as TableUp;
     tableModule.insertTable(3, 3);
     await vi.runAllTimersAsync();
-    tableModule.tableSelection = new TableSelection(tableModule, quill);
     const tds = quill.scroll.descendants(TableCellInnerFormat, 0);
-    tableModule.tableSelection.selectedTds = [tds[3], tds[4], tds[6], tds[7]];
-    tableModule.mergeCells();
+    tableModule.mergeCells([tds[3], tds[4], tds[6], tds[7]]);
     await vi.runAllTimersAsync();
     expect(quill.root).toEqualHTML(
       `
@@ -60,10 +58,8 @@ describe('merge and split cell', () => {
     const tableModule = quill.getModule(TableUp.moduleName) as TableUp;
     tableModule.insertTable(2, 5);
     await vi.runAllTimersAsync();
-    tableModule.tableSelection = new TableSelection(tableModule, quill);
     const tds = quill.scroll.descendants(TableCellInnerFormat, 0);
-    tableModule.tableSelection.selectedTds = [tds[1], tds[2], tds[3], tds[6], tds[7], tds[8]];
-    tableModule.mergeCells();
+    tableModule.mergeCells([tds[1], tds[2], tds[3], tds[6], tds[7], tds[8]]);
     await vi.runAllTimersAsync();
     expect(quill.root).toEqualHTML(
       `
@@ -108,16 +104,12 @@ describe('merge and split cell', () => {
     const tableModule = quill.getModule(TableUp.moduleName) as TableUp;
     tableModule.insertTable(6, 7);
     await vi.runAllTimersAsync();
-    tableModule.tableSelection = new TableSelection(tableModule, quill);
     const tds = quill.scroll.descendants(TableCellInnerFormat, 0);
-    tableModule.tableSelection.selectedTds = [tds[7], tds[8], tds[9], tds[14], tds[15], tds[16], tds[21], tds[22], tds[23]];
-    tableModule.mergeCells();
+    tableModule.mergeCells([tds[7], tds[8], tds[9], tds[14], tds[15], tds[16], tds[21], tds[22], tds[23]]);
     await vi.runAllTimersAsync();
-    tableModule.tableSelection.selectedTds = [tds[25], tds[26], tds[27], tds[32], tds[33], tds[34], tds[39], tds[40], tds[41]];
-    tableModule.mergeCells();
+    tableModule.mergeCells([tds[25], tds[26], tds[27], tds[32], tds[33], tds[34], tds[39], tds[40], tds[41]]);
     await vi.runAllTimersAsync();
-    tableModule.tableSelection.selectedTds = [tds[3], tds[4], tds[5], tds[10], tds[11], tds[12], tds[17], tds[18], tds[19]];
-    tableModule.mergeCells();
+    tableModule.mergeCells([tds[3], tds[4], tds[5], tds[10], tds[11], tds[12], tds[17], tds[18], tds[19]]);
     await vi.runAllTimersAsync();
     expect(quill.root).toEqualHTML(
       `
@@ -179,13 +171,10 @@ describe('merge and split cell', () => {
     const tableModule = quill.getModule(TableUp.moduleName) as TableUp;
     tableModule.insertTable(3, 3);
     await vi.runAllTimersAsync();
-    tableModule.tableSelection = new TableSelection(tableModule, quill);
     const tds = quill.scroll.descendants(TableCellInnerFormat, 0);
-    tableModule.tableSelection.selectedTds = [tds[0], tds[1], tds[3], tds[4]];
-    tableModule.mergeCells();
+    tableModule.mergeCells([tds[0], tds[1], tds[3], tds[4]]);
     await vi.runAllTimersAsync();
-    tableModule.tableSelection.selectedTds = [tds[0]];
-    tableModule.splitCell();
+    tableModule.splitCell([tds[0]]);
     await vi.runAllTimersAsync();
     expect(quill.root).toEqualHTML(
       `
@@ -227,13 +216,10 @@ describe('merge and split cell', () => {
   it('merge cells should sort correct colId', async () => {
     const quill = await createTable(5, 5);
     const tableModule = quill.getModule(TableUp.moduleName) as TableUp;
-    tableModule.tableSelection = new TableSelection(tableModule, quill);
     const tds = quill.scroll.descendants(TableCellInnerFormat, 0);
-    tableModule.tableSelection.selectedTds = [tds[6], tds[7], tds[11], tds[12]];
-    tableModule.mergeCells();
+    tableModule.mergeCells([tds[6], tds[7], tds[11], tds[12]]);
     await vi.runAllTimersAsync();
-    tableModule.tableSelection.selectedTds = [tds[5], tds[6], tds[10], tds[15], tds[16], tds[17], tds[20], tds[21], tds[22]];
-    tableModule.mergeCells();
+    tableModule.mergeCells([tds[5], tds[6], tds[10], tds[15], tds[16], tds[17], tds[20], tds[21], tds[22]]);
     await vi.runAllTimersAsync();
     expect(quill.root).toEqualHTML(
       `
@@ -313,10 +299,8 @@ describe('remove column from table', () => {
     const tableModule = quill.getModule(TableUp.moduleName) as TableUp;
     tableModule.insertTable(3, 3);
     await vi.runAllTimersAsync();
-    tableModule.tableSelection = new TableSelection(tableModule, quill);
     const tds = quill.scroll.descendants(TableCellInnerFormat, 0);
-    tableModule.tableSelection.selectedTds = [tds[0], tds[1], tds[3], tds[4]];
-    tableModule.removeCol();
+    tableModule.removeCol([tds[0], tds[1], tds[3], tds[4]]);
     await vi.runAllTimersAsync();
     expect(quill.root).toEqualHTML(
       `
@@ -347,10 +331,8 @@ describe('remove column from table', () => {
     const quill = await createTable(1, 3, { full: false });
     const tableModule = quill.getModule(TableUp.moduleName) as TableUp;
     await vi.runAllTimersAsync();
-    tableModule.tableSelection = new TableSelection(tableModule, quill);
     const tds = quill.scroll.descendants(TableCellInnerFormat, 0);
-    tableModule.tableSelection.selectedTds = [tds[0]];
-    tableModule.removeCol();
+    tableModule.removeCol([tds[0]]);
     await vi.runAllTimersAsync();
     expect(quill.root).toEqualHTML(
       `
@@ -380,16 +362,12 @@ describe('remove column from table', () => {
     const tableModule = quill.getModule(TableUp.moduleName) as TableUp;
     tableModule.insertTable(4, 4);
     await vi.runAllTimersAsync();
-    tableModule.tableSelection = new TableSelection(tableModule, quill);
     const tds = quill.scroll.descendants(TableCellInnerFormat, 0);
-    tableModule.tableSelection.selectedTds = [tds[4], tds[5], tds[6], tds[8], tds[9], tds[10]];
-    tableModule.mergeCells();
+    tableModule.mergeCells([tds[4], tds[5], tds[6], tds[8], tds[9], tds[10]]);
     await vi.runAllTimersAsync();
-    tableModule.tableSelection.selectedTds = [tds[13], tds[14], tds[15]];
-    tableModule.mergeCells();
+    tableModule.mergeCells([tds[13], tds[14], tds[15]]);
     await vi.runAllTimersAsync();
-    tableModule.tableSelection.selectedTds = [tds[1], tds[2]];
-    tableModule.removeCol();
+    tableModule.removeCol([tds[1], tds[2]]);
     await vi.runAllTimersAsync();
     expect(quill.root).toEqualHTML(
       `
@@ -447,10 +425,8 @@ describe('remove row from table', () => {
     const tableModule = quill.getModule(TableUp.moduleName) as TableUp;
     tableModule.insertTable(3, 3);
     await vi.runAllTimersAsync();
-    tableModule.tableSelection = new TableSelection(tableModule, quill);
     const tds = quill.scroll.descendants(TableCellInnerFormat, 0);
-    tableModule.tableSelection.selectedTds = [tds[0], tds[1], tds[2], tds[3], tds[4], tds[5]];
-    tableModule.removeRow();
+    tableModule.removeRow([tds[0], tds[1], tds[2], tds[3], tds[4], tds[5]]);
     await vi.runAllTimersAsync();
     expect(quill.root).toEqualHTML(
       `
@@ -478,13 +454,10 @@ describe('remove row from table', () => {
     const tableModule = quill.getModule(TableUp.moduleName) as TableUp;
     tableModule.insertTable(3, 3);
     await vi.runAllTimersAsync();
-    tableModule.tableSelection = new TableSelection(tableModule, quill);
     const tds = quill.scroll.descendants(TableCellInnerFormat, 0);
-    tableModule.tableSelection.selectedTds = [tds[1], tds[2], tds[4], tds[5]];
-    tableModule.mergeCells();
+    tableModule.mergeCells([tds[1], tds[2], tds[4], tds[5]]);
     await vi.runAllTimersAsync();
-    tableModule.tableSelection.selectedTds = [tds[0]];
-    tableModule.removeRow();
+    tableModule.removeRow([tds[0]]);
     await vi.runAllTimersAsync();
     expect(quill.root).toEqualHTML(
       `
@@ -548,10 +521,8 @@ describe('insert column into table', () => {
     const tableModule = quill.getModule(TableUp.moduleName) as TableUp;
     tableModule.insertTable(2, 2);
     await vi.runAllTimersAsync();
-    tableModule.tableSelection = new TableSelection(tableModule, quill);
     const tds = quill.scroll.descendants(TableCellInnerFormat, 0);
-    tableModule.tableSelection.selectedTds = [tds[0]];
-    tableModule.appendCol(false);
+    tableModule.appendCol([tds[0]], false);
     await vi.runAllTimersAsync();
     expect(quill.root).toEqualHTML(
       `
@@ -585,13 +556,10 @@ describe('insert column into table', () => {
     const tableModule = quill.getModule(TableUp.moduleName) as TableUp;
     tableModule.insertTable(2, 2);
     await vi.runAllTimersAsync();
-    tableModule.tableSelection = new TableSelection(tableModule, quill);
     const tds = quill.scroll.descendants(TableCellInnerFormat, 0);
-    tableModule.tableSelection.selectedTds = [tds[2], tds[3]];
-    tableModule.mergeCells();
+    tableModule.mergeCells([tds[2], tds[3]]);
     await vi.runAllTimersAsync();
-    tableModule.tableSelection.selectedTds = [tds[1]];
-    tableModule.appendCol(false);
+    tableModule.appendCol([tds[1]], false);
     await vi.runAllTimersAsync();
     expect(quill.root).toEqualHTML(
       `
@@ -629,10 +597,8 @@ describe('insert column into table', () => {
     const tableModule = quill.getModule(TableUp.moduleName) as TableUp;
     tableModule.insertTable(2, 2);
     await vi.runAllTimersAsync();
-    tableModule.tableSelection = new TableSelection(tableModule, quill);
     const tds = quill.scroll.descendants(TableCellInnerFormat, 0);
-    tableModule.tableSelection.selectedTds = [tds[1]];
-    tableModule.appendCol(true);
+    tableModule.appendCol([tds[1]], true);
     await vi.runAllTimersAsync();
     expect(quill.root).toEqualHTML(
       `
@@ -666,13 +632,10 @@ describe('insert column into table', () => {
     const tableModule = quill.getModule(TableUp.moduleName) as TableUp;
     tableModule.insertTable(2, 2);
     await vi.runAllTimersAsync();
-    tableModule.tableSelection = new TableSelection(tableModule, quill);
     const tds = quill.scroll.descendants(TableCellInnerFormat, 0);
-    tableModule.tableSelection.selectedTds = [tds[2], tds[3]];
-    tableModule.mergeCells();
+    tableModule.mergeCells([tds[2], tds[3]]);
     await vi.runAllTimersAsync();
-    tableModule.tableSelection.selectedTds = [tds[0]];
-    tableModule.appendCol(true);
+    tableModule.appendCol([tds[0]], true);
     await vi.runAllTimersAsync();
     expect(quill.root).toEqualHTML(
       `
@@ -710,13 +673,10 @@ describe('insert column into table', () => {
     const tableModule = quill.getModule(TableUp.moduleName) as TableUp;
     tableModule.insertTable(2, 2);
     await vi.runAllTimersAsync();
-    tableModule.tableSelection = new TableSelection(tableModule, quill);
     const tds = quill.scroll.descendants(TableCellInnerFormat, 0);
-    tableModule.tableSelection.selectedTds = [tds[0], tds[1]];
-    tableModule.mergeCells();
+    tableModule.mergeCells([tds[0], tds[1]]);
     await vi.runAllTimersAsync();
-    tableModule.tableSelection.selectedTds = [tds[0]];
-    tableModule.appendCol(true);
+    tableModule.appendCol([tds[0]], true);
     await vi.runAllTimersAsync();
     expect(quill.root).toEqualHTML(
       `
@@ -755,16 +715,12 @@ describe('insert column into table', () => {
     const tableModule = quill.getModule(TableUp.moduleName) as TableUp;
     tableModule.insertTable(6, 3);
     await vi.runAllTimersAsync();
-    tableModule.tableSelection = new TableSelection(tableModule, quill);
     const tds = quill.scroll.descendants(TableCellInnerFormat, 0);
-    tableModule.tableSelection.selectedTds = [tds[3], tds[4], tds[5], tds[6], tds[7], tds[8], tds[9], tds[10], tds[11]];
-    tableModule.mergeCells();
+    tableModule.mergeCells([tds[3], tds[4], tds[5], tds[6], tds[7], tds[8], tds[9], tds[10], tds[11]]);
     await vi.runAllTimersAsync();
-    tableModule.tableSelection.selectedTds = [tds[12], tds[13], tds[15], tds[16]];
-    tableModule.mergeCells();
+    tableModule.mergeCells([tds[12], tds[13], tds[15], tds[16]]);
     await vi.runAllTimersAsync();
-    tableModule.tableSelection.selectedTds = [tds[0]];
-    tableModule.appendCol(true);
+    tableModule.appendCol([tds[0]], true);
     await vi.runAllTimersAsync();
     expect(quill.root).toEqualHTML(
       `
@@ -824,13 +780,10 @@ describe('insert column into table', () => {
     const tableModule = quill.getModule(TableUp.moduleName) as TableUp;
     tableModule.insertTable(4, 5);
     await vi.runAllTimersAsync();
-    tableModule.tableSelection = new TableSelection(tableModule, quill);
     const tds = quill.scroll.descendants(TableCellInnerFormat, 0);
-    tableModule.tableSelection.selectedTds = [tds[2], tds[3], tds[4], tds[7], tds[8], tds[9], tds[12], tds[13], tds[14]];
-    tableModule.mergeCells();
+    tableModule.mergeCells([tds[2], tds[3], tds[4], tds[7], tds[8], tds[9], tds[12], tds[13], tds[14]]);
     await vi.runAllTimersAsync();
-    tableModule.tableSelection.selectedTds = [tds[1]];
-    tableModule.appendCol(true);
+    tableModule.appendCol([tds[1]], true);
     await vi.runAllTimersAsync();
     expect(quill.root).toEqualHTML(
       `
@@ -893,10 +846,8 @@ describe('insert row into table', () => {
     const tableModule = quill.getModule(TableUp.moduleName) as TableUp;
     tableModule.insertTable(2, 2);
     await vi.runAllTimersAsync();
-    tableModule.tableSelection = new TableSelection(tableModule, quill);
     const tds = quill.scroll.descendants(TableCellInnerFormat, 0);
-    tableModule.tableSelection.selectedTds = [tds[0]];
-    tableModule.appendRow(false);
+    tableModule.appendRow([tds[0]], false);
     await vi.runAllTimersAsync();
     expect(quill.root).toEqualHTML(
       `
@@ -929,16 +880,12 @@ describe('insert row into table', () => {
     const tableModule = quill.getModule(TableUp.moduleName) as TableUp;
     tableModule.insertTable(3, 5);
     await vi.runAllTimersAsync();
-    tableModule.tableSelection = new TableSelection(tableModule, quill);
     const tds = quill.scroll.descendants(TableCellInnerFormat, 0);
-    tableModule.tableSelection.selectedTds = [tds[0], tds[1], tds[2], tds[5], tds[6], tds[7]];
-    tableModule.mergeCells();
+    tableModule.mergeCells([tds[0], tds[1], tds[2], tds[5], tds[6], tds[7]]);
     await vi.runAllTimersAsync();
-    tableModule.tableSelection.selectedTds = [tds[9], tds[14]];
-    tableModule.mergeCells();
+    tableModule.mergeCells([tds[9], tds[14]]);
     await vi.runAllTimersAsync();
-    tableModule.tableSelection.selectedTds = [tds[8]];
-    tableModule.appendRow(false);
+    tableModule.appendRow([tds[8]], false);
     await vi.runAllTimersAsync();
     expect(quill.root).toEqualHTML(
       `
@@ -996,10 +943,8 @@ describe('insert row into table', () => {
     const tableModule = quill.getModule(TableUp.moduleName) as TableUp;
     tableModule.insertTable(2, 2);
     await vi.runAllTimersAsync();
-    tableModule.tableSelection = new TableSelection(tableModule, quill);
     const tds = quill.scroll.descendants(TableCellInnerFormat, 0);
-    tableModule.tableSelection.selectedTds = [tds[2]];
-    tableModule.appendRow(true);
+    tableModule.appendRow([tds[2]], true);
     await vi.runAllTimersAsync();
     expect(quill.root).toEqualHTML(
       `
@@ -1032,13 +977,9 @@ describe('insert row into table', () => {
     const tableModule = quill.getModule(TableUp.moduleName) as TableUp;
     tableModule.insertTable(2, 5);
     await vi.runAllTimersAsync();
-    tableModule.tableSelection = new TableSelection(tableModule, quill);
     const tds = quill.scroll.descendants(TableCellInnerFormat, 0);
-    tableModule.tableSelection.selectedTds = [tds[1], tds[2], tds[3], tds[6], tds[7], tds[8]];
-    tableModule.mergeCells();
-    tableModule.tableSelection = new TableSelection(tableModule, quill);
-    tableModule.tableSelection.selectedTds = [tds[0]];
-    tableModule.appendRow(true);
+    tableModule.mergeCells([tds[1], tds[2], tds[3], tds[6], tds[7], tds[8]]);
+    tableModule.appendRow([tds[0]], true);
     await vi.runAllTimersAsync();
     expect(quill.root).toEqualHTML(
       `
@@ -1089,16 +1030,10 @@ describe('unusual delete', () => {
     const tableModule = quill.getModule(TableUp.moduleName) as TableUp;
     tableModule.insertTable(5, 5);
     await vi.runAllTimersAsync();
-    tableModule.tableSelection = new TableSelection(tableModule, quill);
     const tds = quill.scroll.descendants(TableCellInnerFormat, 0);
-    tableModule.tableSelection.selectedTds = [tds[0], tds[1], tds[2], tds[5], tds[6], tds[7], tds[10], tds[11], tds[12]];
-    tableModule.mergeCells();
-    tableModule.tableSelection = new TableSelection(tableModule, quill);
-    tableModule.tableSelection.selectedTds = [tds[4], tds[9], tds[14], tds[19]];
-    tableModule.mergeCells();
-    tableModule.tableSelection = new TableSelection(tableModule, quill);
-    tableModule.tableSelection.selectedTds = [tds[17], tds[18], tds[22], tds[23]];
-    tableModule.mergeCells();
+    tableModule.mergeCells([tds[0], tds[1], tds[2], tds[5], tds[6], tds[7], tds[10], tds[11], tds[12]]);
+    tableModule.mergeCells([tds[4], tds[9], tds[14], tds[19]]);
+    tableModule.mergeCells([tds[17], tds[18], tds[22], tds[23]]);
     await vi.runAllTimersAsync();
     quill.deleteText(0, 16);
     await vi.runAllTimersAsync();
@@ -1113,16 +1048,12 @@ describe('unusual delete', () => {
     const tableModule = quill.getModule(TableUp.moduleName) as TableUp;
     tableModule.insertTable(5, 5);
     await vi.runAllTimersAsync();
-    tableModule.tableSelection = new TableSelection(tableModule, quill);
     const tds = quill.scroll.descendants(TableCellInnerFormat, 0);
-    tableModule.tableSelection.selectedTds = [tds[0], tds[1], tds[2], tds[5], tds[6], tds[7], tds[10], tds[11], tds[12]];
-    tableModule.mergeCells();
-    tableModule.tableSelection = new TableSelection(tableModule, quill);
-    tableModule.tableSelection.selectedTds = [tds[4], tds[9], tds[14], tds[19]];
-    tableModule.mergeCells();
-    tableModule.tableSelection = new TableSelection(tableModule, quill);
-    tableModule.tableSelection.selectedTds = [tds[17], tds[18], tds[22], tds[23]];
-    tableModule.mergeCells();
+    tableModule.mergeCells([tds[0], tds[1], tds[2], tds[5], tds[6], tds[7], tds[10], tds[11], tds[12]]);
+    await vi.runAllTimersAsync();
+    tableModule.mergeCells([tds[4], tds[9], tds[14], tds[19]]);
+    await vi.runAllTimersAsync();
+    tableModule.mergeCells([tds[17], tds[18], tds[22], tds[23]]);
     await vi.runAllTimersAsync();
     quill.deleteText(18, 8);
     await vi.runAllTimersAsync();
@@ -1177,16 +1108,10 @@ describe('unusual delete', () => {
     const tableModule = quill.getModule(TableUp.moduleName) as TableUp;
     tableModule.insertTable(5, 5);
     await vi.runAllTimersAsync();
-    tableModule.tableSelection = new TableSelection(tableModule, quill);
     const tds = quill.scroll.descendants(TableCellInnerFormat, 0);
-    tableModule.tableSelection.selectedTds = [tds[0], tds[1], tds[2], tds[5], tds[6], tds[7], tds[10], tds[11], tds[12]];
-    tableModule.mergeCells();
-    tableModule.tableSelection = new TableSelection(tableModule, quill);
-    tableModule.tableSelection.selectedTds = [tds[4], tds[9], tds[14], tds[19]];
-    tableModule.mergeCells();
-    tableModule.tableSelection = new TableSelection(tableModule, quill);
-    tableModule.tableSelection.selectedTds = [tds[17], tds[18], tds[22], tds[23]];
-    tableModule.mergeCells();
+    tableModule.mergeCells([tds[0], tds[1], tds[2], tds[5], tds[6], tds[7], tds[10], tds[11], tds[12]]);
+    tableModule.mergeCells([tds[4], tds[9], tds[14], tds[19]]);
+    tableModule.mergeCells([tds[17], tds[18], tds[22], tds[23]]);
     await vi.runAllTimersAsync();
     quill.deleteText(21, 3);
     await vi.runAllTimersAsync();

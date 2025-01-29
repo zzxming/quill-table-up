@@ -1,7 +1,7 @@
 import type { TableMainFormat } from '../..';
 import Quill from 'quill';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import TableUp, { TableCellInnerFormat, TableSelection } from '../..';
+import TableUp, { TableCellInnerFormat } from '../..';
 import { createTable, createTableBodyHTML, createTableHTML, createTaleColHTML, datasetAlign, datasetFull } from './utils';
 
 beforeEach(() => {
@@ -15,10 +15,8 @@ describe('table undo', () => {
   it('merge all cell undo', async () => {
     const quill = await createTable(3, 3);
     const tableModule = quill.getModule(TableUp.moduleName) as TableUp;
-    tableModule.tableSelection = new TableSelection(tableModule, quill);
     const tds = quill.scroll.descendants(TableCellInnerFormat, 0);
-    tableModule.tableSelection.selectedTds = tds;
-    tableModule.mergeCells();
+    tableModule.mergeCells(tds);
     await vi.runAllTimersAsync();
     quill.history.undo();
     await vi.runAllTimersAsync();
@@ -35,10 +33,8 @@ describe('table undo', () => {
   it('merge single column undo', async () => {
     const quill = await createTable(3, 3);
     const tableModule = quill.getModule(TableUp.moduleName) as TableUp;
-    tableModule.tableSelection = new TableSelection(tableModule, quill);
     const tds = quill.scroll.descendants(TableCellInnerFormat, 0);
-    tableModule.tableSelection.selectedTds = [tds[0], tds[3], tds[6]];
-    tableModule.mergeCells();
+    tableModule.mergeCells([tds[0], tds[3], tds[6]]);
     await vi.runAllTimersAsync();
     quill.history.undo();
     await vi.runAllTimersAsync();
@@ -55,10 +51,8 @@ describe('table undo', () => {
   it('merge last column undo', async () => {
     const quill = await createTable(3, 3);
     const tableModule = quill.getModule(TableUp.moduleName) as TableUp;
-    tableModule.tableSelection = new TableSelection(tableModule, quill);
     const tds = quill.scroll.descendants(TableCellInnerFormat, 0);
-    tableModule.tableSelection.selectedTds = [tds[2], tds[5], tds[8]];
-    tableModule.mergeCells();
+    tableModule.mergeCells([tds[2], tds[5], tds[8]]);
     await vi.runAllTimersAsync();
     quill.history.undo();
     await vi.runAllTimersAsync();
@@ -75,10 +69,8 @@ describe('table undo', () => {
   it('merge middle column undo', async () => {
     const quill = await createTable(4, 4);
     const tableModule = quill.getModule(TableUp.moduleName) as TableUp;
-    tableModule.tableSelection = new TableSelection(tableModule, quill);
     const tds = quill.scroll.descendants(TableCellInnerFormat, 0);
-    tableModule.tableSelection.selectedTds = [tds[1], tds[2], tds[5], tds[6], tds[9], tds[10], tds[13], tds[14]];
-    tableModule.mergeCells();
+    tableModule.mergeCells([tds[1], tds[2], tds[5], tds[6], tds[9], tds[10], tds[13], tds[14]]);
     await vi.runAllTimersAsync();
     quill.history.undo();
     await vi.runAllTimersAsync();
@@ -95,13 +87,10 @@ describe('table undo', () => {
   it('split column undo', async () => {
     const quill = await createTable(3, 3);
     const tableModule = quill.getModule(TableUp.moduleName) as TableUp;
-    tableModule.tableSelection = new TableSelection(tableModule, quill);
     const tds = quill.scroll.descendants(TableCellInnerFormat, 0);
-    tableModule.tableSelection.selectedTds = [tds[2], tds[5], tds[8]];
-    tableModule.mergeCells();
+    tableModule.mergeCells([tds[2], tds[5], tds[8]]);
     await vi.runAllTimersAsync();
-    tableModule.tableSelection.selectedTds = [tds[2]];
-    tableModule.splitCell();
+    tableModule.splitCell([tds[2]]);
     await vi.runAllTimersAsync();
     quill.history.undo();
     await vi.runAllTimersAsync();
@@ -157,13 +146,10 @@ describe('table undo', () => {
   it('split middle column undo', async () => {
     const quill = await createTable(4, 4);
     const tableModule = quill.getModule(TableUp.moduleName) as TableUp;
-    tableModule.tableSelection = new TableSelection(tableModule, quill);
     const tds = quill.scroll.descendants(TableCellInnerFormat, 0);
-    tableModule.tableSelection.selectedTds = [tds[1], tds[2], tds[5], tds[6], tds[9], tds[10], tds[13], tds[14]];
-    tableModule.mergeCells();
+    tableModule.mergeCells([tds[1], tds[2], tds[5], tds[6], tds[9], tds[10], tds[13], tds[14]]);
     await vi.runAllTimersAsync();
-    tableModule.tableSelection.selectedTds = [tds[1]];
-    tableModule.splitCell();
+    tableModule.splitCell([tds[1]]);
     await vi.runAllTimersAsync();
     quill.history.undo();
     await vi.runAllTimersAsync();
@@ -234,10 +220,8 @@ describe('table undo', () => {
   it('merge single row undo', async () => {
     const quill = await createTable(3, 3);
     const tableModule = quill.getModule(TableUp.moduleName) as TableUp;
-    tableModule.tableSelection = new TableSelection(tableModule, quill);
     const tds = quill.scroll.descendants(TableCellInnerFormat, 0);
-    tableModule.tableSelection.selectedTds = [tds[0], tds[1], tds[2]];
-    tableModule.mergeCells();
+    tableModule.mergeCells([tds[0], tds[1], tds[2]]);
     await vi.runAllTimersAsync();
     quill.history.undo();
     await vi.runAllTimersAsync();
@@ -254,10 +238,8 @@ describe('table undo', () => {
   it('merge multiple row undo', async () => {
     const quill = await createTable(4, 4);
     const tableModule = quill.getModule(TableUp.moduleName) as TableUp;
-    tableModule.tableSelection = new TableSelection(tableModule, quill);
     const tds = quill.scroll.descendants(TableCellInnerFormat, 0);
-    tableModule.tableSelection.selectedTds = [tds[0], tds[1], tds[2], tds[3], tds[4], tds[5], tds[6], tds[7], tds[8], tds[9], tds[10], tds[11]];
-    tableModule.mergeCells();
+    tableModule.mergeCells([tds[0], tds[1], tds[2], tds[3], tds[4], tds[5], tds[6], tds[7], tds[8], tds[9], tds[10], tds[11]]);
     await vi.runAllTimersAsync();
     quill.history.undo();
     await vi.runAllTimersAsync();
@@ -274,10 +256,8 @@ describe('table undo', () => {
   it('merge middle row undo', async () => {
     const quill = await createTable(4, 4);
     const tableModule = quill.getModule(TableUp.moduleName) as TableUp;
-    tableModule.tableSelection = new TableSelection(tableModule, quill);
     const tds = quill.scroll.descendants(TableCellInnerFormat, 0);
-    tableModule.tableSelection.selectedTds = [tds[4], tds[5], tds[6], tds[7], tds[8], tds[9], tds[10], tds[11]];
-    tableModule.mergeCells();
+    tableModule.mergeCells([tds[4], tds[5], tds[6], tds[7], tds[8], tds[9], tds[10], tds[11]]);
     await vi.runAllTimersAsync();
     quill.history.undo();
     await vi.runAllTimersAsync();
@@ -294,10 +274,8 @@ describe('table undo', () => {
   it('5x5 merge center 3x3 cells undo', async () => {
     const quill = await createTable(5, 5);
     const tableModule = quill.getModule(TableUp.moduleName) as TableUp;
-    tableModule.tableSelection = new TableSelection(tableModule, quill);
     const tds = quill.scroll.descendants(TableCellInnerFormat, 0);
-    tableModule.tableSelection.selectedTds = [tds[6], tds[7], tds[8], tds[11], tds[12], tds[13], tds[16], tds[17], tds[18]];
-    tableModule.mergeCells();
+    tableModule.mergeCells([tds[6], tds[7], tds[8], tds[11], tds[12], tds[13], tds[16], tds[17], tds[18]]);
     await vi.runAllTimersAsync();
     quill.history.undo();
     await vi.runAllTimersAsync();
@@ -314,13 +292,10 @@ describe('table undo', () => {
   it('4x4 undo split 3x3 at start 1', async () => {
     const quill = await createTable(4, 4);
     const tableModule = quill.getModule(TableUp.moduleName) as TableUp;
-    tableModule.tableSelection = new TableSelection(tableModule, quill);
     const tds = quill.scroll.descendants(TableCellInnerFormat, 0);
-    tableModule.tableSelection.selectedTds = [tds[0], tds[1], tds[2], tds[4], tds[5], tds[6], tds[8], tds[9], tds[10]];
-    tableModule.mergeCells();
+    tableModule.mergeCells([tds[0], tds[1], tds[2], tds[4], tds[5], tds[6], tds[8], tds[9], tds[10]]);
     await vi.runAllTimersAsync();
-    tableModule.tableSelection.selectedTds = [tds[0]];
-    tableModule.splitCell();
+    tableModule.splitCell([tds[0]]);
     await vi.runAllTimersAsync();
     quill.history.undo();
     await vi.runAllTimersAsync();
@@ -395,13 +370,10 @@ describe('table undo', () => {
   it('5x5 undo split 3x3 at end 25 and undo merge 3x3 at end 25', async () => {
     const quill = await createTable(5, 5);
     const tableModule = quill.getModule(TableUp.moduleName) as TableUp;
-    tableModule.tableSelection = new TableSelection(tableModule, quill);
     const tds = quill.scroll.descendants(TableCellInnerFormat, 0);
-    tableModule.tableSelection.selectedTds = [tds[12], tds[13], tds[14], tds[17], tds[18], tds[19], tds[22], tds[23], tds[24]];
-    tableModule.mergeCells();
+    tableModule.mergeCells([tds[12], tds[13], tds[14], tds[17], tds[18], tds[19], tds[22], tds[23], tds[24]]);
     await vi.runAllTimersAsync();
-    tableModule.tableSelection.selectedTds = [tds[12]];
-    tableModule.splitCell();
+    tableModule.splitCell([tds[12]]);
     await vi.runAllTimersAsync();
     quill.history.undo();
     await vi.runAllTimersAsync();
@@ -491,13 +463,10 @@ describe('table undo', () => {
   it('5x5 undo split 4x4 at start 1', async () => {
     const quill = await createTable(5, 5);
     const tableModule = quill.getModule(TableUp.moduleName) as TableUp;
-    tableModule.tableSelection = new TableSelection(tableModule, quill);
     const tds = quill.scroll.descendants(TableCellInnerFormat, 0);
-    tableModule.tableSelection.selectedTds = [tds[0], tds[1], tds[2], tds[3], tds[5], tds[6], tds[7], tds[8], tds[10], tds[11], tds[12], tds[13], tds[15], tds[16], tds[17], tds[18]];
-    tableModule.mergeCells();
+    tableModule.mergeCells([tds[0], tds[1], tds[2], tds[3], tds[5], tds[6], tds[7], tds[8], tds[10], tds[11], tds[12], tds[13], tds[15], tds[16], tds[17], tds[18]]);
     await vi.runAllTimersAsync();
-    tableModule.tableSelection.selectedTds = [tds[0]];
-    tableModule.splitCell();
+    tableModule.splitCell([tds[0]]);
     await vi.runAllTimersAsync();
     quill.history.undo();
     await vi.runAllTimersAsync();
@@ -591,13 +560,10 @@ describe('table undo', () => {
   it('5x5 undo insert column right with before empty row at start 1', async () => {
     const quill = await createTable(5, 5);
     const tableModule = quill.getModule(TableUp.moduleName) as TableUp;
-    tableModule.tableSelection = new TableSelection(tableModule, quill);
     const tds = quill.scroll.descendants(TableCellInnerFormat, 0);
-    tableModule.tableSelection.selectedTds = [tds[5]];
-    tableModule.appendRow(false);
+    tableModule.appendRow([tds[5]], false);
     await vi.runAllTimersAsync();
-    tableModule.tableSelection.selectedTds = [tds[3]];
-    tableModule.appendCol(true);
+    tableModule.appendCol([tds[3]], true);
     await vi.runAllTimersAsync();
     quill.history.undo();
     await vi.runAllTimersAsync();
@@ -684,10 +650,8 @@ describe('table undo', () => {
   it('3x3 undo insert column right at start 1. updateContents insert text between col', async () => {
     const quill = await createTable(3, 3);
     const tableModule = quill.getModule(TableUp.moduleName) as TableUp;
-    tableModule.tableSelection = new TableSelection(tableModule, quill);
     const tds = quill.scroll.descendants(TableCellInnerFormat, 0);
-    tableModule.tableSelection.selectedTds = [tds[0]];
-    tableModule.appendCol(true);
+    tableModule.appendCol([tds[0]], true);
     await vi.runAllTimersAsync();
     quill.history.undo();
     await vi.runAllTimersAsync();
@@ -706,10 +670,8 @@ describe('cell attribute', () => {
   it('undo set bg color', async () => {
     const quill = await createTable(3, 3);
     const tableModule = quill.getModule(TableUp.moduleName) as TableUp;
-    tableModule.tableSelection = new TableSelection(tableModule, quill);
     const tds = quill.scroll.descendants(TableCellInnerFormat, 0);
-    const selectedTds = [tds[0], tds[1], tds[2]];
-    tableModule.setCellAttrs(selectedTds, 'background-color', 'rgb(253, 235, 255)', true);
+    tableModule.setCellAttrs([tds[0], tds[1], tds[2]], 'background-color', 'rgb(253, 235, 255)', true);
     await vi.runAllTimersAsync();
     expect(quill.root).toEqualHTML(
       `
@@ -751,10 +713,8 @@ describe('cell attribute', () => {
   it('undo set border color', async () => {
     const quill = await createTable(3, 3);
     const tableModule = quill.getModule(TableUp.moduleName) as TableUp;
-    tableModule.tableSelection = new TableSelection(tableModule, quill);
     const tds = quill.scroll.descendants(TableCellInnerFormat, 0);
-    const selectedTds = [tds[0], tds[1], tds[2]];
-    tableModule.setCellAttrs(selectedTds, 'border-color', 'red', true);
+    tableModule.setCellAttrs([tds[0], tds[1], tds[2]], 'border-color', 'red', true);
     await vi.runAllTimersAsync();
     expect(quill.root).toEqualHTML(
       `
