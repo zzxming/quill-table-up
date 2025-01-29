@@ -7,7 +7,6 @@
     z-index: 1;
     display: none;
     align-items: center;
-    justify-content: center;
     padding: 4px;
     border-radius: 6px;
     box-shadow: 0 0 8px rgba(0, 0, 0, 0.5);
@@ -46,6 +45,9 @@
     &.is-contextmenu {
       flex-direction: column;
       padding: 4px 8px;
+      max-height: 350px;
+      overflow-y: auto;
+      overflow-x: hidden;
       .@{namespace}-menu__item {
         display: flex;
         justify-content: flex-start;
@@ -56,6 +58,7 @@
       .is-break {
         width: 100%;
         height: 1px;
+        flex-shrink: 0;
         margin: 4px 0px;
         background-color: #a3a3a3;
       }

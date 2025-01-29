@@ -1,6 +1,8 @@
 import type { Tool } from '../../utils';
 import Background from '../../svg/background.svg';
 import Border from '../../svg/border.svg';
+import Copy from '../../svg/copy.svg';
+import Cut from '../../svg/cut.svg';
 import InsertBottom from '../../svg/insert-bottom.svg';
 import InsertLeft from '../../svg/insert-left.svg';
 import InsertRight from '../../svg/insert-right.svg';
@@ -14,6 +16,41 @@ import { createBEM } from '../../utils';
 
 export const menuColorSelectClassName = 'color-selector';
 export const defaultTools: Tool[] = [
+  {
+    name: 'CopyCell',
+    tip: 'Copy cell',
+    icon: Copy,
+    handle: (tableModule, selectedTds) => {
+      const text = tableModule.getTextByCell(selectedTds);
+      const html = tableModule.getHTMLByCell(selectedTds);
+
+      const clipboardItem = new ClipboardItem({
+        'text/plain': new Blob([text], { type: 'text/plain' }),
+        'text/html': new Blob([html], { type: 'text/html' }),
+      });
+      navigator.clipboard.write([clipboardItem]);
+      tableModule.hideTableTools();
+    },
+  },
+  {
+    name: 'CutCell',
+    tip: 'Cut cell',
+    icon: Cut,
+    handle: (tableModule, selectedTds) => {
+      const text = tableModule.getTextByCell(selectedTds);
+      const html = tableModule.getHTMLByCell(selectedTds, true);
+
+      const clipboardItem = new ClipboardItem({
+        'text/plain': new Blob([text], { type: 'text/plain' }),
+        'text/html': new Blob([html], { type: 'text/html' }),
+      });
+      navigator.clipboard.write([clipboardItem]);
+      tableModule.hideTableTools();
+    },
+  },
+  {
+    name: 'break',
+  },
   {
     name: 'InsertTop',
     icon: InsertTop,
