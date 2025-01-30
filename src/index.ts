@@ -599,6 +599,136 @@ export class TableUp {
     }
   }
 
+  getTextByCell(tds: TableCellInnerFormat[]) {
+    let text = '';
+    for (const td of tds) {
+      const index = td.offset(this.quill.scroll);
+      const length = td.length();
+      for (const op of this.quill.getContents(index, length).ops) {
+        if (isString(op.insert)) {
+          text += op.insert;
+        }
+      }
+    }
+    return text;
+  }
+
+  getHTMLByCell(tds: TableCellInnerFormat[], isCut = false) {
+    if (tds.length === 0) return '';
+    let tableMain: TableMainFormat | null = null;
+    try {
+      for (const td of tds) {
+        const tdParentMain = findParentBlot(td, blotName.tableMain);
+        if (!tableMain) {
+          tableMain = tdParentMain;
+        }
+        if (tdParentMain !== tableMain) {
+          console.error('tableMain is not same');
+          return '';
+        }
+      }
+    }
+    catch {
+      console.error('tds must be in same tableMain');
+      return '';
+    }
+
+    const colgroupBlot = tableMain!.children.head;
+    const tbodyBlot = tableMain!.children.tail;
+    if (!tbodyBlot || !colgroupBlot) {
+      console.error('tableMain has no tbody or colgroup');
+      return '';
+    }
+
+    function getElementTags(element: HTMLElement) {
+      const tagName = element.tagName.toLowerCase();
+      const attributes = Array.from(element.attributes)
+        .map(attr => `${attr.name}="${attr.value}"`)
+        .join(' ');
+      const startTag = `<${tagName}${attributes ? ` ${attributes}` : ''}>`;
+      const selfClosingTags = [
+        'area',
+        'base',
+        'br',
+        'col',
+        'embed',
+        'hr',
+        'img',
+        'input',
+        'link',
+        'meta',
+        'param',
+        'source',
+        'track',
+        'wbr',
+      ];
+
+      return {
+        startTag,
+        endTag: selfClosingTags.includes(tagName) ? '' : `</${tagName}>`,
+      };
+    }
+
+    let html = '';
+    const colIds: Set<string> = new Set();
+    let trBlot: ContainerFormat | null = null;
+    let tdRows = 0;
+    for (const td of tds) {
+      if (!trBlot || trBlot !== td.parent.parent) {
+        if (trBlot) {
+          const { endTag } = getElementTags(trBlot.domNode);
+          if (html !== '') html += endTag;
+        }
+        tdRows += 1;
+        trBlot = td.parent.parent as ContainerFormat;
+        const { startTag } = getElementTags(trBlot.domNode);
+        html = `${html}${startTag}`;
+      }
+      html += td.parent.domNode.outerHTML;
+      colIds.add(td.colId);
+    }
+    const lastTagName = trBlot ? trBlot.domNode.tagName.toLocaleLowerCase() : '';
+    html += `</${lastTagName}>`;
+
+    const { startTag, endTag } = getElementTags(tbodyBlot.domNode as HTMLElement);
+    html = `${startTag}${html}${endTag}`;
+
+    const cols = tableMain!.getCols();
+    const { startTag: colgroupStartTag, endTag: colgroupEndTag } = getElementTags(colgroupBlot.domNode as HTMLElement);
+    let colStr = '';
+    let width = 0;
+    let isFull = false;
+    for (const col of cols.filter(col => colIds.has(col.colId))) {
+      const { startTag } = getElementTags(col.domNode as HTMLElement);
+      colStr += startTag;
+      width += col.width;
+      isFull &&= col.full;
+    }
+    html = colgroupStartTag + colStr + colgroupEndTag + html;
+
+    const tableMainDom = tableMain!.domNode.cloneNode() as HTMLElement;
+    tableMainDom.style.width = `${width}${isFull ? '%' : 'px'}`;
+
+    const { startTag: mainStartTag, endTag: mainEndTag } = getElementTags(tableMainDom);
+    html = mainStartTag + html + mainEndTag;
+
+    const { startTag: wrapperStartTag, endTag: wrapperEndTag } = getElementTags(tableMain!.parent.domNode as HTMLElement);
+    html = wrapperStartTag + html + wrapperEndTag;
+
+    if (isCut) {
+      const trs = tableMain!.getRows();
+      if (tdRows === trs.length) {
+        this.removeCol(tds);
+      }
+      else {
+        for (const td of tds) {
+          td.domNode.innerHTML = '<p><br></p>';
+        }
+      }
+    }
+    return html;
+  }
+
   insertTable(rows: number, columns: number) {
     if (rows >= 30 || columns >= 30) {
       throw new Error('Both rows and columns must be less than 30.');
