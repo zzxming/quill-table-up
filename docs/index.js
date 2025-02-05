@@ -95,6 +95,8 @@ const quill1 = new Quill('#editor1', {
         transparent: '透明',
         perWidthInsufficient: '百分比宽度不足, 如需完成操作需要转换表格为固定宽度，是否继续?',
 
+        CopyCell: '复制单元格',
+        CutCell: '剪切单元格',
         InsertTop: '向上插入一行',
         InsertRight: '向右插入一列',
         InsertBottom: '向下插入一行',
