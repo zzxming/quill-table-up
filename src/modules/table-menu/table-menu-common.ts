@@ -66,7 +66,7 @@ export class TableMenuCommon {
       defaultColorMap,
     }, options);
     return value as TableMenuOptions;
-  };
+  }
 
   getUsedColors() {
     return usedColors;
@@ -116,7 +116,7 @@ export class TableMenuCommon {
       toolBox.appendChild(item);
     }
     return toolBox;
-  };
+  }
 
   createColorChoose(item: HTMLElement, { handle, key }: ToolOption) {
     const colorSelectWrapper = document.createElement('div');

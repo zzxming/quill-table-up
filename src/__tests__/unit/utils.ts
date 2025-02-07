@@ -91,7 +91,7 @@ expect.extend({
 interface TableColDeltaValue extends Omit<TableColValue, 'width' | 'full'> {
   width: number;
   full?: 'true';
-};
+}
 interface TableCreatorOptions {
   isEmpty: boolean;
   tableId: string;

@@ -5,7 +5,7 @@ import { HEXtoRGB, HSBtoHEX, HSBtoRGB, RGBtoHEX, RGBtoHSB, validateHSB } from '.
 interface ColorPickerOptions {
   color: string;
   onChange: (color: string) => void;
-};
+}
 export const createColorPicker = (options: Partial<ColorPickerOptions> = {}) => {
   const contentWidth = 230;
   const contentHeight = 150;

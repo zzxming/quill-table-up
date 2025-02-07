@@ -312,7 +312,7 @@ export class TableUp {
       resizeOptions: {},
       resizeScaleOptions: {},
     } as TableUpOptions, options);
-  };
+  }
 
   resolveTexts(options: Partial<TableTextOptions>) {
     return Object.assign({
@@ -328,7 +328,7 @@ export class TableUp {
       transparent: 'Transparent',
       perWidthInsufficient: 'The percentage width is insufficient. To complete the operation, the table needs to be converted to a fixed width. Do you want to continue?',
     }, options);
-  };
+  }
 
   pasteTableHandler() {
     let tableId = randomId();
@@ -590,7 +590,7 @@ export class TableUp {
       dom.appendChild(isFulllLabel);
     }
     picker.options.appendChild(dom);
-  };
+  }
 
   setCellAttrs(selectedTds: TableCellInnerFormat[], attr: string, value?: any, isStyle: boolean = false) {
     if (selectedTds.length === 0) return;
@@ -1248,7 +1248,7 @@ export function updateTableConstants(data: Partial<TableConstantsData>) {
   TableRowFormat.blotName = blotName.tableRow;
   TableCellFormat.blotName = blotName.tableCell;
   TableCellInnerFormat.blotName = blotName.tableCellInner;
-};
+}
 export function defaultCustomSelect(tableModule: TableUp, picker: QuillThemePicker) {
   return createSelectBox({
     onSelect: (row: number, col: number) => {

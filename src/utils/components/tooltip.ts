@@ -38,7 +38,7 @@ export interface TooltipInstance {
   destroy: () => void;
   show: (force?: boolean) => void;
   hide: (force?: boolean) => void;
-};
+}
 export const createTooltip = (target: HTMLElement, options: ToolTipOptions = {}): TooltipInstance | null => {
   const { msg = '', delay = 150, content, direction = 'bottom', type = 'hover', container, onOpen, onClose, closed, onDestroy } = options;
   const bem = createBEM('tooltip');

@@ -6,7 +6,7 @@ interface InputOptions {
   max?: number;
   min?: number;
   [key: string]: any;
-};
+}
 export const createInputItem = (label: string, options: InputOptions) => {
   const bem = createBEM('input');
   options.type || (options.type = 'text');

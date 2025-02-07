@@ -3,13 +3,13 @@ export interface HSB {
   s: number;
   b: number;
   a: number;
-};
+}
 export interface RGB {
   r: number;
   g: number;
   b: number;
   a: number;
-};
+}
 const normalizeValue = function (value: number | string, max: number | string) {
   value = Math.min(max as number, Math.max(0, Number.parseFloat(`${value}`)));
 

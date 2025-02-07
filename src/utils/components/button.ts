@@ -4,7 +4,7 @@ import { isString } from '../is';
 interface ButtonOptions {
   type: 'confirm' | 'default';
   content: HTMLElement | string;
-};
+}
 export const createButton = (options?: Partial<ButtonOptions>) => {
   const { type = 'default', content } = options || {};
   const bem = createBEM('button');

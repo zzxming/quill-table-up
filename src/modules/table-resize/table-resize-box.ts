@@ -10,7 +10,7 @@ import { isTableAlignRight } from './utils';
 interface Point {
   x: number;
   y: number;
-};
+}
 export class TableResizeBox extends TableResizeCommon {
   root!: HTMLElement;
   tableMain: TableMainFormat;
@@ -70,7 +70,7 @@ export class TableResizeBox extends TableResizeCommon {
       tableSelection.selectedTds = tableSelection.computeSelectedTds(...currentBoundary);
       tableSelection.show();
     }
-  };
+  }
 
   findCurrentColIndex(e: MouseEvent): number {
     return Array.from(this.root.getElementsByClassName(this.bem.be('col-separator'))).indexOf(e.target as HTMLElement);

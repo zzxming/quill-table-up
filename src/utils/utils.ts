@@ -25,7 +25,7 @@ interface ParentBlotReturnMap {
   [blotName.tableRow]: TableRowFormat;
   [blotName.tableCell]: TableCellFormat;
   [blotName.tableCellInner]: TableCellInnerFormat;
-};
+}
 type ParentBlotReturn = {
   [key: string]: TypeParchment.Parent;
 } & ParentBlotReturnMap;
@@ -82,7 +82,7 @@ function mixinProps<T = any, U = any>(target: T, source: U) {
     Object.defineProperty(target, prop, Object.getOwnPropertyDescriptor(source, prop)!);
   }
   return target as typeof target & Omit<typeof source, 'constructor'>;
-};
+}
 export function mixinClass<
   T extends Constructor,
   U extends Constructor[],
@@ -100,7 +100,7 @@ export function mixinClass<
   }
 
   return targetClass;
-};
+}
 
 const viewportPadding = 8;
 export const limitDomInViewPort = (rect: { left: number; top: number; width: number; height: number }) => {
@@ -134,7 +134,7 @@ export const limitDomInViewPort = (rect: { left: number; top: number; width: num
 
 interface ScrollHandle {
   scrollHandler: [HTMLElement, (e: Event) => void][];
-};
+}
 export function addScrollEvent(this: ScrollHandle, dom: HTMLElement, handle: (e: Event) => void) {
   dom.addEventListener('scroll', handle);
   this.scrollHandler.push([dom, handle]);

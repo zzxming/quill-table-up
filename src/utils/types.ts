@@ -25,7 +25,7 @@ export interface TableMenuOptions {
   tools: Tool[];
   localstorageKey: string;
   defaultColorMap: string[];
-};
+}
 export interface TableSelectionOptions {
   selectColor: string;
   tableMenu?: Constructor<InternalModule, [TableUp, Quill, Partial<TableMenuOptions>]>;
@@ -43,7 +43,7 @@ export interface TableCreatorTextOptions {
   colText: string;
   notPositiveNumberError: string;
   perWidthInsufficient: string;
-};
+}
 export type TableMenuTexts = Record<string, string>;
 export interface TableTextOptions extends TableCreatorTextOptions, TableMenuTexts {
   custom: string;
@@ -75,7 +75,7 @@ export interface TableColValue {
   width: string;
   full?: boolean;
   align?: string;
-};
+}
 export interface TableCellValue {
   tableId: string;
   rowId: string;
@@ -83,7 +83,7 @@ export interface TableCellValue {
   rowspan: number;
   colspan: number;
   style?: string;
-};
+}
 export interface TableRowValue {
   tableId: string;
   rowId: string;
@@ -92,7 +92,7 @@ export interface TableValue {
   tableId: string;
   full?: boolean;
   align?: string;
-};
+}
 
 export interface RelactiveRect {
   x: number;
@@ -108,7 +108,7 @@ export interface InternalModule {
   hide: () => void;
   update: () => void;
   destroy: () => void;
-};
+}
 export type Constructor<T = any, U extends Array<any> = any[]> = new (...args: U) => T;
 export interface InternalTableSelectionModule extends InternalModule {
   dragging: boolean;
@@ -132,4 +132,4 @@ export interface TableConstantsData {
   blotName: Record<string, string>;
   tableUpSize: Record<string, number>;
   tableUpEvent: Record<string, string>;
-};
+}

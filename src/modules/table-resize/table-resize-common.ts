@@ -167,7 +167,7 @@ export class TableResizeCommon {
     }
 
     this.quill.emitter.emit(tableUpEvent.AFTER_TABLE_RESIZE);
-  };
+  }
 
   handleColMouseMove(e: MouseEvent): { left: number; width: number } | undefined {
     e.preventDefault();
@@ -213,7 +213,7 @@ export class TableResizeCommon {
       left: resX,
       width,
     };
-  };
+  }
 
   handleColMouseDown(e: MouseEvent): { top: number; left: number; height: number } | undefined {
     if (e.button !== 0) return;
@@ -255,7 +255,7 @@ export class TableResizeCommon {
     this.dragColBreak = divDom;
 
     return styleValue;
-  };
+  }
 
   findCurrentRowIndex(_e: MouseEvent) {
     return -1;
@@ -336,7 +336,7 @@ export class TableResizeCommon {
     this.dragRowBreak = divDom;
 
     return styleValue;
-  };
+  }
 
   update() {}
   destroy() {}
