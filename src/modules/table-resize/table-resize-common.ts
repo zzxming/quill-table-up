@@ -4,6 +4,10 @@ import type { TableMainFormat } from '../../formats';
 import { createBEM, createButton, createDialog, tableUpEvent, tableUpSize } from '../../utils';
 import { isTableAlignRight } from './utils';
 
+export interface sizeChangeValue {
+  px: number;
+  pre: number;
+}
 export class TableResizeCommon {
   colIndex: number = -1;
   tableMain?: TableMainFormat;
@@ -27,7 +31,7 @@ export class TableResizeCommon {
     return -1;
   }
 
-  colWidthChange(_i: number, _w: number, _isFull: boolean) {}
+  colWidthChange(_i: number, _w: sizeChangeValue, _isFull: boolean) {}
 
   async createConfirmDialog({ message, confirm, cancel }: {
     message: string;
@@ -162,7 +166,14 @@ export class TableResizeCommon {
 
       for (const { index, width } of updateInfo) {
         cols[index].width = `${Math.round(width)}${isFull ? '%' : 'px'}`;
-        this.colWidthChange(index, isFull ? width / 100 * tableWidth : width, isFull);
+        this.colWidthChange(
+          index,
+          {
+            px: Math.round(width / 100 * tableWidth),
+            pre: Math.round(width),
+          },
+          isFull,
+        );
       }
     }
 
