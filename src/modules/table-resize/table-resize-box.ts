@@ -1,6 +1,7 @@
 import type { Parchment as TypeParchment } from 'quill';
 import type TableUp from '../..';
 import type { TableColFormat, TableMainFormat, TableRowFormat } from '../..';
+import type { sizeChangeValue } from './table-resize-common';
 import Quill from 'quill';
 import { TableBodyFormat, TableCellInnerFormat } from '../../formats';
 import { addScrollEvent, clearScrollEvent, createBEM } from '../../utils';
@@ -76,9 +77,9 @@ export class TableResizeBox extends TableResizeCommon {
     return Array.from(this.root.getElementsByClassName(this.bem.be('col-separator'))).indexOf(e.target as HTMLElement);
   }
 
-  colWidthChange(i: number, w: number, _isFull: boolean) {
+  colWidthChange(i: number, w: sizeChangeValue, isFull: boolean) {
     const tableColHeads = Array.from(this.root.getElementsByClassName(this.bem.be('col-header'))) as HTMLElement[];
-    tableColHeads[i].style.width = `${w}px`;
+    tableColHeads[i].style.width = isFull ? `${w.pre}%` : `${w.px}px`;
   }
 
   handleColMouseDownFunc = function (this: TableResizeBox, e: MouseEvent) {
