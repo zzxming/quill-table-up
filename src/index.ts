@@ -327,6 +327,19 @@ export class TableUp {
       clear: 'Clear',
       transparent: 'Transparent',
       perWidthInsufficient: 'The percentage width is insufficient. To complete the operation, the table needs to be converted to a fixed width. Do you want to continue?',
+      CopyCell: 'Copy cell',
+      CutCell: 'Cut cell',
+      InsertTop: 'Insert row above',
+      InsertRight: 'Insert column right',
+      InsertBottom: 'Insert row below',
+      InsertLeft: 'Insert column Left',
+      MergeCell: 'Merge Cell',
+      SplitCell: 'Split Cell',
+      DeleteRow: 'Delete Row',
+      DeleteColumn: 'Delete Column',
+      DeleteTable: 'Delete table',
+      BackgroundColor: 'Set background color',
+      BorderColor: 'Set border color',
     }, options);
   }
 
