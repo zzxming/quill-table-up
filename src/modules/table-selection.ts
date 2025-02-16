@@ -64,35 +64,11 @@ export class TableSelection {
     });
     this.resizeObserver.observe(this.quill.root);
 
-    this.quill.root.addEventListener('mousedown', this.mouseDownHandler, false);
-    this.quill.root.addEventListener('keydown', (event) => {
-      const selectionKey = new Set(['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'End', 'Home', 'PageDown', 'PageUp']);
-      if (event.shiftKey) {
-        this.shiftKeyDown = true;
-        if (selectionKey.has(event.key)) {
-          this.keySelectionChange = true;
-        }
-      }
-    });
-    this.quill.root.addEventListener('keyup', (event) => {
-      if (event.key === 'Shift') {
-        this.shiftKeyDown = false;
-      }
-    });
-    document.addEventListener('selectionchange', this.selectionChangeHandler);
-    this.quill.on(Quill.events.SELECTION_CHANGE, (range: TypeRange | null) => {
-      if (range && this.isDisplaySelection) {
-        const formats = this.quill.getFormat(range);
-        const [line] = this.quill.getLine(range.index);
-        let isInChildren = !!formats[blotName.tableCellInner] && !!line;
-        if (isInChildren) {
-          isInChildren &&= this.selectedTds.some(td => td.children.contains(line!));
-        }
-        if (!isInChildren) {
-          this.hide();
-        }
-      }
-    });
+    this.quill.root.addEventListener('mousedown', this.mouseDownHandler, { passive: false });
+    this.quill.root.addEventListener('keydown', this.keydownHandler, { passive: false });
+    this.quill.root.addEventListener('keyup', this.keyupHandler, { passive: false });
+    document.addEventListener('selectionchange', this.selectionChangeHandler, { passive: false });
+    this.quill.on(Quill.events.SELECTION_CHANGE, this.quillSelectionChangeHandler);
     if (this.options.tableMenu) {
       this.tableMenu = new this.options.tableMenu(tableModule, quill, this.options.tableMenuOptions);
     }
@@ -124,6 +100,36 @@ export class TableSelection {
     tempRange.collapse(false);
     return tempRange.startOffset;
   }
+
+  quillSelectionChangeHandler = (range: TypeRange | null) => {
+    if (range && this.isDisplaySelection) {
+      const formats = this.quill.getFormat(range);
+      const [line] = this.quill.getLine(range.index);
+      let isInChildren = !!formats[blotName.tableCellInner] && !!line;
+      if (isInChildren) {
+        isInChildren &&= this.selectedTds.some(td => td.children.contains(line!));
+      }
+      if (!isInChildren) {
+        this.hide();
+      }
+    }
+  };
+
+  keyupHandler = (event: KeyboardEvent) => {
+    if (event.key === 'Shift') {
+      this.shiftKeyDown = false;
+    }
+  };
+
+  keydownHandler = (event: KeyboardEvent) => {
+    const selectionKey = new Set(['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'End', 'Home', 'PageDown', 'PageUp']);
+    if (event.shiftKey) {
+      this.shiftKeyDown = true;
+      if (selectionKey.has(event.key)) {
+        this.keySelectionChange = true;
+      }
+    }
+  };
 
   setSelectionData(selection: Selection, selectionData: SelectionData) {
     const { anchorNode, anchorOffset, focusNode, focusOffset } = selectionData;
@@ -506,14 +512,14 @@ export class TableSelection {
     this.selectedTds = this.computeSelectedTds(startPoint, startPoint);
     this.dragging = true;
     this.show();
-    if (this.tableMenu) {
-      this.tableMenu.hide();
-    }
-    if (this.tableModule.tableResize) {
-      this.tableModule.tableResize.hide();
-    }
 
     const mouseMoveHandler = (mousemoveEvent: MouseEvent) => {
+      if (this.tableMenu) {
+        this.tableMenu.hide();
+      }
+      if (this.tableModule.tableResize) {
+        this.tableModule.tableResize.hide();
+      }
       const { button, target, clientX, clientY } = mousemoveEvent;
       const closestTable = (target as HTMLElement).closest('.ql-table') as HTMLElement;
       if (
@@ -678,7 +684,10 @@ export class TableSelection {
     }
     clearScrollEvent.call(this);
 
-    this.quill.root.removeEventListener('mousedown', this.mouseDownHandler, false);
+    this.quill.root.removeEventListener('mousedown', this.mouseDownHandler);
+    this.quill.root.removeEventListener('keydown', this.keydownHandler);
+    this.quill.root.removeEventListener('keyup', this.keyupHandler);
     document.removeEventListener('selectionchange', this.selectionChangeHandler);
+    this.quill.off(Quill.events.SELECTION_CHANGE, this.quillSelectionChangeHandler);
   }
 }

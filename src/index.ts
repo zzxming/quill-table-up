@@ -277,7 +277,7 @@ export class TableUp {
       false,
     );
     this.quill.on(tableUpEvent.AFTER_TABLE_RESIZE, () => {
-      this.tableSelection && this.tableSelection.hide();
+      this.tableSelection && this.tableSelection.updateWithSelectedTds();
     });
 
     this.pasteTableHandler();
@@ -602,6 +602,7 @@ export class TableUp {
       isFulllLabel.appendChild(isFullCheckboxText);
       dom.appendChild(isFulllLabel);
     }
+    picker.options.innerHTML = '';
     picker.options.appendChild(dom);
   }
 
