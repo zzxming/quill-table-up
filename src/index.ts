@@ -423,9 +423,6 @@ export class TableUp {
           return colOps;
         }, [] as Record<string, any>[]);
         ops.unshift(...newCols);
-        // insert break line before table and after table
-        ops.unshift({ insert: '\n' });
-        ops.push({ insert: '\n' });
       }
       // reset variable to avoid conflict with other table
       tableId = randomId();
