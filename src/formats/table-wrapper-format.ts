@@ -31,6 +31,7 @@ export class TableWrapperFormat extends ContainerFormat {
       e.preventDefault();
       e.dataTransfer!.dropEffect = 'none';
     });
+    node.setAttribute('contenteditable', 'false');
     return node;
   }
 

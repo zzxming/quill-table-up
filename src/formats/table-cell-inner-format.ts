@@ -44,6 +44,7 @@ export class TableCellInnerFormat extends ContainerFormat {
     node.dataset.rowspan = String(getValidCellspan(rowspan));
     node.dataset.colspan = String(getValidCellspan(colspan));
     style && (node.dataset.style = style);
+    node.setAttribute('contenteditable', 'true');
     return node;
   }
 

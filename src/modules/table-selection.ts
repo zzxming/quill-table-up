@@ -65,8 +65,8 @@ export class TableSelection {
     this.resizeObserver.observe(this.quill.root);
 
     this.quill.root.addEventListener('mousedown', this.mouseDownHandler, { passive: false });
-    this.quill.root.addEventListener('keydown', this.keydownHandler, { passive: false });
-    this.quill.root.addEventListener('keyup', this.keyupHandler, { passive: false });
+    // this.quill.root.addEventListener('keydown', this.keydownHandler, { passive: false });
+    // this.quill.root.addEventListener('keyup', this.keyupHandler, { passive: false });
     document.addEventListener('selectionchange', this.selectionChangeHandler, { passive: false });
     this.quill.on(Quill.events.SELECTION_CHANGE, this.quillSelectionChangeHandler);
     if (this.options.tableMenu) {
@@ -102,6 +102,7 @@ export class TableSelection {
   }
 
   quillSelectionChangeHandler = (range: TypeRange | null) => {
+    console.log(range);
     if (range && this.isDisplaySelection) {
       const formats = this.quill.getFormat(range);
       const [line] = this.quill.getLine(range.index);
@@ -224,7 +225,7 @@ export class TableSelection {
 
   selectionChangeHandler = () => {
     const selection = window.getSelection();
-    const isKeySelectionChange = this.keySelectionChange;
+    // const isKeySelectionChange = this.keySelectionChange;
     this.keySelectionChange = false;
     if (!selection) return;
     const { anchorNode, focusNode, anchorOffset, focusOffset } = selection;
@@ -237,30 +238,31 @@ export class TableSelection {
     const anchorNames = findAllParentBlot(anchorBlot);
     const focusNames = findAllParentBlot(focusBlot);
 
-    if (
-      anchorBlot
-      && anchorBlot.statics.blotName === blotName.tableWrapper
-      && focusBlot
-      && focusBlot.statics.blotName === blotName.tableWrapper
-    ) {
-      const tempRange = document.createRange();
-      tempRange.setStart(anchorNode, anchorOffset);
-      tempRange.setEnd(focusNode, focusOffset);
-      const isPoint = tempRange.collapsed;
-      // if selection collapsed and cursor at the start of tableWrapper.
-      // is cursor move front from table cell. so set cursor to the end of prev node.
-      if (anchorOffset === 0 && isPoint) {
-        const prevNode = this.getFirstTextNode(anchorBlot.prev!.domNode);
-        const prevOffset = this.getNodeTailOffset(prevNode);
-        return this.setSelectionData(selection, {
-          anchorNode: prevNode,
-          anchorOffset: prevOffset,
-          focusNode: prevNode,
-          focusOffset: prevOffset,
-        });
-      }
-      return this.quill.blur();
-    }
+    // if (
+    //   anchorBlot
+    //   && anchorBlot.statics.blotName === blotName.tableWrapper
+    //   && focusBlot
+    //   && focusBlot.statics.blotName === blotName.tableWrapper
+    // ) {
+    //   const tempRange = document.createRange();
+    //   tempRange.setStart(anchorNode, anchorOffset);
+    //   tempRange.setEnd(focusNode, focusOffset);
+    //   const isPoint = tempRange.collapsed;
+    //   // if selection collapsed and cursor at the start of tableWrapper.
+    //   // is cursor move front from table cell. so set cursor to the end of prev node.
+    //   if (anchorOffset === 0 && isPoint) {
+    //     const prevNode = this.getFirstTextNode(anchorBlot.prev!.domNode);
+    //     const prevOffset = this.getNodeTailOffset(prevNode);
+    //     return this.setSelectionData(selection, {
+    //       anchorNode: prevNode,
+    //       anchorOffset: prevOffset,
+    //       focusNode: prevNode,
+    //       focusOffset: prevOffset,
+    //     });
+    //   }
+    //   return this.quill.blur();
+    // }
+
     // defect: mousedown at tableWrapper to selection will collapse selection to point
     // // If anchor is at tableWrapper and offset is 0, move to the previous row, without changing focus
     // // If anchor is at tableWrapper and offset is 1, move to the next row, without changing focus
@@ -353,43 +355,64 @@ export class TableSelection {
       || (!isAnchorInCellInner && isFocusInCellInner)
       || (!isFocusInCellInner && isAnchorInCellInner)
     ) {
-      if (isKeySelectionChange) {
-        // limit selection in current cell
-        this.setSelectionData(selection, this.lastSelection);
-      }
-      else {
-        // mouse selection cover all table
-        const isUpFromDown = this.selectionDirectionUp(selection);
-        const tableWrapperBlot = isAnchorInCellInner
-          ? anchorNames.get(blotName.tableWrapper) as TableWrapperFormat
-          : focusNames.get(blotName.tableWrapper) as TableWrapperFormat;
-
-        // 从 tableWrapper 的 0 开始选择还是会出现选区翻转，禁止掉在 tableWrapper 的 0 和 1 的选择: 方式是不允许选择在 tableWrapper
-        const nextNode = this.getLastTextNode(tableWrapperBlot.next!.domNode);
-        const prevNode = this.getFirstTextNode(tableWrapperBlot.prev!.domNode);
-        let { startNode, startOffset, endNode, endOffset } = this.findWrapSelection([
-          { node: prevNode, offset: this.getNodeTailOffset(prevNode) },
-          { node: nextNode, offset: 0 },
-          { node: anchorNode, offset: anchorOffset },
-          { node: focusNode, offset: focusOffset },
-        ]);
-        if (isUpFromDown) {
-          [startNode, startOffset, endNode, endOffset] = [endNode, endOffset, startNode, startOffset];
-        }
-        this.lastSelection = {
-          anchorNode: startNode,
-          anchorOffset: startOffset,
-          focusNode: endNode,
-          focusOffset: endOffset,
-        };
-        this.setSelectionData(selection, this.lastSelection);
-      }
-
+      this.setSelectionData(selection, this.lastSelection);
       if (this.selectedTds.length > 0) {
         this.hide();
       }
       return;
     }
+
+    // // if the selection in the table partial
+    // const isAnchorInCellInner = anchorNames.has(blotName.tableCellInner);
+    // const isFocusInCellInner = focusNames.has(blotName.tableCellInner);
+    // let isNotSameCellInner = isAnchorInCellInner && isFocusInCellInner;
+    // if (isNotSameCellInner) {
+    //   const anchorCellBlot = anchorNames.get(blotName.tableCellInner) as TableCellInnerFormat;
+    //   const focusCellBlot = focusNames.get(blotName.tableCellInner) as TableCellInnerFormat;
+    //   isNotSameCellInner &&= (anchorCellBlot !== focusCellBlot);
+    // }
+    // if (
+    //   (isAnchorInCellInner && isFocusInCellInner && isNotSameCellInner)
+    //   || (!isAnchorInCellInner && isFocusInCellInner)
+    //   || (!isFocusInCellInner && isAnchorInCellInner)
+    // ) {
+    //   if (isKeySelectionChange) {
+    //     // limit selection in current cell
+    //     this.setSelectionData(selection, this.lastSelection);
+    //   }
+    //   else {
+    //     // mouse selection cover all table
+    //     const isUpFromDown = this.selectionDirectionUp(selection);
+    //     const tableWrapperBlot = isAnchorInCellInner
+    //       ? anchorNames.get(blotName.tableWrapper) as TableWrapperFormat
+    //       : focusNames.get(blotName.tableWrapper) as TableWrapperFormat;
+
+    //     // 从 tableWrapper 的 0 开始选择还是会出现选区翻转，禁止掉在 tableWrapper 的 0 和 1 的选择: 方式是不允许选择在 tableWrapper
+    //     const nextNode = this.getLastTextNode(tableWrapperBlot.next!.domNode);
+    //     const prevNode = this.getFirstTextNode(tableWrapperBlot.prev!.domNode);
+    //     let { startNode, startOffset, endNode, endOffset } = this.findWrapSelection([
+    //       { node: prevNode, offset: this.getNodeTailOffset(prevNode) },
+    //       { node: nextNode, offset: 0 },
+    //       { node: anchorNode, offset: anchorOffset },
+    //       { node: focusNode, offset: focusOffset },
+    //     ]);
+    //     if (isUpFromDown) {
+    //       [startNode, startOffset, endNode, endOffset] = [endNode, endOffset, startNode, startOffset];
+    //     }
+    //     this.lastSelection = {
+    //       anchorNode: startNode,
+    //       anchorOffset: startOffset,
+    //       focusNode: endNode,
+    //       focusOffset: endOffset,
+    //     };
+    //     this.setSelectionData(selection, this.lastSelection);
+    //   }
+
+    //   if (this.selectedTds.length > 0) {
+    //     this.hide();
+    //   }
+    //   return;
+    // }
 
     this.lastSelection = {
       anchorNode,
