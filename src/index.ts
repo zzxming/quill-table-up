@@ -1,6 +1,4 @@
 import type { Range, Parchment as TypeParchment } from 'quill';
-import type { BlockEmbed as TypeBlockEmbed } from 'quill/blots/block';
-import type TypeBlock from 'quill/blots/block';
 import type { Delta as TypeDelta } from 'quill/core';
 import type { Context } from 'quill/modules/keyboard';
 import type Keyboard from 'quill/modules/keyboard';
@@ -110,36 +108,6 @@ export class TableUp {
         if (context.format[blotName.tableCellInner]) {
           const tableInnerBlot = findParentBlot(blot, blotName.tableCellInner);
           if (blot === tableInnerBlot.children.tail && offsetInline === blot.length() - 1) {
-            return false;
-          }
-        }
-        return true;
-      },
-    },
-    'after table insert new line': {
-      // lick 'code exit'
-      bindInHead: true,
-      key: 'Enter',
-      collapsed: true,
-      format: [blotName.tableCellInner],
-      prefix: /^$/,
-      suffix: /^\s*$/,
-      handler(this: { quill: Quill }, range: Range) {
-        const [line, offset] = this.quill.getLine(range.index);
-        const format = this.quill.getFormat(range.index + offset + 1, 1);
-        // next line still in table. not exit
-        if (format[blotName.tableCellInner]) {
-          return true;
-        }
-        // if have tow empty lines in table cell. enter will exit table and add a new line after table
-        let numLines = 2;
-        let cur = line;
-        while (cur !== null && cur.length() <= 1) {
-          cur = cur.prev as TypeBlock | TypeBlockEmbed | null;
-          numLines -= 1;
-          if (numLines <= 0) {
-            this.quill.insertText(range.index + 1, '\n');
-            this.quill.setSelection(range.index + 1, Quill.sources.SILENT);
             return false;
           }
         }
@@ -423,9 +391,6 @@ export class TableUp {
           return colOps;
         }, [] as Record<string, any>[]);
         ops.unshift(...newCols);
-        // insert break line before table and after table
-        ops.unshift({ insert: '\n' });
-        ops.push({ insert: '\n' });
       }
       // reset variable to avoid conflict with other table
       tableId = randomId();
