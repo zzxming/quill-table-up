@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import TableUp, { TableCellInnerFormat } from '../..';
-import { createQuillWithTableModule, createTable, createTableDeltaOps, createTableHTML } from './utils';
+import { createQuillWithTableModule, createTable, createTableDeltaOps, createTableHTML, createTaleColHTML } from './utils';
 
 beforeEach(() => {
   vi.useFakeTimers();
@@ -285,7 +285,6 @@ describe('set contents', () => {
     tableModule.setCellAttrs([tds[4], tds[5]], 'height', '50px', true);
     await vi.runAllTimersAsync();
     const delta = quill.getContents();
-    const insertGetHTML = quill.root.innerHTML;
     expect(delta.ops).toEqual([
       { insert: '\n' },
       { insert: { 'table-up-col': { tableId: '1', colId: '1', full: true, width: 50 } } },
@@ -307,7 +306,43 @@ describe('set contents', () => {
     quill.setContents([{ insert: '\n' }]);
     quill.setContents(delta);
     await vi.runAllTimersAsync();
-    expect(quill.root.innerHTML).toBe(insertGetHTML);
+    expect(quill.root).toEqualHTML(
+      `
+        <p><br></p><div>
+          <table cellpadding="0" cellspacing="0">
+            ${createTaleColHTML(2, { width: 50, full: true })}
+            <tbody>
+              <tr>
+                <td style="backround-color: red;">
+                  <div><p>1</p></div>
+                </td>
+                <td style="backround-color: red;">
+                  <div><p>2</p></div>
+                </td>
+              </tr>
+              <tr>
+                <td style="border-color: red;">
+                  <div><p>3</p></div>
+                </td>
+                <td style="border-color: red;">
+                  <div><p>4</p></div>
+                </td>
+              </tr>
+              <tr>
+                <td style="height: 50px;">
+                  <div><p>5</p></div>
+                </td>
+                <td style="height: 50px;">
+                  <div><p>6</p></div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p><br></p>
+      `,
+      { ignoreAttrs: ['class', 'style', 'rowspan', 'colspan', 'data-full', 'data-style', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
+    );
   });
 });
 
