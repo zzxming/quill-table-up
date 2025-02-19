@@ -36,6 +36,7 @@
   display: inline-block;
   min-width: 100%;
   word-break: break-word;
+  outline: none;
 }
 .ql-editor .ql-table col {
   border-collapse: separate;
