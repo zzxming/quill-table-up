@@ -5,8 +5,8 @@ import type Keyboard from 'quill/modules/keyboard';
 import type Toolbar from 'quill/modules/toolbar';
 import type { InternalModule, InternalTableSelectionModule, QuillTheme, QuillThemePicker, TableConstantsData, TableTextOptions, TableUpOptions } from './utils';
 import Quill from 'quill';
-import { BlockOverride, BlockquoteOverride, CodeBlockOverride, ContainerFormat, HeaderOverride, ListItemOverride, ScrollOverride, TableBodyFormat, TableCellFormat, TableCellInnerFormat, TableColFormat, TableColgroupFormat, TableMainFormat, TableRowFormat, TableWrapperFormat } from './formats';
-import { blotName, createBEM, createSelectBox, debounce, findParentBlot, findParentBlots, isFunction, isObject, isString, limitDomInViewPort, randomId, tableUpEvent, tableUpSize } from './utils';
+import { BlockOverride, ContainerFormat, ScrollOverride, TableBodyFormat, TableCellFormat, TableCellInnerFormat, TableColFormat, TableColgroupFormat, TableMainFormat, TableRowFormat, TableWrapperFormat } from './formats';
+import { blotName, createBEM, createSelectBox, debounce, findParentBlot, findParentBlots, isFunction, isObject, isString, limitDomInViewPort, mixinClass, randomId, tableUpEvent, tableUpSize } from './utils';
 
 const Delta = Quill.import('delta');
 const Break = Quill.import('blots/break') as TypeParchment.BlotConstructor;
@@ -136,14 +136,20 @@ export class TableUp {
 
     TableCellInnerFormat.requiredContainer = TableCellFormat;
 
+    const overrides = ['header', 'list', 'blockquote', 'code-block'].reduce((formatMap, format) => {
+      const key = `formats/${format}`;
+      const blot = Quill.import(key) as any;
+      formatMap[key] = class extends mixinClass(blot, [BlockOverride]) {
+        static register(): void {}
+      };
+      return formatMap;
+    }, {} as Record<string, Function>);
+
     Quill.register({
       'blots/scroll': ScrollOverride,
       'blots/block': BlockOverride,
+      ...overrides,
       [`blots/${blotName.container}`]: ContainerFormat,
-      'formats/header': HeaderOverride,
-      'formats/list': ListItemOverride,
-      'formats/blockquote': BlockquoteOverride,
-      'formats/code-block': CodeBlockOverride,
       [`formats/${blotName.tableCell}`]: TableCellFormat,
       [`formats/${blotName.tableCellInner}`]: TableCellInnerFormat,
       [`formats/${blotName.tableRow}`]: TableRowFormat,
