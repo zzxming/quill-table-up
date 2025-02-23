@@ -81,3 +81,39 @@ test('test TableSelection vertical', async ({ page }) => {
     Number.parseFloat(await selectionLine.evaluate(el => getComputedStyle(el).height)),
   ).toBeCloseTo(cellBounding.height * 3, -1);
 });
+
+test('test TableSelection set format list', async ({ page }) => {
+  await createTableBySelect(page, 'container1', 2, 2);
+  const cell = page.locator('#editor1 .ql-editor .ql-table td').nth(0);
+  const cellBounding = (await cell.boundingBox())!;
+  expect(cellBounding).not.toBeNull();
+  await cell.click();
+  await page.mouse.down();
+  await page.mouse.move(cellBounding.x + cellBounding.width * 2 - 10, cellBounding.y + cellBounding.height * 2 - 10);
+  await page.mouse.up();
+
+  const item = page.locator('.ql-toolbar .ql-list[value="bullet"]').nth(0);
+  await item.click();
+
+  expect(await page.locator('#editor1 .ql-table-cell-inner ol').count()).toBe(4);
+});
+
+test('test TableSelection set indent format', async ({ page }) => {
+  await createTableBySelect(page, 'container1', 2, 2);
+  const cell = page.locator('#editor1 .ql-editor .ql-table td').nth(0);
+  const cellBounding = (await cell.boundingBox())!;
+  expect(cellBounding).not.toBeNull();
+  await cell.click();
+  await page.mouse.down();
+  await page.mouse.move(cellBounding.x + cellBounding.width * 2 - 10, cellBounding.y + cellBounding.height * 2 - 10);
+  await page.mouse.up();
+
+  const plus = page.locator('.ql-toolbar .ql-indent[value="+1"]').nth(0);
+  await plus.click();
+  await plus.click();
+  expect(await page.locator('#editor1 .ql-table-cell-inner p.ql-indent-2').count()).toBe(4);
+
+  const reduce = page.locator('.ql-toolbar .ql-indent[value="-1"]').nth(0);
+  await reduce.click();
+  expect(await page.locator('#editor1 .ql-table-cell-inner p.ql-indent-1').count()).toBe(4);
+});
