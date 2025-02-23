@@ -1,4 +1,4 @@
-import type { Parchment as TypeParchment, Range as TypeRange } from 'quill';
+import type { EmitterSource, Parchment as TypeParchment, Range as TypeRange } from 'quill';
 import type { TableUp } from '..';
 import type { TableMainFormat, TableWrapperFormat } from '../formats';
 import type { InternalModule, RelactiveRect, TableSelectionOptions } from '../utils';
@@ -50,7 +50,7 @@ export class TableSelection {
     this.cellSelect = this.helpLinesInitial();
 
     this.resizeObserver = new ResizeObserver((entries) => {
-      // prevent the element first bind
+      // prevent when element first bind
       if (entries.some((entry) => {
         const originVal = (entry.target as ResizeObserveTarget)[IsFirstResizeObserve];
         (entry.target as ResizeObserveTarget)[IsFirstResizeObserve] = false;
@@ -97,7 +97,8 @@ export class TableSelection {
     return tempRange.startOffset;
   }
 
-  quillSelectionChangeHandler = (range: TypeRange | null) => {
+  quillSelectionChangeHandler = (range: TypeRange | null, _oldRange: TypeRange | null, source: EmitterSource) => {
+    if (source === Quill.sources.API) return;
     if (range && this.isDisplaySelection) {
       const formats = this.quill.getFormat(range);
       const [line] = this.quill.getLine(range.index);
