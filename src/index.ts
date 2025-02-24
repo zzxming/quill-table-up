@@ -1,12 +1,13 @@
 import type { Range, Parchment as TypeParchment } from 'quill';
-import type { EmitterSource, Delta as TypeDelta } from 'quill/core';
+import type { EmitterSource } from 'quill/core';
 import type { Context } from 'quill/modules/keyboard';
 import type Keyboard from 'quill/modules/keyboard';
 import type Toolbar from 'quill/modules/toolbar';
 import type { InternalModule, InternalTableSelectionModule, QuillTheme, QuillThemePicker, TableConstantsData, TableTextOptions, TableUpOptions } from './utils';
 import Quill from 'quill';
 import { BlockOverride, ContainerFormat, ScrollOverride, TableBodyFormat, TableCellFormat, TableCellInnerFormat, TableColFormat, TableColgroupFormat, TableMainFormat, TableRowFormat, TableWrapperFormat } from './formats';
-import { blotName, createBEM, createSelectBox, debounce, findParentBlot, findParentBlots, isFunction, isObject, isString, limitDomInViewPort, mixinClass, randomId, tableUpEvent, tableUpSize } from './utils';
+import { TablePasteParser } from './modules';
+import { blotName, createBEM, createSelectBox, debounce, findParentBlot, findParentBlots, isFunction, isString, limitDomInViewPort, mixinClass, randomId, tableUpEvent, tableUpSize } from './utils';
 
 const Delta = Quill.import('delta');
 const Break = Quill.import('blots/break') as TypeParchment.BlotConstructor;
@@ -29,34 +30,6 @@ const createCell = (scroll: TypeParchment.ScrollBlot, { tableId, rowId, colId }:
   tableCell.appendChild(tableCellInner);
 
   return tableCell;
-};
-const getCellWidth = (cell: HTMLElement): number => {
-  let width = Number.parseFloat(cell.getAttribute('width') || tableUpSize.colDefaultWidth);
-  if (Number.isNaN(width)) {
-    const styleWidth = cell.style.width;
-    width = styleWidth ? Number.parseFloat(styleWidth) : cell.offsetWidth;
-  }
-  return width;
-};
-const calculateCols = (tableNode: HTMLElement, colNums: number): number[] => {
-  const colWidths = new Array(colNums).fill(tableUpSize.colDefaultWidth);
-  // no need consider colspan
-  // word table will have a row at last <!--[if !supportMisalignedColumns]-->
-  // that tr doesn't have colspan and every td have width attribute. but set style "border:none"
-  const rows = Array.from(tableNode.querySelectorAll('tr'));
-  for (const row of rows) {
-    const cells = Array.from(row.querySelectorAll('td'));
-    for (const [index, cell] of cells.entries()) {
-      if (index < colNums) {
-        const cellWidth = getCellWidth(cell);
-        colWidths[index] = cellWidth || colWidths[index];
-      }
-      else {
-        break;
-      }
-    }
-  }
-  return colWidths;
 };
 
 // Blots that cannot be inserted into a table
@@ -296,7 +269,7 @@ export class TableUp {
       this.tableSelection && this.tableSelection.updateWithSelectedTds();
     });
 
-    this.pasteTableHandler();
+    new TablePasteParser(this.quill);
     this.listenBalanceCells();
   }
 
@@ -357,198 +330,6 @@ export class TableUp {
       BackgroundColor: 'Set background color',
       BorderColor: 'Set border color',
     }, options);
-  }
-
-  pasteTableHandler() {
-    let tableId = randomId();
-    let rowId = randomId();
-    let colIds: string[] = [];
-    let rowspanCount: { rowspan: number; colspan: number }[] = [];
-    let cellCount = 0;
-    let colCount = 0;
-
-    // handle paste html or text into table cell
-    const pasteElementIntoCell = (node: Node, delta: TypeDelta, _scroll: TypeParchment.ScrollBlot) => {
-      const range = this.quill.getSelection(true);
-      const formats = this.quill.getFormat(range);
-      const tableCellInnerValue = formats[blotName.tableCellInner];
-      if (tableCellInnerValue) {
-        for (const op of delta.ops) {
-          if (!op.attributes) op.attributes = {};
-          op.attributes[blotName.tableCellInner] = tableCellInnerValue;
-        }
-      }
-      return delta;
-    };
-    this.quill.clipboard.addMatcher(Node.TEXT_NODE, pasteElementIntoCell);
-    this.quill.clipboard.addMatcher(Node.ELEMENT_NODE, pasteElementIntoCell);
-
-    this.quill.clipboard.addMatcher('table', (node, delta) => {
-      if (delta.ops.length === 0) return delta;
-
-      const format = this.quill.getFormat();
-      const currentCellFormat = format[blotName.tableCellInner];
-      const ops: Record<string, any>[] = [];
-      const cols: Record<string, any>[] = [];
-      for (let i = 0; i < delta.ops.length; i++) {
-        const { attributes, insert } = delta.ops[i];
-        // remove quill origin table format and tableCell format
-        const { table, [blotName.tableCell]: tableCell, ...attrs } = attributes || {};
-        const hasCol = insert && (insert as Record<string, any>)[blotName.tableCol];
-        if (currentCellFormat) {
-          // if current in cell. no need add col. but need replace paste cell format with current cell format
-          if (hasCol) continue;
-          const { [blotName.tableCellInner]: tableCellInner, ...keepAtttrs } = attrs;
-          ops.push({
-            attributes: {
-              ...keepAtttrs,
-              [blotName.tableCellInner]: currentCellFormat,
-            },
-            insert,
-          });
-        }
-        else {
-          if (hasCol) {
-            cols.push({ insert });
-          }
-          else {
-            ops.push({ attributes: attrs, insert });
-          }
-        }
-      }
-
-      // if current in cell. no need add col
-      if (!currentCellFormat) {
-        const colWidths = calculateCols(node as HTMLElement, colIds.length);
-        const newCols = colWidths.reduce((colOps, width, i) => {
-          if (!cols[i]) {
-            colOps.push({
-              insert: {
-                [blotName.tableCol]: {
-                  tableId,
-                  colId: colIds[i],
-                  width,
-                  full: false,
-                },
-              },
-            });
-          }
-          else {
-            colOps.push(cols[i]);
-          }
-          return colOps;
-        }, [] as Record<string, any>[]);
-        ops.unshift(...newCols);
-      }
-      // reset variable to avoid conflict with other table
-      tableId = randomId();
-      colIds = [];
-      rowspanCount = [];
-      cellCount = 0;
-      colCount = 0;
-      return new Delta(ops);
-    });
-
-    this.quill.clipboard.addMatcher('colgroup', (node, delta) => {
-      const ops: Record<string, any>[] = [];
-      for (let i = 0; i < delta.ops.length; i++) {
-        const op = delta.ops[i];
-        if (op && isObject(op.insert) && op.insert[blotName.tableCol]) {
-          ops.push(op);
-        }
-      }
-      return new Delta(ops);
-    });
-    this.quill.clipboard.addMatcher('col', (node) => {
-      colIds[colCount] = randomId();
-      const delta = new Delta().insert({
-        [blotName.tableCol]: Object.assign(
-          TableColFormat.value(node as HTMLElement),
-          {
-            tableId,
-            colId: colIds[colCount],
-          },
-        ),
-      });
-      colCount += 1;
-      return delta;
-    });
-
-    this.quill.clipboard.addMatcher('tr', (node, delta) => {
-      rowId = randomId();
-      cellCount = 0;
-      for (const op of delta.ops) {
-        if (
-          op.attributes && op.attributes.background
-          && op.attributes[blotName.tableCellInner]
-        ) {
-          const cellAttrs = op.attributes[blotName.tableCellInner] as Record<string, any>;
-          if (!cellAttrs.style) cellAttrs.style = '';
-          (op.attributes[blotName.tableCellInner] as Record<string, any>).style = `background:${op.attributes.background};${cellAttrs.style}`;
-        }
-      }
-      // minus rowspan
-      for (const [i, span] of rowspanCount.entries()) {
-        if (span.rowspan > 0) {
-          span.rowspan -= 1;
-        }
-        if (span.rowspan <= 0) {
-          rowspanCount[i] = { rowspan: 0, colspan: 0 };
-        }
-      }
-      return delta;
-    });
-
-    const matchCell = (node: Node, delta: TypeDelta) => {
-      const cell = node as HTMLElement;
-      const cellFormat = TableCellFormat.formats(cell);
-      if (!colIds[cellCount] || !rowspanCount[cellCount]) {
-        for (let i = cellCount; i >= 0; i--) {
-          if (!colIds[i]) {
-            colIds[i] = randomId();
-          }
-          if (!rowspanCount[i]) {
-            rowspanCount[i] = { rowspan: 0, colspan: 0 };
-          }
-        }
-      }
-      // skip the colspan of the cell in the previous row
-      const { colspan } = rowspanCount[cellCount];
-      cellCount += colspan;
-      // add current cell rowspan in `rowspanCount` to calculate next row cell
-      if (cellFormat.rowspan > 1) {
-        rowspanCount[cellCount] = { rowspan: cellFormat.rowspan, colspan: cellFormat.colspan };
-      }
-
-      const colId = colIds[cellCount];
-      cellCount += cellFormat.colspan;
-
-      // add each insert tableCellInner format
-      const value = Object.assign(
-        cellFormat,
-        {
-          tableId,
-          rowId,
-          colId,
-        },
-      );
-      // make sure <!--[if !supportMisalignedColumns]--> display border
-      if (cell.style.border === 'none') {
-        value.style = value.style.replaceAll(/border-(top|right|bottom|left)-style:none;?/g, '');
-      }
-      const ops = [];
-      for (const op of delta.ops) {
-        const { insert, attributes } = op;
-        if (op.insert) {
-          const attrs = { ...attributes };
-          delete attrs[blotName.tableCell];
-          ops.push({ insert, attributes: { ...attrs, [blotName.tableCellInner]: value } });
-        }
-      }
-      return new Delta(ops);
-    };
-    this.quill.clipboard.addMatcher('td', matchCell);
-    this.quill.clipboard.addMatcher('th', matchCell);
   }
 
   showTableTools(table: HTMLElement) {
