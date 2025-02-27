@@ -15,54 +15,42 @@
     text-align: right;
   }
   &__checkbox {
-    .setCssVar(active-color, #506eec);
-    .setCssVar(mark-bg-color, #fff);
-    .setCssVar(mark-border-color, #212121);
+    .setCssVar(check-color, #212121);
+    .setCssVar(checked-color, #506eec);
 
     display: flex;
     align-items: center;
     margin-top: 4px;
-    position: relative;
     cursor: pointer;
     font-size: 12px;
     user-select: none;
     input {
-      position: absolute;
-      opacity: 0;
+      appearance: none;
+      width: 18px;
+      height: 18px;
+      border: 1px solid .getCssVar(check-color) [];
+      border-radius: 5px;
+      background-color: transparent;
+      display: inline-block;
+      position: relative;
+      margin-right: 10px;
       cursor: pointer;
-      height: 0;
-      width: 0;
-      &:checked ~ .@{namespace}-creator__mark {
-        .setCssVar(mark-bg-color, .getCssVar(active-color) []);
-        .setCssVar(mark-border-color, .getCssVar(active-color) []);
-
-        &:after {
-          display: block;
-        }
+      &:before {
+        content: '';
+        background-color: .getCssVar(checked-color) [];
+        display: block;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%) scale(0);
+        width: 10px;
+        height: 10px;
+        border-radius: 3px;
+        transition: all 0.2s ease-in-out;
       }
-    }
-  }
-  &__mark {
-    position: relative;
-    top: 0;
-    left: 0;
-    height: 18px;
-    width: 18px;
-    margin-right: 4px;
-    background: .getCssVar(mark-bg-color) [];
-    border: 1px solid .getCssVar(mark-border-color) [];
-    border-radius: 5px;
-    &::after {
-      content: '';
-      position: absolute;
-      display: none;
-      left: 5px;
-      top: 3px;
-      width: 3px;
-      height: 8px;
-      border: solid #fff;
-      border-width: 0 3px 3px 0;
-      transform: rotate(45deg);
+      &:checked:before {
+        transform: translate(-50%, -50%) scale(1);
+      }
     }
   }
 }

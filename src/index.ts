@@ -387,12 +387,9 @@ export class TableUp {
       isFullCheckbox.addEventListener('change', () => {
         this.options.full = isFullCheckbox.checked;
       });
-      const mark = document.createElement('div');
-      mark.classList.add(bem.be('mark'));
       const isFullCheckboxText = document.createElement('span');
       isFullCheckboxText.textContent = this.options.texts.fullCheckboxText;
       isFulllLabel.appendChild(isFullCheckbox);
-      isFulllLabel.appendChild(mark);
       isFulllLabel.appendChild(isFullCheckboxText);
       dom.appendChild(isFulllLabel);
     }
