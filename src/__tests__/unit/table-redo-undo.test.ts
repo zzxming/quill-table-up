@@ -1,7 +1,8 @@
-import type { TableMainFormat } from '../..';
+import type { TableMainFormat } from '../../formats';
 import Quill from 'quill';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import TableUp, { TableCellInnerFormat } from '../..';
+import { TableCellInnerFormat } from '../../formats';
+import { TableUp } from '../../table-up';
 import { createTable, createTableBodyHTML, createTableHTML, createTaleColHTML, datasetAlign, datasetFull } from './utils';
 
 beforeEach(() => {

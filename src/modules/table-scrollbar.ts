@@ -1,5 +1,5 @@
-import type TableUp from '..';
 import type { TableMainFormat } from '../formats';
+import type { TableUp } from '../table-up';
 import Quill from 'quill';
 import { addScrollEvent, clearScrollEvent, createBEM, debounce } from '../utils';
 

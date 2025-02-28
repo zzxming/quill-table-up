@@ -1,6 +1,6 @@
 import type { EmitterSource, Parchment as TypeParchment, Range as TypeRange } from 'quill';
-import type { TableUp } from '..';
 import type { TableMainFormat, TableWrapperFormat } from '../formats';
+import type { TableUp } from '../table-up';
 import type { InternalModule, RelactiveRect, TableSelectionOptions } from '../utils';
 import Quill from 'quill';
 import { TableCellFormat, TableCellInnerFormat } from '../formats';

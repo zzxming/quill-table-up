@@ -1,5 +1,5 @@
 import type Quill from 'quill';
-import type TableUp from '../..';
+import type { TableUp } from '../../table-up';
 import type { TableMenuOptions, ToolTipOptions } from '../../utils';
 import { limitDomInViewPort } from '../../utils';
 import { menuColorSelectClassName } from './constants';

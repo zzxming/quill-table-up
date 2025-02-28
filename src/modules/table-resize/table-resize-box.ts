@@ -1,6 +1,6 @@
 import type { Parchment as TypeParchment } from 'quill';
-import type TableUp from '../..';
-import type { TableColFormat, TableMainFormat, TableRowFormat } from '../..';
+import type { TableColFormat, TableMainFormat, TableRowFormat } from '../../formats';
+import type { TableUp } from '../../table-up';
 import type { sizeChangeValue } from './table-resize-common';
 import Quill from 'quill';
 import { TableBodyFormat, TableCellInnerFormat } from '../../formats';
