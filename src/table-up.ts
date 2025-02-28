@@ -3,15 +3,16 @@ import type { EmitterSource } from 'quill/core';
 import type { Context } from 'quill/modules/keyboard';
 import type Keyboard from 'quill/modules/keyboard';
 import type Toolbar from 'quill/modules/toolbar';
+import type { TypeQuill } from './instance';
 import type { InternalModule, InternalTableSelectionModule, QuillTheme, QuillThemePicker, TableConstantsData, TableTextOptions, TableUpOptions } from './utils';
-import Quill from 'quill';
 import { BlockOverride, ContainerFormat, ScrollOverride, TableBodyFormat, TableCellFormat, TableCellInnerFormat, TableColFormat, TableColgroupFormat, TableMainFormat, TableRowFormat, TableWrapperFormat } from './formats';
+import { getQuill } from './instance';
 import { TablePasteParser } from './modules';
 import { blotName, createBEM, createSelectBox, debounce, findParentBlot, findParentBlots, isForbidInTable, isFunction, isString, limitDomInViewPort, mixinClass, randomId, tableCantInsert, tableUpEvent, tableUpSize } from './utils';
 
+const Quill = getQuill();
 const Delta = Quill.import('delta');
 const Break = Quill.import('blots/break') as TypeParchment.BlotConstructor;
-const icons = Quill.import('ui/icons') as Record<string, any>;
 const Parchment = Quill.import('parchment');
 
 function createCell(scroll: TypeParchment.ScrollBlot, { tableId, rowId, colId }: { tableId: string; rowId: string; colId: string }) {
@@ -72,7 +73,7 @@ export class TableUp {
       key: 'Backspace',
       collapsed: true,
       offset: 0,
-      handler(this: { quill: Quill }, range: Range, context: Context) {
+      handler(this: { quill: TypeQuill }, range: Range, context: Context) {
         const line = this.quill.getLine(range.index);
         const blot = line[0] as TypeParchment.BlockBlot;
         if (blot.prev instanceof TableWrapperFormat) {
@@ -94,7 +95,7 @@ export class TableUp {
       bindInHead: true,
       key: 'Delete',
       collapsed: true,
-      handler(this: { quill: Quill }, range: Range, context: Context) {
+      handler(this: { quill: TypeQuill }, range: Range, context: Context) {
         const line = this.quill.getLine(range.index);
         const blot = line[0] as TypeParchment.BlockBlot;
         const offsetInline = line[1];
@@ -111,7 +112,7 @@ export class TableUp {
     },
   };
 
-  static register() {
+  static register(Q: TypeParchment.Registry) {
     TableWrapperFormat.allowedChildren = [TableMainFormat];
 
     TableMainFormat.allowedChildren = [TableBodyFormat, TableColgroupFormat];
@@ -132,15 +133,14 @@ export class TableUp {
     TableCellInnerFormat.requiredContainer = TableCellFormat;
 
     const overrides = ['header', 'list', 'blockquote', 'code-block'].reduce((formatMap, format) => {
-      const key = `formats/${format}`;
-      const blot = Quill.import(key) as any;
-      formatMap[key] = class extends mixinClass(blot, [BlockOverride]) {
+      const blot = Q.query(format) as any;
+      formatMap[`formats/${format}`] = class extends mixinClass(blot, [BlockOverride]) {
         static register(): void {}
       };
       return formatMap;
     }, {} as Record<string, Function>);
 
-    Quill.register({
+    const targets = {
       'blots/scroll': ScrollOverride,
       'blots/block': BlockOverride,
       ...overrides,
@@ -153,10 +153,13 @@ export class TableUp {
       [`formats/${blotName.tableColgroup}`]: TableColgroupFormat,
       [`formats/${blotName.tableMain}`]: TableMainFormat,
       [`formats/${blotName.tableWrapper}`]: TableWrapperFormat,
-    }, true);
+    };
+    for (const [key, value] of Object.entries(targets)) {
+      Quill.register(key, value, true);
+    }
   }
 
-  quill: Quill;
+  quill: TypeQuill;
   options: TableUpOptions;
   toolBox: HTMLDivElement;
   fixTableByLisenter = debounce(this.balanceTables, 100);
@@ -172,7 +175,7 @@ export class TableUp {
     return this.constructor;
   }
 
-  constructor(quill: Quill, options: Partial<TableUpOptions>) {
+  constructor(quill: TypeQuill, options: Partial<TableUpOptions>) {
     this.quill = quill;
     this.options = this.resolveOptions(options || {});
     const toolboxBEM = createBEM('toolbox');
@@ -309,6 +312,7 @@ export class TableUp {
   }
 
   resolveOptions(options: Partial<TableUpOptions>): TableUpOptions {
+    const icons = Quill.import('ui/icons') as Record<string, any>;
     return Object.assign({
       customBtn: false,
       texts: this.resolveTexts(options.texts || {}),

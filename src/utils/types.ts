@@ -1,7 +1,7 @@
-import type Quill from 'quill';
 import type BaseTheme from 'quill/themes/base';
 import type Picker from 'quill/ui/picker';
 import type { TableCellInnerFormat } from '../formats';
+import type { TypeQuill } from '../instance';
 import type { TableUp } from '../table-up';
 
 export type QuillThemePicker = (Picker & { options: HTMLElement });
@@ -29,7 +29,7 @@ export interface TableMenuOptions {
 }
 export interface TableSelectionOptions {
   selectColor: string;
-  tableMenu?: Constructor<InternalModule, [TableUp, Quill, Partial<TableMenuOptions>]>;
+  tableMenu?: Constructor<InternalModule, [TableUp, TypeQuill, Partial<TableMenuOptions>]>;
   tableMenuOptions: TableMenuOptions;
 }
 export interface TableResizeScaleOptions {
@@ -59,15 +59,15 @@ export interface TableUpOptions {
   customBtn: boolean;
   texts: TableTextOptions;
   icon: string;
-  selection?: Constructor<InternalTableSelectionModule, [TableUp, Quill, Partial<TableSelectionOptions>]>;
+  selection?: Constructor<InternalTableSelectionModule, [TableUp, TypeQuill, Partial<TableSelectionOptions>]>;
   selectionOptions: Partial<TableSelectionOptions>;
-  resize?: Constructor<InternalModule, [TableUp, HTMLElement, Quill, any]>;
+  resize?: Constructor<InternalModule, [TableUp, HTMLElement, TypeQuill, any]>;
   resizeOptions: any;
-  scrollbar?: Constructor<InternalModule, [TableUp, HTMLElement, Quill, any]>;
+  scrollbar?: Constructor<InternalModule, [TableUp, HTMLElement, TypeQuill, any]>;
   scrollbarOptions: any;
-  align?: Constructor<InternalModule, [TableUp, HTMLElement, Quill, any]>;
+  align?: Constructor<InternalModule, [TableUp, HTMLElement, TypeQuill, any]>;
   alignOptions: any;
-  resizeScale?: Constructor<InternalModule, [TableUp, HTMLElement, Quill, Partial<TableResizeScaleOptions>]>;
+  resizeScale?: Constructor<InternalModule, [TableUp, HTMLElement, TypeQuill, Partial<TableResizeScaleOptions>]>;
   resizeScaleOptions: Partial<TableResizeScaleOptions>;
 }
 export interface TableColValue {

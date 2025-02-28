@@ -1,10 +1,12 @@
+import type { TypeQuill } from '../../instance';
 import type { TableUp } from '../../table-up';
-import Quill from 'quill';
 import { type TableCellFormat, TableRowFormat } from '../../formats';
+import { getQuill } from '../../instance';
 import { blotName, createBEM, findParentBlot, findParentBlots } from '../../utils';
 import { TableResizeCommon } from './table-resize-common';
 import { isTableAlignRight } from './utils';
 
+const Quill = getQuill();
 export class TableResizeLine extends TableResizeCommon {
   colResizer: HTMLElement;
   rowResizer: HTMLElement;
@@ -16,7 +18,7 @@ export class TableResizeLine extends TableResizeCommon {
   tableCellBlot?: TableCellFormat;
 
   bem = createBEM('resize-line');
-  constructor(public tableModule: TableUp, public table: HTMLElement, quill: Quill) {
+  constructor(public tableModule: TableUp, public table: HTMLElement, quill: TypeQuill) {
     super(tableModule, quill);
     this.colResizer = this.tableModule.addContainer(this.bem.be('col'));
     this.rowResizer = this.tableModule.addContainer(this.bem.be('row'));

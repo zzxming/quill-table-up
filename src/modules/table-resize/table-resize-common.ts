@@ -1,5 +1,5 @@
-import type Quill from 'quill';
 import type { TableMainFormat } from '../../formats';
+import type { TypeQuill } from '../../instance';
 import type { TableUp } from '../../table-up';
 import { createBEM, createButton, createDialog, tableUpEvent, tableUpSize } from '../../utils';
 import { isTableAlignRight } from './utils';
@@ -25,7 +25,7 @@ export class TableResizeCommon {
 
   dragBEM = createBEM('drag-line');
 
-  constructor(public tableModule: TableUp, public quill: Quill) {}
+  constructor(public tableModule: TableUp, public quill: TypeQuill) {}
 
   findCurrentColIndex(_e: MouseEvent) {
     return -1;

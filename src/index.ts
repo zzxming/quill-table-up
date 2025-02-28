@@ -1,3 +1,5 @@
+import './init';
+// eslint-disable-next-line perfectionist/sort-imports
 import { TableUp } from './table-up';
 
 export default TableUp;

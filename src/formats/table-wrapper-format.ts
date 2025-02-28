@@ -1,9 +1,10 @@
-import Quill from 'quill';
+import { getQuill } from '../instance';
 import { blotName } from '../utils';
 import { ContainerFormat } from './container-format';
 import { TableBodyFormat } from './table-body-format';
 import { TableColgroupFormat } from './table-colgroup-format';
 
+const Quill = getQuill();
 const Parchment = Quill.import('parchment');
 
 export class TableWrapperFormat extends ContainerFormat {

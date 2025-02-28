@@ -112,8 +112,8 @@ const createOverridesTable = (html: string, options = true, moduleOptions = {}, 
     }
   }
   class TableUpOverride extends TableUp {
-    static register(): void {
-      super.register();
+    static register(R: any): void {
+      super.register(R);
       Quill.register({
         'formats/a-col': TableColFormatOverride,
         'formats/a-cell': TableCellFormatOverride,

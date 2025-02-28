@@ -17,13 +17,18 @@
   ],
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js"
+      "browser": {
+        "types": "./dist/index.d.ts",
+        "import": "./dist/index.js"
+      },
+      "node": {
+        "types": "./dist/node.d.ts",
+        "import": "./dist/node.js"
+      }
     },
     "./index.css": "./dist/index.css",
     "./table-creator.css": "./dist/table-creator.css"
   },
-  "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "files": [
     "dist",
@@ -68,6 +73,7 @@
     "parchment": "^3.0.0",
     "postcss-pxtorem": "^6.1.0",
     "resize-observer-polyfill": "^1.5.1",
+    "rimraf": "^6.0.1",
     "rollup": "^4.34.8",
     "rollup-plugin-dts": "^6.1.1",
     "rollup-plugin-svg-import": "^3.0.0",

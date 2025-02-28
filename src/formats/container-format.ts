@@ -1,8 +1,8 @@
 import type { Parchment as TypeParchment } from 'quill';
-import Quill from 'quill';
+import { getQuill } from '../instance';
 import { blotName } from '../utils';
 
-const Parchment = Quill.import('parchment');
+const Quill = getQuill();
 const Container = Quill.import('blots/container') as typeof TypeParchment.ContainerBlot;
 const Block = Quill.import('blots/block') as TypeParchment.BlotConstructor;
 const BlockEmbed = Quill.import('blots/block/embed') as TypeParchment.BlotConstructor;
@@ -10,7 +10,6 @@ const BlockEmbed = Quill.import('blots/block/embed') as TypeParchment.BlotConstr
 export class ContainerFormat extends Container {
   static tagName: string;
   static blotName: string = blotName.container;
-  static scope = Parchment.Scope.BLOCK_BLOT;
 
   static allowedChildren?: TypeParchment.BlotConstructor[] = [Block, BlockEmbed, Container];
   static requiredContainer: TypeParchment.BlotConstructor;

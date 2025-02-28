@@ -1,9 +1,10 @@
 import type { Parchment as TypeParchment } from 'quill';
 import type { TableColFormat, TableMainFormat, TableRowFormat } from '../../formats';
+import type { TypeQuill } from '../../instance';
 import type { TableUp } from '../../table-up';
 import type { sizeChangeValue } from './table-resize-common';
-import Quill from 'quill';
 import { TableBodyFormat, TableCellInnerFormat } from '../../formats';
+import { getQuill } from '../../instance';
 import { addScrollEvent, clearScrollEvent, createBEM } from '../../utils';
 import { TableResizeCommon } from './table-resize-common';
 import { isTableAlignRight } from './utils';
@@ -12,6 +13,7 @@ interface Point {
   x: number;
   y: number;
 }
+const Quill = getQuill();
 export class TableResizeBox extends TableResizeCommon {
   root!: HTMLElement;
   tableMain: TableMainFormat;
@@ -27,7 +29,7 @@ export class TableResizeBox extends TableResizeCommon {
   size: number = 12;
   bem = createBEM('resize-box');
 
-  constructor(public tableModule: TableUp, public table: HTMLElement, quill: Quill) {
+  constructor(public tableModule: TableUp, public table: HTMLElement, quill: TypeQuill) {
     super(tableModule, quill);
     this.tableMain = Quill.find(this.table) as TableMainFormat;
 

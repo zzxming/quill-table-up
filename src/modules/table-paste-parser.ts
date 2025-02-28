@@ -1,9 +1,11 @@
 import type { Parchment as TypeParchment } from 'quill';
 import type { Delta as TypeDelta } from 'quill/core';
-import Quill from 'quill';
+import type { TypeQuill } from '../instance';
 import { TableCellFormat, TableColFormat } from '../formats';
+import { getQuill } from '../instance';
 import { blotName, isObject, randomId, tableUpSize } from '../utils';
 
+const Quill = getQuill();
 const Delta = Quill.import('delta');
 
 function getCellWidth(cell: HTMLElement): number {
@@ -42,7 +44,7 @@ export class TablePasteParser {
   rowspanCount: { rowspan: number; colspan: number }[] = [];
   cellCount = 0;
   colCount = 0;
-  constructor(public quill: Quill) {
+  constructor(public quill: TypeQuill) {
     this.quill.clipboard.addMatcher('table', this.matchTable.bind(this));
     this.quill.clipboard.addMatcher('colgroup', this.matchColgroup.bind(this));
     this.quill.clipboard.addMatcher('col', this.matchCol.bind(this));

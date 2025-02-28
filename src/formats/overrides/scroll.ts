@@ -1,8 +1,9 @@
 import type { Parchment as TypeParchment } from 'quill';
-import Quill from 'quill';
+import { getQuill } from '../../instance';
 import { blotName } from '../../utils';
 import { TableCellInnerFormat } from '../table-cell-inner-format';
 
+const Quill = getQuill();
 const Parchment = Quill.import('parchment');
 const ScrollBlot = Quill.import('blots/scroll') as any;
 

@@ -1,8 +1,10 @@
 import type { TableMainFormat } from '../formats';
+import type { TypeQuill } from '../instance';
 import type { TableUp } from '../table-up';
-import Quill from 'quill';
+import { getQuill } from '../instance';
 import { addScrollEvent, clearScrollEvent, createBEM, debounce } from '../utils';
 
+const Quill = getQuill();
 export class Scrollbar {
   minSize: number = 20;
   gap: number = 4;
@@ -29,7 +31,7 @@ export class Scrollbar {
   scrollHandler: [HTMLElement, (e: Event) => void][] = [];
   propertyMap: { readonly size: 'height'; readonly offset: 'offsetHeight'; readonly scrollDirection: 'scrollTop'; readonly scrollSize: 'scrollHeight'; readonly axis: 'Y'; readonly direction: 'top'; readonly client: 'clientY' } | { readonly size: 'width'; readonly offset: 'offsetWidth'; readonly scrollDirection: 'scrollLeft'; readonly scrollSize: 'scrollWidth'; readonly axis: 'X'; readonly direction: 'left'; readonly client: 'clientX' };
   bem = createBEM('scrollbar');
-  constructor(public quill: Quill, public isVertical: boolean, public table: HTMLElement, public scrollbarContainer: HTMLElement) {
+  constructor(public quill: TypeQuill, public isVertical: boolean, public table: HTMLElement, public scrollbarContainer: HTMLElement) {
     this.container = table.parentElement!;
     this.propertyMap = this.isVertical
       ? {
@@ -214,7 +216,7 @@ export class TableVirtualScrollbar {
   scrollbarContainer: HTMLElement;
   scrollbar: Scrollbar[];
   bem = createBEM('scrollbar');
-  constructor(public tableModule: TableUp, public table: HTMLElement, public quill: Quill) {
+  constructor(public tableModule: TableUp, public table: HTMLElement, public quill: TypeQuill) {
     this.scrollbarContainer = this.tableModule.addContainer(this.bem.be('container'));
 
     this.scrollbar = [

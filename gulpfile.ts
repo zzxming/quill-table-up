@@ -9,6 +9,7 @@ import cleanCSS from 'gulp-clean-css';
 import less from 'gulp-less';
 import postcss from 'gulp-postcss';
 import pxtorem from 'postcss-pxtorem';
+import { rimraf } from 'rimraf';
 import { rollup } from 'rollup';
 import { dts } from 'rollup-plugin-dts';
 import svg from 'rollup-plugin-svg-import';
@@ -20,36 +21,57 @@ const demoBundle = resolve(__dirname, './docs');
 const buildDts = async () => {
   const bundle = await rollup(
     {
-      input: './src/index.ts',
+      input: {
+        index: './src/index.ts',
+        node: './src/node.ts',
+      },
       external: [/^quill/],
       treeshake: true,
       plugins: [dts({ tsconfig: './tsconfig.json' })],
     },
   );
   return bundle.write({
-    file: resolve(distBundle, 'index.d.ts'),
+    dir: distBundle,
     sourcemap: false,
     format: 'es',
+    entryFileNames: '[name].d.ts',
   });
 };
 const buildTs = async (isDev: boolean = false) => {
+  if (!isDev) {
+    await rimraf([
+      'dist/**/*.js',
+      'dist/**/*.js.map',
+      'dist/**/*.ts',
+    ], { glob: true });
+  }
   const plugins = [
     typescript({ tsconfig: './tsconfig.json', exclude: ['src/__tests__'] }),
     nodeResolve(),
     svg({ stringify: true }),
   ];
   !isDev && plugins.push(terser());
-  const bundle = await rollup(
-    {
+  async function bundleUMD() {
+    const umdBundle = await rollup({
       input: './src/index.ts',
       external: [/^quill/],
       treeshake: true,
       plugins,
-    },
-  );
-  if (!isDev) {
-    await bundle.write({
-      file: resolve(distBundle, 'index.umd.js'),
+    });
+    if (!isDev) {
+      await umdBundle.write({
+        file: resolve(distBundle, 'index.umd.js'),
+        sourcemap: true,
+        format: 'umd',
+        name: 'TableUp',
+        globals: {
+          quill: 'Quill',
+        },
+        exports: 'named',
+      });
+    }
+    return umdBundle.write({
+      file: resolve(demoBundle, 'index.umd.js'),
       sourcemap: true,
       format: 'umd',
       name: 'TableUp',
@@ -59,22 +81,27 @@ const buildTs = async (isDev: boolean = false) => {
       exports: 'named',
     });
   }
-
-  await bundle.write({
-    file: resolve(demoBundle, 'index.umd.js'),
-    sourcemap: true,
-    format: 'umd',
-    name: 'TableUp',
-    globals: {
-      quill: 'Quill',
-    },
-    exports: 'named',
-  });
-  return bundle.write({
-    file: resolve(distBundle, 'index.js'),
-    sourcemap: true,
-    format: 'es',
-  });
+  async function bundleES() {
+    const esBundle = await rollup({
+      input: {
+        index: './src/index.ts',
+        node: './src/node.ts',
+      },
+      external: [/^quill/],
+      treeshake: true,
+      plugins,
+    });
+    return esBundle.write({
+      dir: distBundle,
+      sourcemap: true,
+      format: 'es',
+      entryFileNames: '[name].js',
+    });
+  }
+  return Promise.all([
+    bundleUMD(),
+    bundleES(),
+  ]);
 };
 const buildTheme = async (isDev: boolean = false) => {
   const bunlde = await src(['./src/style/index.less', './src/style/table-creator.less'])

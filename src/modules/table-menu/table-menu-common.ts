@@ -1,4 +1,4 @@
-import type Quill from 'quill';
+import type { TypeQuill } from '../../instance';
 import type { TableUp } from '../../table-up';
 import type { TableMenuOptions, ToolOption, TooltipInstance, ToolTipOptions } from '../../utils';
 import { createBEM, createColorPicker, createTooltip, debounce, defaultColorMap, isArray, isFunction, randomId } from '../../utils';
@@ -16,7 +16,7 @@ export class TableMenuCommon {
     direction: 'top',
   };
 
-  constructor(public tableModule: TableUp, public quill: Quill, options: TableMenuOptionsInput) {
+  constructor(public tableModule: TableUp, public quill: TypeQuill, options: TableMenuOptionsInput) {
     this.options = this.resolveOptions(options);
 
     try {

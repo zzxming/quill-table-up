@@ -1,11 +1,13 @@
 import type { EmitterSource, Parchment as TypeParchment, Range as TypeRange } from 'quill';
 import type { TableMainFormat, TableWrapperFormat } from '../formats';
+import type { TypeQuill } from '../instance';
 import type { TableUp } from '../table-up';
 import type { InternalModule, RelactiveRect, TableSelectionOptions } from '../utils';
-import Quill from 'quill';
 import { TableCellFormat, TableCellInnerFormat } from '../formats';
+import { getQuill } from '../instance';
 import { addScrollEvent, blotName, clearScrollEvent, createBEM, findAllParentBlot, getRelativeRect, isRectanglesIntersect } from '../utils';
 
+const Quill = getQuill();
 const ERROR_LIMIT = 0;
 const IsFirstResizeObserve = Symbol('IsFirstResizeObserve');
 type ResizeObserveTarget = HTMLElement & { [IsFirstResizeObserve]?: boolean };
@@ -43,7 +45,7 @@ export class TableSelection {
     focusOffset: 0,
   };
 
-  constructor(public tableModule: TableUp, public quill: Quill, options: Partial<TableSelectionOptions> = {}) {
+  constructor(public tableModule: TableUp, public quill: TypeQuill, options: Partial<TableSelectionOptions> = {}) {
     this.options = this.resolveOptions(options);
 
     this.cellSelectWrap = tableModule.addContainer(this.bem.b());

@@ -1,9 +1,11 @@
 import type { TableMainFormat, TableWrapperFormat } from '../formats';
+import type { TypeQuill } from '../instance';
 import type { TableUp } from '../table-up';
 import { autoUpdate, computePosition, flip, limitShift, offset, shift } from '@floating-ui/dom';
-import Quill from 'quill';
+import { getQuill } from '../instance';
 import { createBEM } from '../utils';
 
+const Quill = getQuill();
 export class TableAlign {
   tableBlot: TableMainFormat;
   tableWrapperBlot: TableWrapperFormat;
@@ -11,7 +13,7 @@ export class TableAlign {
   cleanup?: () => void;
   bem = createBEM('align');
   resizeObserver = new ResizeObserver(() => this.hide());
-  constructor(public tableModule: TableUp, public table: HTMLElement, public quill: Quill) {
+  constructor(public tableModule: TableUp, public table: HTMLElement, public quill: TypeQuill) {
     this.tableBlot = Quill.find(table)! as TableMainFormat;
     this.tableWrapperBlot = this.tableBlot.parent as TableWrapperFormat;
 

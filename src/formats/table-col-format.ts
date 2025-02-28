@@ -1,10 +1,11 @@
 import type { Parchment as TypeParchment } from 'quill';
 import type { BlockEmbed as TypeBlockEmbed } from 'quill/blots/block';
 import type { TableColValue } from '../utils';
-import Quill from 'quill';
+import { getQuill } from '../instance';
 import { blotName, findParentBlot, findParentBlots, tableUpSize } from '../utils';
 import { TableCellInnerFormat } from './table-cell-inner-format';
 
+const Quill = getQuill();
 const BlockEmbed = Quill.import('blots/block/embed') as typeof TypeBlockEmbed;
 
 export class TableColFormat extends BlockEmbed {
@@ -112,7 +113,7 @@ export class TableColFormat extends BlockEmbed {
     );
   }
 
-  optimize(context: Record< string, any>) {
+  optimize(context: Record<string, any>) {
     const parent = this.parent;
     if (parent != null && parent.statics.blotName !== blotName.tableColgroup) {
       const value = this.statics.value(this.domNode);

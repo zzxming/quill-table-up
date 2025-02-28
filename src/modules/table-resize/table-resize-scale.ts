@@ -1,10 +1,12 @@
 import type { TableColFormat, TableMainFormat, TableRowFormat, TableWrapperFormat } from '../../formats';
+import type { TypeQuill } from '../../instance';
 import type { TableUp } from '../../table-up';
 import type { TableResizeScaleOptions } from '../../utils';
-import Quill from 'quill';
+import { getQuill } from '../../instance';
 import { addScrollEvent, clearScrollEvent, createBEM, tableUpSize } from '../../utils';
 import { isTableAlignRight } from './utils';
 
+const Quill = getQuill();
 export class TableResizeScale {
   scrollHandler: [HTMLElement, (e: Event) => void][] = [];
   tableMainBlot: TableMainFormat | null = null;
@@ -16,7 +18,7 @@ export class TableResizeScale {
   root?: HTMLElement;
   block?: HTMLElement;
   resizeobserver: ResizeObserver = new ResizeObserver(() => this.update());
-  constructor(public tableModule: TableUp, public table: HTMLElement, public quill: Quill, options: Partial<TableResizeScaleOptions>) {
+  constructor(public tableModule: TableUp, public table: HTMLElement, public quill: TypeQuill, options: Partial<TableResizeScaleOptions>) {
     this.options = this.resolveOptions(options);
     this.tableMainBlot = Quill.find(table) as TableMainFormat;
 

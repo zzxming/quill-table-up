@@ -1,11 +1,11 @@
-import type Quill from 'quill';
+import type { TypeQuill } from '../../instance';
 import type { TableUp } from '../../table-up';
 import type { TableMenuOptionsInput } from './table-menu-common';
 import { computePosition, flip, limitShift, offset, shift } from '@floating-ui/dom';
 import { TableMenuCommon } from './table-menu-common';
 
 export class TableMenuSelect extends TableMenuCommon {
-  constructor(public tableModule: TableUp, public quill: Quill, options: TableMenuOptionsInput) {
+  constructor(public tableModule: TableUp, public quill: TypeQuill, options: TableMenuOptionsInput) {
     super(tableModule, quill, options);
 
     this.menu = this.buildTools();

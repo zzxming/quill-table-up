@@ -1,4 +1,4 @@
-import type Quill from 'quill';
+import type { TypeQuill } from '../../instance';
 import type { TableUp } from '../../table-up';
 import type { TableMenuOptions, ToolTipOptions } from '../../utils';
 import { limitDomInViewPort } from '../../utils';
@@ -11,7 +11,7 @@ export class TableMenuContextmenu extends TableMenuCommon {
     direction: 'right',
   };
 
-  constructor(public tableModule: TableUp, public quill: Quill, options: TableMenuOptionsInput) {
+  constructor(public tableModule: TableUp, public quill: TypeQuill, options: TableMenuOptionsInput) {
     super(tableModule, quill, options);
 
     this.quill.root.addEventListener('contextmenu', this.listenContextmenu);
