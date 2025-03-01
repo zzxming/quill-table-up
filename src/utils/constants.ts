@@ -1,3 +1,5 @@
+import type { Parchment as TypeParchment } from 'quill';
+
 export const blotName = {
   container: 'table-up-container',
   tableWrapper: 'table-up',
@@ -97,3 +99,14 @@ export const defaultColorMap = [
 ];
 
 export const cssNamespace = 'table-up';
+
+// Blots that cannot be inserted into a table
+export const tableCantInsert: Set<string> = new Set([blotName.tableCellInner]);
+
+export const isForbidInTableBlot = (blot: TypeParchment.Blot) => tableCantInsert.has(blot.statics.blotName);
+export const isForbidInTable = (current: TypeParchment.Blot): boolean =>
+  current && current.parent
+    ? isForbidInTableBlot(current.parent)
+      ? true
+      : isForbidInTable(current.parent)
+    : false;

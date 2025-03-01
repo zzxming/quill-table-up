@@ -1,6 +1,6 @@
 import type Quill from 'quill';
-import type TableUp from '../..';
 import type { TableMainFormat } from '../../formats';
+import type { TableUp } from '../../table-up';
 import { createBEM, createButton, createDialog, tableUpEvent, tableUpSize } from '../../utils';
 import { isTableAlignRight } from './utils';
 
@@ -38,7 +38,7 @@ export class TableResizeCommon {
     confirm: string;
     cancel: string;
   }) {
-    return new Promise((resolve) => {
+    return new Promise<boolean>((resolve) => {
       const content = document.createElement('div');
       Object.assign(content.style, {
         padding: '8px 12px',

@@ -1,4 +1,4 @@
-import type TableUp from '../..';
+import type { TableUp } from '../../table-up';
 import Quill from 'quill';
 import { type TableCellFormat, TableRowFormat } from '../../formats';
 import { blotName, createBEM, findParentBlot, findParentBlots } from '../../utils';

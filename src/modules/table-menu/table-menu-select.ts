@@ -1,5 +1,6 @@
 import type Quill from 'quill';
-import type { TableMenuOptionsInput, TableUp } from '../..';
+import type { TableUp } from '../../table-up';
+import type { TableMenuOptionsInput } from './table-menu-common';
 import { computePosition, flip, limitShift, offset, shift } from '@floating-ui/dom';
 import { TableMenuCommon } from './table-menu-common';
 

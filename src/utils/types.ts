@@ -1,7 +1,8 @@
 import type Quill from 'quill';
 import type BaseTheme from 'quill/themes/base';
 import type Picker from 'quill/ui/picker';
-import type { TableCellInnerFormat, TableUp } from '..';
+import type { TableCellInnerFormat } from '../formats';
+import type { TableUp } from '../table-up';
 
 export type QuillThemePicker = (Picker & { options: HTMLElement });
 export interface QuillTheme extends BaseTheme {

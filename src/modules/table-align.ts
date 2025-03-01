@@ -1,5 +1,5 @@
-import type TableUp from '..';
 import type { TableMainFormat, TableWrapperFormat } from '../formats';
+import type { TableUp } from '../table-up';
 import { autoUpdate, computePosition, flip, limitShift, offset, shift } from '@floating-ui/dom';
 import Quill from 'quill';
 import { createBEM } from '../utils';
