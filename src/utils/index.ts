@@ -6,5 +6,6 @@ export * from './constants';
 export * from './is';
 export * from './position';
 export * from './scroll-event-handle';
+export * from './transformer';
 export * from './types';
 export * from './utils';
