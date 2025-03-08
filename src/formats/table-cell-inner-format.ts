@@ -138,7 +138,7 @@ export class TableCellInnerFormat extends ContainerFormat {
     }
     super.formatAt(index, length, name, value);
     // set style for `td`
-    if (value.style) {
+    if (value && value.style) {
       const style = cssTextToObject(value.style);
       for (const [name, value] of Object.entries(style)) {
         this.setFormatValue(name, value, true);
