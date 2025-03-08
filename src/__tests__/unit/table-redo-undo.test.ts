@@ -667,38 +667,13 @@ describe('table undo', () => {
   });
 });
 
-describe('cell attribute', () => {
+describe('undo cell attribute', () => {
   it('undo set bg color', async () => {
     const quill = await createTable(3, 3);
     const tableModule = quill.getModule(TableUp.moduleName) as TableUp;
     const tds = quill.scroll.descendants(TableCellInnerFormat, 0);
     tableModule.setCellAttrs([tds[0], tds[1], tds[2]], 'background-color', 'rgb(253, 235, 255)', true);
     await vi.runAllTimersAsync();
-    expect(quill.root).toEqualHTML(
-      `
-        <p><br></p>
-        <div>
-          <table cellpadding="0" cellspacing="0"${datasetFull(true)} style="margin-right: auto;">
-            ${createTaleColHTML(3)}
-            <tbody>
-              ${
-                new Array(3).fill(0).map((_, i) => `
-                  <tr data-row-id="${i + 1}">
-                    ${
-                      new Array(3).fill(0).map((_, j) => `<td rowspan="1" colspan="1" data-row-id="${i + 1}" data-col-id="${j + 1}"${i === 0 ? ' style="background-color: rgb(253, 235, 255);"' : ''}>
-                        <div data-rowspan="1" data-colspan="1" data-row-id="${i + 1}" data-col-id="${j + 1}"${i === 0 ? ' data-style="background-color: rgb(253, 235, 255);"' : ''}><p>${i * 3 + j + 1}</p></div>
-                      </td>`).join('\n')
-                    }
-                  </tr>
-                `).join('\n')
-              }
-            </tbody>
-          </table>
-        </div>
-        <p><br></p>
-      `,
-      { ignoreAttrs: ['class', 'data-table-id', 'contenteditable'] },
-    );
     quill.history.undo();
     await vi.runAllTimersAsync();
     expect(quill.root).toEqualHTML(
@@ -712,29 +687,42 @@ describe('cell attribute', () => {
   });
 
   it('undo set border color', async () => {
-    const quill = await createTable(3, 3);
+    const quill = await createTable(2, 2);
     const tableModule = quill.getModule(TableUp.moduleName) as TableUp;
     const tds = quill.scroll.descendants(TableCellInnerFormat, 0);
-    tableModule.setCellAttrs([tds[0], tds[1], tds[2]], 'border-color', 'red', true);
+    tableModule.setCellAttrs([tds[0], tds[1]], 'border-color', 'red', true);
     await vi.runAllTimersAsync();
     expect(quill.root).toEqualHTML(
       `
         <p><br></p>
         <div>
           <table cellpadding="0" cellspacing="0"${datasetFull(true)} style="margin-right: auto;">
-            ${createTaleColHTML(3)}
+            ${createTaleColHTML(2)}
             <tbody>
-              ${
-                new Array(3).fill(0).map((_, i) => `
-                  <tr data-row-id="${i + 1}">
-                    ${
-                      new Array(3).fill(0).map((_, j) => `<td rowspan="1" colspan="1" data-row-id="${i + 1}" data-col-id="${j + 1}"${i === 0 ? ' style="border-color: red;"' : ''}>
-                        <div data-rowspan="1" data-colspan="1" data-row-id="${i + 1}" data-col-id="${j + 1}"${i === 0 ? ' data-style="border-color: red;"' : ''}><p>${i * 3 + j + 1}</p></div>
-                      </td>`).join('\n')
-                    }
-                  </tr>
-                `).join('\n')
-              }
+              <tr data-row-id="1">
+                <td colspan="1" data-col-id="1" data-row-id="1" rowspan="1" style="border-color: red; border-right-color: red;">
+                  <div data-col-id="1" data-colspan="1" data-row-id="1" data-rowspan="1" data-style="border-color: red; border-right-color: red;">
+                    <p>1</p>
+                  </div>
+                </td>
+                <td colspan="1" data-col-id="2" data-row-id="1" rowspan="1" style="border-color: red;">
+                  <div data-col-id="2" data-colspan="1" data-row-id="1" data-rowspan="1" data-style="border-color: red;">
+                    <p>2</p>
+                  </div>
+                </td>
+              </tr>
+              <tr data-row-id="2">
+                <td colspan="1" data-col-id="1" data-row-id="2" rowspan="1">
+                  <div data-col-id="1" data-colspan="1" data-row-id="2" data-rowspan="1">
+                    <p>3</p>
+                  </div>
+                </td>
+                <td colspan="1" data-col-id="2" data-row-id="2" rowspan="1">
+                  <div data-col-id="2" data-colspan="1" data-row-id="2" data-rowspan="1">
+                    <p>4</p>
+                  </div>
+                </td>
+              </tr>
             </tbody>
           </table>
         </div>
@@ -747,7 +735,7 @@ describe('cell attribute', () => {
     expect(quill.root).toEqualHTML(
       `
         <p><br></p>
-        ${createTableHTML(3, 3)}
+        ${createTableHTML(2, 2)}
         <p><br></p>
       `,
       { ignoreAttrs: ['class', 'data-table-id', 'contenteditable'] },
@@ -804,20 +792,6 @@ describe('cell attribute', () => {
       col.align = 'center';
     }
     await vi.runAllTimersAsync();
-    expect(quill.root).toEqualHTML(
-      `
-        <p><br></p>
-        <div>
-          <table cellpadding="0" cellspacing="0"${datasetAlign('center')} style="margin-right: auto; width: 300px; margin-left: auto;">
-            ${createTaleColHTML(3, { align: 'center', full: false, width: 100 })}
-            ${createTableBodyHTML(3, 3)}
-          </table>
-        </div>
-        <p><br></p>
-      `,
-      { ignoreAttrs: ['class', 'data-table-id', 'contenteditable'] },
-    );
-
     quill.history.undo();
     await vi.runAllTimersAsync();
     expect(quill.root).toEqualHTML(

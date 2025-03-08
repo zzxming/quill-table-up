@@ -1,8 +1,8 @@
 import type { TableCellValue } from '../utils';
-import type { TableCellInnerFormat } from './table-cell-inner-format';
 import type { TableRowFormat } from './table-row-format';
-import { blotName } from '../utils';
+import { blotName, findParentBlot } from '../utils';
 import { ContainerFormat } from './container-format';
+import { TableCellInnerFormat } from './table-cell-inner-format';
 import { getValidCellspan } from './utils';
 
 export class TableCellFormat extends ContainerFormat {
@@ -87,6 +87,55 @@ export class TableCellFormat extends ContainerFormat {
       Object.assign(this.domNode.style, {
         [name]: value,
       });
+      if (name.startsWith('border')) {
+        this.setStyleBoder(name, value);
+      }
+    }
+  }
+
+  setStyleBoder(name: string, value?: any) {
+    // eslint-disable-next-line no-extra-boolean-cast
+    const setValue = Boolean(value) ? value : null;
+    const isMergeBorder = !['left', 'right', 'top', 'bottom'].some(direction => name.includes(direction)) && name.startsWith('border-');
+    if (!isMergeBorder) return;
+
+    // only need set prev td. event current td is a span cell
+    if (this.prev && this.prev instanceof TableCellFormat) {
+      const [cell] = this.prev.descendant(TableCellInnerFormat, 0);
+      if (cell) {
+        cell.setFormatValue(name.replace('border-', 'border-right-'), setValue, true);
+      }
+    }
+
+    // need find all the prev td that bottom near current td
+    if (this.parent.prev) {
+      try {
+        const tableMainBlot = findParentBlot(this, blotName.tableMain);
+        const colIds = tableMainBlot.getColIds();
+        const startColIndex = this.getColumnIndex();
+        const endColIndex = startColIndex + this.colspan;
+        const borderColIds = new Set(colIds.filter((_, i) => i >= startColIndex && i < endColIndex));
+
+        let rowspan = 1;
+        let prevTr = this.parent.prev as TableRowFormat;
+        while (prevTr) {
+          let trReachCurrent = false;
+          prevTr.foreachCellInner((cell) => {
+            if (borderColIds.has(cell.colId) && cell.rowspan >= rowspan) {
+              cell.setFormatValue(name.replace('border-', 'border-bottom-'), setValue, true);
+              borderColIds.delete(cell.colId);
+            }
+
+            cell.rowspan >= rowspan && (trReachCurrent = true);
+          });
+          if (!trReachCurrent) break;
+          prevTr = prevTr.prev as TableRowFormat;
+          rowspan += 1;
+        }
+      }
+      catch (error) {
+        console.error(error);
+      }
     }
   }
 
@@ -108,6 +157,11 @@ export class TableCellFormat extends ContainerFormat {
 
   get colspan() {
     return Number(this.domNode.getAttribute('colspan'));
+  }
+
+  getColumnIndex() {
+    const table = findParentBlot(this, blotName.tableMain);
+    return table.getColIds().indexOf(this.colId);
   }
 
   getCellInner() {

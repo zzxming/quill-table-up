@@ -48,8 +48,16 @@
         display: table-column;
         table-layout: fixed;
       }
+      tr + tr {
+        td {
+          border-top: none;
+        }
+      }
       td {
         border: 1px solid #a1a1aa;
+        & + td {
+          border-left: none;
+        }
       }
     }
   }

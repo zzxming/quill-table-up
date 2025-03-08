@@ -1,3 +1,4 @@
+import type { Delta } from 'quill';
 import type { TableColValue } from '../../utils';
 import Quill from 'quill';
 import { expect, vi } from 'vitest';
@@ -87,6 +88,12 @@ expect.extend({
     };
   },
 });
+
+export function expectDelta(received: Delta, expected: Delta) {
+  for (const [i, op] of expected.ops.entries()) {
+    expect(op).toMatchObject(received.ops[i]);
+  }
+}
 
 interface TableColDeltaValue extends Omit<TableColValue, 'width' | 'full'> {
   width: number;
