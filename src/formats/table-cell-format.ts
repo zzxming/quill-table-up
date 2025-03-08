@@ -1,8 +1,8 @@
 import type { TableCellValue } from '../utils';
-import type { TableCellInnerFormat } from './table-cell-inner-format';
 import type { TableRowFormat } from './table-row-format';
-import { blotName } from '../utils';
+import { blotName, findParentBlot } from '../utils';
 import { ContainerFormat } from './container-format';
+import { TableCellInnerFormat } from './table-cell-inner-format';
 import { getValidCellspan } from './utils';
 
 export class TableCellFormat extends ContainerFormat {
@@ -87,6 +87,32 @@ export class TableCellFormat extends ContainerFormat {
       Object.assign(this.domNode.style, {
         [name]: value,
       });
+      if (name.startsWith('border')) {
+        this.setStyleBoder(name, value);
+      }
+    }
+  }
+
+  setStyleBoder(name: string, value?: any) {
+    // eslint-disable-next-line no-extra-boolean-cast
+    const setValue = Boolean(value) ? value : null;
+    const isMergeBorder = !['left', 'right', 'top', 'bottom'].some(direction => name.includes(direction)) && name.startsWith('border-');
+    if (!isMergeBorder) return;
+    if (this.prev && this.prev instanceof TableCellFormat) {
+      const [cell] = this.prev.descendant(TableCellInnerFormat, 0);
+      if (cell) {
+        cell.setFormatValue(name.replace('border-', 'border-right-'), setValue, true);
+      }
+    }
+    if (this.parent.prev) {
+      const parent = this.parent.prev as TableRowFormat;
+      parent.foreachCellInner((cell) => {
+        if (cell.colId === this.colId) {
+          cell.setFormatValue(name.replace('border-', 'border-bottom-'), setValue, true);
+          return true;
+        }
+        return false;
+      });
     }
   }
 
@@ -108,6 +134,11 @@ export class TableCellFormat extends ContainerFormat {
 
   get colspan() {
     return Number(this.domNode.getAttribute('colspan'));
+  }
+
+  getColumnIndex() {
+    const table = findParentBlot(this, blotName.tableMain);
+    return table.getColIds().indexOf(this.colId);
   }
 
   getCellInner() {

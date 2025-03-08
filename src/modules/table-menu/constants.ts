@@ -157,7 +157,7 @@ export const defaultTools: Tool[] = [
     tip: 'Set border color',
     key: 'border-color',
     handle: (tableModule, selectedTds, color) => {
-      tableModule.setCellAttrs(selectedTds, 'border-color', color, true);
+      tableModule.setCellAttrs(selectedTds, 'border-left-color', color, true);
     },
   },
 ];
