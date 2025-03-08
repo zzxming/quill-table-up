@@ -98,21 +98,44 @@ export class TableCellFormat extends ContainerFormat {
     const setValue = Boolean(value) ? value : null;
     const isMergeBorder = !['left', 'right', 'top', 'bottom'].some(direction => name.includes(direction)) && name.startsWith('border-');
     if (!isMergeBorder) return;
+
+    // only need set prev td. event current td is a span cell
     if (this.prev && this.prev instanceof TableCellFormat) {
       const [cell] = this.prev.descendant(TableCellInnerFormat, 0);
       if (cell) {
         cell.setFormatValue(name.replace('border-', 'border-right-'), setValue, true);
       }
     }
+
+    // need find all the prev td that bottom near current td
     if (this.parent.prev) {
-      const parent = this.parent.prev as TableRowFormat;
-      parent.foreachCellInner((cell) => {
-        if (cell.colId === this.colId) {
-          cell.setFormatValue(name.replace('border-', 'border-bottom-'), setValue, true);
-          return true;
+      try {
+        const tableMainBlot = findParentBlot(this, blotName.tableMain);
+        const colIds = tableMainBlot.getColIds();
+        const startColIndex = this.getColumnIndex();
+        const endColIndex = startColIndex + this.colspan;
+        const borderColIds = new Set(colIds.filter((_, i) => i >= startColIndex && i < endColIndex));
+
+        let rowspan = 1;
+        let prevTr = this.parent.prev as TableRowFormat;
+        while (prevTr) {
+          let trReachCurrent = false;
+          prevTr.foreachCellInner((cell) => {
+            if (borderColIds.has(cell.colId) && cell.rowspan >= rowspan) {
+              cell.setFormatValue(name.replace('border-', 'border-bottom-'), setValue, true);
+              borderColIds.delete(cell.colId);
+            }
+
+            cell.rowspan >= rowspan && (trReachCurrent = true);
+          });
+          if (!trReachCurrent) break;
+          prevTr = prevTr.prev as TableRowFormat;
+          rowspan += 1;
         }
-        return false;
-      });
+      }
+      catch (error) {
+        console.error(error);
+      }
     }
   }
 
