@@ -1,5 +1,8 @@
+import Quill from 'quill';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { createQuillWithTableModule, createTableDeltaOps, createTableHTML, createTaleColHTML } from './utils';
+import { createQuillWithTableModule, createTableDeltaOps, createTableHTML, createTaleColHTML, expectDelta } from './utils';
+
+const Delta = Quill.import('delta');
 
 beforeEach(() => {
   vi.useFakeTimers();
@@ -265,45 +268,44 @@ describe('clipboard content format', () => {
     );
     await vi.runAllTimersAsync();
 
-    const ops = quill.getContents().ops;
-    const resultOps = [
-      { insert: '\n' },
-      { insert: { 'table-up-col': { full: false, width: 121 } } },
-      { insert: { 'table-up-col': { full: false, width: 121 } } },
-      { insert: { 'table-up-col': { full: false, width: 121 } } },
-      { insert: '1' },
-      { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1 } }, insert: '\n' },
-      { insert: '2' },
-      { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1 } }, insert: '\n' },
-      { insert: '3' },
-      { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1 } }, insert: '\n' },
-      { insert: '4' },
-      { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1 } }, insert: '\n' },
-      { insert: '5' },
-      { attributes: { 'code-block': 'plain', 'table-up-cell-inner': { rowspan: 1, colspan: 1 } }, insert: '\n' },
-      { insert: '5' },
-      { attributes: { 'code-block': 'plain', 'table-up-cell-inner': { rowspan: 1, colspan: 1 } }, insert: '\n' },
-      { insert: '5' },
-      { attributes: { 'code-block': 'plain', 'table-up-cell-inner': { rowspan: 1, colspan: 1 } }, insert: '\n' },
-      { insert: '5' },
-      { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1 } }, insert: '\n' },
-      { insert: '5' },
-      { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1 } }, insert: '\n' },
-      { insert: '5' },
-      { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1 } }, insert: '\n' },
-      { insert: '6' },
-      { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1 } }, insert: '\n' },
-      { insert: '7' },
-      { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1 } }, insert: '\n' },
-      { insert: '8' },
-      { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1 } }, insert: '\n' },
-      { insert: '9' },
-      { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1 } }, insert: '\n' },
-      { insert: '\n' },
-    ];
-    for (const [i, op] of ops.entries()) {
-      expect(op).toMatchObject(resultOps[i]);
-    }
+    expectDelta(
+      new Delta([
+        { insert: '\n' },
+        { insert: { 'table-up-col': { full: false, width: 121 } } },
+        { insert: { 'table-up-col': { full: false, width: 121 } } },
+        { insert: { 'table-up-col': { full: false, width: 121 } } },
+        { insert: '1' },
+        { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1 } }, insert: '\n' },
+        { insert: '2' },
+        { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1 } }, insert: '\n' },
+        { insert: '3' },
+        { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1 } }, insert: '\n' },
+        { insert: '4' },
+        { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1 } }, insert: '\n' },
+        { insert: '5' },
+        { attributes: { 'code-block': 'plain', 'table-up-cell-inner': { rowspan: 1, colspan: 1 } }, insert: '\n' },
+        { insert: '5' },
+        { attributes: { 'code-block': 'plain', 'table-up-cell-inner': { rowspan: 1, colspan: 1 } }, insert: '\n' },
+        { insert: '5' },
+        { attributes: { 'code-block': 'plain', 'table-up-cell-inner': { rowspan: 1, colspan: 1 } }, insert: '\n' },
+        { insert: '5' },
+        { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1 } }, insert: '\n' },
+        { insert: '5' },
+        { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1 } }, insert: '\n' },
+        { insert: '5' },
+        { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1 } }, insert: '\n' },
+        { insert: '6' },
+        { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1 } }, insert: '\n' },
+        { insert: '7' },
+        { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1 } }, insert: '\n' },
+        { insert: '8' },
+        { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1 } }, insert: '\n' },
+        { insert: '9' },
+        { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1 } }, insert: '\n' },
+        { insert: '\n' },
+      ]),
+      quill.getContents(),
+    );
   });
 
   it('should convert html header correctly', async () => {
@@ -313,20 +315,19 @@ describe('clipboard content format', () => {
     );
     await vi.runAllTimersAsync();
 
-    const ops = quill.getContents().ops;
-    const resultOps = [
-      { insert: '\n' },
-      { insert: { 'table-up-col': { full: false, width: 583 } } },
-      { insert: { 'table-up-col': { full: false, width: 583 } } },
-      { insert: 'header1' },
-      { attributes: { 'header': 1, 'table-up-cell-inner': { rowspan: 1, colspan: 1 } }, insert: '\n' },
-      { insert: 'header3' },
-      { attributes: { 'header': 3, 'table-up-cell-inner': { rowspan: 1, colspan: 1 } }, insert: '\n' },
-      { insert: '\n' },
-    ];
-    for (const [i, op] of ops.entries()) {
-      expect(op).toMatchObject(resultOps[i]);
-    }
+    expectDelta(
+      new Delta([
+        { insert: '\n' },
+        { insert: { 'table-up-col': { full: false, width: 583 } } },
+        { insert: { 'table-up-col': { full: false, width: 583 } } },
+        { insert: 'header1' },
+        { attributes: { 'header': 1, 'table-up-cell-inner': { rowspan: 1, colspan: 1 } }, insert: '\n' },
+        { insert: 'header3' },
+        { attributes: { 'header': 3, 'table-up-cell-inner': { rowspan: 1, colspan: 1 } }, insert: '\n' },
+        { insert: '\n' },
+      ]),
+      quill.getContents(),
+    );
   });
 
   it('should convert html image correctly', async () => {
@@ -336,17 +337,16 @@ describe('clipboard content format', () => {
     );
     await vi.runAllTimersAsync();
 
-    const ops = quill.getContents().ops;
-    const resultOps = [
-      { insert: '\n' },
-      { insert: { 'table-up-col': { full: true, width: 100 } } },
-      { insert: { image: 'https://upload-bbs.miyoushe.com/upload/2024/06/18/5556092/73b7bae28fded7a72d93a35d5559b24c_3979852353547906724.png' } },
-      { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1 } }, insert: '\n' },
-      { insert: '\n' },
-    ];
-    for (const [i, op] of ops.entries()) {
-      expect(op).toMatchObject(resultOps[i]);
-    }
+    expectDelta(
+      new Delta([
+        { insert: '\n' },
+        { insert: { 'table-up-col': { full: true, width: 100 } } },
+        { insert: { image: 'https://upload-bbs.miyoushe.com/upload/2024/06/18/5556092/73b7bae28fded7a72d93a35d5559b24c_3979852353547906724.png' } },
+        { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1 } }, insert: '\n' },
+        { insert: '\n' },
+      ]),
+      quill.getContents(),
+    );
   });
 
   it('should convert html video correctly', async () => {
@@ -356,17 +356,16 @@ describe('clipboard content format', () => {
     );
     await vi.runAllTimersAsync();
 
-    const ops = quill.getContents().ops;
-    const resultOps = [
-      { insert: '\n' },
-      { insert: { 'table-up-col': { full: true, width: 100 } } },
-      { insert: { video: 'http://127.0.0.1:5500/docs/index.html' } },
-      { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1 } }, insert: '\n' },
-      { insert: '\n' },
-    ];
-    for (const [i, op] of ops.entries()) {
-      expect(op).toMatchObject(resultOps[i]);
-    }
+    expectDelta(
+      new Delta([
+        { insert: '\n' },
+        { insert: { 'table-up-col': { full: true, width: 100 } } },
+        { insert: { video: 'http://127.0.0.1:5500/docs/index.html' } },
+        { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1 } }, insert: '\n' },
+        { insert: '\n' },
+      ]),
+      quill.getContents(),
+    );
   });
 
   it('should convert html list correctly', async () => {
@@ -376,27 +375,26 @@ describe('clipboard content format', () => {
     );
     await vi.runAllTimersAsync();
 
-    const ops = quill.getContents().ops;
-    const resultOps = [
-      { insert: '\n' },
-      { insert: { 'table-up-col': { full: false, width: 583 } } },
-      { insert: { 'table-up-col': { full: false, width: 583 } } },
-      { insert: 'list order' },
-      { attributes: { 'list': 'ordered', 'table-up-cell-inner': { rowspan: 1, colspan: 1 } }, insert: '\n' },
-      { insert: 'aaa' },
-      { attributes: { 'indent': 1, 'list': 'ordered', 'table-up-cell-inner': { rowspan: 1, colspan: 1 } }, insert: '\n' },
-      { insert: 'list bullet' },
-      { attributes: { 'list': 'bullet', 'table-up-cell-inner': { rowspan: 1, colspan: 1 } }, insert: '\n' },
-      { insert: 'list checkbox' },
-      { attributes: { 'list': 'unchecked', 'table-up-cell-inner': { rowspan: 1, colspan: 1 } }, insert: '\n' },
-      { insert: 'checkbox checked' },
-      { attributes: { 'list': 'checked', 'table-up-cell-inner': { rowspan: 1, colspan: 1 } }, insert: '\n' },
-      { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1 } }, insert: '\n' },
-      { insert: '\n' },
-    ];
-    for (const [i, op] of ops.entries()) {
-      expect(op).toMatchObject(resultOps[i]);
-    }
+    expectDelta(
+      new Delta([
+        { insert: '\n' },
+        { insert: { 'table-up-col': { full: false, width: 583 } } },
+        { insert: { 'table-up-col': { full: false, width: 583 } } },
+        { insert: 'list order' },
+        { attributes: { 'list': 'ordered', 'table-up-cell-inner': { rowspan: 1, colspan: 1 } }, insert: '\n' },
+        { insert: 'aaa' },
+        { attributes: { 'indent': 1, 'list': 'ordered', 'table-up-cell-inner': { rowspan: 1, colspan: 1 } }, insert: '\n' },
+        { insert: 'list bullet' },
+        { attributes: { 'list': 'bullet', 'table-up-cell-inner': { rowspan: 1, colspan: 1 } }, insert: '\n' },
+        { insert: 'list checkbox' },
+        { attributes: { 'list': 'unchecked', 'table-up-cell-inner': { rowspan: 1, colspan: 1 } }, insert: '\n' },
+        { insert: 'checkbox checked' },
+        { attributes: { 'list': 'checked', 'table-up-cell-inner': { rowspan: 1, colspan: 1 } }, insert: '\n' },
+        { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1 } }, insert: '\n' },
+        { insert: '\n' },
+      ]),
+      quill.getContents(),
+    );
   });
 
   it('should convert html blockquote correctly', async () => {
@@ -406,22 +404,21 @@ describe('clipboard content format', () => {
     }));
     await vi.runAllTimersAsync();
 
-    const ops = quill.getContents().ops;
-    const resultOps = [
-      { insert: '\n' },
-      { insert: { 'table-up-col': { full: false, width: 583 } } },
-      { insert: { 'table-up-col': { full: false, width: 583 } } },
-      { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1 } }, insert: '\n' },
-      { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1 } }, insert: '\n' },
-      { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1 } }, insert: '\n' },
-      { insert: 'blockquote' },
-      { attributes: { 'blockquote': true, 'table-up-cell-inner': { rowspan: 1, colspan: 1 } }, insert: '\n\n' },
-      { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1 } }, insert: '\n' },
-      { insert: '\n' },
-    ];
-    for (const [i, op] of ops.entries()) {
-      expect(op).toMatchObject(resultOps[i]);
-    }
+    expectDelta(
+      new Delta([
+        { insert: '\n' },
+        { insert: { 'table-up-col': { full: false, width: 583 } } },
+        { insert: { 'table-up-col': { full: false, width: 583 } } },
+        { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1 } }, insert: '\n' },
+        { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1 } }, insert: '\n' },
+        { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1 } }, insert: '\n' },
+        { insert: 'blockquote' },
+        { attributes: { 'blockquote': true, 'table-up-cell-inner': { rowspan: 1, colspan: 1 } }, insert: '\n\n' },
+        { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1 } }, insert: '\n' },
+        { insert: '\n' },
+      ]),
+      quill.getContents(),
+    );
   });
 
   it('clipboard convert cell with block format html', async () => {
@@ -531,19 +528,19 @@ describe('clipboard cell in cell', () => {
       { html: '<html>\r\n<body>\r\n\u003C!--StartFragment--><p>text</p><p>123</p>\u003C!--EndFragment-->\r\n</body>\r\n</html>' },
     );
     await vi.runAllTimersAsync();
-    const ops = quill.getContents().ops;
-    const resultOps = [
-      { insert: '\n' },
-      { insert: { 'table-up-col': { full: false, width: 100 } } },
-      { insert: 'text' },
-      { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1 } }, insert: '\n' },
-      { insert: '123' },
-      { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1 } }, insert: '\n\n' },
-      { insert: '\n' },
-    ];
-    for (const [i, op] of ops.entries()) {
-      expect(op).toMatchObject(resultOps[i]);
-    }
+
+    expectDelta(
+      new Delta([
+        { insert: '\n' },
+        { insert: { 'table-up-col': { full: false, width: 100 } } },
+        { insert: 'text' },
+        { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1 } }, insert: '\n' },
+        { insert: '123' },
+        { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1 } }, insert: '\n\n' },
+        { insert: '\n' },
+      ]),
+      quill.getContents(),
+    );
   });
 
   it('paste format text into table', async () => {
@@ -557,21 +554,21 @@ describe('clipboard cell in cell', () => {
       { html: '<html>\r\n<body>\r\n\u003C!--StartFragment--><h1>123</h1><p></p><p><strong style="color: rgb(230, 0, 0); background-color: rgb(0, 0, 0);"><em><s><u>123</u></s></em></strong><sub style="color: rgb(230, 0, 0); background-color: rgb(0, 0, 0);"><strong><em><s><u>qwe</u></s></em></strong></sub></p>\u003C!--EndFragment-->\r\n</body>\r\n</html>' },
     );
     await vi.runAllTimersAsync();
-    const ops = quill.getContents().ops;
-    const resultOps = [
-      { insert: '\n' },
-      { insert: { 'table-up-col': { full: false, width: 100 } } },
-      { insert: '123' },
-      { attributes: { 'header': 1, 'table-up-cell-inner': { rowspan: 1, colspan: 1 } }, insert: '\n' },
-      { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1 } }, insert: '\n' },
-      { attributes: { background: '#000000', color: '#e60000' }, insert: '123' },
-      { attributes: { background: '#000000', color: '#e60000', script: 'sub' }, insert: 'qwe' },
-      { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1 } }, insert: '\n\n' },
-      { insert: '\n' },
-    ];
-    for (const [i, op] of ops.entries()) {
-      expect(op).toMatchObject(resultOps[i]);
-    }
+
+    expectDelta(
+      new Delta([
+        { insert: '\n' },
+        { insert: { 'table-up-col': { full: false, width: 100 } } },
+        { insert: '123' },
+        { attributes: { 'header': 1, 'table-up-cell-inner': { rowspan: 1, colspan: 1 } }, insert: '\n' },
+        { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1 } }, insert: '\n' },
+        { attributes: { background: '#000000', color: '#e60000' }, insert: '123' },
+        { attributes: { background: '#000000', color: '#e60000', script: 'sub' }, insert: 'qwe' },
+        { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1 } }, insert: '\n\n' },
+        { insert: '\n' },
+      ]),
+      quill.getContents(),
+    );
   });
 
   it('paste cell text into table', async () => {
@@ -585,19 +582,19 @@ describe('clipboard cell in cell', () => {
       { html: '<html>\r\n<body>\r\n\u003C!--StartFragment--><div class="ql-table-wrapper" data-table-id="8v36875pbr6"><table class="ql-table" data-table-id="8v36875pbr6" data-full="true" cellpadding="0" cellspacing="0" style="margin-right: auto;"><tbody data-table-id="8v36875pbr6"><tr class="ql-table-row" data-table-id="8v36875pbr6" data-row-id="zjhlbpvwjo"><td class="ql-table-cell" data-table-id="8v36875pbr6" data-row-id="zjhlbpvwjo" data-col-id="y0epsy6odnm" rowspan="1" colspan="1"><div class="ql-table-cell-inner" data-table-id="8v36875pbr6" data-row-id="zjhlbpvwjo" data-col-id="y0epsy6odnm" data-rowspan="1" data-colspan="1"><p>5</p><p></p><p>q</p></div></td></tr></tbody></table></div>\u003C!--EndFragment-->\r\n</body>\r\n</html>' },
     );
     await vi.runAllTimersAsync();
-    const ops = quill.getContents().ops;
-    const resultOps = [
-      { insert: '\n' },
-      { insert: { 'table-up-col': { full: false, width: 100 } } },
-      { insert: '5' },
-      { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1 } }, insert: '\n\n' },
-      { insert: 'q' },
-      { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1 } }, insert: '\n\n' },
-      { insert: '\n' },
-    ];
-    for (const [i, op] of ops.entries()) {
-      expect(op).toMatchObject(resultOps[i]);
-    }
+
+    expectDelta(
+      new Delta([
+        { insert: '\n' },
+        { insert: { 'table-up-col': { full: false, width: 100 } } },
+        { insert: '5' },
+        { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1 } }, insert: '\n\n' },
+        { insert: 'q' },
+        { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1 } }, insert: '\n\n' },
+        { insert: '\n' },
+      ]),
+      quill.getContents(),
+    );
   });
 
   it('paste cell with format text into table', async () => {
@@ -611,21 +608,21 @@ describe('clipboard cell in cell', () => {
       { html: '<html>\r\n<body>\r\n\u003C!--StartFragment--><div class="ql-table-wrapper" data-table-id="8v36875pbr6"><table class="ql-table" data-table-id="8v36875pbr6" data-full="true" cellpadding="0" cellspacing="0" style="margin-right: auto;"><tbody data-table-id="8v36875pbr6"><tr class="ql-table-row" data-table-id="8v36875pbr6" data-row-id="zjhlbpvwjo"><td class="ql-table-cell" data-table-id="8v36875pbr6" data-row-id="zjhlbpvwjo" data-col-id="gpais2dyp87" rowspan="1" colspan="1"><div class="ql-table-cell-inner" data-table-id="8v36875pbr6" data-row-id="zjhlbpvwjo" data-col-id="gpais2dyp87" data-rowspan="1" data-colspan="1"><h1>123</h1><p></p><p><strong><em><s><u>123</u></s></em></strong><sub><strong><em><s><u>qwe</u></s></em></strong></sub><sup><strong><em><s><u>qwe</u></s></em></strong></sup></p></div></td></tr></tbody></table></div>\u003C!--EndFragment-->\r\n</body>\r\n</html>' },
     );
     await vi.runAllTimersAsync();
-    const ops = quill.getContents().ops;
-    const resultOps = [
-      { insert: '\n' },
-      { insert: { 'table-up-col': { full: false, width: 100 } } },
-      { insert: '123' },
-      { attributes: { 'header': 1, 'table-up-cell-inner': { rowspan: 1, colspan: 1 } }, insert: '\n' },
-      { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1 } }, insert: '\n' },
-      { attributes: { underline: true, strike: true, italic: true, bold: true }, insert: '123' },
-      { attributes: { underline: true, strike: true, italic: true, bold: true, script: 'sub' }, insert: 'qwe' },
-      { attributes: { underline: true, strike: true, italic: true, bold: true, script: 'super' }, insert: 'qwe' },
-      { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1 } }, insert: '\n\n' },
-      { insert: '\n' },
-    ];
-    for (const [i, op] of ops.entries()) {
-      expect(op).toMatchObject(resultOps[i]);
-    }
+
+    expectDelta(
+      new Delta([
+        { insert: '\n' },
+        { insert: { 'table-up-col': { full: false, width: 100 } } },
+        { insert: '123' },
+        { attributes: { 'header': 1, 'table-up-cell-inner': { rowspan: 1, colspan: 1 } }, insert: '\n' },
+        { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1 } }, insert: '\n' },
+        { attributes: { underline: true, strike: true, italic: true, bold: true }, insert: '123' },
+        { attributes: { underline: true, strike: true, italic: true, bold: true, script: 'sub' }, insert: 'qwe' },
+        { attributes: { underline: true, strike: true, italic: true, bold: true, script: 'super' }, insert: 'qwe' },
+        { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1 } }, insert: '\n\n' },
+        { insert: '\n' },
+      ]),
+      quill.getContents(),
+    );
   });
 });
