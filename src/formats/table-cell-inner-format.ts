@@ -3,7 +3,7 @@ import type TypeBlock from 'quill/blots/block';
 import type { TableCellValue } from '../utils';
 import type { TableCellFormat } from './table-cell-format';
 import Quill from 'quill';
-import { blotName, findParentBlot, findParentBlots } from '../utils';
+import { blotName, cssTextToObject, findParentBlot, findParentBlots } from '../utils';
 import { ContainerFormat } from './container-format';
 import { getValidCellspan } from './utils';
 
@@ -137,6 +137,13 @@ export class TableCellInnerFormat extends ContainerFormat {
       length += 1;
     }
     super.formatAt(index, length, name, value);
+    // set style for `td`
+    if (value.style) {
+      const style = cssTextToObject(value.style);
+      for (const [name, value] of Object.entries(style)) {
+        this.setFormatValue(name, value, true);
+      }
+    }
   }
 
   formats(): Record<string, any> {

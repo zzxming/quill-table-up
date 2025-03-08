@@ -34,7 +34,10 @@ export class BlockOverride extends Block {
           }
           // remove empty cell. tableCellFormat.optimize need col to compute
           if (selfParent && selfParent.length() === 0) {
-            selfParent.parent.remove();
+            selfParent.remove();
+            if (selfParent.parent.statics.blotName === blotName.tableCell && selfParent.parent.length() === 0) {
+              selfParent.parent.remove();
+            }
             const selfRow = selfParent.parent.parent;
             if (selfRow.statics.blotName === blotName.tableRow && selfRow.children.length === 0) {
               selfRow.remove();
