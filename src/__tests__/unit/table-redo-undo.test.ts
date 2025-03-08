@@ -667,7 +667,7 @@ describe('table undo', () => {
   });
 });
 
-describe('cell attribute', () => {
+describe('undo cell attribute', () => {
   it('undo set bg color', async () => {
     const quill = await createTable(3, 3);
     const tableModule = quill.getModule(TableUp.moduleName) as TableUp;

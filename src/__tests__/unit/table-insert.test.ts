@@ -355,3 +355,187 @@ describe('column width calculate', () => {
     expect(quill.root.querySelectorAll('table')[0].style.width).toBe('300px');
   });
 });
+
+describe('insert row into table', () => {
+  it('insert row top', async () => {
+    const quill = createQuillWithTableModule(`<p><br></p>`);
+    const tableModule = quill.getModule(TableUp.moduleName) as TableUp;
+    tableModule.insertTable(2, 2);
+    await vi.runAllTimersAsync();
+    const tds = quill.scroll.descendants(TableCellInnerFormat, 0);
+    tableModule.appendRow([tds[0]], false);
+    await vi.runAllTimersAsync();
+    expect(quill.root).toEqualHTML(
+      `
+        <p><br></p>
+        <div>
+          <table cellpadding="0" cellspacing="0" data-full="true">
+            <colgroup data-full="true">
+              <col width="50%" data-full="true" />
+              <col width="50%" data-full="true" />
+            </colgroup>
+            <tbody>
+              ${
+                new Array(3).fill(0).map(() => `
+                  <tr>
+                    ${new Array(2).fill(0).map(() => `<td rowspan="1" colspan="1"><div><p><br></p></div></td>`).join('\n')}
+                  </tr>
+                `).join('\n')
+              }
+            </tbody>
+          </table>
+        </div>
+        <p><br></p>
+      `,
+      { ignoreAttrs: ['class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
+    );
+  });
+
+  it('insert row top and index is inside rowspan cell', async () => {
+    const quill = createQuillWithTableModule(`<p><br></p>`);
+    const tableModule = quill.getModule(TableUp.moduleName) as TableUp;
+    tableModule.insertTable(3, 5);
+    await vi.runAllTimersAsync();
+    const tds = quill.scroll.descendants(TableCellInnerFormat, 0);
+    tableModule.mergeCells([tds[0], tds[1], tds[2], tds[5], tds[6], tds[7]]);
+    await vi.runAllTimersAsync();
+    tableModule.mergeCells([tds[9], tds[14]]);
+    await vi.runAllTimersAsync();
+    tableModule.appendRow([tds[8]], false);
+    await vi.runAllTimersAsync();
+    expect(quill.root).toEqualHTML(
+      `
+        <p><br></p>
+        <div>
+          <table cellpadding="0" cellspacing="0" data-full="true">
+            <colgroup data-full="true">
+              ${new Array(5).fill(0).map(() => `<col width="20%" data-full="true" />`).join('\n')}
+            </colgroup>
+            <tbody>
+              <tr>
+                <td rowspan="3" colspan="3">
+                  <div>
+                    <p><br></p>
+                    <p><br></p>
+                    <p><br></p>
+                    <p><br></p>
+                    <p><br></p>
+                    <p><br></p>
+                  </div>
+                </td>
+                <td rowspan="1" colspan="1"><div><p><br></p></div></td>
+                <td rowspan="1" colspan="1"><div><p><br></p></div></td>
+              </tr>
+              <tr>
+                <td rowspan="1" colspan="1"><div><p><br></p></div></td>
+                <td rowspan="1" colspan="1"><div><p><br></p></div></td>
+              </tr>
+              <tr>
+                <td rowspan="1" colspan="1"><div><p><br></p></div></td>
+                <td rowspan="2" colspan="1">
+                  <div>
+                    <p><br></p>
+                    <p><br></p>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td rowspan="1" colspan="1"><div><p><br></p></div></td>
+                <td rowspan="1" colspan="1"><div><p><br></p></div></td>
+                <td rowspan="1" colspan="1"><div><p><br></p></div></td>
+                <td rowspan="1" colspan="1"><div><p><br></p></div></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p><br></p>
+      `,
+      { ignoreAttrs: ['class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
+    );
+  });
+
+  it('insert row bottom', async () => {
+    const quill = createQuillWithTableModule(`<p><br></p>`);
+    const tableModule = quill.getModule(TableUp.moduleName) as TableUp;
+    tableModule.insertTable(2, 2);
+    await vi.runAllTimersAsync();
+    const tds = quill.scroll.descendants(TableCellInnerFormat, 0);
+    tableModule.appendRow([tds[2]], true);
+    await vi.runAllTimersAsync();
+    expect(quill.root).toEqualHTML(
+      `
+        <p><br></p>
+        <div>
+          <table cellpadding="0" cellspacing="0" data-full="true">
+            <colgroup data-full="true">
+              <col width="50%" data-full="true" />
+              <col width="50%" data-full="true" />
+            </colgroup>
+            <tbody>
+              ${
+                new Array(3).fill(0).map(() => `
+                  <tr>
+                    ${new Array(2).fill(0).map(() => `<td rowspan="1" colspan="1"><div><p><br></p></div></td>`).join('\n')}
+                  </tr>
+                `).join('\n')
+              }
+            </tbody>
+          </table>
+        </div>
+        <p><br></p>
+      `,
+      { ignoreAttrs: ['class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
+    );
+  });
+
+  it('insert row bottom and index is inside rowspan cell', async () => {
+    const quill = createQuillWithTableModule(`<p><br></p>`);
+    const tableModule = quill.getModule(TableUp.moduleName) as TableUp;
+    tableModule.insertTable(2, 5);
+    await vi.runAllTimersAsync();
+    const tds = quill.scroll.descendants(TableCellInnerFormat, 0);
+    tableModule.mergeCells([tds[1], tds[2], tds[3], tds[6], tds[7], tds[8]]);
+    tableModule.appendRow([tds[0]], true);
+    await vi.runAllTimersAsync();
+    expect(quill.root).toEqualHTML(
+      `
+        <p><br></p>
+        <div>
+          <table cellpadding="0" cellspacing="0" data-full="true">
+            <colgroup data-full="true">
+              <col width="20%" data-full="true" />
+              <col width="60%" data-full="true" />
+              <col width="20%" data-full="true" />
+            </colgroup>
+            <tbody>
+              <tr>
+                <td rowspan="1" colspan="1"><div><p><br></p></div></td>
+                <td rowspan="3" colspan="1">
+                  <div>
+                    <p><br></p>
+                    <p><br></p>
+                    <p><br></p>
+                    <p><br></p>
+                    <p><br></p>
+                    <p><br></p>
+                  </div>
+                </td>
+                <td rowspan="1" colspan="1"><div><p><br></p></div></td>
+              </tr>
+              <tr>
+                <td rowspan="1" colspan="1"><div><p><br></p></div></td>
+                <td rowspan="1" colspan="1"><div><p><br></p></div></td>
+              </tr>
+              <tr>
+                <td rowspan="1" colspan="1"><div><p><br></p></div></td>
+                <td rowspan="1" colspan="1"><div><p><br></p></div></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p><br></p>
+      `,
+      { ignoreAttrs: ['class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
+    );
+  });
+});
