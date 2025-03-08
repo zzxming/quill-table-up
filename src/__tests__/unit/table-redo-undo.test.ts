@@ -674,31 +674,6 @@ describe('undo cell attribute', () => {
     const tds = quill.scroll.descendants(TableCellInnerFormat, 0);
     tableModule.setCellAttrs([tds[0], tds[1], tds[2]], 'background-color', 'rgb(253, 235, 255)', true);
     await vi.runAllTimersAsync();
-    expect(quill.root).toEqualHTML(
-      `
-        <p><br></p>
-        <div>
-          <table cellpadding="0" cellspacing="0"${datasetFull(true)} style="margin-right: auto;">
-            ${createTaleColHTML(3)}
-            <tbody>
-              ${
-                new Array(3).fill(0).map((_, i) => `
-                  <tr data-row-id="${i + 1}">
-                    ${
-                      new Array(3).fill(0).map((_, j) => `<td rowspan="1" colspan="1" data-row-id="${i + 1}" data-col-id="${j + 1}"${i === 0 ? ' style="background-color: rgb(253, 235, 255);"' : ''}>
-                        <div data-rowspan="1" data-colspan="1" data-row-id="${i + 1}" data-col-id="${j + 1}"${i === 0 ? ' data-style="background-color: rgb(253, 235, 255);"' : ''}><p>${i * 3 + j + 1}</p></div>
-                      </td>`).join('\n')
-                    }
-                  </tr>
-                `).join('\n')
-              }
-            </tbody>
-          </table>
-        </div>
-        <p><br></p>
-      `,
-      { ignoreAttrs: ['class', 'data-table-id', 'contenteditable'] },
-    );
     quill.history.undo();
     await vi.runAllTimersAsync();
     expect(quill.root).toEqualHTML(
@@ -817,20 +792,6 @@ describe('undo cell attribute', () => {
       col.align = 'center';
     }
     await vi.runAllTimersAsync();
-    expect(quill.root).toEqualHTML(
-      `
-        <p><br></p>
-        <div>
-          <table cellpadding="0" cellspacing="0"${datasetAlign('center')} style="margin-right: auto; width: 300px; margin-left: auto;">
-            ${createTaleColHTML(3, { align: 'center', full: false, width: 100 })}
-            ${createTableBodyHTML(3, 3)}
-          </table>
-        </div>
-        <p><br></p>
-      `,
-      { ignoreAttrs: ['class', 'data-table-id', 'contenteditable'] },
-    );
-
     quill.history.undo();
     await vi.runAllTimersAsync();
     expect(quill.root).toEqualHTML(

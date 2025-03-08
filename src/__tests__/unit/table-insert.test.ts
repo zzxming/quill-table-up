@@ -1,7 +1,11 @@
+import type { TableMainFormat } from '../../formats';
+import Quill from 'quill';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { TableCellInnerFormat } from '../../formats';
 import { TableUp } from '../../table-up';
-import { createQuillWithTableModule, createTable, createTableDeltaOps, createTableHTML, createTaleColHTML } from './utils';
+import { createQuillWithTableModule, createTable, createTableBodyHTML, createTableDeltaOps, createTableHTML, createTaleColHTML, datasetAlign, datasetFull, expectDelta } from './utils';
+
+const Delta = Quill.import('delta');
 
 beforeEach(() => {
   vi.useFakeTimers();
@@ -536,6 +540,218 @@ describe('insert row into table', () => {
         <p><br></p>
       `,
       { ignoreAttrs: ['class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
+    );
+  });
+});
+
+describe('set cell attribute', () => {
+  it('set bg color', async () => {
+    const quill = await createTable(3, 3);
+    const tableModule = quill.getModule(TableUp.moduleName) as TableUp;
+    const tds = quill.scroll.descendants(TableCellInnerFormat, 0);
+    tableModule.setCellAttrs([tds[0], tds[1], tds[2]], 'background-color', 'rgb(253, 235, 255)', true);
+    await vi.runAllTimersAsync();
+    expect(quill.root).toEqualHTML(
+      `
+        <p><br></p>
+        <div>
+          <table cellpadding="0" cellspacing="0"${datasetFull(true)} style="margin-right: auto;">
+            ${createTaleColHTML(3)}
+            <tbody>
+              ${
+                new Array(3).fill(0).map((_, i) => `
+                  <tr data-row-id="${i + 1}">
+                    ${
+                      new Array(3).fill(0).map((_, j) => `<td rowspan="1" colspan="1" data-row-id="${i + 1}" data-col-id="${j + 1}"${i === 0 ? ' style="background-color: rgb(253, 235, 255);"' : ''}>
+                        <div data-rowspan="1" data-colspan="1" data-row-id="${i + 1}" data-col-id="${j + 1}"${i === 0 ? ' data-style="background-color: rgb(253, 235, 255);"' : ''}><p>${i * 3 + j + 1}</p></div>
+                      </td>`).join('\n')
+                    }
+                  </tr>
+                `).join('\n')
+              }
+            </tbody>
+          </table>
+        </div>
+        <p><br></p>
+      `,
+      { ignoreAttrs: ['class', 'data-table-id', 'contenteditable'] },
+    );
+  });
+
+  it('set border color', async () => {
+    const quill = await createTable(2, 2);
+    const tableModule = quill.getModule(TableUp.moduleName) as TableUp;
+    const tds = quill.scroll.descendants(TableCellInnerFormat, 0);
+    tableModule.setCellAttrs([tds[0], tds[1]], 'border-color', 'red', true);
+    await vi.runAllTimersAsync();
+    expect(quill.root).toEqualHTML(
+      `
+        <p><br></p>
+        <div>
+          <table cellpadding="0" cellspacing="0"${datasetFull(true)} style="margin-right: auto;">
+            ${createTaleColHTML(2)}
+            <tbody>
+              <tr data-row-id="1">
+                <td colspan="1" data-col-id="1" data-row-id="1" rowspan="1" style="border-color: red; border-right-color: red;">
+                  <div data-col-id="1" data-colspan="1" data-row-id="1" data-rowspan="1" data-style="border-color: red; border-right-color: red;">
+                    <p>1</p>
+                  </div>
+                </td>
+                <td colspan="1" data-col-id="2" data-row-id="1" rowspan="1" style="border-color: red;">
+                  <div data-col-id="2" data-colspan="1" data-row-id="1" data-rowspan="1" data-style="border-color: red;">
+                    <p>2</p>
+                  </div>
+                </td>
+              </tr>
+              <tr data-row-id="2">
+                <td colspan="1" data-col-id="1" data-row-id="2" rowspan="1">
+                  <div data-col-id="1" data-colspan="1" data-row-id="2" data-rowspan="1">
+                    <p>3</p>
+                  </div>
+                </td>
+                <td colspan="1" data-col-id="2" data-row-id="2" rowspan="1">
+                  <div data-col-id="2" data-colspan="1" data-row-id="2" data-rowspan="1">
+                    <p>4</p>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p><br></p>
+      `,
+      { ignoreAttrs: ['class', 'data-table-id', 'contenteditable'] },
+    );
+    expectDelta(
+      new Delta([
+        { insert: '\n' },
+        { insert: { 'table-up-col': { full: true, width: 50 } } },
+        { insert: { 'table-up-col': { full: true, width: 50 } } },
+        { insert: '1' },
+        { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1, style: 'border-color: red; border-right-color: red;' } }, insert: '\n' },
+        { insert: '2' },
+        { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1, style: 'border-color: red;' } }, insert: '\n' },
+        { insert: '3' },
+        { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1 } }, insert: '\n' },
+        { insert: '4' },
+        { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1 } }, insert: '\n' },
+        { insert: '\n' },
+      ]),
+      quill.getContents(),
+    );
+  });
+
+  it('set table align change', async () => {
+    const quill = await createTable(3, 3, { full: false, width: 100 });
+    const table = quill.root.querySelector('table')!;
+    const tableBlot = Quill.find(table) as TableMainFormat;
+    const cols = tableBlot.getCols();
+    for (const col of cols) {
+      col.align = 'center';
+    }
+    await vi.runAllTimersAsync();
+    expect(quill.root).toEqualHTML(
+      `
+        <p><br></p>
+        <div>
+          <table cellpadding="0" cellspacing="0"${datasetAlign('center')} style="margin-right: auto; width: 300px; margin-left: auto;">
+            ${createTaleColHTML(3, { align: 'center', full: false, width: 100 })}
+            ${createTableBodyHTML(3, 3)}
+          </table>
+        </div>
+        <p><br></p>
+      `,
+      { ignoreAttrs: ['class', 'data-table-id', 'contenteditable'] },
+    );
+  });
+
+  it('set span cell border color', async () => {
+    const quill = await createTable(5, 5, {}, { isEmpty: true });
+    const tableModule = quill.getModule(TableUp.moduleName) as TableUp;
+
+    const tds = quill.scroll.descendants(TableCellInnerFormat, 0);
+    tableModule.mergeCells([tds[6], tds[7], tds[8], tds[11], tds[12], tds[13], tds[16], tds[17], tds[18]]);
+    const mergedTds = quill.scroll.descendants(TableCellInnerFormat, 0);
+    tableModule.setCellAttrs([mergedTds[6]], 'border-color', 'red', true);
+
+    await vi.runAllTimersAsync();
+    expectDelta(
+      new Delta([
+        { insert: '\n' },
+        { insert: { 'table-up-col': { full: true, width: 20 } } },
+        { insert: { 'table-up-col': { full: true, width: 20 } } },
+        { insert: { 'table-up-col': { full: true, width: 20 } } },
+        { insert: { 'table-up-col': { full: true, width: 20 } } },
+        { insert: { 'table-up-col': { full: true, width: 20 } } },
+        { attributes: { 'table-up-cell-inner': { } }, insert: '\n' },
+        { attributes: { 'table-up-cell-inner': { style: 'border-bottom-color: red;' } }, insert: '\n' },
+        { attributes: { 'table-up-cell-inner': { style: 'border-bottom-color: red;' } }, insert: '\n' },
+        { attributes: { 'table-up-cell-inner': { style: 'border-bottom-color: red;' } }, insert: '\n' },
+        { attributes: { 'table-up-cell-inner': { } }, insert: '\n' },
+        { attributes: { 'table-up-cell-inner': { style: 'border-right-color: red;' } }, insert: '\n' },
+        { attributes: { 'table-up-cell-inner': { rowspan: 3, colspan: 3, style: 'border-color: red;' } }, insert: '\n\n\n\n\n\n\n\n\n' },
+        { attributes: { 'table-up-cell-inner': { } }, insert: '\n' },
+        { attributes: { 'table-up-cell-inner': { } }, insert: '\n' },
+        { attributes: { 'table-up-cell-inner': { } }, insert: '\n' },
+        { attributes: { 'table-up-cell-inner': { } }, insert: '\n' },
+        { attributes: { 'table-up-cell-inner': { } }, insert: '\n' },
+        { attributes: { 'table-up-cell-inner': { } }, insert: '\n' },
+        { attributes: { 'table-up-cell-inner': { } }, insert: '\n' },
+        { attributes: { 'table-up-cell-inner': { } }, insert: '\n' },
+        { attributes: { 'table-up-cell-inner': { } }, insert: '\n' },
+        { attributes: { 'table-up-cell-inner': { } }, insert: '\n' },
+        { insert: '\n' },
+      ]),
+      quill.getContents(),
+    );
+  });
+
+  it('set rowspan and colspan cell border color', async () => {
+    const quill = await createTable(6, 4, {}, { isEmpty: true });
+    const tableModule = quill.getModule(TableUp.moduleName) as TableUp;
+
+    const tds = quill.scroll.descendants(TableCellInnerFormat, 0);
+    tableModule.mergeCells([tds[4], tds[5], tds[8], tds[9]]);
+    await vi.runAllTimersAsync();
+    tableModule.mergeCells([tds[13], tds[14], tds[17], tds[18]]);
+    await vi.runAllTimersAsync();
+    const mergedTds = quill.scroll.descendants(TableCellInnerFormat, 0);
+    tableModule.setCellAttrs([mergedTds[10]], 'border-color', 'red', true);
+
+    await vi.runAllTimersAsync();
+    expectDelta(
+      new Delta([
+        { insert: '\n' },
+        { insert: { 'table-up-col': { full: true, width: 25 } } },
+        { insert: { 'table-up-col': { full: true, width: 25 } } },
+        { insert: { 'table-up-col': { full: true, width: 25 } } },
+        { insert: { 'table-up-col': { full: true, width: 25 } } },
+        { attributes: { 'table-up-cell-inner': { } }, insert: '\n' },
+        { attributes: { 'table-up-cell-inner': { } }, insert: '\n' },
+        { attributes: { 'table-up-cell-inner': { } }, insert: '\n' },
+        { attributes: { 'table-up-cell-inner': { } }, insert: '\n' },
+
+        { attributes: { 'table-up-cell-inner': { rowspan: 2, colspan: 2 } }, insert: '\n\n\n\n' },
+        { attributes: { 'table-up-cell-inner': { } }, insert: '\n' },
+        { attributes: { 'table-up-cell-inner': { } }, insert: '\n' },
+
+        { attributes: { 'table-up-cell-inner': { style: 'border-bottom-color: red;' } }, insert: '\n' },
+        { attributes: { 'table-up-cell-inner': { } }, insert: '\n' },
+
+        { attributes: { 'table-up-cell-inner': { style: 'border-right-color: red;' } }, insert: '\n' },
+        { attributes: { 'table-up-cell-inner': { rowspan: 2, colspan: 2, style: 'border-color: red;' } }, insert: '\n\n\n\n' },
+        { attributes: { 'table-up-cell-inner': { } }, insert: '\n' },
+
+        { attributes: { 'table-up-cell-inner': { } }, insert: '\n' },
+        { attributes: { 'table-up-cell-inner': { } }, insert: '\n' },
+
+        { attributes: { 'table-up-cell-inner': { } }, insert: '\n' },
+        { attributes: { 'table-up-cell-inner': { } }, insert: '\n' },
+        { attributes: { 'table-up-cell-inner': { } }, insert: '\n' },
+        { attributes: { 'table-up-cell-inner': { } }, insert: '\n' },
+        { insert: '\n' },
+      ]),
+      quill.getContents(),
     );
   });
 });
