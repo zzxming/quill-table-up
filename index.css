@@ -44,8 +44,14 @@
   display: table-column;
   table-layout: fixed;
 }
+.ql-editor .ql-table tr + tr td {
+  border-top: none;
+}
 .ql-editor .ql-table td {
   border: 1px solid #a1a1aa;
+}
+.ql-editor .ql-table td + td {
+  border-left: none;
 }
 .table-up-toolbox {
   position: absolute;
