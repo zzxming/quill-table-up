@@ -2,6 +2,12 @@ import Quill from 'quill';
 import { defaultCustomSelect, TableAlign, TableCellFormat, TableCellInnerFormat, TableColFormat, TableMenuContextmenu, TableResizeBox, TableSelection, TableUp, TableVirtualScrollbar, updateTableConstants } from 'table-up';
 
 updateTableConstants({
+  /**
+   * Change the blot name
+   *  table-up-col -> a-col
+   *  table-up-cell -> a-cell
+   *  table-up-cell-inner -> a-cell-inner
+   */
   blotName: {
     tableCol: 'a-col',
     tableCell: 'a-cell',
@@ -101,6 +107,7 @@ class TableCellInnerFormatOverride extends TableCellInnerFormat {
 class TableUpOverride extends TableUp {
   static register() {
     super.register();
+    // Override the formats
     Quill.register({
       'formats/a-col': TableColFormatOverride,
       'formats/a-cell': TableCellFormatOverride,

@@ -161,6 +161,15 @@ for (const [i, btn] of [
   });
 }
 
+for (const [i, btn] of [
+  writable1,
+  writable2,
+].entries()) {
+  btn.addEventListener('click', () => {
+    quill[i].enable(!quill[i].isEnabled());
+  });
+}
+
 quill1.setContents([
   // { insert: '\n' },
   // { insert: { 'table-up-col': { tableId: '1', colId: '1', width: 63 } } },
