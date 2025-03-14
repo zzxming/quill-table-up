@@ -23,6 +23,10 @@ export const tableUpEvent = {
   AFTER_TABLE_RESIZE: 'after-table-resize',
 };
 
+export const tableUpInternal = {
+  moduleName: 'table-up',
+};
+
 export const defaultColorMap = [
   [
     'rgb(255, 255, 255)',

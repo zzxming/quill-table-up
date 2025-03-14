@@ -3,6 +3,7 @@ import type BaseTheme from 'quill/themes/base';
 import type Picker from 'quill/ui/picker';
 import type { TableCellInnerFormat } from '../formats';
 import type { TableUp } from '../table-up';
+import type { blotName, tableUpEvent, tableUpInternal, tableUpSize } from './constants';
 
 export type QuillThemePicker = (Picker & { options: HTMLElement });
 export interface QuillTheme extends BaseTheme {
@@ -129,8 +130,12 @@ export interface InternalTableSelectionModule extends InternalModule {
   ) => TableCellInnerFormat[];
   updateWithSelectedTds: () => void;
 }
+export type Writable<T> = {
+  -readonly [P in keyof T]: T[P];
+};
 export interface TableConstantsData {
-  blotName: Record<string, string>;
-  tableUpSize: Record<string, number>;
-  tableUpEvent: Record<string, string>;
+  blotName: Partial<Record<keyof Writable<typeof blotName>, string>>;
+  tableUpSize: Partial<typeof tableUpSize>;
+  tableUpEvent: Partial<typeof tableUpEvent>;
+  tableUpInternal: Partial<typeof tableUpInternal>;
 }

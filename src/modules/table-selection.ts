@@ -4,13 +4,15 @@ import type { TableUp } from '../table-up';
 import type { InternalModule, RelactiveRect, TableSelectionOptions } from '../utils';
 import Quill from 'quill';
 import { TableCellFormat, TableCellInnerFormat } from '../formats';
-import { addScrollEvent, blotName, clearScrollEvent, createBEM, findAllParentBlot, getRelativeRect, isRectanglesIntersect } from '../utils';
+import { addScrollEvent, blotName, clearScrollEvent, createBEM, findAllParentBlot, getRelativeRect, isRectanglesIntersect, tableUpInternal } from '../utils';
 
 const ERROR_LIMIT = 0;
 const IsFirstResizeObserve = Symbol('IsFirstResizeObserve');
 type ResizeObserveTarget = HTMLElement & { [IsFirstResizeObserve]?: boolean };
+const Parchment = Quill.import('parchment');
+const Delta = Quill.import('delta');
 
-interface SelectionData {
+export interface SelectionData {
   anchorNode: Node | null;
   anchorOffset: number;
   focusNode: Node | null;
@@ -46,6 +48,8 @@ export class TableSelection {
   constructor(public tableModule: TableUp, public quill: Quill, options: Partial<TableSelectionOptions> = {}) {
     this.options = this.resolveOptions(options);
 
+    this.quillHack();
+
     this.cellSelectWrap = tableModule.addContainer(this.bem.b());
     this.cellSelect = this.helpLinesInitial();
 
@@ -69,6 +73,50 @@ export class TableSelection {
       this.tableMenu = new this.options.tableMenu(tableModule, quill, this.options.tableMenuOptions);
     }
     this.hide();
+  }
+
+  quillHack() {
+    // tableSelection format cellInner style
+    const originFormat = this.quill.format;
+    this.quill.format = function (name: string, value: unknown, source: EmitterSource = Quill.sources.API) {
+      const blot = this.scroll.query(name);
+      // filter embed blot
+      if (!((blot as TypeParchment.BlotConstructor).prototype instanceof Parchment.EmbedBlot)) {
+        const tableUpModule = this.getModule(tableUpInternal.moduleName) as TableUp;
+        if (tableUpModule && tableUpModule.tableSelection && tableUpModule.tableSelection.selectedTds.length > 0) {
+          const selectedTds = tableUpModule.tableSelection.selectedTds;
+
+          // calculate the format value. the format should be canceled when this value exists in all selected cells
+          let setOrigin = false;
+          let end = -1;
+          const tdRanges = [];
+          for (const innerTd of selectedTds) {
+            const index = innerTd.offset(this.scroll);
+            const length = innerTd.length();
+            tdRanges.push({ index, length });
+            const format = this.getFormat(index, length);
+            if (format[name] !== value) {
+              setOrigin = true;
+            }
+
+            end = index + length;
+          }
+          const resultValue = setOrigin ? value : false;
+
+          const delta = new Delta();
+          for (const [i, { index, length }] of tdRanges.entries()) {
+            const lastIndex = i === 0 ? 0 : tdRanges[i - 1].index + tdRanges[i - 1].length;
+            delta.retain(index - lastIndex).retain(length, { [name]: resultValue });
+          }
+
+          // set selection at the end of the last selected cell. (for make sure the toolbar handler get the origin correct value)
+          this.setSelection(Math.max(0, end - 1), 0, Quill.sources.SILENT);
+          return this.updateContents(delta);
+        }
+      }
+
+      return originFormat.call(this, name, value, source);
+    };
   }
 
   getFirstTextNode(dom: HTMLElement | Node): Node {
