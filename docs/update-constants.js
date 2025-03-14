@@ -1,7 +1,9 @@
 import Quill from 'quill';
 import TableUp, { defaultCustomSelect, TableAlign, TableMenuContextmenu, TableResizeBox, TableSelection, TableVirtualScrollbar, updateTableConstants } from 'table-up';
 
+// Update table-up constants before module registe
 updateTableConstants({
+  // All blot name about table
   blotName: {
     container: 'a-container',
     tableWrapper: 'a',
@@ -13,13 +15,19 @@ updateTableConstants({
     tableCell: 'a-cell',
     tableCellInner: 'a-cell-inner',
   },
+  // Table cell size about variable
   tableUpSize: {
     colMinWidthPre: 5,
     colMinWidthPx: 40,
     rowMinHeightPx: 36,
   },
+  // Table internal event. You can listen it by `quill.on(tableUpEvent.AFTER_TABLE_RESIZE, callback)`
   tableUpEvent: {
     AFTER_TABLE_RESIZE: 'after-table-resize',
+  },
+  // Other variable
+  tableUpInternal: {
+    moduleName: 'table',
   },
 });
 
