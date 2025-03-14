@@ -755,3 +755,28 @@ describe('set cell attribute', () => {
     );
   });
 });
+
+describe('cell editable', () => {
+  it('quill enable hack should useable', async () => {
+    const quill = await createTable(3, 3);
+    const inners = quill.root.querySelectorAll('.ql-table-cell-inner');
+    expect(inners.length).toBe(9);
+    for (const inner of Array.from(inners)) {
+      expect(inner.getAttribute('contenteditable')).toBe('true');
+    }
+
+    quill.enable(false);
+    const disabledInners = quill.root.querySelectorAll('.ql-table-cell-inner');
+    expect(disabledInners.length).toBe(9);
+    for (const inner of Array.from(disabledInners)) {
+      expect(inner.getAttribute('contenteditable')).toBe('false');
+    }
+
+    quill.enable(true);
+    const enabledInners = quill.root.querySelectorAll('.ql-table-cell-inner');
+    expect(enabledInners.length).toBe(9);
+    for (const inner of Array.from(enabledInners)) {
+      expect(inner.getAttribute('contenteditable')).toBe('true');
+    }
+  });
+});
