@@ -91,6 +91,10 @@ export class TableCellFormat extends ContainerFormat {
         this.setStyleBoder(name, value);
       }
     }
+
+    if (this.children.head && this.children.head.statics.blotName === blotName.tableCellInner && this.domNode.style.cssText) {
+      (this.children.head.domNode as HTMLElement).dataset.style = this.domNode.style.cssText;
+    }
   }
 
   setStyleBoder(name: string, value?: any) {

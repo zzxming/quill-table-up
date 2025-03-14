@@ -258,6 +258,259 @@ describe('clipboard cell structure', () => {
       { ignoreAttrs: ['class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'contenteditable'] },
     );
   });
+
+  it('clipboard convert cell border', async () => {
+    const quill = createQuillWithTableModule(`<p><br></p>`);
+    quill.setContents(
+      quill.clipboard.convert({
+        html: `<div class="ql-table-wrapper" data-table-id="5pi2un7zknv" contenteditable="false">
+          <table class="ql-table" data-table-id="5pi2un7zknv" data-full="true" cellpadding="0" cellspacing="0" style="margin-right: auto;">
+            <colgroup data-table-id="5pi2un7zknv" data-full="true" contenteditable="false">
+              <col width="50%" data-full="true" data-table-id="5pi2un7zknv" data-col-id="eo2512o36cf">
+              <col width="50%" data-full="true" data-table-id="5pi2un7zknv" data-col-id="xyb8tsffasd">
+            </colgroup><tbody data-table-id="5pi2un7zknv">
+              <tr class="ql-table-row" data-table-id="5pi2un7zknv" data-row-id="i3fzy8p0yya">
+                <td class="ql-table-cell" data-table-id="5pi2un7zknv" data-row-id="i3fzy8p0yya" data-col-id="eo2512o36cf" rowspan="1" colspan="1" style="border-color: transparent;">
+                  <div class="ql-table-cell-inner" data-table-id="5pi2un7zknv" data-row-id="i3fzy8p0yya" data-col-id="eo2512o36cf" data-rowspan="1" data-colspan="1" data-style="border-top-color:transparent;border-right-color:transparent;border-bottom-color:transparent;border-left-color:transparent" contenteditable="true">
+                    <p><strong>Col 1</strong></p>
+                  </div>
+                </td>
+                <td class="ql-table-cell" data-table-id="5pi2un7zknv" data-row-id="i3fzy8p0yya" data-col-id="xyb8tsffasd" rowspan="1" colspan="1" style="border-color: transparent;">
+                  <div class="ql-table-cell-inner" data-table-id="5pi2un7zknv" data-row-id="i3fzy8p0yya" data-col-id="xyb8tsffasd" data-rowspan="1" data-colspan="1" data-style="border-top-color:transparent;border-right-color:transparent;border-bottom-color:transparent;border-left-color:transparent" contenteditable="true">
+                    <p class="ql-align-right"><strong>Data 1</strong></p>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>`,
+      }),
+    );
+    await vi.runAllTimersAsync();
+    // string convert html style have different behavior. in node will merge same attribute
+    // like: border-left-color:;border-right-color:;border-top-color:;border-bottom-color:; will merge to border-color:;
+    expect(quill.root).toEqualHTML(
+      `<p><br></p>
+       <div>
+          <table data-full="true" cellpadding="0" cellspacing="0" style="margin-right: auto;">
+            <colgroup data-full="true">
+              <col width="50%" data-full="true">
+              <col width="50%" data-full="true">
+            </colgroup>
+            <tbody>
+              <tr>
+                <td rowspan="1" colspan="1" style="border-color: transparent;">
+                  <div data-style="border-color:transparent">
+                    <p><strong>Col 1</strong></p>
+                  </div>
+                </td>
+                <td rowspan="1" colspan="1" style="border-color: transparent;">
+                  <div data-style="border-color:transparent">
+                    <p class="ql-align-right"><strong>Data 1</strong></p>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p><br></p>`,
+      { ignoreAttrs: ['class', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
+    );
+  });
+
+  it('clipboard convert cell border with different cell', async () => {
+    const quill = createQuillWithTableModule(`<p><br></p>`);
+    quill.setContents(
+      quill.clipboard.convert({
+        html: `<div class="ql-table-wrapper" data-table-id="net6rvnou1" contenteditable="false"><table class="ql-table" data-table-id="net6rvnou1" cellpadding="0" cellspacing="0" style="margin-right: auto; width: 633px;"><colgroup data-table-id="net6rvnou1" contenteditable="false"><col width="211px" data-table-id="net6rvnou1" data-col-id="k2gt5etndq"><col width="211px" data-table-id="net6rvnou1" data-col-id="9w3nt695har"><col width="211px" data-table-id="net6rvnou1" data-col-id="p6yitoe294"></colgroup><tbody data-table-id="net6rvnou1"><tr class="ql-table-row" data-table-id="net6rvnou1" data-row-id="6zdnloahiv"><td class="ql-table-cell" data-table-id="net6rvnou1" data-row-id="6zdnloahiv" data-col-id="k2gt5etndq" rowspan="1" colspan="1" style="border-color: transparent;"><div class="ql-table-cell-inner" data-table-id="net6rvnou1" data-row-id="6zdnloahiv" data-col-id="k2gt5etndq" data-rowspan="1" data-colspan="1" contenteditable="true" data-style="border-color: transparent;"><p><br></p></div></td><td class="ql-table-cell" data-table-id="net6rvnou1" data-row-id="6zdnloahiv" data-col-id="9w3nt695har" rowspan="1" colspan="1" style="border-bottom-color: transparent;"><div class="ql-table-cell-inner" data-table-id="net6rvnou1" data-row-id="6zdnloahiv" data-col-id="9w3nt695har" data-rowspan="1" data-colspan="1" contenteditable="true" data-style="border-bottom-color: transparent;"><p><br></p></div></td><td class="ql-table-cell" data-table-id="net6rvnou1" data-row-id="6zdnloahiv" data-col-id="p6yitoe294" rowspan="1" colspan="1"><div class="ql-table-cell-inner" data-table-id="net6rvnou1" data-row-id="6zdnloahiv" data-col-id="p6yitoe294" data-rowspan="1" data-colspan="1" contenteditable="true"><p><br></p></div></td></tr><tr class="ql-table-row" data-table-id="net6rvnou1" data-row-id="ikpx3beeyx"><td class="ql-table-cell" data-table-id="net6rvnou1" data-row-id="ikpx3beeyx" data-col-id="k2gt5etndq" rowspan="1" colspan="1" style="border-right-color: transparent;"><div class="ql-table-cell-inner" data-table-id="net6rvnou1" data-row-id="ikpx3beeyx" data-col-id="k2gt5etndq" data-rowspan="1" data-colspan="1" contenteditable="true" data-style="border-right-color: transparent;"><p><br></p></div></td><td class="ql-table-cell" data-table-id="net6rvnou1" data-row-id="ikpx3beeyx" data-col-id="9w3nt695har" rowspan="1" colspan="1" style="border-color: transparent;"><div class="ql-table-cell-inner" data-table-id="net6rvnou1" data-row-id="ikpx3beeyx" data-col-id="9w3nt695har" data-rowspan="1" data-colspan="1" contenteditable="true" data-style="border-color: transparent;"><p><br></p></div></td><td class="ql-table-cell" data-table-id="net6rvnou1" data-row-id="ikpx3beeyx" data-col-id="p6yitoe294" rowspan="1" colspan="1"><div class="ql-table-cell-inner" data-table-id="net6rvnou1" data-row-id="ikpx3beeyx" data-col-id="p6yitoe294" data-rowspan="1" data-colspan="1" contenteditable="true"><p><br></p></div></td></tr><tr class="ql-table-row" data-table-id="net6rvnou1" data-row-id="hlgvikp39ps"><td class="ql-table-cell" data-table-id="net6rvnou1" data-row-id="hlgvikp39ps" data-col-id="k2gt5etndq" rowspan="1" colspan="1"><div class="ql-table-cell-inner" data-table-id="net6rvnou1" data-row-id="hlgvikp39ps" data-col-id="k2gt5etndq" data-rowspan="1" data-colspan="1" contenteditable="true"><p><br></p></div></td><td class="ql-table-cell" data-table-id="net6rvnou1" data-row-id="hlgvikp39ps" data-col-id="9w3nt695har" rowspan="1" colspan="1"><div class="ql-table-cell-inner" data-table-id="net6rvnou1" data-row-id="hlgvikp39ps" data-col-id="9w3nt695har" data-rowspan="1" data-colspan="1" contenteditable="true"><p><br></p></div></td><td class="ql-table-cell" data-table-id="net6rvnou1" data-row-id="hlgvikp39ps" data-col-id="p6yitoe294" rowspan="1" colspan="1"><div class="ql-table-cell-inner" data-table-id="net6rvnou1" data-row-id="hlgvikp39ps" data-col-id="p6yitoe294" data-rowspan="1" data-colspan="1" contenteditable="true"><p><br></p></div></td></tr></tbody></table></div>`,
+      }),
+    );
+    await vi.runAllTimersAsync();
+    expect(quill.root).toEqualHTML(
+      `<p><br></p>
+       <div>
+          <table cellpadding="0" cellspacing="0" style="margin-right: auto; width: 633px;">
+            ${createTaleColHTML(3, { full: false, width: 211 })}
+            <tbody>
+              <tr>
+                <td rowspan="1" colspan="1" style="border-color: transparent;">
+                  <div data-style="border-color:transparent">
+                    <p><br></p>
+                  </div>
+                </td>
+                <td rowspan="1" colspan="1" style="border-bottom-color: transparent;">
+                  <div data-style="border-bottom-color:transparent">
+                    <p><br></p>
+                  </div>
+                </td>
+                <td rowspan="1" colspan="1">
+                  <div>
+                    <p><br></p>
+                  </div>
+                </td>
+              </tr>
+              </tr>
+                <td rowspan="1" colspan="1" style="border-right-color: transparent;">
+                  <div data-style="border-right-color:transparent">
+                    <p><br></p>
+                  </div>
+                </td>
+                <td rowspan="1" colspan="1" style="border-color: transparent;">
+                  <div data-style="border-color:transparent">
+                    <p><br></p>
+                  </div>
+                </td>
+                <td rowspan="1" colspan="1">
+                  <div>
+                    <p><br></p>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td rowspan="1" colspan="1">
+                  <div>
+                    <p><br></p>
+                  </div>
+                </td>
+                <td rowspan="1" colspan="1">
+                  <div>
+                    <p><br></p>
+                  </div>
+                </td>
+                <td rowspan="1" colspan="1">
+                  <div>
+                    <p><br></p>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p><br></p>`,
+      { ignoreAttrs: ['class', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
+    );
+  });
+
+  it('clipboard convert cell background', async () => {
+    const quill = createQuillWithTableModule(`<p><br></p>`);
+    quill.setContents(
+      quill.clipboard.convert({
+        html: `<table class="ql-table" data-table-id="09vk8hiocha7" cellpadding="0" cellspacing="0" style="margin-right: auto; width: 633px;"><colgroup data-table-id="09vk8hiocha7" contenteditable="false"><col width="211px" data-table-id="09vk8hiocha7" data-col-id="srfl2yk2jg"><col width="211px" data-table-id="09vk8hiocha7" data-col-id="d65st33j925"><col width="211px" data-table-id="09vk8hiocha7" data-col-id="4ab6o7bnh4w"></colgroup><tbody data-table-id="09vk8hiocha7"><tr class="ql-table-row" data-table-id="09vk8hiocha7" data-row-id="cupiz2pct7b"><td class="ql-table-cell" data-table-id="09vk8hiocha7" data-row-id="cupiz2pct7b" data-col-id="srfl2yk2jg" rowspan="1" colspan="1"><div class="ql-table-cell-inner" data-table-id="09vk8hiocha7" data-row-id="cupiz2pct7b" data-col-id="srfl2yk2jg" data-rowspan="1" data-colspan="1" contenteditable="true"><p><br></p></div></td><td class="ql-table-cell" data-table-id="09vk8hiocha7" data-row-id="cupiz2pct7b" data-col-id="d65st33j925" rowspan="1" colspan="1"><div class="ql-table-cell-inner" data-table-id="09vk8hiocha7" data-row-id="cupiz2pct7b" data-col-id="d65st33j925" data-rowspan="1" data-colspan="1" contenteditable="true"><p><br></p></div></td><td class="ql-table-cell" data-table-id="09vk8hiocha7" data-row-id="cupiz2pct7b" data-col-id="4ab6o7bnh4w" rowspan="1" colspan="1"><div class="ql-table-cell-inner" data-table-id="09vk8hiocha7" data-row-id="cupiz2pct7b" data-col-id="4ab6o7bnh4w" data-rowspan="1" data-colspan="1" contenteditable="true"><p><br></p></div></td></tr><tr class="ql-table-row" data-table-id="09vk8hiocha7" data-row-id="on34v2us4vp"><td class="ql-table-cell" data-table-id="09vk8hiocha7" data-row-id="on34v2us4vp" data-col-id="srfl2yk2jg" rowspan="1" colspan="1"><div class="ql-table-cell-inner" data-table-id="09vk8hiocha7" data-row-id="on34v2us4vp" data-col-id="srfl2yk2jg" data-rowspan="1" data-colspan="1" contenteditable="true"><p><br></p></div></td><td class="ql-table-cell" data-table-id="09vk8hiocha7" data-row-id="on34v2us4vp" data-col-id="d65st33j925" rowspan="1" colspan="1" style="background-color: transparent;"><div class="ql-table-cell-inner table-up-selection--selected" data-table-id="09vk8hiocha7" data-row-id="on34v2us4vp" data-col-id="d65st33j925" data-rowspan="1" data-colspan="1" contenteditable="true" data-style="background-color: transparent;"><p><br></p></div></td><td class="ql-table-cell" data-table-id="09vk8hiocha7" data-row-id="on34v2us4vp" data-col-id="4ab6o7bnh4w" rowspan="1" colspan="1"><div class="ql-table-cell-inner" data-table-id="09vk8hiocha7" data-row-id="on34v2us4vp" data-col-id="4ab6o7bnh4w" data-rowspan="1" data-colspan="1" contenteditable="true"><p><br></p></div></td></tr><tr class="ql-table-row" data-table-id="09vk8hiocha7" data-row-id="rjpd1nu9ug"><td class="ql-table-cell" data-table-id="09vk8hiocha7" data-row-id="rjpd1nu9ug" data-col-id="srfl2yk2jg" rowspan="1" colspan="1"><div class="ql-table-cell-inner" data-table-id="09vk8hiocha7" data-row-id="rjpd1nu9ug" data-col-id="srfl2yk2jg" data-rowspan="1" data-colspan="1" contenteditable="true"><p><br></p></div></td><td class="ql-table-cell" data-table-id="09vk8hiocha7" data-row-id="rjpd1nu9ug" data-col-id="d65st33j925" rowspan="1" colspan="1"><div class="ql-table-cell-inner" data-table-id="09vk8hiocha7" data-row-id="rjpd1nu9ug" data-col-id="d65st33j925" data-rowspan="1" data-colspan="1" contenteditable="true"><p><br></p></div></td><td class="ql-table-cell" data-table-id="09vk8hiocha7" data-row-id="rjpd1nu9ug" data-col-id="4ab6o7bnh4w" rowspan="1" colspan="1"><div class="ql-table-cell-inner" data-table-id="09vk8hiocha7" data-row-id="rjpd1nu9ug" data-col-id="4ab6o7bnh4w" data-rowspan="1" data-colspan="1" contenteditable="true"><p><br></p></div></td></tr></tbody></table>`,
+      }),
+    );
+    await vi.runAllTimersAsync();
+
+    expect(quill.root).toEqualHTML(
+      `<p><br></p>
+       <div>
+          <table cellpadding="0" cellspacing="0" style="margin-right: auto; width: 633px;">
+            ${createTaleColHTML(3, { full: false, width: 211 })}
+            <tbody>
+              <tr>
+                <td rowspan="1" colspan="1">
+                  <div>
+                    <p><br></p>
+                  </div>
+                </td>
+                <td rowspan="1" colspan="1">
+                  <div>
+                    <p><br></p>
+                  </div>
+                </td>
+                <td rowspan="1" colspan="1">
+                  <div>
+                    <p><br></p>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td rowspan="1" colspan="1">
+                  <div>
+                    <p><br></p>
+                  </div>
+                </td>
+                <td rowspan="1" colspan="1" style="background-color: transparent;">
+                  <div data-style="background-color:transparent">
+                    <p><br></p>
+                  </div>
+                </td>
+                <td rowspan="1" colspan="1">
+                  <div>
+                    <p><br></p>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td rowspan="1" colspan="1">
+                  <div>
+                    <p><br></p>
+                  </div>
+                </td>
+                <td rowspan="1" colspan="1">
+                  <div>
+                    <p><br></p>
+                  </div>
+                </td>
+                <td rowspan="1" colspan="1">
+                  <div>
+                    <p><br></p>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p><br></p>`,
+      { ignoreAttrs: ['class', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
+    );
+  });
+
+  it('clipboard convert cell height', async () => {
+    const quill = createQuillWithTableModule(`<p><br></p>`);
+    quill.setContents(
+      quill.clipboard.convert({
+        html: `<div class="ql-table-wrapper" data-table-id="nihaf83179p" contenteditable="false"><table class="ql-table" data-table-id="nihaf83179p" cellpadding="0" cellspacing="0" style="margin-right: auto; width: 634px;"><colgroup data-table-id="nihaf83179p" contenteditable="false"><col width="317px" data-table-id="nihaf83179p" data-col-id="d9nfgefj3q"><col width="317px" data-table-id="nihaf83179p" data-col-id="k1cx4gfr7qs"></colgroup><tbody data-table-id="nihaf83179p"><tr class="ql-table-row" data-table-id="nihaf83179p" data-row-id="nqmnbvuykce"><td class="ql-table-cell" data-table-id="nihaf83179p" data-row-id="nqmnbvuykce" data-col-id="d9nfgefj3q" rowspan="1" colspan="1" style="height: 73px;"><div class="ql-table-cell-inner" data-table-id="nihaf83179p" data-row-id="nqmnbvuykce" data-col-id="d9nfgefj3q" data-rowspan="1" data-colspan="1" contenteditable="true" data-style="height: 73px;"><p><br></p></div></td><td class="ql-table-cell" data-table-id="nihaf83179p" data-row-id="nqmnbvuykce" data-col-id="k1cx4gfr7qs" rowspan="1" colspan="1" style="height: 73px;"><div class="ql-table-cell-inner" data-table-id="nihaf83179p" data-row-id="nqmnbvuykce" data-col-id="k1cx4gfr7qs" data-rowspan="1" data-colspan="1" contenteditable="true" data-style="height: 73px;"><p><br></p></div></td></tr><tr class="ql-table-row" data-table-id="nihaf83179p" data-row-id="hlimp9vxfh"><td class="ql-table-cell" data-table-id="nihaf83179p" data-row-id="hlimp9vxfh" data-col-id="d9nfgefj3q" rowspan="1" colspan="1"><div class="ql-table-cell-inner" data-table-id="nihaf83179p" data-row-id="hlimp9vxfh" data-col-id="d9nfgefj3q" data-rowspan="1" data-colspan="1" contenteditable="true"><p><br></p></div></td><td class="ql-table-cell" data-table-id="nihaf83179p" data-row-id="hlimp9vxfh" data-col-id="k1cx4gfr7qs" rowspan="1" colspan="1"><div class="ql-table-cell-inner" data-table-id="nihaf83179p" data-row-id="hlimp9vxfh" data-col-id="k1cx4gfr7qs" data-rowspan="1" data-colspan="1" contenteditable="true"><p><br></p></div></td></tr></tbody></table></div>`,
+      }),
+    );
+    await vi.runAllTimersAsync();
+
+    expect(quill.root).toEqualHTML(
+      `<p><br></p>
+       <div>
+          <table cellpadding="0" cellspacing="0" style="margin-right: auto; width: 634px;">
+            ${createTaleColHTML(2, { full: false, width: 317 })}
+            <tbody>
+              <tr>
+                <td rowspan="1" colspan="1" style="height: 73px;">
+                  <div data-style="height:73px">
+                    <p><br></p>
+                  </div>
+                </td>
+                <td rowspan="1" colspan="1" style="height: 73px;">
+                  <div data-style="height:73px">
+                    <p><br></p>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td rowspan="1" colspan="1">
+                  <div>
+                    <p><br></p>
+                  </div>
+                </td>
+                <td rowspan="1" colspan="1">
+                  <div>
+                    <p><br></p>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p><br></p>`,
+      { ignoreAttrs: ['class', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
+    );
+  });
 });
 
 describe('clipboard content format', () => {
@@ -512,6 +765,82 @@ describe('clipboard content format', () => {
         <p><br></p>
       `,
       { ignoreAttrs: ['class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'contenteditable'] },
+    );
+  });
+
+  it('clipboard conver multiple formats and attributes', async () => {
+    const quill = createQuillWithTableModule(`<p><br></p>`);
+    quill.setContents(
+      quill.clipboard.convert({
+        html: `<div class="ql-table-wrapper" data-table-id="axky6ertrbo" contenteditable="false"><table class="ql-table" data-table-id="axky6ertrbo" cellpadding="0" cellspacing="0" style="margin-right: auto; width: 300px;"><colgroup data-table-id="axky6ertrbo" contenteditable="false"><col width="100px" data-table-id="axky6ertrbo" data-col-id="udqfzpmf4m"><col width="100px" data-table-id="axky6ertrbo" data-col-id="uu5nfqzcbx"><col width="100px" data-table-id="axky6ertrbo" data-col-id="y6bmdvnbnr"></colgroup><tbody data-table-id="axky6ertrbo"><tr class="ql-table-row" data-table-id="axky6ertrbo" data-row-id="829isdm1k8k"><td class="ql-table-cell" data-table-id="axky6ertrbo" data-row-id="829isdm1k8k" data-col-id="udqfzpmf4m" rowspan="1" colspan="1" style="height: 90px; background-color: rgb(94, 255, 0);"><div class="ql-table-cell-inner" data-table-id="axky6ertrbo" data-row-id="829isdm1k8k" data-col-id="udqfzpmf4m" data-rowspan="1" data-colspan="1" data-style="height: 90px; background-color: rgb(94, 255, 0);" contenteditable="true"><p><span style="color: rgb(230, 0, 0); background-color: rgb(0, 102, 204);">qwf</span></p></div></td><td class="ql-table-cell" data-table-id="axky6ertrbo" data-row-id="829isdm1k8k" data-col-id="uu5nfqzcbx" rowspan="2" colspan="1" style="height: 90px;"><div class="ql-table-cell-inner" data-table-id="axky6ertrbo" data-row-id="829isdm1k8k" data-col-id="uu5nfqzcbx" data-rowspan="2" data-colspan="1" data-style="height: 90px;" contenteditable="true"><blockquote><code style="background-color: rgb(0, 102, 204); color: rgb(230, 0, 0);">qwfqwfw</code></blockquote><ol><li data-list="bullet"><span class="ql-ui" contenteditable="false"></span>qwg<sub>qwg</sub><sub style="background-color: rgb(0, 102, 204);">wqg</sub></li></ol></div></td><td class="ql-table-cell" data-table-id="axky6ertrbo" data-row-id="829isdm1k8k" data-col-id="y6bmdvnbnr" rowspan="1" colspan="1" style="height: 90px;"><div class="ql-table-cell-inner" data-table-id="axky6ertrbo" data-row-id="829isdm1k8k" data-col-id="y6bmdvnbnr" data-rowspan="1" data-colspan="1" data-style="height: 90px;" contenteditable="true"><p><span style="background-color: rgb(0, 102, 204);">qwg</span></p></div></td></tr><tr class="ql-table-row" data-table-id="axky6ertrbo" data-row-id="t6g1uhxx78"><td class="ql-table-cell" data-table-id="axky6ertrbo" data-row-id="t6g1uhxx78" data-col-id="udqfzpmf4m" rowspan="1" colspan="1"><div class="ql-table-cell-inner" data-table-id="axky6ertrbo" data-row-id="t6g1uhxx78" data-col-id="udqfzpmf4m" data-rowspan="1" data-colspan="1" contenteditable="true"><p><br></p></div></td><td class="ql-table-cell" data-table-id="axky6ertrbo" data-row-id="t6g1uhxx78" data-col-id="y6bmdvnbnr" rowspan="1" colspan="1"><div class="ql-table-cell-inner" data-table-id="axky6ertrbo" data-row-id="t6g1uhxx78" data-col-id="y6bmdvnbnr" data-rowspan="1" data-colspan="1" contenteditable="true"><p><br></p></div></td></tr><tr class="ql-table-row" data-table-id="axky6ertrbo" data-row-id="eqkvtvxxk64"><td class="ql-table-cell" data-table-id="axky6ertrbo" data-row-id="eqkvtvxxk64" data-col-id="udqfzpmf4m" rowspan="1" colspan="2"><div class="ql-table-cell-inner" data-table-id="axky6ertrbo" data-row-id="eqkvtvxxk64" data-col-id="udqfzpmf4m" data-rowspan="1" data-colspan="2" contenteditable="true"><div class="ql-code-block-container" spellcheck="false"><div class="ql-code-block" data-language="plain">qwgwqgwgqwg</div></div></div></td><td class="ql-table-cell" data-table-id="axky6ertrbo" data-row-id="eqkvtvxxk64" data-col-id="y6bmdvnbnr" rowspan="1" colspan="1"><div class="ql-table-cell-inner" data-table-id="axky6ertrbo" data-row-id="eqkvtvxxk64" data-col-id="y6bmdvnbnr" data-rowspan="1" data-colspan="1" contenteditable="true"><p><strong class="ql-font-monospace ql-size-large"><em><s><u>qwgwqg</u></s></em></strong></p></div></td></tr></tbody></table></div>`,
+      }),
+    );
+    await vi.runAllTimersAsync();
+
+    expect(quill.root).toEqualHTML(
+      `<p><br></p>
+     <div>
+        <table cellpadding="0" cellspacing="0" style="margin-right: auto; width: 300px;">
+          ${createTaleColHTML(3, { full: false, width: 100 })}
+          <tbody>
+            <tr>
+              <td rowspan="1" colspan="1" style="height: 90px; background-color: rgb(94, 255, 0);">
+                <div data-style="height:90px;background-color:rgb(94, 255, 0)">
+                  <p>
+                    <span style="background-color: rgb(0, 102, 204); color: rgb(230, 0, 0);">qwf</span>
+                  </p>
+                </div>
+              </td>
+              <td rowspan="2" colspan="1" style="height: 90px;">
+                <div data-style="height:90px">
+                  <blockquote><code style="color: rgb(230, 0, 0); background-color: rgb(0, 102, 204);">qwfqwfw</code></blockquote>
+                  <ol>
+                    <li data-list="bullet">
+                      <span class="ql-ui" contenteditable="false"></span>qwg<sub>qwg</sub>
+                      <sub style="background-color: rgb(0, 102, 204);">wqg</sub>
+                    </li>
+                  </ol>
+                </div>
+              </td>
+              <td rowspan="1" colspan="1" style="height: 90px;">
+                <div data-style="height:90px">
+                  <p>
+                    <span style="background-color: rgb(0, 102, 204);">qwg</span>
+                  </p>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td rowspan="1" colspan="1">
+                <div>
+                  <p><br></p>
+                </div>
+              </td>
+              <td rowspan="1" colspan="1">
+                <div>
+                  <p><br></p>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td rowspan="1" colspan="2">
+                <div>
+                  <div class="ql-code-block-container" spellcheck="false">
+                    <div class="ql-code-block" data-language="plain">qwgwqgwgqwg</div>
+                  </div>
+                </div>
+              </td>
+              <td rowspan="1" colspan="1">
+                <div>
+                  <p><strong class="ql-size-large ql-font-monospace"><em><s><u>qwgwqg</u></s></em></strong></p>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p><br></p>`,
+      { ignoreAttrs: ['class', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
     );
   });
 });

@@ -2,7 +2,7 @@ import type { Parchment as TypeParchment } from 'quill';
 import type { Delta as TypeDelta } from 'quill/core';
 import Quill from 'quill';
 import { TableCellFormat, TableColFormat } from '../formats';
-import { blotName, isObject, randomId, tableUpSize } from '../utils';
+import { blotName, isObject, isString, randomId, tableUpSize } from '../utils';
 
 const Delta = Quill.import('delta');
 
@@ -222,12 +222,23 @@ export class TablePasteParser {
     if (cell.style.border === 'none') {
       value.style = value.style.replaceAll(/border-(top|right|bottom|left)-style:none;?/g, '');
     }
+    function isOnlyNewlines(input: string) {
+      for (const char of input) {
+        if (char !== '\n') {
+          return false;
+        }
+      }
+      return true;
+    }
     const ops = [];
     for (const op of delta.ops) {
       const { insert, attributes } = op;
-      if (op.insert) {
-        const attrs = { ...attributes };
-        delete attrs[blotName.tableCell];
+      if (insert) {
+        const { [blotName.tableCell]: tableCell, ...attrs } = attributes as Record<string, unknown>;
+        // background will effect on `td`. but we alreadt handle backgroundColor in tableCell. need delete it
+        if (isString(insert) && isOnlyNewlines(insert)) {
+          delete attrs.background;
+        }
         ops.push({ insert, attributes: { ...attrs, [blotName.tableCellInner]: value } });
       }
     }
