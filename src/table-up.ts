@@ -1,5 +1,4 @@
 import type { Range, Parchment as TypeParchment } from 'quill';
-import type { EmitterSource } from 'quill/core';
 import type { Context } from 'quill/modules/keyboard';
 import type Keyboard from 'quill/modules/keyboard';
 import type Toolbar from 'quill/modules/toolbar';
@@ -7,12 +6,11 @@ import type { InternalModule, InternalTableSelectionModule, QuillTheme, QuillThe
 import Quill from 'quill';
 import { BlockOverride, ContainerFormat, ScrollOverride, TableBodyFormat, TableCellFormat, TableCellInnerFormat, TableColFormat, TableColgroupFormat, TableMainFormat, TableRowFormat, TableWrapperFormat } from './formats';
 import { TablePasteParser } from './modules';
-import { blotName, createBEM, createSelectBox, debounce, findParentBlot, findParentBlots, isForbidInTable, isFunction, isString, limitDomInViewPort, mixinClass, randomId, tableCantInsert, tableUpEvent, tableUpSize } from './utils';
+import { blotName, createBEM, createSelectBox, debounce, findParentBlot, findParentBlots, isForbidInTable, isFunction, isString, limitDomInViewPort, mixinClass, randomId, tableCantInsert, tableUpEvent, tableUpInternal, tableUpSize } from './utils';
 
 const Delta = Quill.import('delta');
 const Break = Quill.import('blots/break') as TypeParchment.BlotConstructor;
 const icons = Quill.import('ui/icons') as Record<string, any>;
-const Parchment = Quill.import('parchment');
 
 function createCell(scroll: TypeParchment.ScrollBlot, { tableId, rowId, colId }: { tableId: string; rowId: string; colId: string }) {
   const value = {
@@ -36,6 +34,9 @@ export function updateTableConstants(data: Partial<TableConstantsData>) {
   Object.assign(blotName, data.blotName || {});
   Object.assign(tableUpSize, data.tableUpSize || {});
   Object.assign(tableUpEvent, data.tableUpEvent || {});
+  Object.assign(tableUpInternal, data.tableUpInternal || {});
+
+  TableUp.moduleName = tableUpInternal.moduleName;
 
   TableUp.toolName = blotName.tableWrapper;
   ContainerFormat.blotName = blotName.container;
@@ -64,7 +65,7 @@ export function defaultCustomSelect(tableModule: TableUp, picker: QuillThemePick
 }
 
 export class TableUp {
-  static moduleName = 'table-up';
+  static moduleName: string = tableUpInternal.moduleName;
   static toolName: string = blotName.tableWrapper;
   static keyboradHandler = {
     'forbid remove table by backspace': {
@@ -178,46 +179,7 @@ export class TableUp {
     const toolboxBEM = createBEM('toolbox');
     this.toolBox = this.quill.addContainer(toolboxBEM.b());
 
-    const originFormat = quill.format;
-    quill.format = function (name: string, value: unknown, source: EmitterSource = Quill.sources.API) {
-      const blot = this.scroll.query(name);
-      // filter embed blot
-      if (!((blot as TypeParchment.BlotConstructor).prototype instanceof Parchment.EmbedBlot)) {
-        const tableUpModule = this.getModule(TableUp.moduleName) as TableUp;
-        if (tableUpModule && tableUpModule.tableSelection && tableUpModule.tableSelection.selectedTds.length > 0) {
-          const selectedTds = tableUpModule.tableSelection.selectedTds;
-
-          // calculate the format value. the format should be canceled when this value exists in all selected cells
-          let setOrigin = false;
-          let end = -1;
-          const tdRanges = [];
-          for (const innerTd of selectedTds) {
-            const index = innerTd.offset(this.scroll);
-            const length = innerTd.length();
-            tdRanges.push({ index, length });
-            const format = this.getFormat(index, length);
-            if (format[name] !== value) {
-              setOrigin = true;
-            }
-
-            end = index + length;
-          }
-          const resultValue = setOrigin ? value : false;
-
-          const delta = new Delta();
-          for (const [i, { index, length }] of tdRanges.entries()) {
-            const lastIndex = i === 0 ? 0 : tdRanges[i - 1].index + tdRanges[i - 1].length;
-            delta.retain(index - lastIndex).retain(length, { [name]: resultValue });
-          }
-
-          // set selection at the end of the last selected cell. (for make sure the toolbar handler get the origin correct value)
-          this.setSelection(Math.max(0, end - 1), 0, Quill.sources.SILENT);
-          return this.updateContents(delta);
-        }
-      }
-
-      return originFormat.call(this, name, value, source);
-    };
+    this.quillHack();
 
     if (!this.options.scrollbar) {
       const scrollbarBEM = createBEM('scrollbar');
@@ -350,6 +312,21 @@ export class TableUp {
       BackgroundColor: 'Set background color',
       BorderColor: 'Set border color',
     }, options);
+  }
+
+  quillHack() {
+    // `TableWrapper` is not editable. Beacuse we don't want the cursor to be at the end or beginning of the same line as the table
+    // This hack is to make the table cell should not editable when quill is diabled
+    const originQuillEnable = this.quill.enable;
+    this.quill.enable = (enabled: boolean) => {
+      TableCellInnerFormat.writable = enabled;
+      const inners = this.quill.root.querySelectorAll(`.${TableCellInnerFormat.className}`);
+      for (const inner of Array.from(inners)) {
+        inner.setAttribute('contenteditable', String(TableCellInnerFormat.writable));
+      }
+      originQuillEnable.call(this.quill, enabled);
+    };
+    this.quill.enable(this.quill.isEnabled());
   }
 
   showTableTools(table: HTMLElement) {

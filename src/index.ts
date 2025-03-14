@@ -13,6 +13,7 @@ export {
   findParentBlots,
   randomId,
   tableUpEvent,
+  tableUpInternal,
   tableUpSize,
 } from './utils';
 export * from './utils/types';

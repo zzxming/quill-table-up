@@ -117,3 +117,41 @@ test('test TableSelection set indent format', async ({ page }) => {
   await reduce.click();
   expect(await page.locator('#editor1 .ql-table-cell-inner p.ql-indent-1').count()).toBe(4);
 });
+
+test('test TableSelection set multiple format', async ({ page }) => {
+  await createTableBySelect(page, 'container1', 2, 2);
+  const cell = page.locator('#editor1 .ql-editor .ql-table td').nth(0);
+  const cellBounding = (await cell.boundingBox())!;
+  expect(cellBounding).not.toBeNull();
+  await cell.click();
+  await page.mouse.down();
+  await page.mouse.move(cellBounding.x + cellBounding.width * 2 - 10, cellBounding.y + cellBounding.height * 2 - 10);
+  await page.mouse.up();
+
+  await page.locator('#editor1 .ql-editor p').nth(0).type('1');
+  const cells = page.locator('#editor1 .ql-editor .ql-table-cell-inner');
+  await cells.all().then(async (elements) => {
+    for (const element of elements) {
+      await element.type('1');
+    }
+  });
+
+  await page.locator('.ql-toolbar .ql-bold').nth(0).click();
+  await page.locator('.ql-toolbar .ql-italic').nth(0).click();
+  await page.locator('.ql-toolbar .ql-underline').nth(0).click();
+  await page.locator('.ql-toolbar .ql-strike').nth(0).click();
+  await page.locator('.ql-toolbar .ql-background.ql-picker').nth(0).click();
+  await page.locator('.ql-toolbar .ql-background.ql-picker .ql-picker-item[data-value="#e60000"]').nth(0).click();
+
+  const strongEl = page.locator('#editor1 .ql-table-cell-inner strong');
+  expect(await strongEl.count()).toBe(4);
+  expect(await page.locator('#editor1 .ql-table-cell-inner em').count()).toBe(4);
+  expect(await page.locator('#editor1 .ql-table-cell-inner s').count()).toBe(4);
+  expect(await page.locator('#editor1 .ql-table-cell-inner u').count()).toBe(4);
+
+  await strongEl.all().then(async (elements) => {
+    for (const element of elements) {
+      await expect(element).toHaveCSS('background-color', 'rgb(230, 0, 0)');
+    }
+  });
+});

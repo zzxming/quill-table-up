@@ -21,6 +21,8 @@ Enhancement of quill table module
 npm install quill-table-up
 ```
 
+> the registe module name is used internal. so if you want to change it, place use the function [`updateTableConstants`](https://github.com/zzxming/quill-table-up?tab=readme-ov-file#change-internal-constants-variable)
+
 ```js
 import Quill from 'quill';
 import TableUp, { TableAlign, TableMenuContextmenu, TableResizeBox, TableResizeScale, TableSelection, TableVirtualScrollbar } from 'quill-table-up';
@@ -261,11 +263,20 @@ class ScrollBlot extends ScrollOverride {
 
 ### Change internal constants variable
 
-you can change internal constants variable by importing `updateTableConstants` from `quill-table-up` and call it before `TableUp` registed.
+If it's not necessary, you should import constants variable from `quill-table-up` directly but not edit it.
+
+```ts
+import { blotName, tableUpEvent, tableUpInternal, tableUpSize, } from 'quill-table-up';
+```
+
+<hr>
+
+You can change internal constants variable by importing `updateTableConstants` from `quill-table-up` and call it before `TableUp` registed.
 
 It helps to migrate from other table modules with the same data structure.
 
-[change variable demo](https://github.com/zzxming/quill-table-up/blob/master/docs/update-constants.js)
+- [full variable demo](https://github.com/zzxming/quill-table-up/blob/master/docs/update-constants.js)
+- [change blot name that in delta demo](https://github.com/zzxming/quill-table-up/blob/master/docs/update-formats-value.js)
 
 If you change the `TableWrapperFormat` blot name, you also need to add new css style to make toolbar icon have correct style.
 
