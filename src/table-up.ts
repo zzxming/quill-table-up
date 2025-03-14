@@ -179,6 +179,8 @@ export class TableUp {
     const toolboxBEM = createBEM('toolbox');
     this.toolBox = this.quill.addContainer(toolboxBEM.b());
 
+    this.quillHack();
+
     if (!this.options.scrollbar) {
       const scrollbarBEM = createBEM('scrollbar');
       this.quill.container.classList.add(scrollbarBEM.bm('origin'));
@@ -310,6 +312,21 @@ export class TableUp {
       BackgroundColor: 'Set background color',
       BorderColor: 'Set border color',
     }, options);
+  }
+
+  quillHack() {
+    // `TableWrapper` is not editable. Beacuse we don't want the cursor to be at the end or beginning of the same line as the table
+    // This hack is to make the table cell should not editable when quill is diabled
+    const originQuillEnable = this.quill.enable;
+    this.quill.enable = (enabled: boolean) => {
+      TableCellInnerFormat.writable = enabled;
+      const inners = this.quill.root.querySelectorAll(`.${TableCellInnerFormat.className}`);
+      for (const inner of Array.from(inners)) {
+        inner.setAttribute('contenteditable', String(TableCellInnerFormat.writable));
+      }
+      originQuillEnable.call(this.quill, enabled);
+    };
+    this.quill.enable(this.quill.isEnabled());
   }
 
   showTableTools(table: HTMLElement) {

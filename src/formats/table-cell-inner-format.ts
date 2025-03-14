@@ -19,6 +19,7 @@ export class TableCellInnerFormat extends ContainerFormat {
   declare parent: TableCellFormat;
   // keep `isAllowStyle` and `allowStyle` same with TableCellFormat
   static allowStyle = new Set(['background-color', 'border', 'height']);
+  static writable: boolean = false;
   static isAllowStyle(str: string): boolean {
     for (const style of this.allowStyle) {
       if (str.startsWith(style)) {
@@ -44,7 +45,7 @@ export class TableCellInnerFormat extends ContainerFormat {
     node.dataset.rowspan = String(getValidCellspan(rowspan));
     node.dataset.colspan = String(getValidCellspan(colspan));
     style && (node.dataset.style = style);
-    node.setAttribute('contenteditable', 'true');
+    node.setAttribute('contenteditable', String(this.writable));
     return node;
   }
 
