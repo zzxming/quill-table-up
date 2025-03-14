@@ -64,9 +64,8 @@ export class TableCellInnerFormat extends ContainerFormat {
   setFormatValue(name: string, value: any, isStyle: boolean = false) {
     if (isStyle) {
       if (!this.statics.isAllowStyle(name)) return;
-      if (this.parent) {
+      if (this.parent && this.parent.statics.blotName === blotName.tableCell) {
         this.parent.setFormatValue(name, value);
-        this.domNode.dataset.style = this.parent.domNode.style.cssText;
       }
     }
     else {
@@ -78,7 +77,7 @@ export class TableCellInnerFormat extends ContainerFormat {
       else {
         this.domNode.removeAttribute(attrName);
       }
-      if (this.parent) {
+      if (this.parent && this.parent.statics.blotName === blotName.tableCell) {
         this.parent.setFormatValue(name, value);
       }
     }

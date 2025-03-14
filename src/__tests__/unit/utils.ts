@@ -4,8 +4,7 @@ import Quill from 'quill';
 import { expect, vi } from 'vitest';
 import { TableUp } from '../../table-up';
 
-// eslint-disable-next-line unicorn/prefer-string-replace-all
-export const normalizeHTML = (html: string | { html: string }) => typeof html === 'object' ? html.html : html.replace(/\n\s*/g, '');
+export const normalizeHTML = (html: string | { html: string }) => typeof html === 'object' ? html.html : html.replaceAll(/\n\s*/g, '');
 export const sortAttributes = (element: HTMLElement) => {
   const attributes = Array.from(element.attributes);
   const sortedAttributes = attributes.sort((a, b) =>
@@ -58,7 +57,6 @@ expect.extend({
       typeof received === 'string' ? received : received.innerHTML,
     );
     expectedDOM.innerHTML = normalizeHTML(expected);
-
     const doms = [receivedDOM, expectedDOM];
 
     for (const dom of doms) {
