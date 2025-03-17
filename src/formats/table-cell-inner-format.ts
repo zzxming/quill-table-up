@@ -1,5 +1,6 @@
 import type { Parchment as TypeParchment } from 'quill';
 import type TypeBlock from 'quill/blots/block';
+import type TypeScroll from 'quill/blots/scroll';
 import type { TableCellValue } from '../utils';
 import type { TableCellFormat } from './table-cell-format';
 import Quill from 'quill';
@@ -19,7 +20,6 @@ export class TableCellInnerFormat extends ContainerFormat {
   declare parent: TableCellFormat;
   // keep `isAllowStyle` and `allowStyle` same with TableCellFormat
   static allowStyle = new Set(['background-color', 'border', 'height']);
-  static writable: boolean = true;
   static isAllowStyle(str: string): boolean {
     for (const style of this.allowStyle) {
       if (str.startsWith(style)) {
@@ -45,7 +45,6 @@ export class TableCellInnerFormat extends ContainerFormat {
     node.dataset.rowspan = String(getValidCellspan(rowspan));
     node.dataset.colspan = String(getValidCellspan(colspan));
     style && (node.dataset.style = style);
-    node.setAttribute('contenteditable', String(this.writable));
     return node;
   }
 
@@ -60,6 +59,11 @@ export class TableCellInnerFormat extends ContainerFormat {
     };
     style && (value.style = style);
     return value;
+  }
+
+  constructor(scroll: TypeScroll, domNode: HTMLElement, _value: TableCellValue) {
+    super(scroll, domNode);
+    domNode.setAttribute('contenteditable', String(scroll.isEnabled()));
   }
 
   setFormatValue(name: string, value: any, isStyle: boolean = false) {
