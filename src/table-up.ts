@@ -320,10 +320,9 @@ export class TableUp {
     const originQuillEnable = this.quill.enable;
     this.quill.enable = (enabled: boolean) => {
       const tableCellInnerFormat = Quill.import(`formats/${blotName.tableCellInner}`) as typeof TableCellInnerFormat;
-      tableCellInnerFormat.writable = enabled;
       const inners = this.quill.root.querySelectorAll(`.${tableCellInnerFormat.className}`);
       for (const inner of Array.from(inners)) {
-        inner.setAttribute('contenteditable', String(tableCellInnerFormat.writable));
+        inner.setAttribute('contenteditable', String(enabled));
       }
       originQuillEnable.call(this.quill, enabled);
     };

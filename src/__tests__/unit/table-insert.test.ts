@@ -799,4 +799,39 @@ describe('cell editable', () => {
       expect(inner.getAttribute('contenteditable')).toBe('true');
     }
   });
+
+  it('multiple quill editor table cell should effect each other', async () => {
+    const quill1 = createQuillWithTableModule(`<p><br></p>`, {}, {}, { readOnly: true });
+    quill1.setContents(createTableDeltaOps(3, 3));
+    await vi.runAllTimersAsync();
+    const quill2 = createQuillWithTableModule(`<p><br></p>`, {}, {}, { readOnly: false });
+    quill2.setContents(createTableDeltaOps(3, 3));
+    await vi.runAllTimersAsync();
+
+    const disabledInners1 = quill1.root.querySelectorAll('.ql-table-cell-inner');
+    expect(disabledInners1.length).toBe(9);
+    for (const inner of Array.from(disabledInners1)) {
+      expect(inner.getAttribute('contenteditable')).toBe('false');
+    }
+
+    const enabledInners2 = quill2.root.querySelectorAll('.ql-table-cell-inner');
+    expect(enabledInners2.length).toBe(9);
+    for (const inner of Array.from(enabledInners2)) {
+      expect(inner.getAttribute('contenteditable')).toBe('true');
+    }
+
+    quill1.enable(true);
+    const enabledInners1 = quill1.root.querySelectorAll('.ql-table-cell-inner');
+    expect(enabledInners1.length).toBe(9);
+    for (const inner of Array.from(enabledInners1)) {
+      expect(inner.getAttribute('contenteditable')).toBe('true');
+    }
+
+    quill2.enable(false);
+    const disabledInners2 = quill2.root.querySelectorAll('.ql-table-cell-inner');
+    expect(disabledInners2.length).toBe(9);
+    for (const inner of Array.from(disabledInners2)) {
+      expect(inner.getAttribute('contenteditable')).toBe('false');
+    }
+  });
 });
