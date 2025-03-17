@@ -757,7 +757,7 @@ describe('set cell attribute', () => {
 });
 
 describe('cell editable', () => {
-  it('quill enable hack should useable', async () => {
+  it('quill enable hack should useable when initial readOnly `false`', async () => {
     const quill = await createTable(3, 3);
     const inners = quill.root.querySelectorAll('.ql-table-cell-inner');
     expect(inners.length).toBe(9);
@@ -765,7 +765,27 @@ describe('cell editable', () => {
       expect(inner.getAttribute('contenteditable')).toBe('true');
     }
 
-    quill.enable(false);
+    quill.disable();
+    const disabledInners = quill.root.querySelectorAll('.ql-table-cell-inner');
+    expect(disabledInners.length).toBe(9);
+    for (const inner of Array.from(disabledInners)) {
+      expect(inner.getAttribute('contenteditable')).toBe('false');
+    }
+
+    quill.enable(true);
+    const enabledInners = quill.root.querySelectorAll('.ql-table-cell-inner');
+    expect(enabledInners.length).toBe(9);
+    for (const inner of Array.from(enabledInners)) {
+      expect(inner.getAttribute('contenteditable')).toBe('true');
+    }
+  });
+
+  it('quill enable hack should useable when initial readOnly `true`', async () => {
+    const quill = createQuillWithTableModule(`<p><br></p>`, {}, {}, { readOnly: true });
+    quill.setContents(createTableDeltaOps(3, 3));
+    await vi.runAllTimersAsync();
+
+    console.log(quill.root.innerHTML);
     const disabledInners = quill.root.querySelectorAll('.ql-table-cell-inner');
     expect(disabledInners.length).toBe(9);
     for (const inner of Array.from(disabledInners)) {

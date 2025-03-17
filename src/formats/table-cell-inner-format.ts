@@ -19,7 +19,7 @@ export class TableCellInnerFormat extends ContainerFormat {
   declare parent: TableCellFormat;
   // keep `isAllowStyle` and `allowStyle` same with TableCellFormat
   static allowStyle = new Set(['background-color', 'border', 'height']);
-  static writable: boolean = false;
+  static writable: boolean = true;
   static isAllowStyle(str: string): boolean {
     for (const style of this.allowStyle) {
       if (str.startsWith(style)) {
