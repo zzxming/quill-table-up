@@ -519,24 +519,27 @@ export class TableUp {
 
     let html = '';
     const colIds: Set<string> = new Set();
-    let trBlot: ContainerFormat | null = null;
     let tdRows = 0;
+    let lastTrId: string | null = null;
     for (const td of tds) {
-      if (!trBlot || trBlot !== td.parent.parent) {
-        if (trBlot) {
-          const { endTag } = getElementTags(trBlot.domNode);
-          if (html !== '') html += endTag;
-        }
+      const i = this.quill.getIndex(td);
+      const len = td.length();
+      const htmlStr = this.quill.getSemanticHTML(i, len);
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(htmlStr, 'text/html');
+      const tr = doc.querySelector('tr')!;
+      if (td.rowId !== lastTrId) {
         tdRows += 1;
-        trBlot = td.parent.parent as ContainerFormat;
-        const { startTag } = getElementTags(trBlot.domNode);
-        html = `${html}${startTag}`;
+        const { startTag, endTag } = getElementTags(tr);
+        html += `${html ? endTag : ''}${startTag}${tr.innerHTML}`;
       }
-      html += td.parent.domNode.outerHTML;
+      else {
+        html += tr.innerHTML;
+      }
+      lastTrId = td.rowId;
       colIds.add(td.colId);
     }
-    const lastTagName = trBlot ? trBlot.domNode.tagName.toLocaleLowerCase() : '';
-    html += `</${lastTagName}>`;
+    html += '</tr>';
 
     const { startTag, endTag } = getElementTags(tbodyBlot.domNode as HTMLElement);
     html = `${startTag}${html}${endTag}`;
