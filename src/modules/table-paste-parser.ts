@@ -79,7 +79,7 @@ export class TablePasteParser {
       const { attributes, insert } = delta.ops[i];
       // remove quill origin table format and tableCell format
       const { table, [blotName.tableCell]: tableCell, ...attrs } = attributes || {};
-      const hasCol = insert && (insert as Record<string, any>)[blotName.tableCol];
+      const hasCol = isObject(insert) && insert[blotName.tableCol];
       if (currentCellFormat) {
         // if current in cell. no need add col. but need replace paste cell format with current cell format
         if (hasCol) continue;
@@ -125,6 +125,7 @@ export class TablePasteParser {
       }, [] as Record<string, any>[]);
       ops.unshift(...newCols);
     }
+
     // reset variable to avoid conflict with other table
     this.tableId = randomId();
     this.colIds = [];
@@ -232,15 +233,18 @@ export class TablePasteParser {
     }
     const ops = [];
     for (const op of delta.ops) {
-      const { insert, attributes } = op;
+      const { insert, attributes = {} } = op;
       if (insert) {
         const { [blotName.tableCell]: tableCell, ...attrs } = attributes as Record<string, unknown>;
-        // background will effect on `td`. but we alreadt handle backgroundColor in tableCell. need delete it
+        // background will effect on `td`. but we already handle backgroundColor in tableCell. need delete it
         if (isString(insert) && isOnlyNewlines(insert)) {
           delete attrs.background;
         }
         ops.push({ insert, attributes: { ...attrs, [blotName.tableCellInner]: value } });
       }
+    }
+    if (ops.length <= 0 || !isString(ops[ops.length - 1].insert) || !(ops[ops.length - 1].insert as string).endsWith('\n')) {
+      ops.push({ insert: '\n', attributes: { [blotName.tableCellInner]: value } });
     }
     return new Delta(ops);
   }

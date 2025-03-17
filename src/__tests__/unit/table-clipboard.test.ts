@@ -511,6 +511,222 @@ describe('clipboard cell structure', () => {
       { ignoreAttrs: ['class', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
     );
   });
+
+  it('clipboard convert empty cell should not ignore', async () => {
+    const quill = createQuillWithTableModule(`<p><br></p>`);
+    quill.setContents(
+      quill.clipboard.convert({
+        html: `<table><tbody><tr><th>q</th><th>w</th><th>e</th></tr><tr><th></th><td>2</td><td>3</td></tr><tr><th></th><td>4</td><td>5</td></tr></tbody></table>`,
+      }),
+    );
+    await vi.runAllTimersAsync();
+
+    expect(quill.root).toEqualHTML(
+      `<p><br></p>
+       <div>
+          <table cellpadding="0" cellspacing="0" style="margin-right: auto; width: 300px;">
+            ${createTaleColHTML(3, { full: false, width: 100 })}
+            <tbody>
+              <tr>
+                <td rowspan="1" colspan="1">
+                  <div>
+                    <p>q</p>
+                  </div>
+                </td>
+                <td rowspan="1" colspan="1">
+                  <div>
+                    <p>w</p>
+                  </div>
+                </td>
+                <td rowspan="1" colspan="1">
+                  <div>
+                    <p>e</p>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td rowspan="1" colspan="1">
+                  <div>
+                    <p><br></p>
+                  </div>
+                </td>
+                <td rowspan="1" colspan="1">
+                  <div>
+                    <p>2</p>
+                  </div>
+                </td>
+                <td rowspan="1" colspan="1">
+                  <div>
+                    <p>3</p>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td rowspan="1" colspan="1">
+                  <div>
+                    <p><br></p>
+                  </div>
+                </td>
+                <td rowspan="1" colspan="1">
+                  <div>
+                    <p>4</p>
+                  </div>
+                </td>
+                <td rowspan="1" colspan="1">
+                  <div>
+                    <p>5</p>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p><br></p>`,
+      { ignoreAttrs: ['class', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
+    );
+  });
+
+  it('clipboard convert th as td', async () => {
+    const quill = createQuillWithTableModule(`<p><br></p>`);
+    quill.setContents(
+      quill.clipboard.convert({
+        html: `<table class="ws-table-all" id="customers"><tbody><tr><th>Company</th><th>Contact</th><th>Country</th></tr><tr><td>Alfreds Futterkiste</td><td>Maria Anders</td><td>Germany</td></tr><tr><td>Centro comercial Moctezuma</td><td>Francisco Chang</td><td>Mexico</td></tr><tr><td>Ernst Handel</td><td>Roland Mendel</td><td>Austria</td></tr><tr><td>Island Trading</td><td>Helen Bennett</td><td>UK</td></tr><tr><td>Laughing Bacchus Winecellars</td><td>Yoshi Tannamuri</td><td>Canada</td></tr><tr><td>Magazzini Alimentari Riuniti</td><td>Giovanni Rovelli</td><td>Italy</td></tr></tbody></table>`,
+      }),
+    );
+    await vi.runAllTimersAsync();
+
+    expect(quill.root).toEqualHTML(
+      `<p><br></p>
+       <div>
+          <table cellpadding="0" cellspacing="0" style="margin-right: auto; width: 300px;">
+            ${createTaleColHTML(3, { full: false, width: 100 })}
+            <tbody>
+              <tr>
+                <td colspan="1" rowspan="1">
+                  <div>
+                    <p>Company</p>
+                  </div>
+                </td>
+                <td colspan="1" rowspan="1">
+                  <div>
+                    <p>Contact</p>
+                  </div>
+                </td>
+                <td colspan="1" rowspan="1">
+                  <div>
+                    <p>Country</p>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td colspan="1" rowspan="1">
+                  <div>
+                    <p>Alfreds Futterkiste</p>
+                  </div>
+                </td>
+                <td colspan="1" rowspan="1">
+                  <div>
+                    <p>Maria Anders</p>
+                  </div>
+                </td>
+                <td colspan="1" rowspan="1">
+                  <div>
+                    <p>Germany</p>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td colspan="1" rowspan="1">
+                  <div>
+                    <p>Centro comercial Moctezuma</p>
+                  </div>
+                </td>
+                <td colspan="1" rowspan="1">
+                  <div>
+                    <p>Francisco Chang</p>
+                  </div>
+                </td>
+                <td colspan="1" rowspan="1">
+                  <div>
+                    <p>Mexico</p>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td colspan="1" rowspan="1">
+                  <div>
+                    <p>Ernst Handel</p>
+                  </div>
+                </td>
+                <td colspan="1" rowspan="1">
+                  <div>
+                    <p>Roland Mendel</p>
+                  </div>
+                </td>
+                <td colspan="1" rowspan="1">
+                  <div>
+                    <p>Austria</p>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td colspan="1" rowspan="1">
+                  <div>
+                    <p>Island Trading</p>
+                  </div>
+                </td>
+                <td colspan="1" rowspan="1">
+                  <div>
+                    <p>Helen Bennett</p>
+                  </div>
+                </td>
+                <td colspan="1" rowspan="1">
+                  <div>
+                    <p>UK</p>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td colspan="1" rowspan="1">
+                  <div>
+                    <p>Laughing Bacchus Winecellars</p>
+                  </div>
+                </td>
+                <td colspan="1" rowspan="1">
+                  <div>
+                    <p>Yoshi Tannamuri</p>
+                  </div>
+                </td>
+                <td colspan="1" rowspan="1">
+                  <div>
+                    <p>Canada</p>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td colspan="1" rowspan="1">
+                  <div>
+                    <p>Magazzini Alimentari Riuniti</p>
+                  </div>
+                </td>
+                <td colspan="1" rowspan="1">
+                  <div>
+                    <p>Giovanni Rovelli</p>
+                  </div>
+                </td>
+                <td colspan="1" rowspan="1">
+                  <div>
+                    <p>Italy</p>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p><br></p>`,
+      { ignoreAttrs: ['class', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
+    );
+  });
 });
 
 describe('clipboard content format', () => {
