@@ -319,14 +319,14 @@ export class TableUp {
     // This hack is to make the table cell should not editable when quill is diabled
     const originQuillEnable = this.quill.enable;
     this.quill.enable = (enabled: boolean) => {
-      TableCellInnerFormat.writable = enabled;
-      const inners = this.quill.root.querySelectorAll(`.${TableCellInnerFormat.className}`);
+      const tableCellInnerFormat = Quill.import(`formats/${blotName.tableCellInner}`) as typeof TableCellInnerFormat;
+      tableCellInnerFormat.writable = enabled;
+      const inners = this.quill.root.querySelectorAll(`.${tableCellInnerFormat.className}`);
       for (const inner of Array.from(inners)) {
-        inner.setAttribute('contenteditable', String(TableCellInnerFormat.writable));
+        inner.setAttribute('contenteditable', String(tableCellInnerFormat.writable));
       }
       originQuillEnable.call(this.quill, enabled);
     };
-    this.quill.enable(this.quill.isEnabled());
   }
 
   showTableTools(table: HTMLElement) {

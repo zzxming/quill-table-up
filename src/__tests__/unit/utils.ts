@@ -26,7 +26,7 @@ export const sortAttributes = (element: HTMLElement) => {
     }
   });
 };
-export const createQuillWithTableModule = (html: string, options = {}, moduleOptions = {}, register = {}) => {
+export const createQuillWithTableModule = (html: string, tableOptions = {}, moduleOptions = {}, quillOptions = {}, register = {}) => {
   Quill.register({
     [`modules/${TableUp.moduleName}`]: TableUp,
     ...register,
@@ -37,13 +37,14 @@ export const createQuillWithTableModule = (html: string, options = {}, moduleOpt
     modules: {
       [TableUp.moduleName]: {
         full: true,
-        ...options,
+        ...tableOptions,
       },
       history: {
         delay: 0,
       },
       ...moduleOptions,
     },
+    ...quillOptions,
   });
   return quill;
 };
