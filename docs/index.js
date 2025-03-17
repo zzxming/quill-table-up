@@ -116,6 +116,7 @@ const quill1 = new Quill('#editor1', {
 const quill2 = new Quill('#editor2', {
   // debug: 'info',
   theme: 'snow',
+  readOnly: true,
   modules: {
     toolbar: toolbarConfig,
     [TableUp.moduleName]: {
