@@ -155,3 +155,25 @@ test('test TableSelection set multiple format', async ({ page }) => {
     }
   });
 });
+
+test('test TableSelection should not display when color picking', async ({ page }) => {
+  await createTableBySelect(page, 'container1', 3, 3);
+  const cell = page.locator('#editor1 .ql-editor .ql-table td').nth(0);
+  await cell.click();
+  expect(page.locator('#container1 .table-up-toolbox .table-up-selection .table-up-selection__line')).toBeVisible();
+
+  await cell.click({ button: 'right' });
+  await page.locator('.table-up-menu.is-contextmenu .table-up-menu__item').filter({ hasText: 'Set background color' }).first().click();
+  await page.waitForTimeout(200);
+  expect(page.locator('#container1 .table-up-toolbox .table-up-selection .table-up-selection__line')).not.toBeVisible();
+
+  await page.mouse.move(0, 0);
+  await page.waitForTimeout(200);
+  expect(page.locator('#container1 .table-up-toolbox .table-up-selection .table-up-selection__line')).toBeVisible();
+
+  await page.locator('#editor1 .ql-editor p').nth(0).click();
+  expect(page.locator('#container1 .table-up-toolbox .table-up-selection .table-up-selection__line')).not.toBeVisible();
+
+  await page.waitForTimeout(200);
+  expect(page.locator('#container1 .table-up-toolbox .table-up-selection .table-up-selection__line')).not.toBeVisible();
+});
