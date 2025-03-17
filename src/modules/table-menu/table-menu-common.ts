@@ -8,6 +8,7 @@ export type TableMenuOptionsInput = Partial<Omit<TableMenuOptions, 'texts'>>;
 export class TableMenuCommon {
   options: TableMenuOptions;
   menu: HTMLElement | null = null;
+  isMenuDisplay: boolean = false;
   updateUsedColor: (this: any, color?: string) => void;
   tooltipItem: TooltipInstance[] = [];
   bem = createBEM('menu');
@@ -204,7 +205,16 @@ export class TableMenuCommon {
 
     return createTooltip(item, {
       content: colorSelectWrapper,
-      onClose(force) {
+      onOpen: () => {
+        if (this.isMenuDisplay && this.tableModule.tableSelection) {
+          this.tableModule.tableSelection.hideDisplay();
+        }
+        return false;
+      },
+      onClose: (force) => {
+        if (this.isMenuDisplay && this.tableModule.tableSelection) {
+          this.tableModule.tableSelection.showDisplay();
+        }
         const isChild = colorSelectWrapper.contains(colorPicker);
         if (force && isChild) {
           hideColorPicker();
@@ -230,6 +240,7 @@ export class TableMenuCommon {
   update() {
     if (!this.menu || !this.tableModule.tableSelection || !this.tableModule.tableSelection.boundary) return;
     Object.assign(this.menu.style, { display: 'flex' });
+    this.isMenuDisplay = true;
   }
 
   hide() {
@@ -237,6 +248,7 @@ export class TableMenuCommon {
     for (const tooltip of this.tooltipItem) {
       tooltip.hide(true);
     }
+    this.isMenuDisplay = false;
   }
 
   destroy() {

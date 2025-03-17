@@ -129,6 +129,8 @@ export interface InternalTableSelectionModule extends InternalModule {
     }
   ) => TableCellInnerFormat[];
   updateWithSelectedTds: () => void;
+  showDisplay: () => void;
+  hideDisplay: () => void;
 }
 export type Writable<T> = {
   -readonly [P in keyof T]: T[P];

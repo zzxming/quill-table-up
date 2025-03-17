@@ -524,12 +524,12 @@ export class TableSelection {
       height: `${this.boundary.height}px`,
     });
     Object.assign(this.cellSelectWrap.style, {
-      display: 'block',
       left: `${wrapLeft}px`,
       top: `${wrapTop}px`,
       width: `${tableWrapperRect.width + 2}px`,
       height: `${tableWrapperRect.height + 2}px`,
     });
+    this.showDisplay();
     if (!this.dragging && this.tableMenu) {
       this.tableMenu.update();
     }
@@ -568,6 +568,10 @@ export class TableSelection {
     }
   }
 
+  showDisplay() {
+    Object.assign(this.cellSelectWrap.style, { display: 'block' });
+  }
+
   show() {
     if (!this.table) return;
     clearScrollEvent.call(this);
@@ -582,13 +586,17 @@ export class TableSelection {
     });
   }
 
+  hideDisplay() {
+    Object.assign(this.cellSelectWrap.style, { display: 'none' });
+  }
+
   hide() {
     this.boundary = null;
     for (const td of this.selectedTds) {
       td.domNode.classList.remove(`${this.bem.bm('selected')}`);
     }
     this.selectedTds = [];
-    this.cellSelectWrap && Object.assign(this.cellSelectWrap.style, { display: 'none' });
+    this.hideDisplay();
     this.setSelectionTable(undefined);
     if (this.tableMenu) {
       this.tableMenu.hide();
