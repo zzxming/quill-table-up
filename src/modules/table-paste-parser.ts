@@ -232,10 +232,10 @@ export class TablePasteParser {
     }
     const ops = [];
     for (const op of delta.ops) {
-      const { insert, attributes } = op;
+      const { insert, attributes = {} } = op;
       if (insert) {
         const { [blotName.tableCell]: tableCell, ...attrs } = attributes as Record<string, unknown>;
-        // background will effect on `td`. but we alreadt handle backgroundColor in tableCell. need delete it
+        // background will effect on `td`. but we already handle backgroundColor in tableCell. need delete it
         if (isString(insert) && isOnlyNewlines(insert)) {
           delete attrs.background;
         }
