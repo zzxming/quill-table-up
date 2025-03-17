@@ -79,7 +79,7 @@ export class TablePasteParser {
       const { attributes, insert } = delta.ops[i];
       // remove quill origin table format and tableCell format
       const { table, [blotName.tableCell]: tableCell, ...attrs } = attributes || {};
-      const hasCol = insert && (insert as Record<string, any>)[blotName.tableCol];
+      const hasCol = isObject(insert) && insert[blotName.tableCol];
       if (currentCellFormat) {
         // if current in cell. no need add col. but need replace paste cell format with current cell format
         if (hasCol) continue;
@@ -125,6 +125,7 @@ export class TablePasteParser {
       }, [] as Record<string, any>[]);
       ops.unshift(...newCols);
     }
+
     // reset variable to avoid conflict with other table
     this.tableId = randomId();
     this.colIds = [];
