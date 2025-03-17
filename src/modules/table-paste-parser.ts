@@ -242,6 +242,9 @@ export class TablePasteParser {
         ops.push({ insert, attributes: { ...attrs, [blotName.tableCellInner]: value } });
       }
     }
+    if (ops.length <= 0 || !isString(ops[ops.length - 1].insert) || !(ops[ops.length - 1].insert as string).endsWith('\n')) {
+      ops.push({ insert: '\n', attributes: { [blotName.tableCellInner]: value } });
+    }
     return new Delta(ops);
   }
 }
