@@ -64,6 +64,52 @@ export function defaultCustomSelect(tableModule: TableUp, picker: QuillThemePick
   });
 }
 
+function generateTableArrowHandler(up: boolean) {
+  return {
+    key: up ? 'ArrowUp' : 'ArrowDown',
+    collapsed: true,
+    format: [blotName.tableCellInner],
+    bindInHead: false,
+    handler(this: { quill: Quill }, range: Range, context: Context) {
+      let tableBlot: TableWrapperFormat;
+      let tableMain: TableMainFormat;
+      let tableRow: TableRowFormat;
+      let tableCell: TableCellFormat;
+      try {
+        [tableBlot, tableMain, tableRow, tableCell] = findParentBlots(context.line, [blotName.tableWrapper, blotName.tableMain, blotName.tableRow, blotName.tableCell] as const);
+      }
+      catch {
+        return true;
+      }
+
+      const colIds = tableMain.getColIds();
+      const direction = up ? 'prev' : 'next';
+      const childDirection = up ? 'tail' : 'head';
+      const aroundLine = tableBlot[direction];
+      if (context.line[direction] || !aroundLine) {
+        return true;
+      }
+      const targetRow = tableRow[direction] as TableRowFormat;
+      if (targetRow) {
+        const cellIndex = colIds.indexOf(tableCell.colId);
+        const targetCell = targetRow.getCellByColId(colIds[cellIndex], direction);
+        if (!targetCell) return true;
+        let targetChild = targetCell.children[childDirection] as TypeParchment.ParentBlot;
+        if (targetChild.children) {
+          targetChild = targetChild.children[childDirection] as TypeParchment.ParentBlot;
+        }
+        const index = targetChild.offset(this.quill.scroll) + Math.min(context.offset, targetChild.length() - 1);
+        this.quill.setSelection(index, 0, Quill.sources.USER);
+      }
+      else {
+        const index = aroundLine.offset(this.quill.scroll) + (up ? aroundLine.length() - 1 : 0);
+        this.quill.setSelection(index, 0, Quill.sources.USER);
+      }
+      return false;
+    },
+  };
+}
+
 export class TableUp {
   static moduleName: string = tableUpInternal.moduleName;
   static toolName: string = blotName.tableWrapper;
@@ -110,6 +156,8 @@ export class TableUp {
         return true;
       },
     },
+    'table up': generateTableArrowHandler(true),
+    'table down': generateTableArrowHandler(false),
   };
 
   static register() {
