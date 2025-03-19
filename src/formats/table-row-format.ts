@@ -34,6 +34,28 @@ export class TableRowFormat extends ContainerFormat {
     });
   }
 
+  getCellByColId(colId: string, direction: 'next' | 'prev'): TableCellFormat | null {
+    const tableMain = findParentBlot(this, blotName.tableMain);
+    const colIds = tableMain.getColIds();
+    const targetIndex = colIds.indexOf(colId);
+    const next = this.children.iterator();
+    let cur: null | TableCellFormat = null;
+    while ((cur = next())) {
+      if (cur.colId === colId) {
+        return cur;
+      }
+      const curIndex = colIds.indexOf(cur.colId);
+      if (curIndex < targetIndex && curIndex + cur.colspan > targetIndex) {
+        return cur;
+      }
+    }
+    // Not found in current row. Means cell is rowspan. Find in prev or next row.
+    if (this[direction] && this[direction]!.statics.blotName === blotName.tableRow) {
+      return (this[direction] as TableRowFormat).getCellByColId(colId, direction);
+    }
+    return null;
+  }
+
   // insert cell at index
   // return the minus skip column number
   // [2, 3]. means next line should skip 2 columns. next next line skip 3 columns

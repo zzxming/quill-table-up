@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { createTableBySelect } from './utils';
+import { createTableBySelect, extendTest } from './utils';
 
 test.beforeEach(async ({ page }) => {
   await page.goto('http://127.0.0.1:5500/docs/test.html');
@@ -176,4 +176,63 @@ test('test TableSelection should not display when color picking', async ({ page 
 
   await page.waitForTimeout(200);
   expect(page.locator('#container1 .table-up-toolbox .table-up-selection .table-up-selection__line')).not.toBeVisible();
+});
+
+extendTest('test table keyboard ArrowUp and ArrowDown should work', async ({ page, editorPage }) => {
+  editorPage.index = 0;
+  editorPage.setContents([
+    { insert: '123456\n' },
+    { insert: { 'table-up-col': { tableId: 'njo6syk0zqb', colId: 'mnpytyt1cno', full: false, width: 291 } } },
+    { insert: { 'table-up-col': { tableId: 'njo6syk0zqb', colId: '6ihx044tflt', full: false, width: 291 } } },
+    { insert: { 'table-up-col': { tableId: 'njo6syk0zqb', colId: 'raiomwr9yuc', full: false, width: 291 } } },
+    { insert: { 'table-up-col': { tableId: 'njo6syk0zqb', colId: 'qiuz7k09q6r', full: false, width: 291 } } },
+    { insert: '123' },
+    { attributes: { 'table-up-cell-inner': { tableId: 'njo6syk0zqb', rowId: 'rvwpsb2pky', colId: 'mnpytyt1cno', rowspan: 2, colspan: 2 } }, insert: '\n' },
+    { insert: '123456' },
+    { attributes: { 'table-up-cell-inner': { tableId: 'njo6syk0zqb', rowId: 'rvwpsb2pky', colId: 'mnpytyt1cno', rowspan: 2, colspan: 2 } }, insert: '\n' },
+    { insert: '123' },
+    { attributes: { 'table-up-cell-inner': { tableId: 'njo6syk0zqb', rowId: 'rvwpsb2pky', colId: 'mnpytyt1cno', rowspan: 2, colspan: 2 } }, insert: '\n' },
+    { attributes: { 'table-up-cell-inner': { tableId: 'njo6syk0zqb', rowId: 'rvwpsb2pky', colId: 'raiomwr9yuc', rowspan: 1, colspan: 1 } }, insert: '\n' },
+    { attributes: { 'table-up-cell-inner': { tableId: 'njo6syk0zqb', rowId: 'rvwpsb2pky', colId: 'qiuz7k09q6r', rowspan: 1, colspan: 1 } }, insert: '\n' },
+    { insert: '123' },
+    { attributes: { 'table-up-cell-inner': { tableId: 'njo6syk0zqb', rowId: 'vhg5x933cs', colId: 'raiomwr9yuc', rowspan: 1, colspan: 2 } }, insert: '\n' },
+    { insert: '123456' },
+    { attributes: { 'table-up-cell-inner': { tableId: 'njo6syk0zqb', rowId: 'vhg5x933cs', colId: 'raiomwr9yuc', rowspan: 1, colspan: 2 } }, insert: '\n' },
+    { insert: '123' },
+    { attributes: { 'table-up-cell-inner': { tableId: 'njo6syk0zqb', rowId: 'vhg5x933cs', colId: 'raiomwr9yuc', rowspan: 1, colspan: 2 } }, insert: '\n' },
+    { insert: '12345' },
+    { attributes: { 'table-up-cell-inner': { tableId: 'njo6syk0zqb', rowId: 'nsb7mrygbk9', colId: 'mnpytyt1cno', rowspan: 1, colspan: 1 } }, insert: '\n' },
+    { attributes: { 'table-up-cell-inner': { tableId: 'njo6syk0zqb', rowId: 'nsb7mrygbk9', colId: '6ihx044tflt', rowspan: 1, colspan: 1 } }, insert: '\n' },
+    { attributes: { 'table-up-cell-inner': { tableId: 'njo6syk0zqb', rowId: 'nsb7mrygbk9', colId: 'raiomwr9yuc', rowspan: 1, colspan: 1 } }, insert: '\n' },
+    { attributes: { 'table-up-cell-inner': { tableId: 'njo6syk0zqb', rowId: 'nsb7mrygbk9', colId: 'qiuz7k09q6r', rowspan: 1, colspan: 1 } }, insert: '\n' },
+    { insert: '123456\n' },
+  ]);
+
+  await editorPage.setSelection(50, 0);
+  await page.keyboard.press('ArrowUp');
+  expect((await editorPage.getSelection())!.index).toBe(39);
+
+  await editorPage.setSelection(48, 0);
+  await page.keyboard.press('ArrowUp');
+  expect((await editorPage.getSelection())!.index).toBe(25);
+
+  await editorPage.setSelection(14, 0);
+  await page.keyboard.press('ArrowUp');
+  expect((await editorPage.getSelection())!.index).toBe(6);
+
+  await editorPage.setSelection(25, 0);
+  await page.keyboard.press('ArrowDown');
+  expect((await editorPage.getSelection())!.index).toBe(46);
+
+  await editorPage.setSelection(26, 0);
+  await page.keyboard.press('ArrowDown');
+  expect((await editorPage.getSelection())!.index).toBe(28);
+
+  await editorPage.setSelection(48, 0);
+  await page.keyboard.press('ArrowDown');
+  expect((await editorPage.getSelection())!.index).toBe(52);
+
+  await editorPage.setSelection(50, 0);
+  await page.keyboard.press('ArrowDown');
+  expect((await editorPage.getSelection())!.index).toBe(52);
 });
