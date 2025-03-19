@@ -73,7 +73,7 @@ export class TableWrapperFormat extends ContainerFormat {
       this.parent.insertBefore(this.scroll.create('block'), this);
     }
     if (!this.next || !(this.next instanceof Parchment.BlockBlot)) {
-      this.parent.appendChild(this.scroll.create('block'));
+      this.parent.insertBefore(this.scroll.create('block'), this.next);
     }
   };
 }
