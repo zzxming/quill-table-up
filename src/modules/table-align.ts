@@ -88,7 +88,6 @@ export class TableAlign {
 
   hide() {
     if (!this.alignBox) return;
-    console.log('hide');
     this.alignBox.classList.remove(this.bem.bm('active'));
     if (this.cleanup) {
       this.cleanup();

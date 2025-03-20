@@ -65,6 +65,10 @@ export class TableMenuContextmenu extends TableMenuCommon {
 
   update(position?: { x: number; y: number }) {
     if (!this.isMenuDisplay || !this.menu || !this.tableModule.tableSelection || !this.tableModule.tableSelection.boundary) return;
+    if (!position) {
+      return;
+    }
+
     super.update();
     const style: Record<string, any> = {
       display: 'flex',
@@ -72,9 +76,6 @@ export class TableMenuContextmenu extends TableMenuCommon {
       top: 0,
     };
 
-    if (!position) {
-      return this.hide();
-    }
     const { x, y } = position;
     style.left = x;
     style.top = y;
