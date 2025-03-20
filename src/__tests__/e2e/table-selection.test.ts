@@ -178,36 +178,84 @@ test('test TableSelection should not display when color picking', async ({ page 
   await expect(page.locator('#container1 .table-up-toolbox .table-up-selection .table-up-selection__line')).not.toBeVisible();
 });
 
-extendTest('test TableSelection and TableMenuContextmenu should hide when selection change', async ({ page }) => {
+extendTest('test TableSelection should update when selection change', async ({ page, editorPage }) => {
+  editorPage.index = 0;
   await createTableBySelect(page, 'container1', 3, 3);
-  const centerCell = page.locator('#editor1').getByRole('cell').nth(0);
-  await centerCell.click();
+
+  const lineBound = (await page.locator('#editor1 .ql-editor > p').first().boundingBox())!;
+  expect(lineBound).not.toBeNull();
+
+  await page.locator('#editor1 .ql-table .ql-table-cell').nth(0).click();
+  const selectionWrapper = page.locator('#container1 .table-up-selection');
+  await expect(selectionWrapper).toBeVisible();
+  const selectionBound = (await selectionWrapper.boundingBox())!;
+  expect(selectionBound).not.toBeNull();
+
+  await editorPage.updateContents([{ insert: '12345\n12345' }], 'user');
+
+  await expect(selectionWrapper).toBeVisible();
+  const newSelectionWrapper = (await selectionWrapper.boundingBox())!;
+  expect(newSelectionWrapper).not.toBeNull();
+
+  expect(newSelectionWrapper.y - selectionBound.y).toBeCloseTo(lineBound.height, 5);
+});
+
+extendTest('test TableMenuSelect should update when selection change', async ({ page, editorPage }) => {
+  await page.evaluate(() => {
+    window.scrollTo(0, 600);
+  });
+
+  editorPage.index = 1;
+  await createTableBySelect(page, 'container2', 3, 3);
+
+  const lineBound = (await page.locator('#editor2 .ql-editor > p').first().boundingBox())!;
+  expect(lineBound).not.toBeNull();
+
+  await page.locator('#editor2 .ql-table .ql-table-cell').nth(0).click();
+  const menuWrapper = page.locator('#container2 .table-up-menu');
+  await expect(menuWrapper).toBeVisible();
+  const menuBound = (await menuWrapper.boundingBox())!;
+  expect(menuBound).not.toBeNull();
+
+  await editorPage.updateContents([{ insert: '12345\n12345' }], 'user');
+  await page.evaluate(() => {
+    window.scrollTo(0, 600);
+  });
+
+  await expect(menuWrapper).toBeVisible();
+  const newMenuWrapper = (await menuWrapper.boundingBox())!;
+  expect(newMenuWrapper).not.toBeNull();
+
+  expect(newMenuWrapper.y - menuBound.y).toBeCloseTo(lineBound.height, 0);
+});
+
+extendTest('test TableSelection and TableMenuSelect should hide when selection out table', async ({ page }) => {
+  await createTableBySelect(page, 'container1', 3, 3);
+  const firstCell1 = page.locator('#editor1').getByRole('cell').nth(0);
+  await firstCell1.click();
   expect(page.locator('#container1 .table-up-selection')).toBeVisible();
 
   await page.keyboard.down('ArrowUp');
   expect(page.locator('#container1 .table-up-selection')).not.toBeVisible();
 
-  await centerCell.click();
-  await centerCell.click({ button: 'right' });
+  await firstCell1.click();
+  await firstCell1.click({ button: 'right' });
   await expect(page.locator('#container1 .table-up-selection')).toBeVisible();
   await expect(page.locator('.table-up-menu.is-contextmenu')).toBeVisible();
 
   await page.keyboard.down('ArrowUp');
   await expect(page.locator('#container1 .table-up-selection')).not.toBeVisible();
   await expect(page.locator('.table-up-menu.is-contextmenu')).not.toBeVisible();
-});
 
-extendTest('test TableSelection and TableMenuSelect should hide when selection out table', async ({ page }) => {
   await createTableBySelect(page, 'container2', 3, 3);
-  const centerCell = page.locator('#editor2').getByRole('cell').nth(0);
-  await centerCell.click();
+  const firstCell2 = page.locator('#editor2').getByRole('cell').nth(0);
+  await firstCell2.click();
   await expect(page.locator('#container2 .table-up-selection')).toBeVisible();
 
   await page.keyboard.down('ArrowUp');
   await expect(page.locator('#container2 .table-up-selection')).not.toBeVisible();
 
-  await centerCell.click();
-  await centerCell.click({ button: 'right' });
+  await firstCell2.click();
   await expect(page.locator('#container2 .table-up-selection')).toBeVisible();
   await expect(page.locator('#container2 .table-up-menu')).toBeVisible();
 
