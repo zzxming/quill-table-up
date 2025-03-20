@@ -304,6 +304,10 @@
   position: absolute;
   z-index: 0;
 }
+.table-up-resize-line__row.is-hidden,
+.table-up-resize-line__col.is-hidden {
+  display: none;
+}
 .table-up-resize-line__row::before,
 .table-up-resize-line__col::before,
 .table-up-resize-line__row::after,
