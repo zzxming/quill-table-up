@@ -40,7 +40,12 @@ export class TableResizeBox extends TableResizeCommon {
       this.show();
     });
     this.resizeObserver.observe(this.table);
+    this.quill.on(Quill.events.TEXT_CHANGE, this.updateWhenTextChange);
   }
+
+  updateWhenTextChange = () => {
+    this.update();
+  };
 
   handleResizerHeader(isX: boolean, e: MouseEvent) {
     const { clientX, clientY } = e;
@@ -283,6 +288,7 @@ export class TableResizeBox extends TableResizeCommon {
     this.hide();
     clearScrollEvent.call(this);
     this.resizeObserver.disconnect();
+    this.quill.off(Quill.events.TEXT_CHANGE, this.updateWhenTextChange);
     for (const [dom, handle] of this.scrollHandler) {
       dom.removeEventListener('scroll', handle);
     }

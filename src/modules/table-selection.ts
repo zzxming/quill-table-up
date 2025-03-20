@@ -4,11 +4,9 @@ import type { TableUp } from '../table-up';
 import type { InternalModule, RelactiveRect, TableSelectionOptions } from '../utils';
 import Quill from 'quill';
 import { TableCellFormat, TableCellInnerFormat } from '../formats';
-import { addScrollEvent, blotName, clearScrollEvent, createBEM, findAllParentBlot, getRelativeRect, isRectanglesIntersect, tableUpInternal } from '../utils';
+import { addScrollEvent, blotName, clearScrollEvent, createBEM, createResizeObserver, findAllParentBlot, getRelativeRect, isRectanglesIntersect, tableUpEvent, tableUpInternal } from '../utils';
 
 const ERROR_LIMIT = 0;
-const IsFirstResizeObserve = Symbol('IsFirstResizeObserve');
-type ResizeObserveTarget = HTMLElement & { [IsFirstResizeObserve]?: boolean };
 const Parchment = Quill.import('parchment');
 const Delta = Quill.import('delta');
 
@@ -53,27 +51,22 @@ export class TableSelection {
     this.cellSelectWrap = tableModule.addContainer(this.bem.b());
     this.cellSelect = this.helpLinesInitial();
 
-    this.resizeObserver = new ResizeObserver((entries) => {
-      // prevent when element first bind
-      if (entries.some((entry) => {
-        const originVal = (entry.target as ResizeObserveTarget)[IsFirstResizeObserve];
-        (entry.target as ResizeObserveTarget)[IsFirstResizeObserve] = false;
-        return originVal;
-      })) {
-        return;
-      }
-      this.hide();
-    });
+    this.resizeObserver = createResizeObserver(() => this.hide(), { ignoreFirstBind: true });
     this.resizeObserver.observe(this.quill.root);
 
     this.quill.root.addEventListener('mousedown', this.mouseDownHandler, { passive: false });
     document.addEventListener('selectionchange', this.selectionChangeHandler, { passive: false });
+    this.quill.on(tableUpEvent.AFTER_TABLE_RESIZE, this.updateAfterResize);
     this.quill.on(Quill.events.SELECTION_CHANGE, this.quillSelectionChangeHandler);
     if (this.options.tableMenu) {
       this.tableMenu = new this.options.tableMenu(tableModule, quill, this.options.tableMenuOptions);
     }
     this.hide();
   }
+
+  updateAfterResize = () => {
+    this.updateWithSelectedTds();
+  };
 
   quillHack() {
     // tableSelection format cellInner style
@@ -155,7 +148,10 @@ export class TableSelection {
         isInChildren &&= this.selectedTds.some(td => td.children.contains(line!));
       }
       if (!isInChildren) {
-        this.hide();
+        this.hideDisplay();
+        if (this.tableMenu) {
+          this.tableMenu.hide();
+        }
       }
     }
   };
@@ -465,7 +461,7 @@ export class TableSelection {
       this.startScrollX = 0;
       this.startScrollY = 0;
       if (this.tableMenu && this.selectedTds.length > 0) {
-        this.tableMenu.update();
+        this.tableMenu.show();
       }
     };
 
@@ -531,7 +527,7 @@ export class TableSelection {
     });
     this.showDisplay();
     if (!this.dragging && this.tableMenu) {
-      this.tableMenu.update();
+      this.tableMenu.show();
     }
   }
 
@@ -558,12 +554,10 @@ export class TableSelection {
   setSelectionTable(table: HTMLTableElement | undefined) {
     if (this.table === table) return;
     if (this.table) {
-      (this.table as ResizeObserveTarget)[IsFirstResizeObserve] = undefined;
       this.resizeObserver.unobserve(this.table);
     }
     this.table = table;
     if (this.table) {
-      (this.table as ResizeObserveTarget)[IsFirstResizeObserve] = true;
       this.resizeObserver.observe(this.table);
     }
   }
@@ -616,5 +610,6 @@ export class TableSelection {
     this.quill.root.removeEventListener('mousedown', this.mouseDownHandler);
     document.removeEventListener('selectionchange', this.selectionChangeHandler);
     this.quill.off(Quill.events.SELECTION_CHANGE, this.quillSelectionChangeHandler);
+    this.quill.on(tableUpEvent.AFTER_TABLE_RESIZE, this.updateAfterResize);
   }
 }

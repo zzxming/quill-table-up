@@ -2,7 +2,7 @@ import type { TableMainFormat, TableWrapperFormat } from '../formats';
 import type { TableUp } from '../table-up';
 import { autoUpdate, computePosition, flip, limitShift, offset, shift } from '@floating-ui/dom';
 import Quill from 'quill';
-import { createBEM } from '../utils';
+import { createBEM, createResizeObserver } from '../utils';
 
 export class TableAlign {
   tableBlot: TableMainFormat;
@@ -10,13 +10,22 @@ export class TableAlign {
   alignBox?: HTMLElement;
   cleanup?: () => void;
   bem = createBEM('align');
-  resizeObserver = new ResizeObserver(() => this.hide());
+  resizeObserver = createResizeObserver(() => this.update(), { ignoreFirstBind: true });
+
   constructor(public tableModule: TableUp, public table: HTMLElement, public quill: Quill) {
     this.tableBlot = Quill.find(table)! as TableMainFormat;
     this.tableWrapperBlot = this.tableBlot.parent as TableWrapperFormat;
 
     this.alignBox = this.buildTool();
+    this.resizeObserver.observe(this.table);
+    this.quill.on(Quill.events.TEXT_CHANGE, this.updateWhenTextChange);
+
+    this.show();
   }
+
+  updateWhenTextChange = () => {
+    this.update();
+  };
 
   buildTool() {
     const alignBox = this.tableModule.addContainer(this.bem.b());
@@ -74,11 +83,12 @@ export class TableAlign {
   show() {
     if (!this.alignBox) return;
     this.alignBox.classList.add(this.bem.bm('active'));
-    this.resizeObserver.observe(this.table);
+    this.update();
   }
 
   hide() {
     if (!this.alignBox) return;
+    console.log('hide');
     this.alignBox.classList.remove(this.bem.bm('active'));
     if (this.cleanup) {
       this.cleanup();
@@ -93,7 +103,6 @@ export class TableAlign {
       return;
     }
 
-    this.show();
     computePosition(this.tableWrapperBlot.domNode, this.alignBox, {
       placement: 'top',
       middleware: [flip(), shift({ limiter: limitShift() }), offset(16)],
@@ -108,6 +117,7 @@ export class TableAlign {
   destroy() {
     this.hide();
     this.resizeObserver.disconnect();
+    this.quill.off(Quill.events.TEXT_CHANGE, this.updateWhenTextChange);
     if (this.alignBox) {
       this.alignBox.remove();
       this.alignBox = undefined;

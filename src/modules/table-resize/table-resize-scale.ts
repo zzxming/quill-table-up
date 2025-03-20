@@ -25,7 +25,12 @@ export class TableResizeScale {
       this.buildResizer();
       this.show();
     }
+    this.quill.on(Quill.events.TEXT_CHANGE, this.updateWhenTextChange);
   }
+
+  updateWhenTextChange = () => {
+    this.update();
+  };
 
   resolveOptions(options: Partial<TableResizeScaleOptions>) {
     return Object.assign({
@@ -146,6 +151,7 @@ export class TableResizeScale {
 
   destroy() {
     this.hide();
+    this.quill.off(Quill.events.TEXT_CHANGE, this.updateWhenTextChange);
     if (this.root) {
       this.root.remove();
     }

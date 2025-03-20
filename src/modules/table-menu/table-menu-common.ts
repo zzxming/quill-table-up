@@ -1,6 +1,6 @@
-import type Quill from 'quill';
 import type { TableUp } from '../../table-up';
 import type { TableMenuOptions, ToolOption, TooltipInstance, ToolTipOptions } from '../../utils';
+import Quill from 'quill';
 import { createBEM, createColorPicker, createTooltip, debounce, defaultColorMap, isArray, isFunction, randomId } from '../../utils';
 import { colorClassName, defaultTools, maxSaveColorCount, menuColorSelectClassName, usedColors } from './constants';
 
@@ -57,7 +57,14 @@ export class TableMenuCommon {
         }
       }
     }, 1000);
+    this.quill.on(Quill.events.TEXT_CHANGE, this.updateWhenTextChange);
   }
+
+  updateWhenTextChange = () => {
+    if (this.isMenuDisplay) {
+      this.update();
+    }
+  };
 
   resolveOptions(options: TableMenuOptionsInput) {
     const value = Object.assign({
@@ -237,10 +244,14 @@ export class TableMenuCommon {
     tipTextDom && this.tooltipItem.push(tipTextDom);
   }
 
-  update() {
+  show() {
     if (!this.menu || !this.tableModule.tableSelection || !this.tableModule.tableSelection.boundary) return;
     Object.assign(this.menu.style, { display: 'flex' });
     this.isMenuDisplay = true;
+    this.update();
+  }
+
+  update() {
   }
 
   hide() {
@@ -252,8 +263,10 @@ export class TableMenuCommon {
   }
 
   destroy() {
+    this.quill.on(Quill.events.TEXT_CHANGE, this.updateWhenTextChange);
     for (const tooltip of this.tooltipItem) tooltip.destroy();
     if (!this.menu) return;
+    this.hide();
     this.menu.remove();
     this.menu = null;
   }
