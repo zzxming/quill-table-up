@@ -185,17 +185,15 @@ export class TableMenuCommon {
     colorMapRow.appendChild(customColor);
     colorSelectWrapper.appendChild(colorMapRow);
 
-    if (usedColors.size > 0) {
-      const usedColorWrap = document.createElement('div');
-      usedColorWrap.classList.add(colorClassName.used, this.colorItemClass);
-      for (const recordColor of usedColors) {
-        const colorItem = document.createElement('div');
-        colorItem.classList.add(colorClassName.item);
-        colorItem.style.backgroundColor = recordColor;
-        usedColorWrap.appendChild(colorItem);
-      }
-      colorSelectWrapper.appendChild(usedColorWrap);
+    const usedColorWrap = document.createElement('div');
+    usedColorWrap.classList.add(colorClassName.used, this.colorItemClass);
+    for (const recordColor of usedColors) {
+      const colorItem = document.createElement('div');
+      colorItem.classList.add(colorClassName.item);
+      colorItem.style.backgroundColor = recordColor;
+      usedColorWrap.appendChild(colorItem);
     }
+    colorSelectWrapper.appendChild(usedColorWrap);
 
     colorSelectWrapper.addEventListener('click', (e) => {
       e.stopPropagation();
@@ -210,20 +208,25 @@ export class TableMenuCommon {
       }
     });
 
-    return createTooltip(item, {
+    const instance = createTooltip(item, {
       content: colorSelectWrapper,
       onOpen: () => {
         if (this.isMenuDisplay && this.tableModule.tableSelection) {
           this.tableModule.tableSelection.hideDisplay();
         }
+        for (const item of this.tooltipItem) {
+          if (item !== instance) {
+            item.hide(true);
+          }
+        }
         return false;
       },
-      onClose: (force) => {
+      onClose: () => {
         if (this.isMenuDisplay && this.tableModule.tableSelection) {
           this.tableModule.tableSelection.showDisplay();
         }
         const isChild = colorSelectWrapper.contains(colorPicker);
-        if (force && isChild) {
+        if (isChild) {
           hideColorPicker();
         }
         return isChild;
@@ -233,6 +236,7 @@ export class TableMenuCommon {
       },
       ...this.colorChooseTooltipOption,
     })!;
+    return instance;
   }
 
   getSelectedTds() {
@@ -263,7 +267,7 @@ export class TableMenuCommon {
   }
 
   destroy() {
-    this.quill.on(Quill.events.TEXT_CHANGE, this.updateWhenTextChange);
+    this.quill.off(Quill.events.TEXT_CHANGE, this.updateWhenTextChange);
     for (const tooltip of this.tooltipItem) tooltip.destroy();
     if (!this.menu) return;
     this.hide();
