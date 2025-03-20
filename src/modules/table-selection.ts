@@ -56,15 +56,16 @@ export class TableSelection {
 
     this.quill.root.addEventListener('mousedown', this.mouseDownHandler, { passive: false });
     document.addEventListener('selectionchange', this.selectionChangeHandler, { passive: false });
-    this.quill.on(tableUpEvent.AFTER_TABLE_RESIZE, this.updateAfterResize);
+    this.quill.on(tableUpEvent.AFTER_TABLE_RESIZE, this.updateAfterEvent);
     this.quill.on(Quill.events.SELECTION_CHANGE, this.quillSelectionChangeHandler);
+    this.quill.on(Quill.events.TEXT_CHANGE, this.updateAfterEvent);
     if (this.options.tableMenu) {
       this.tableMenu = new this.options.tableMenu(tableModule, quill, this.options.tableMenuOptions);
     }
     this.hide();
   }
 
-  updateAfterResize = () => {
+  updateAfterEvent = () => {
     this.updateWithSelectedTds();
   };
 
@@ -527,7 +528,7 @@ export class TableSelection {
     });
     this.showDisplay();
     if (!this.dragging && this.tableMenu) {
-      this.tableMenu.show();
+      this.tableMenu.update();
     }
   }
 
@@ -610,6 +611,7 @@ export class TableSelection {
     this.quill.root.removeEventListener('mousedown', this.mouseDownHandler);
     document.removeEventListener('selectionchange', this.selectionChangeHandler);
     this.quill.off(Quill.events.SELECTION_CHANGE, this.quillSelectionChangeHandler);
-    this.quill.on(tableUpEvent.AFTER_TABLE_RESIZE, this.updateAfterResize);
+    this.quill.off(Quill.events.TEXT_CHANGE, this.updateAfterEvent);
+    this.quill.on(tableUpEvent.AFTER_TABLE_RESIZE, this.updateAfterEvent);
   }
 }
