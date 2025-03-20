@@ -284,6 +284,8 @@ export class TableUp {
           if (this.table === tableNode) {
             this.tableSelection && this.tableSelection.show();
             this.tableAlign && this.tableAlign.update();
+            this.tableResize && this.tableResize.update();
+            this.tableScrollbar && this.tableScrollbar.update();
             return;
           }
           if (this.table) this.hideTableTools();
@@ -295,9 +297,6 @@ export class TableUp {
       },
       false,
     );
-    this.quill.on(tableUpEvent.AFTER_TABLE_RESIZE, () => {
-      this.tableSelection && this.tableSelection.updateWithSelectedTds();
-    });
 
     new TablePasteParser(this.quill);
     this.listenBalanceCells();

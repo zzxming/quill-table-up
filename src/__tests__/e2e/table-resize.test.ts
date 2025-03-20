@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { createTableBySelect } from './utils';
+import { createTableBySelect, extendTest } from './utils';
 
 test.beforeEach(async ({ page }) => {
   await page.goto('http://127.0.0.1:5500/docs/test.html');
@@ -128,7 +128,7 @@ test('test TableResizeBox position', async ({ page }) => {
   expect(firstCellBounding.y).toEqual(toolBounding.y);
 });
 
-test('test TableResizeScale', async ({ page }) => {
+test('test TableResizeScale functional', async ({ page }) => {
   await createTableBySelect(page, 'container1', 3, 3);
   const centerCell = page.locator('#editor1').getByRole('cell').nth(4);
   await centerCell.click();
@@ -149,4 +149,32 @@ test('test TableResizeScale', async ({ page }) => {
   for (const cell of await cells.all()) {
     await expect(cell).toHaveCSS('height', `${Math.floor(cellBounding.height + 30)}px`);
   }
+});
+
+extendTest('test TableResizeBox and TableResizeScale should update when text change', async ({ page, editorPage }) => {
+  editorPage.index = 1;
+  await createTableBySelect(page, 'container2', 3, 3);
+
+  const lineBound = (await page.locator('#editor2 .ql-editor > p').first().boundingBox())!;
+  expect(lineBound).not.toBeNull();
+  await page.locator('#editor2 .ql-table .ql-table-cell').nth(0).click();
+  const scale = page.locator('#container2 .table-up-scale');
+  const boxTop = await page.locator('#container2 .table-up-resize-box').evaluate((element) => {
+    return Number.parseFloat(window.getComputedStyle(element).top);
+  });
+  await expect(scale).toBeVisible();
+  await expect(page.locator('#container2 .table-up-resize-box .table-up-resize-box__corner')).toBeVisible();
+
+  await editorPage.updateContents([{ insert: '12345\n12345\n12345' }], 'user');
+
+  await expect(scale).toBeVisible();
+  await expect(page.locator('#container2 .table-up-resize-box .table-up-resize-box__corner')).toBeVisible();
+  const scaleTop = await scale.evaluate((element) => {
+    return Number.parseFloat(window.getComputedStyle(element).top);
+  });
+  expect(scaleTop).toBeCloseTo(lineBound.height * 3, 4);
+  const newBoxTop = await page.locator('#container2 .table-up-resize-box').evaluate((element) => {
+    return Number.parseFloat(window.getComputedStyle(element).top);
+  });
+  expect(newBoxTop).toBeCloseTo(boxTop + lineBound.height * 2, 4);
 });

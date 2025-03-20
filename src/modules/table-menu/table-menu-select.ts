@@ -10,12 +10,17 @@ export class TableMenuSelect extends TableMenuCommon {
 
     this.menu = this.buildTools();
     this.tableModule.addContainer(this.menu);
+    this.show();
+    this.update();
   }
 
   update() {
-    if (!this.menu || !this.tableModule.tableSelection || !this.tableModule.tableSelection.boundary) return;
+    if (!this.isMenuDisplay || !this.menu || !this.tableModule.tableSelection || !this.tableModule.tableSelection.boundary) return;
     super.update();
-
+    // if TableSelection hidden. also hide menu
+    if (!this.tableModule.tableSelection.cellSelect.offsetParent) {
+      return this.hide();
+    }
     computePosition(this.tableModule.tableSelection.cellSelect, this.menu, {
       placement: 'bottom',
       middleware: [flip(), shift({ limiter: limitShift() }), offset(8)],

@@ -29,6 +29,10 @@ export class TableMenuContextmenu extends TableMenuCommon {
       if (!this.menu) {
         this.menu = this.buildTools();
       }
+      // manual call menu show
+      Object.assign(this.menu.style, { display: 'flex' });
+      this.isMenuDisplay = true;
+
       this.update({ x: e.clientX, y: e.clientY });
       document.addEventListener('click', () => {
         this.hide();
@@ -56,8 +60,11 @@ export class TableMenuContextmenu extends TableMenuCommon {
     item.appendChild(tipTextDom);
   }
 
+  // override show. because TableSelection will call tableMenu.show() after select td
+  show() {}
+
   update(position?: { x: number; y: number }) {
-    if (!this.menu || !this.tableModule.tableSelection || !this.tableModule.tableSelection.boundary) return;
+    if (!this.isMenuDisplay || !this.menu || !this.tableModule.tableSelection || !this.tableModule.tableSelection.boundary) return;
     super.update();
     const style: Record<string, any> = {
       display: 'flex',

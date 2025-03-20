@@ -140,14 +140,14 @@ export class TableResizeLine extends TableResizeCommon {
   }
 
   show() {
-    Object.assign(this.colResizer.style, { display: null });
-    Object.assign(this.rowResizer.style, { display: null });
+    this.rowResizer.classList.remove(this.bem.is('hidden'));
+    this.colResizer.classList.remove(this.bem.is('hidden'));
   }
 
   hide() {
     this.currentTableCell = undefined;
-    this.rowResizer.style.display = 'none';
-    this.colResizer.style.display = 'none';
+    this.rowResizer.classList.add(this.bem.is('hidden'));
+    this.colResizer.classList.add(this.bem.is('hidden'));
   }
 
   update() {

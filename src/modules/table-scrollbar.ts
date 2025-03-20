@@ -224,7 +224,12 @@ export class TableVirtualScrollbar {
     for (const item of this.scrollbar) {
       this.scrollbarContainer.appendChild(item.scrollbar);
     }
+    this.quill.on(Quill.events.TEXT_CHANGE, this.updateWhenTextChange);
   }
+
+  updateWhenTextChange = () => {
+    this.update();
+  };
 
   hide() {
     for (const scrollbar of this.scrollbar) {
@@ -247,6 +252,7 @@ export class TableVirtualScrollbar {
 
   destroy() {
     this.scrollbarContainer.remove();
+    this.quill.off(Quill.events.TEXT_CHANGE, this.updateWhenTextChange);
     for (const scrollbar of this.scrollbar) {
       scrollbar.destroy();
     }

@@ -5,6 +5,7 @@ export * from './components';
 export * from './constants';
 export * from './is';
 export * from './position';
+export * from './resize-observer-helper';
 export * from './scroll-event-handle';
 export * from './transformer';
 export * from './types';
