@@ -58,7 +58,6 @@ export const createTooltip = (target: HTMLElement, options: ToolTipOptions = {})
     }
     let showTimer: ReturnType<typeof setTimeout> | undefined;
     let closeTimer: ReturnType<typeof setTimeout> | undefined;
-    let closeTransendTimer: ReturnType<typeof setTimeout> | undefined;
     let cleanup: () => void;
     const update = () => {
       if (cleanup) cleanup();
@@ -83,7 +82,6 @@ export const createTooltip = (target: HTMLElement, options: ToolTipOptions = {})
 
     const openTooltip = (force: boolean = false) => {
       if (closeTimer) clearTimeout(closeTimer);
-      if (closeTransendTimer) clearTimeout(closeTransendTimer);
 
       showTimer = setTimeout(() => {
         if (onOpen) {

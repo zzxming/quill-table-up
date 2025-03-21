@@ -11,6 +11,7 @@ export class TableMenuCommon {
   isMenuDisplay: boolean = false;
   updateUsedColor: (this: any, color?: string) => void;
   tooltipItem: TooltipInstance[] = [];
+  activeTooltip: TooltipInstance | null = null;
   bem = createBEM('menu');
   colorItemClass = `color-${randomId()}`;
   colorChooseTooltipOption: ToolTipOptions = {
@@ -208,17 +209,14 @@ export class TableMenuCommon {
       }
     });
 
-    const instance = createTooltip(item, {
+    // get tooltip instance. makesure color picker only display one at time
+    const tooltip = createTooltip(item, {
       content: colorSelectWrapper,
       onOpen: () => {
         if (this.isMenuDisplay && this.tableModule.tableSelection) {
           this.tableModule.tableSelection.hideDisplay();
         }
-        for (const item of this.tooltipItem) {
-          if (item !== instance) {
-            item.hide(true);
-          }
-        }
+        this.setActiveTooltip(tooltip);
         return false;
       },
       onClose: () => {
@@ -229,14 +227,27 @@ export class TableMenuCommon {
         if (isChild) {
           hideColorPicker();
         }
-        return isChild;
+        if (this.activeTooltip === tooltip) {
+          this.activeTooltip = null;
+        }
+        return false;
       },
-      onDestroy() {
+      onDestroy: () => {
         destroyColorPicker();
+        if (this.activeTooltip === tooltip) {
+          this.activeTooltip = null;
+        }
       },
       ...this.colorChooseTooltipOption,
     })!;
-    return instance;
+    return tooltip;
+  }
+
+  setActiveTooltip(tooltip: TooltipInstance | null) {
+    if (this.activeTooltip && this.activeTooltip !== tooltip) {
+      this.activeTooltip.hide(true);
+    }
+    this.activeTooltip = tooltip;
   }
 
   getSelectedTds() {
@@ -268,6 +279,7 @@ export class TableMenuCommon {
 
   destroy() {
     this.quill.off(Quill.events.TEXT_CHANGE, this.updateWhenTextChange);
+    this.activeTooltip = null;
     for (const tooltip of this.tooltipItem) tooltip.destroy();
     if (!this.menu) return;
     this.hide();

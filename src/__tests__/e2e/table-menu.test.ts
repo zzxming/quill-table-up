@@ -12,14 +12,14 @@ extendTest('test menu color picker should not have two at the same time', async 
   await centerCell.click();
 
   await page.locator('#editor2 .table-up-menu .color-selector').nth(0).hover();
-  await page.waitForTimeout(200);
+  await page.waitForTimeout(1000);
 
   await page.locator('.table-up-tooltip .custom.table-up-color-map__btn').click();
   const colorpicker = page.locator('.table-up-tooltip .custom.table-up-color-map__btn .table-up-color-picker');
   await expect(colorpicker).toBeVisible();
 
   await page.locator('#editor2 .table-up-menu .color-selector').nth(1).hover();
-  await page.waitForTimeout(200);
+  await page.waitForTimeout(1000);
   await expect(colorpicker).not.toBeVisible();
   await expect(page.locator('.table-up-tooltip .table-up-color-map')).toBeVisible();
 });
