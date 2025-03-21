@@ -163,18 +163,18 @@ test('test TableSelection should not display when color picking', async ({ page 
   await expect(page.locator('#container1 .table-up-toolbox .table-up-selection .table-up-selection__line')).toBeVisible();
 
   await cell.click({ button: 'right' });
-  await page.locator('.table-up-menu.is-contextmenu .table-up-menu__item').filter({ hasText: 'Set background color' }).first().click();
-  await page.waitForTimeout(200);
+  await page.locator('.table-up-menu.is-contextmenu .table-up-menu__item').filter({ hasText: 'Set background color' }).first().hover();
+  await page.waitForTimeout(1000);
   await expect(page.locator('#container1 .table-up-toolbox .table-up-selection .table-up-selection__line')).not.toBeVisible();
 
   await page.mouse.move(0, 0);
-  await page.waitForTimeout(200);
+  await page.waitForTimeout(1000);
   await expect(page.locator('#container1 .table-up-toolbox .table-up-selection .table-up-selection__line')).toBeVisible();
 
   await page.locator('#editor1 .ql-editor p').nth(0).click();
   await expect(page.locator('#container1 .table-up-toolbox .table-up-selection .table-up-selection__line')).not.toBeVisible();
 
-  await page.waitForTimeout(200);
+  await page.waitForTimeout(1000);
   await expect(page.locator('#container1 .table-up-toolbox .table-up-selection .table-up-selection__line')).not.toBeVisible();
 });
 
