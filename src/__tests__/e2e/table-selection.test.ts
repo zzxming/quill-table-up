@@ -156,29 +156,7 @@ test('test TableSelection set multiple format', async ({ page }) => {
   });
 });
 
-test('test TableSelection should not display when color picking', async ({ page }) => {
-  await createTableBySelect(page, 'container1', 3, 3);
-  const cell = page.locator('#editor1 .ql-editor .ql-table td').nth(0);
-  await cell.click();
-  await expect(page.locator('#container1 .table-up-toolbox .table-up-selection .table-up-selection__line')).toBeVisible();
-
-  await cell.click({ button: 'right' });
-  await page.locator('.table-up-menu.is-contextmenu .table-up-menu__item').filter({ hasText: 'Set background color' }).first().hover();
-  await page.waitForTimeout(1000);
-  await expect(page.locator('#container1 .table-up-toolbox .table-up-selection .table-up-selection__line')).not.toBeVisible();
-
-  await page.mouse.move(0, 0);
-  await page.waitForTimeout(1000);
-  await expect(page.locator('#container1 .table-up-toolbox .table-up-selection .table-up-selection__line')).toBeVisible();
-
-  await page.locator('#editor1 .ql-editor p').nth(0).click();
-  await expect(page.locator('#container1 .table-up-toolbox .table-up-selection .table-up-selection__line')).not.toBeVisible();
-
-  await page.waitForTimeout(1000);
-  await expect(page.locator('#container1 .table-up-toolbox .table-up-selection .table-up-selection__line')).not.toBeVisible();
-});
-
-extendTest('test TableSelection should update when selection change', async ({ page, editorPage }) => {
+extendTest('test TableSelection should update when text change', async ({ page, editorPage }) => {
   editorPage.index = 0;
   await createTableBySelect(page, 'container1', 3, 3);
 
@@ -196,37 +174,37 @@ extendTest('test TableSelection should update when selection change', async ({ p
   await expect(selectionWrapper).toBeVisible();
   const newSelectionWrapper = (await selectionWrapper.boundingBox())!;
   expect(newSelectionWrapper).not.toBeNull();
-
   expect(newSelectionWrapper.y - selectionBound.y).toBeCloseTo(lineBound.height, 5);
 });
 
-extendTest('test TableMenuSelect should update when selection change', async ({ page, editorPage }) => {
-  await page.evaluate(() => {
-    window.scrollTo(0, 600);
-  });
+extendTest('test TableSelection should hide when table resize', async ({ page, editorPage }) => {
+  editorPage.index = 0;
+  await createTableBySelect(page, 'container1', 3, 3);
 
-  editorPage.index = 1;
-  await createTableBySelect(page, 'container2', 3, 3);
+  await page.locator('#editor1 .ql-table .ql-table-cell').nth(0).click();
+  const selectionWrapper = page.locator('#container1 .table-up-selection');
+  await expect(selectionWrapper).toBeVisible();
 
-  const lineBound = (await page.locator('#editor2 .ql-editor > p').first().boundingBox())!;
-  expect(lineBound).not.toBeNull();
+  await editorPage.updateContents([{ retain: 5 }, { insert: '12345\n12345' }], 'user');
 
-  await page.locator('#editor2 .ql-table .ql-table-cell').nth(0).click();
-  const menuWrapper = page.locator('#container2 .table-up-menu');
-  await expect(menuWrapper).toBeVisible();
-  const menuBound = (await menuWrapper.boundingBox())!;
-  expect(menuBound).not.toBeNull();
+  await expect(selectionWrapper).not.toBeVisible();
+});
 
-  await editorPage.updateContents([{ insert: '12345\n12345' }], 'user');
-  await page.evaluate(() => {
-    window.scrollTo(0, 600);
-  });
+extendTest('test TableSelection should update when selection change', async ({ page, editorPage }) => {
+  editorPage.index = 0;
+  await createTableBySelect(page, 'container1', 3, 3);
 
-  await expect(menuWrapper).toBeVisible();
-  const newMenuWrapper = (await menuWrapper.boundingBox())!;
-  expect(newMenuWrapper).not.toBeNull();
+  await page.locator('#editor1 .ql-table .ql-table-cell').nth(0).click();
+  const selectionLine = page.locator('#container1 .table-up-selection .table-up-selection__line');
+  await expect(selectionLine).toBeVisible();
 
-  expect(newMenuWrapper.y - menuBound.y).toBeCloseTo(lineBound.height, 0);
+  await page.keyboard.press('ArrowRight');
+  await expect(selectionLine).toBeVisible();
+  const newSelectionWrapper = (await selectionLine.boundingBox())!;
+  expect(newSelectionWrapper).not.toBeNull();
+  const cell1Bound = (await page.locator('#editor1 .ql-editor td').nth(1).boundingBox())!;
+  expect(cell1Bound).not.toBeNull();
+  expect(cell1Bound).toEqual(newSelectionWrapper);
 });
 
 extendTest('test TableSelection and TableMenuSelect should hide when selection out table', async ({ page }) => {

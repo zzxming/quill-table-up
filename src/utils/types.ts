@@ -2,6 +2,7 @@ import type Quill from 'quill';
 import type BaseTheme from 'quill/themes/base';
 import type Picker from 'quill/ui/picker';
 import type { TableCellInnerFormat } from '../formats';
+import type { MenuTooltipInstance } from '../modules';
 import type { TableUp } from '../table-up';
 import type { blotName, tableUpEvent, tableUpInternal, tableUpSize } from './constants';
 
@@ -30,7 +31,7 @@ export interface TableMenuOptions {
 }
 export interface TableSelectionOptions {
   selectColor: string;
-  tableMenu?: Constructor<InternalModule, [TableUp, Quill, Partial<TableMenuOptions>]>;
+  tableMenu?: Constructor<InternalTableMenuModule, [TableUp, Quill, Partial<TableMenuOptions>]>;
   tableMenuOptions: TableMenuOptions;
 }
 export interface TableResizeScaleOptions {
@@ -113,10 +114,12 @@ export interface InternalModule {
 }
 export type Constructor<T = any, U extends Array<any> = any[]> = new (...args: U) => T;
 export interface InternalTableSelectionModule extends InternalModule {
+  table: HTMLElement;
   dragging: boolean;
   boundary: RelactiveRect | null;
   selectedTds: TableCellInnerFormat[];
   cellSelect: HTMLElement;
+  isDisplaySelection: boolean;
   tableMenu?: InternalModule;
   computeSelectedTds: (
     startPoint: {
@@ -131,6 +134,10 @@ export interface InternalTableSelectionModule extends InternalModule {
   updateWithSelectedTds: () => void;
   showDisplay: () => void;
   hideDisplay: () => void;
+}
+export interface InternalTableMenuModule extends InternalModule {
+  isMenuDisplay: boolean;
+  activeTooltip: MenuTooltipInstance | null;
 }
 export type Writable<T> = {
   -readonly [P in keyof T]: T[P];

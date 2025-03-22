@@ -1,10 +1,10 @@
 import type { EmitterSource, Parchment as TypeParchment, Range as TypeRange } from 'quill';
 import type { TableMainFormat, TableWrapperFormat } from '../formats';
 import type { TableUp } from '../table-up';
-import type { InternalModule, RelactiveRect, TableSelectionOptions } from '../utils';
+import type { InternalTableMenuModule, RelactiveRect, TableSelectionOptions } from '../utils';
 import Quill from 'quill';
 import { TableCellFormat, TableCellInnerFormat } from '../formats';
-import { addScrollEvent, blotName, clearScrollEvent, createBEM, createResizeObserver, findAllParentBlot, getRelativeRect, isRectanglesIntersect, tableUpEvent, tableUpInternal } from '../utils';
+import { addScrollEvent, blotName, clearScrollEvent, createBEM, createResizeObserver, findAllParentBlot, findParentBlot, getRelativeRect, isRectanglesIntersect, tableUpEvent, tableUpInternal } from '../utils';
 
 const ERROR_LIMIT = 0;
 const Parchment = Quill.import('parchment');
@@ -31,7 +31,7 @@ export class TableSelection {
   cellSelect: HTMLElement;
   dragging: boolean = false;
   scrollHandler: [HTMLElement, (...args: any[]) => void][] = [];
-  tableMenu?: InternalModule;
+  tableMenu?: InternalTableMenuModule;
   resizeObserver: ResizeObserver;
   table?: HTMLTableElement;
   isDisplaySelection = false;
@@ -66,7 +66,9 @@ export class TableSelection {
   }
 
   updateAfterEvent = () => {
-    this.updateWithSelectedTds();
+    if (!(this.tableMenu && this.tableMenu.activeTooltip && this.tableMenu.activeTooltip.isColorPick)) {
+      this.updateWithSelectedTds();
+    }
   };
 
   quillHack() {
@@ -144,15 +146,21 @@ export class TableSelection {
     if (range && this.isDisplaySelection) {
       const formats = this.quill.getFormat(range);
       const [line] = this.quill.getLine(range.index);
-      let isInChildren = !!formats[blotName.tableCellInner] && !!line;
-      if (isInChildren) {
-        isInChildren &&= this.selectedTds.some(td => td.children.contains(line!));
-      }
-      if (!isInChildren) {
-        this.hideDisplay();
-        if (this.tableMenu) {
-          this.tableMenu.hide();
+      const isInCell = !!formats[blotName.tableCellInner] && !!line;
+      const containsLine = this.selectedTds.some(td => td.children.contains(line!));
+
+      if (isInCell && !containsLine) {
+        try {
+          const cellInner = findParentBlot(line!, blotName.tableCellInner) as TableCellInnerFormat;
+          this.selectedTds = [cellInner];
+          this.updateWithSelectedTds();
         }
+        catch {
+          // do nothing. should not into here
+        }
+      }
+      else if (!(isInCell && containsLine)) {
+        this.hide();
       }
     }
   };
@@ -565,13 +573,13 @@ export class TableSelection {
 
   showDisplay() {
     Object.assign(this.cellSelectWrap.style, { display: 'block' });
+    this.isDisplaySelection = true;
   }
 
   show() {
     if (!this.table) return;
     clearScrollEvent.call(this);
 
-    this.isDisplaySelection = true;
     this.update();
     addScrollEvent.call(this, this.quill.root, () => {
       this.update();
@@ -583,15 +591,16 @@ export class TableSelection {
 
   hideDisplay() {
     Object.assign(this.cellSelectWrap.style, { display: 'none' });
-  }
-
-  hide() {
-    this.boundary = null;
+    this.isDisplaySelection = false;
     for (const td of this.selectedTds) {
       td.domNode.classList.remove(`${this.bem.bm('selected')}`);
     }
-    this.selectedTds = [];
+  }
+
+  hide() {
     this.hideDisplay();
+    this.boundary = null;
+    this.selectedTds = [];
     this.setSelectionTable(undefined);
     if (this.tableMenu) {
       this.tableMenu.hide();

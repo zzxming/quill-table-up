@@ -5,13 +5,17 @@ import { createBEM, createColorPicker, createTooltip, debounce, defaultColorMap,
 import { colorClassName, defaultTools, maxSaveColorCount, menuColorSelectClassName, usedColors } from './constants';
 
 export type TableMenuOptionsInput = Partial<Omit<TableMenuOptions, 'texts'>>;
+export interface MenuTooltipInstance extends TooltipInstance {
+  isColorPick?: boolean;
+}
 export class TableMenuCommon {
   options: TableMenuOptions;
   menu: HTMLElement | null = null;
   isMenuDisplay: boolean = false;
+  isColorPicking: boolean = false;
   updateUsedColor: (this: any, color?: string) => void;
-  tooltipItem: TooltipInstance[] = [];
-  activeTooltip: TooltipInstance | null = null;
+  tooltipItem: MenuTooltipInstance[] = [];
+  activeTooltip: MenuTooltipInstance | null = null;
   bem = createBEM('menu');
   colorItemClass = `color-${randomId()}`;
   colorChooseTooltipOption: ToolTipOptions = {
@@ -210,7 +214,7 @@ export class TableMenuCommon {
     });
 
     // get tooltip instance. makesure color picker only display one at time
-    const tooltip = createTooltip(item, {
+    const tooltip: MenuTooltipInstance = createTooltip(item, {
       content: colorSelectWrapper,
       onOpen: () => {
         if (this.isMenuDisplay && this.tableModule.tableSelection) {
@@ -221,6 +225,7 @@ export class TableMenuCommon {
       },
       onClose: () => {
         if (this.isMenuDisplay && this.tableModule.tableSelection) {
+          this.tableModule.tableSelection.updateWithSelectedTds();
           this.tableModule.tableSelection.showDisplay();
         }
         const isChild = colorSelectWrapper.contains(colorPicker);
@@ -240,10 +245,11 @@ export class TableMenuCommon {
       },
       ...this.colorChooseTooltipOption,
     })!;
+    tooltip.isColorPick = true;
     return tooltip;
   }
 
-  setActiveTooltip(tooltip: TooltipInstance | null) {
+  setActiveTooltip(tooltip: MenuTooltipInstance | null) {
     if (this.activeTooltip && this.activeTooltip !== tooltip) {
       this.activeTooltip.hide(true);
     }

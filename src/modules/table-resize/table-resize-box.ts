@@ -73,6 +73,7 @@ export class TableResizeBox extends TableResizeCommon {
         this.lastHeaderSelect = currentBoundary;
       }
 
+      tableSelection.table = this.table;
       tableSelection.selectedTds = tableSelection.computeSelectedTds(...currentBoundary);
       tableSelection.show();
     }

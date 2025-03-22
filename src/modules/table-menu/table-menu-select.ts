@@ -15,7 +15,7 @@ export class TableMenuSelect extends TableMenuCommon {
   }
 
   update() {
-    if (!this.isMenuDisplay || !this.menu || !this.tableModule.tableSelection || !this.tableModule.tableSelection.boundary) return;
+    if (!this.isMenuDisplay || !this.menu || !this.tableModule.tableSelection || !this.tableModule.tableSelection.isDisplaySelection) return;
     super.update();
 
     computePosition(this.tableModule.tableSelection.cellSelect, this.menu, {
