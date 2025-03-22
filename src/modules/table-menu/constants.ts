@@ -163,7 +163,6 @@ export const defaultTools: Tool[] = [
 ];
 
 export const maxSaveColorCount = 10;
-export const usedColors = new Set<string>();
 const bem = createBEM('color-map');
 export const colorClassName = {
   selectWrapper: bem.b(),
