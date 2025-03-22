@@ -8,5 +8,6 @@ export * from './position';
 export * from './resize-observer-helper';
 export * from './scroll-event-handle';
 export * from './transformer';
+export * from './transition-event-helper';
 export * from './types';
 export * from './utils';

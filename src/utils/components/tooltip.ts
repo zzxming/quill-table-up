@@ -7,6 +7,7 @@ import {
   shift,
 } from '@floating-ui/dom';
 import { createBEM } from '../bem';
+import { handleIfTransitionend } from '../transition-event-helper';
 
 export interface ToolTipOptions {
   direction?:
@@ -99,13 +100,12 @@ export const createTooltip = (target: HTMLElement, options: ToolTipOptions = {})
     };
     const closeTooltip = (force: boolean = false) => {
       if (showTimer) clearTimeout(showTimer);
-
       closeTimer = setTimeout(() => {
         if (onClose) {
           const allow = onClose(force);
           if (!force && allow) return;
         }
-        tooltip.addEventListener('transitionend', transitionendHandler, { once: true });
+        handleIfTransitionend(tooltip, 150, transitionendHandler, { once: true });
         tooltip.classList.add('transparent');
       }, delay);
     };
