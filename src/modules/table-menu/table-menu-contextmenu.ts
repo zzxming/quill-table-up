@@ -64,7 +64,7 @@ export class TableMenuContextmenu extends TableMenuCommon {
   show() {}
 
   update(position?: { x: number; y: number }) {
-    if (!this.isMenuDisplay || !this.menu || !this.tableModule.tableSelection || !this.tableModule.tableSelection.boundary) return;
+    if (!this.isMenuDisplay || !this.menu || !this.tableModule.tableSelection || !this.tableModule.tableSelection.isDisplaySelection) return;
     if (!position) {
       return;
     }

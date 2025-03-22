@@ -6,10 +6,34 @@ test.beforeEach(async ({ page }) => {
   page.locator('.ql-container.ql-snow');
 });
 
+extendTest('test menu color picker should work correctly', async ({ page }) => {
+  await createTableBySelect(page, 'container1', 3, 3);
+  const container1Cell = page.locator('#editor1').getByRole('cell').nth(0);
+  await container1Cell.click();
+  await container1Cell.click({ button: 'right' });
+
+  await page.locator('.table-up-menu.is-contextmenu .table-up-menu__item').filter({ hasText: 'Set background color' }).first().hover();
+  await page.waitForTimeout(1000);
+
+  await page.locator('.table-up-tooltip .table-up-color-map .table-up-color-map__item[style="background-color: rgb(255, 255, 255);"]').first().click();
+  await expect(page.locator('.table-up-menu.is-contextmenu')).toBeVisible();
+  await expect(page.locator('#editor1').getByRole('cell').nth(0)).toHaveCSS('background-color', 'rgb(255, 255, 255)');
+
+  await createTableBySelect(page, 'container2', 3, 3);
+  const container2Cell = page.locator('#editor2').getByRole('cell').nth(0);
+  await container2Cell.click();
+
+  await page.locator('#editor2 .table-up-menu .color-selector').nth(0).hover();
+  await page.waitForTimeout(1000);
+
+  await page.locator('.table-up-tooltip .table-up-color-map .table-up-color-map__item[style="background-color: rgb(255, 255, 255);"]').first().click();
+  await expect(page.locator('#editor2 .table-up-menu')).toBeVisible();
+  await expect(page.locator('#editor2').getByRole('cell').nth(0)).toHaveCSS('background-color', 'rgb(255, 255, 255)');
+});
+
 extendTest('test menu color picker should not have two at the same time', async ({ page }) => {
   await createTableBySelect(page, 'container2', 3, 3);
-  const centerCell = page.locator('#editor2').getByRole('cell').nth(0);
-  await centerCell.click();
+  await page.locator('#editor2').getByRole('cell').nth(0).click();
 
   await page.locator('#editor2 .table-up-menu .color-selector').nth(0).hover();
   await page.waitForTimeout(1000);
@@ -22,4 +46,65 @@ extendTest('test menu color picker should not have two at the same time', async 
   await page.waitForTimeout(1000);
   await expect(colorpicker).not.toBeVisible();
   await expect(page.locator('.table-up-tooltip .table-up-color-map')).toBeVisible();
+});
+
+extendTest('test TableMenuSelect should update when text change', async ({ page, editorPage }) => {
+  await page.evaluate(() => {
+    window.scrollTo(0, 600);
+  });
+
+  editorPage.index = 1;
+  await createTableBySelect(page, 'container2', 3, 3);
+
+  const lineBound = (await page.locator('#editor2 .ql-editor > p').first().boundingBox())!;
+  expect(lineBound).not.toBeNull();
+
+  await page.locator('#editor2 .ql-table .ql-table-cell').nth(0).click();
+  const menuWrapper = page.locator('#container2 .table-up-menu');
+  await expect(menuWrapper).toBeVisible();
+  const menuBound = (await menuWrapper.boundingBox())!;
+  expect(menuBound).not.toBeNull();
+
+  await editorPage.updateContents([{ insert: '12345\n12345' }], 'user');
+  await page.evaluate(() => {
+    window.scrollTo(0, 600);
+  });
+
+  await expect(menuWrapper).toBeVisible();
+  const newMenuWrapper = (await menuWrapper.boundingBox())!;
+  expect(newMenuWrapper).not.toBeNull();
+
+  expect(newMenuWrapper.y - menuBound.y).toBeCloseTo(lineBound.height, 0);
+});
+
+extendTest('test TableSelection should not display when color pick display', async ({ page }) => {
+  await createTableBySelect(page, 'container1', 3, 3);
+  const cell = page.locator('#editor1 .ql-editor .ql-table td').nth(0);
+  await cell.click();
+  await expect(page.locator('#container1 .table-up-toolbox .table-up-selection .table-up-selection__line')).toBeVisible();
+
+  await cell.click({ button: 'right' });
+  await page.locator('.table-up-menu.is-contextmenu .table-up-menu__item').filter({ hasText: 'Set background color' }).first().hover();
+  await page.waitForTimeout(1000);
+  await expect(page.locator('#container1 .table-up-toolbox .table-up-selection .table-up-selection__line')).not.toBeVisible();
+
+  await page.mouse.move(0, 0);
+  await page.waitForTimeout(1000);
+  await expect(page.locator('#container1 .table-up-toolbox .table-up-selection .table-up-selection__line')).toBeVisible();
+
+  await page.locator('#editor1 .ql-editor p').nth(0).click();
+  await expect(page.locator('#container1 .table-up-toolbox .table-up-selection .table-up-selection__line')).not.toBeVisible();
+
+  await cell.click();
+  await cell.click({ button: 'right' });
+  await page.locator('.table-up-menu.is-contextmenu .table-up-menu__item').filter({ hasText: 'Set background color' }).first().hover();
+  await page.waitForTimeout(1000);
+  await page.locator('.table-up-tooltip .table-up-color-map .table-up-color-map__btn.custom').click();
+  await page.waitForTimeout(1000);
+  const bgPicker = page.locator('.table-up-tooltip .table-up-color-map .table-up-color-map__btn.custom .table-up-color-picker__background');
+  const bounding = (await bgPicker.boundingBox())!;
+  expect(bounding).not.toBeNull();
+  await page.mouse.click(bounding.x + bounding.width / 2, bounding.y + bounding.height / 2);
+  await page.waitForTimeout(1000);
+  await expect(page.locator('#container1 .table-up-toolbox .table-up-selection .table-up-selection__line')).not.toBeVisible();
 });
