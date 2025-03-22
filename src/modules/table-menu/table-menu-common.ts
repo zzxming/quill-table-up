@@ -2,13 +2,14 @@ import type { TableUp } from '../../table-up';
 import type { TableMenuOptions, ToolOption, TooltipInstance, ToolTipOptions } from '../../utils';
 import Quill from 'quill';
 import { createBEM, createColorPicker, createTooltip, debounce, defaultColorMap, isArray, isFunction, randomId } from '../../utils';
-import { colorClassName, defaultTools, maxSaveColorCount, menuColorSelectClassName, usedColors } from './constants';
+import { colorClassName, defaultTools, maxSaveColorCount, menuColorSelectClassName } from './constants';
 
 export type TableMenuOptionsInput = Partial<Omit<TableMenuOptions, 'texts'>>;
 export interface MenuTooltipInstance extends TooltipInstance {
   isColorPick?: boolean;
 }
 export class TableMenuCommon {
+  usedColors = new Set<string>();
   options: TableMenuOptions;
   menu: HTMLElement | null = null;
   isMenuDisplay: boolean = false;
@@ -31,20 +32,20 @@ export class TableMenuCommon {
       if (!isArray(colorValue)) {
         colorValue = [];
       }
-      colorValue.slice(-1 * maxSaveColorCount).map((c: string) => usedColors.add(c));
+      colorValue.slice(-1 * maxSaveColorCount).map((c: string) => this.usedColors.add(c));
     }
     catch {}
 
     this.updateUsedColor = debounce((color?: string) => {
       if (!color) return;
-      usedColors.add(color);
-      if (usedColors.size > maxSaveColorCount) {
-        const saveColors = Array.from(usedColors).slice(-1 * maxSaveColorCount);
-        usedColors.clear();
-        saveColors.map(v => usedColors.add(v));
+      this.usedColors.add(color);
+      if (this.usedColors.size > maxSaveColorCount) {
+        const saveColors = Array.from(this.usedColors).slice(-1 * maxSaveColorCount);
+        this.usedColors.clear();
+        saveColors.map(v => this.usedColors.add(v));
       }
 
-      localStorage.setItem(this.options.localstorageKey, JSON.stringify(Array.from(usedColors)));
+      localStorage.setItem(this.options.localstorageKey, JSON.stringify(Array.from(this.usedColors)));
       const usedColorWrappers = Array.from(document.querySelectorAll(`.${this.colorItemClass}.${colorClassName.used}`));
       for (const usedColorWrapper of usedColorWrappers) {
         const newColorItem = document.createElement('div');
@@ -79,10 +80,6 @@ export class TableMenuCommon {
       defaultColorMap,
     }, options);
     return value as TableMenuOptions;
-  }
-
-  getUsedColors() {
-    return usedColors;
   }
 
   buildTools(): HTMLElement {
@@ -192,7 +189,7 @@ export class TableMenuCommon {
 
     const usedColorWrap = document.createElement('div');
     usedColorWrap.classList.add(colorClassName.used, this.colorItemClass);
-    for (const recordColor of usedColors) {
+    for (const recordColor of this.usedColors) {
       const colorItem = document.createElement('div');
       colorItem.classList.add(colorClassName.item);
       colorItem.style.backgroundColor = recordColor;
