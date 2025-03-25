@@ -212,6 +212,7 @@ export class TableResizeBox extends TableResizeCommon {
           const cellInners = this.tableMain.descendants(TableCellInnerFormat);
           const tableSelection = this.tableModule.tableSelection;
           tableSelection.selectedTds = cellInners;
+          tableSelection.show();
           tableSelection.updateWithSelectedTds();
         }
       });

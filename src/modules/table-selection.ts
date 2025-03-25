@@ -66,9 +66,7 @@ export class TableSelection {
   }
 
   updateAfterEvent = () => {
-    if (!(this.tableMenu && this.tableMenu.activeTooltip && this.tableMenu.activeTooltip.isColorPick)) {
-      this.updateWithSelectedTds();
-    }
+    this.updateWithSelectedTds();
   };
 
   quillHack() {
@@ -143,7 +141,7 @@ export class TableSelection {
 
   quillSelectionChangeHandler = (range: TypeRange | null, _oldRange: TypeRange | null, source: EmitterSource) => {
     if (source === Quill.sources.API) return;
-    if (range && this.isDisplaySelection) {
+    if (range && this.selectedTds.length > 0) {
       const formats = this.quill.getFormat(range);
       const [line] = this.quill.getLine(range.index);
       const isInCell = !!formats[blotName.tableCellInner] && !!line;
@@ -491,7 +489,6 @@ export class TableSelection {
     }
     this.selectedTds = this.computeSelectedTds(startPoint, endPoint);
     if (this.selectedTds.length > 0) {
-      this.show();
       this.update();
     }
   }
@@ -514,7 +511,6 @@ export class TableSelection {
       subtree: true,
     });
     if (this.selectedTds.length === 0 || !this.boundary || !this.table) return;
-
     const { x: editorScrollX, y: editorScrollY } = this.getQuillViewScroll();
     const { x: tableScrollX, y: tableScrollY } = this.getTableViewScroll();
     const tableWrapperRect = this.table.parentElement!.getBoundingClientRect();
@@ -534,7 +530,6 @@ export class TableSelection {
       width: `${tableWrapperRect.width + 2}px`,
       height: `${tableWrapperRect.height + 2}px`,
     });
-    this.showDisplay();
     if (!this.dragging && this.tableMenu) {
       this.tableMenu.update();
     }
@@ -562,13 +557,7 @@ export class TableSelection {
 
   setSelectionTable(table: HTMLTableElement | undefined) {
     if (this.table === table) return;
-    if (this.table) {
-      this.resizeObserver.unobserve(this.table);
-    }
     this.table = table;
-    if (this.table) {
-      this.resizeObserver.observe(this.table);
-    }
   }
 
   showDisplay() {
@@ -581,6 +570,7 @@ export class TableSelection {
     clearScrollEvent.call(this);
 
     this.update();
+    this.showDisplay();
     addScrollEvent.call(this, this.quill.root, () => {
       this.update();
     });
