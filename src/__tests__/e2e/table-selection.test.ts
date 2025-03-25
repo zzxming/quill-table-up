@@ -177,17 +177,28 @@ extendTest('test TableSelection should update when text change', async ({ page, 
   expect(newSelectionWrapper.y - selectionBound.y).toBeCloseTo(lineBound.height, 5);
 });
 
-extendTest('test TableSelection should hide when table resize', async ({ page, editorPage }) => {
+extendTest('test TableSelection should update when table resize', async ({ page, editorPage }) => {
   editorPage.index = 0;
   await createTableBySelect(page, 'container1', 3, 3);
 
   await page.locator('#editor1 .ql-table .ql-table-cell').nth(0).click();
-  const selectionWrapper = page.locator('#container1 .table-up-selection');
-  await expect(selectionWrapper).toBeVisible();
+  const selection = page.locator('#container1 .table-up-selection .table-up-selection__line');
+  await expect(selection).toBeVisible();
+  const selectionBound = (await selection.boundingBox())!;
+  expect(selectionBound).not.toBeNull();
 
-  await editorPage.updateContents([{ retain: 5 }, { insert: '12345\n12345' }], 'user');
+  await page.locator('#editor1').getByRole('cell').nth(4).click();
+  const colBoundingBox = (await page.locator('#editor1 .table-up-resize-line__col').boundingBox())!;
+  expect(colBoundingBox).not.toBeNull();
+  await page.mouse.move(colBoundingBox.x + colBoundingBox.width / 2, colBoundingBox.y + colBoundingBox.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(colBoundingBox.x + colBoundingBox.width / 2 + 100, colBoundingBox.y + colBoundingBox.height / 2);
+  await page.mouse.up();
 
-  await expect(selectionWrapper).not.toBeVisible();
+  await expect(selection).toBeVisible();
+  const newSelectionBound = (await selection.boundingBox())!;
+  expect(newSelectionBound).not.toBeNull();
+  expect(newSelectionBound.width).toBeCloseTo(selectionBound.width + 100, 5);
 });
 
 extendTest('test TableSelection should update when selection change', async ({ page, editorPage }) => {
@@ -299,4 +310,34 @@ extendTest('test table keyboard ArrowUp and ArrowDown should work', async ({ pag
   await editorPage.setSelection(50, 0);
   await page.keyboard.press('ArrowDown');
   expect((await editorPage.getSelection())!.index).toBe(52);
+});
+
+extendTest('test TableSelection should update when selection change and menu display', async ({ page, editorPage }) => {
+  editorPage.index = 0;
+  await createTableBySelect(page, 'container1', 3, 3);
+
+  await page.locator('#editor1 .ql-table .ql-table-cell').nth(0).click();
+  const selectionLine = page.locator('#container1 .table-up-selection .table-up-selection__line');
+  await expect(selectionLine).toBeVisible();
+
+  await page.locator('#editor1 .ql-table .ql-table-cell').nth(0).click({ button: 'right' });
+  await expect(page.locator('.table-up-menu.is-contextmenu')).toBeVisible();
+
+  await page.locator('.table-up-menu.is-contextmenu .table-up-menu__item').filter({ hasText: 'Set background color' }).first().hover();
+  await page.waitForTimeout(1000);
+  await expect(selectionLine).not.toBeVisible();
+
+  await page.keyboard.press('ArrowDown');
+  await expect(selectionLine).not.toBeVisible();
+  await expect(page.locator('.table-up-menu.is-contextmenu')).toBeVisible();
+
+  await page.mouse.move(0, 0);
+  await page.waitForTimeout(1000);
+  await expect(selectionLine).toBeVisible();
+
+  const selectionWrapper = (await selectionLine.boundingBox())!;
+  expect(selectionWrapper).not.toBeNull();
+  const cell1Bound = (await page.locator('#editor1 .ql-editor td').nth(3).boundingBox())!;
+  expect(cell1Bound).not.toBeNull();
+  expect(cell1Bound).toEqual(selectionWrapper);
 });
