@@ -70,3 +70,40 @@ extendTest('test TableScrollbar should update when text change', async ({ page, 
   const newScrollbarTop = await getTransformValue(scrollbarHorizontal, 5);
   expect(newScrollbarTop - scrollbarTop).toBeCloseTo(lineBound.height, 0);
 });
+
+extendTest('test TableScrollbar should not effect selection', async ({ page, editorPage }) => {
+  editorPage.index = 0;
+  await editorPage.setContents([
+    { insert: '\n' },
+    { insert: { 'table-up-col': { tableId: '2y50yzsqukx', colId: '7jwlegz1wcx', full: false, width: 500 } } },
+    { insert: { 'table-up-col': { tableId: '2y50yzsqukx', colId: 'jzkt5xg4uoe', full: false, width: 500 } } },
+    { insert: { 'table-up-col': { tableId: '2y50yzsqukx', colId: 'ya1np2wbu5f', full: false, width: 500 } } },
+    { attributes: { 'table-up-cell-inner': { tableId: '2y50yzsqukx', rowId: 'q5927gxiii', colId: '7jwlegz1wcx', rowspan: 1, colspan: 1 } }, insert: '\n' },
+    { attributes: { 'table-up-cell-inner': { tableId: '2y50yzsqukx', rowId: 'q5927gxiii', colId: 'jzkt5xg4uoe', rowspan: 1, colspan: 1 } }, insert: '\n' },
+    { attributes: { 'table-up-cell-inner': { tableId: '2y50yzsqukx', rowId: 'q5927gxiii', colId: 'ya1np2wbu5f', rowspan: 1, colspan: 1 } }, insert: '\n' },
+    { attributes: { 'table-up-cell-inner': { tableId: '2y50yzsqukx', rowId: '269nnst8unz', colId: '7jwlegz1wcx', rowspan: 1, colspan: 1 } }, insert: '\n' },
+    { attributes: { 'table-up-cell-inner': { tableId: '2y50yzsqukx', rowId: '269nnst8unz', colId: 'jzkt5xg4uoe', rowspan: 1, colspan: 1 } }, insert: '\n' },
+    { attributes: { 'table-up-cell-inner': { tableId: '2y50yzsqukx', rowId: '269nnst8unz', colId: 'ya1np2wbu5f', rowspan: 1, colspan: 1 } }, insert: '\n' },
+    { attributes: { 'table-up-cell-inner': { tableId: '2y50yzsqukx', rowId: 'xpwngzum4e', colId: '7jwlegz1wcx', rowspan: 1, colspan: 1 } }, insert: '\n' },
+    { attributes: { 'table-up-cell-inner': { tableId: '2y50yzsqukx', rowId: 'xpwngzum4e', colId: 'jzkt5xg4uoe', rowspan: 1, colspan: 1 } }, insert: '\n' },
+    { attributes: { 'table-up-cell-inner': { tableId: '2y50yzsqukx', rowId: 'xpwngzum4e', colId: 'ya1np2wbu5f', rowspan: 1, colspan: 1 } }, insert: '\n' },
+    { insert: '\n' },
+  ]);
+
+  await page.locator('#editor1 .ql-table .ql-table-cell').nth(0).click();
+  const scrollbarHorizontal = page.locator('#container1 .table-up-scrollbar.is-horizontal .table-up-scrollbar__thumb');
+  await expect(scrollbarHorizontal).toBeVisible();
+  const bound = (await scrollbarHorizontal.boundingBox())!;
+  expect(bound).not.toBeNull();
+
+  await page.mouse.move(bound.x + bound.width / 2, bound.y + bound.height / 2);
+  await page.mouse.down();
+  expect(await page.evaluate(() => {
+    return document.onselectstart && document.onselectstart(new Event('selectstart')) === false;
+  })).toBe(true);
+
+  await page.mouse.up();
+  expect(await page.evaluate(() => {
+    return !document.onselectstart || (document.onselectstart && document.onselectstart(new Event('selectstart')) === true);
+  })).toBe(true);
+});
