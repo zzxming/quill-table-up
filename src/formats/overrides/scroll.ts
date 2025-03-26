@@ -4,9 +4,22 @@ import { blotName } from '../../utils';
 import { TableCellInnerFormat } from '../table-cell-inner-format';
 
 const Parchment = Quill.import('parchment');
+// createBlock is private. can't use type `Scroll`
 const ScrollBlot = Quill.import('blots/scroll') as any;
 
 export class ScrollOverride extends ScrollBlot {
+  declare domNode: HTMLElement;
+  enable(enabled = true) {
+    // `TableWrapper` is not editable. Beacuse we don't want the cursor to be at the end or beginning of the same line as the table
+    // This hack is to make the table cell should not editable when quill is diabled
+    const tableCellInnerFormat = Quill.import(`formats/${blotName.tableCellInner}`) as typeof TableCellInnerFormat;
+    const inners = this.domNode.querySelectorAll(`.${tableCellInnerFormat.className}`);
+    for (const inner of Array.from(inners)) {
+      inner.setAttribute('contenteditable', String(!!enabled));
+    }
+    super.enable(enabled);
+  }
+
   createBlock(attributes: Record<string, any>, refBlot?: TypeParchment.Blot) {
     let createBlotName: string | undefined;
     let formats: Record<string, any> = {};
