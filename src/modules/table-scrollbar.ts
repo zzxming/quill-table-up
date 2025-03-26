@@ -117,7 +117,7 @@ export class Scrollbar {
       display: 'none',
     });
     this.thumb.classList.add(this.bem.be('thumb'));
-
+    let originDocSelect: typeof document.onselectstart = null;
     const mouseMoveDocumentHandler = (e: MouseEvent) => {
       if (this.cursorDown === false) return;
       const prevPage = this.thumbState[this.propertyMap.axis];
@@ -139,12 +139,15 @@ export class Scrollbar {
       if (this.cursorLeave) {
         this.hideScrollbar();
       }
+      // eslint-disable-next-line unicorn/prefer-add-event-listener
+      document.onselectstart = originDocSelect;
     };
     const startDrag = (e: MouseEvent) => {
       e.stopImmediatePropagation();
       this.cursorDown = true;
       document.addEventListener('mousemove', mouseMoveDocumentHandler);
       document.addEventListener('mouseup', mouseUpDocumentHandler);
+      originDocSelect = document.onselectstart;
       // eslint-disable-next-line unicorn/prefer-add-event-listener
       document.onselectstart = () => false;
     };
