@@ -177,6 +177,38 @@ extendTest('test TableSelection should update when text change', async ({ page, 
   expect(newSelectionWrapper.y - selectionBound.y).toBeCloseTo(lineBound.height, 5);
 });
 
+extendTest('test TableSelection should hide if selectedTds no longer in page', async ({ page, editorPage }) => {
+  editorPage.index = 0;
+  await createTableBySelect(page, 'container1', 3, 3);
+  await page.waitForTimeout(1000);
+
+  const cell1Bound = (await page.locator('#editor1 .ql-editor td').nth(0).boundingBox())!;
+  expect(cell1Bound).not.toBeNull();
+  const cell5Bound = (await page.locator('#editor1 .ql-editor td').nth(4).boundingBox())!;
+  expect(cell5Bound).not.toBeNull();
+
+  await page.locator('#editor1 .ql-editor td').nth(0).click();
+  await page.mouse.move(cell1Bound.x + cell1Bound.width / 2, cell1Bound.y + cell1Bound.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(cell5Bound.x + cell5Bound.width / 2, cell5Bound.y + cell5Bound.height / 2);
+  await page.mouse.up();
+  await page.locator('#editor1 .ql-editor td').nth(4).click({ button: 'right' });
+  await page.locator('.table-up-menu.is-contextmenu .table-up-menu__item').filter({ hasText: 'Merge cell' }).first().click();
+  await page.locator('#editor1 .ql-editor td').nth(0).click();
+  await page.waitForTimeout(1000);
+
+  const selection = page.locator('#container1 .table-up-selection .table-up-selection__line');
+  await expect(selection).toBeVisible();
+  const selectionBound = (await selection.boundingBox())!;
+  expect(selectionBound).not.toBeNull();
+  const mergedCellBound = (await page.locator('#editor1 .ql-editor td').nth(0).boundingBox())!;
+  expect(mergedCellBound).not.toBeNull();
+  expect(selectionBound).toEqual(mergedCellBound);
+
+  await page.keyboard.press('Control+z');
+  await expect(page.locator('#container1 .table-up-selection .table-up-selection__line')).not.toBeVisible();
+});
+
 extendTest('test TableSelection should update when table resize', async ({ page, editorPage }) => {
   editorPage.index = 0;
   await createTableBySelect(page, 'container1', 3, 3);

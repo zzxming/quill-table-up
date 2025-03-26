@@ -491,6 +491,9 @@ export class TableSelection {
     if (this.selectedTds.length > 0) {
       this.update();
     }
+    else {
+      this.hide();
+    }
   }
 
   update() {
