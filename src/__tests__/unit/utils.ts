@@ -103,6 +103,7 @@ interface TableColDeltaValue extends Omit<TableColValue, 'width' | 'full'> {
 interface TableCreatorOptions {
   isEmpty: boolean;
   tableId: string;
+  editable: boolean;
 }
 type ColOptions = Omit<TableColValue, 'width' | 'tableId' | 'colId'> & { width?: number };
 
@@ -163,13 +164,13 @@ export const createTaleColHTML = (colNum: number, colOptions?: Partial<ColOption
   const { tableId = '1' } = options || {};
   const colWidth = getColWidthStyle({ full, width, colNum });
   return `
-    <colgroup ${datasetTableId(tableId)}${datasetFull(full)}${datasetAlign(align)}>
+    <colgroup contenteditable="false" ${datasetTableId(tableId)}${datasetFull(full)}${datasetAlign(align)}>
       ${new Array(colNum).fill(0).map((_, i) => `<col ${colWidth} ${datasetTableId(tableId)} data-col-id="${i + 1}"${datasetFull(full)}${datasetAlign(align)} />`).join('\n')}
     </colgroup>
   `;
 };
 export const createTableBodyHTML = (row: number, col: number, options?: Partial<TableCreatorOptions>) => {
-  const { isEmpty = false, tableId = '1' } = options || {};
+  const { isEmpty = false, tableId = '1', editable = true } = options || {};
   return `
     <tbody ${datasetTableId(tableId)}>
       ${
@@ -177,7 +178,7 @@ export const createTableBodyHTML = (row: number, col: number, options?: Partial<
           <tr ${datasetTableId(tableId)} data-row-id="${i + 1}">
             ${
               new Array(col).fill(0).map((_, j) => `<td rowspan="1" colspan="1" ${datasetTableId(tableId)} data-row-id="${i + 1}" data-col-id="${j + 1}">
-                <div ${datasetTableId(tableId)} data-rowspan="1" data-colspan="1" data-row-id="${i + 1}" data-col-id="${j + 1}">
+                <div ${datasetTableId(tableId)} data-rowspan="1" data-colspan="1" data-row-id="${i + 1}" data-col-id="${j + 1}" contenteditable="${editable}">
                   <p>
                     ${isEmpty ? '<br>' : i * row + j + 1}
                   </p>
@@ -214,7 +215,7 @@ export const createTableHTML = (row: number, col: number, colOptions?: ColOption
   }
 
   return `
-    <div ${datasetTableId(tableId)}>
+    <div contenteditable="false" ${datasetTableId(tableId)}>
       <table cellpadding="0" cellspacing="0" ${datasetTableId(tableId)}${datasetFull(full)}${datasetAlign(align)} style="${alignStyle}${full ? '' : ` width: ${width * col}px;`}">
         ${createTaleColHTML(col, colOptions)}
         ${createTableBodyHTML(row, col, options)}
