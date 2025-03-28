@@ -156,6 +156,28 @@ test('test TableSelection set multiple format', async ({ page }) => {
   });
 });
 
+test('test TableSelection clean format', async ({ page }) => {
+  await createTableBySelect(page, 'container1', 2, 2);
+  const cell = page.locator('#editor1 .ql-editor .ql-table td').nth(0);
+  const cellBounding = (await cell.boundingBox())!;
+  expect(cellBounding).not.toBeNull();
+  await cell.click();
+  await page.mouse.down();
+  await page.mouse.move(cellBounding.x + cellBounding.width * 1.5, cellBounding.y + cellBounding.height * 1.5);
+  await page.mouse.up();
+
+  await page.locator('#container1 .ql-toolbar .ql-indent[value="+1"]').nth(0).click();
+  await page.locator('#container1 .ql-toolbar .ql-header').nth(0).click();
+  await page.locator('#container1 .ql-toolbar .ql-header .ql-picker-item[data-value="1"]').nth(0).click();
+
+  const formatEl = page.locator('#editor1 .ql-table-cell-inner h1.ql-indent-1');
+  expect(await formatEl.count()).toBe(4);
+
+  await page.locator('#container1 .ql-toolbar .ql-clean').nth(0).click();
+  const cleanEl = page.locator('#editor1 .ql-table-cell-inner h1.ql-indent-1');
+  expect(await cleanEl.count()).toBe(0);
+});
+
 extendTest('test TableSelection should update when text change', async ({ page, editorPage }) => {
   editorPage.index = 0;
   await createTableBySelect(page, 'container1', 3, 3);

@@ -1,7 +1,7 @@
 import type { Parchment as TypeParchment } from 'quill';
 import type TypeBlock from 'quill/blots/block';
 import Quill from 'quill';
-import { blotName, findParentBlots } from '../../utils';
+import { blotName, findParentBlot } from '../../utils';
 
 const Parchment = Quill.import('parchment');
 const Block = Quill.import('blots/block') as typeof TypeBlock;
@@ -66,28 +66,8 @@ export class BlockOverride extends Block {
 
   format(name: string, value: any): void {
     if (name === blotName.tableCellInner && this.parent.statics.blotName === name && !value) {
-      // when set tableCellInner null. not only clear current block tableCellInner block and also
-      // need move td/tr after current cell out of current table. like code-block, split into two table
-      const [tableCell, tableRow, tableWrapper] = findParentBlots(this, [blotName.tableCell, blotName.tableRow, blotName.tableWrapper] as const);
-      const tableNext = tableWrapper.next;
-      let tableRowNext = tableRow.next;
-      let tableCellNext = tableCell.next;
-
-      // clear cur block
-      tableWrapper.parent.insertBefore(this, tableNext);
-      // only move out of table. `optimize` will generate new table
-      // move table cell
-      while (tableCellNext) {
-        const next = tableCellNext.next;
-        tableWrapper.parent.insertBefore(tableCellNext, tableNext);
-        tableCellNext = next as TypeParchment.ContainerBlot;
-      }
-      // move table row
-      while (tableRowNext) {
-        const next = tableRowNext.next;
-        tableWrapper.parent.insertBefore(tableRowNext, tableNext);
-        tableRowNext = next as TypeParchment.ContainerBlot;
-      }
+      const cellInner = findParentBlot(this, blotName.tableCellInner);
+      cellInner.unwrap();
     }
     else {
       super.format(name, value);
