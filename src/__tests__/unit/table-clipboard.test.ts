@@ -1,6 +1,7 @@
 import Quill from 'quill';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { createQuillWithTableModule, createTableDeltaOps, createTableHTML, createTaleColHTML, expectDelta } from './utils';
+import { TableUp } from '../../table-up';
+import { createQuillWithTableModule, createTableDeltaOps, createTableHTML, createTaleColHTML, expectDelta, simulatePasteHTML } from './utils';
 
 const Delta = Quill.import('delta');
 
@@ -13,7 +14,9 @@ afterEach(() => {
 
 describe('clipboard cell structure', () => {
   it('clipboard convert table', async () => {
-    const quill = createQuillWithTableModule(`<p><br></p>`);
+    Quill.register({ [`modules/${TableUp.moduleName}`]: TableUp }, true);
+    const container = document.body.appendChild(document.createElement('div'));
+    const quill = new Quill(container);
     quill.setContents(
       quill.clipboard.convert({
         html: '<div class="ql-table-wrapper" data-table-id="1"><table class="ql-table" data-table-id="1" cellpadding="0" cellspacing="0" style="margin-right: auto; width: 300px;"><colgroup data-table-id="1" contenteditable="false"><col width="100px" data-table-id="1" data-col-id="1"><col width="100px" data-table-id="1" data-col-id="2"><col width="100px" data-table-id="1" data-col-id="3"></colgroup><tbody data-table-id="1"><tr class="ql-table-row" data-table-id="1" data-row-id="1"><td class="ql-table-cell" data-table-id="1" data-row-id="1" data-col-id="1" rowspan="1" colspan="1"><div class="ql-table-cell-inner" data-table-id="1" data-row-id="1" data-col-id="1" data-rowspan="1" data-colspan="1"><p>1</p></div></td><td class="ql-table-cell" data-table-id="1" data-row-id="1" data-col-id="2" rowspan="1" colspan="1"><div class="ql-table-cell-inner" data-table-id="1" data-row-id="1" data-col-id="2" data-rowspan="1" data-colspan="1"><p>2</p></div></td><td class="ql-table-cell" data-table-id="1" data-row-id="1" data-col-id="3" rowspan="1" colspan="1"><div class="ql-table-cell-inner" data-table-id="1" data-row-id="1" data-col-id="3" data-rowspan="1" data-colspan="1"><p>3</p></div></td></tr><tr class="ql-table-row" data-table-id="1" data-row-id="2"><td class="ql-table-cell" data-table-id="1" data-row-id="2" data-col-id="1" rowspan="1" colspan="1"><div class="ql-table-cell-inner" data-table-id="1" data-row-id="2" data-col-id="1" data-rowspan="1" data-colspan="1"><p>4</p></div></td><td class="ql-table-cell" data-table-id="1" data-row-id="2" data-col-id="2" rowspan="1" colspan="1"><div class="ql-table-cell-inner" data-table-id="1" data-row-id="2" data-col-id="2" data-rowspan="1" data-colspan="1"><p>5</p></div></td><td class="ql-table-cell" data-table-id="1" data-row-id="2" data-col-id="3" rowspan="1" colspan="1"><div class="ql-table-cell-inner" data-table-id="1" data-row-id="2" data-col-id="3" data-rowspan="1" data-colspan="1"><p>6</p></div></td></tr><tr class="ql-table-row" data-table-id="1" data-row-id="3"><td class="ql-table-cell" data-table-id="1" data-row-id="3" data-col-id="1" rowspan="1" colspan="1"><div class="ql-table-cell-inner" data-table-id="1" data-row-id="3" data-col-id="1" data-rowspan="1" data-colspan="1"><p>7</p></div></td><td class="ql-table-cell" data-table-id="1" data-row-id="3" data-col-id="2" rowspan="1" colspan="1"><div class="ql-table-cell-inner" data-table-id="1" data-row-id="3" data-col-id="2" data-rowspan="1" data-colspan="1"><p>8</p></div></td><td class="ql-table-cell" data-table-id="1" data-row-id="3" data-col-id="3" rowspan="1" colspan="1"><div class="ql-table-cell-inner" data-table-id="1" data-row-id="3" data-col-id="3" data-rowspan="1" data-colspan="1"><p>9</p></div></td></tr></tbody></table></div>',
@@ -1066,13 +1069,11 @@ describe('clipboard cell in cell', () => {
     const quill = createQuillWithTableModule(`<p><br></p>`);
     quill.setContents(createTableDeltaOps(1, 1, { full: false, width: 100 }, { isEmpty: true }));
     await vi.runAllTimersAsync();
-    const range = { index: 2, length: 0 };
-    quill.setSelection(range);
-    quill.clipboard.onPaste(
-      range,
-      { html: '<html>\r\n<body>\r\n\u003C!--StartFragment--><p>text</p><p>123</p>\u003C!--EndFragment-->\r\n</body>\r\n</html>' },
+    await simulatePasteHTML(
+      quill,
+      { index: 2, length: 0 },
+      '<html><body><!--StartFragment--><p >text</p><p>123</p><!--EndFragment--></body></html>',
     );
-    await vi.runAllTimersAsync();
 
     expectDelta(
       new Delta([
@@ -1081,7 +1082,7 @@ describe('clipboard cell in cell', () => {
         { insert: 'text' },
         { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1 } }, insert: '\n' },
         { insert: '123' },
-        { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1 } }, insert: '\n\n' },
+        { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1 } }, insert: '\n' },
         { insert: '\n' },
       ]),
       quill.getContents(),
@@ -1092,13 +1093,11 @@ describe('clipboard cell in cell', () => {
     const quill = createQuillWithTableModule(`<p><br></p>`);
     quill.setContents(createTableDeltaOps(1, 1, { full: false, width: 100 }, { isEmpty: true }));
     await vi.runAllTimersAsync();
-    const range = { index: 2, length: 0 };
-    quill.setSelection(range);
-    quill.clipboard.onPaste(
-      range,
-      { html: '<html>\r\n<body>\r\n\u003C!--StartFragment--><h1>123</h1><p></p><p><strong style="color: rgb(230, 0, 0); background-color: rgb(0, 0, 0);"><em><s><u>123</u></s></em></strong><sub style="color: rgb(230, 0, 0); background-color: rgb(0, 0, 0);"><strong><em><s><u>qwe</u></s></em></strong></sub></p>\u003C!--EndFragment-->\r\n</body>\r\n</html>' },
+    await simulatePasteHTML(
+      quill,
+      { index: 2, length: 0 },
+      '<html>\r\n<body>\r\n\u003C!--StartFragment--><h1>123</h1><p></p><p><strong style="color: rgb(230, 0, 0); background-color: rgb(0, 0, 0);"><em><s><u>123</u></s></em></strong><sub style="color: rgb(230, 0, 0); background-color: rgb(0, 0, 0);"><strong><em><s><u>qwe</u></s></em></strong></sub></p>\u003C!--EndFragment-->\r\n</body>\r\n</html>',
     );
-    await vi.runAllTimersAsync();
 
     expectDelta(
       new Delta([
@@ -1107,9 +1106,9 @@ describe('clipboard cell in cell', () => {
         { insert: '123' },
         { attributes: { 'header': 1, 'table-up-cell-inner': { rowspan: 1, colspan: 1 } }, insert: '\n' },
         { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1 } }, insert: '\n' },
-        { attributes: { background: '#000000', color: '#e60000' }, insert: '123' },
-        { attributes: { background: '#000000', color: '#e60000', script: 'sub' }, insert: 'qwe' },
-        { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1 } }, insert: '\n\n' },
+        { attributes: { underline: true, strike: true, italic: true, background: '#000000', color: '#e60000', bold: true }, insert: '123' },
+        { attributes: { underline: true, strike: true, italic: true, bold: true, background: '#000000', color: '#e60000', script: 'sub' }, insert: 'qwe' },
+        { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1 } }, insert: '\n' },
         { insert: '\n' },
       ]),
       quill.getContents(),

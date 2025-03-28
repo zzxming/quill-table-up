@@ -5,7 +5,7 @@ import type Toolbar from 'quill/modules/toolbar';
 import type { InternalModule, InternalTableSelectionModule, QuillTheme, QuillThemePicker, TableConstantsData, TableTextOptions, TableUpOptions } from './utils';
 import Quill from 'quill';
 import { BlockOverride, ContainerFormat, ScrollOverride, TableBodyFormat, TableCellFormat, TableCellInnerFormat, TableColFormat, TableColgroupFormat, TableMainFormat, TableRowFormat, TableWrapperFormat } from './formats';
-import { TablePasteParser } from './modules';
+import { TableClipboard } from './modules';
 import { blotName, createBEM, createSelectBox, debounce, findParentBlot, findParentBlots, isForbidInTable, isFunction, isString, limitDomInViewPort, mixinClass, randomId, tableCantInsert, tableUpEvent, tableUpInternal, tableUpSize } from './utils';
 
 const Delta = Quill.import('delta');
@@ -202,6 +202,7 @@ export class TableUp {
       [`formats/${blotName.tableColgroup}`]: TableColgroupFormat,
       [`formats/${blotName.tableMain}`]: TableMainFormat,
       [`formats/${blotName.tableWrapper}`]: TableWrapperFormat,
+      'modules/clipboard': TableClipboard,
     }, true);
   }
 
@@ -296,7 +297,6 @@ export class TableUp {
       false,
     );
 
-    new TablePasteParser(this.quill);
     this.listenBalanceCells();
   }
 
@@ -511,6 +511,7 @@ export class TableUp {
       const htmlStr = this.quill.getSemanticHTML(i, len);
       const parser = new DOMParser();
       const doc = parser.parseFromString(htmlStr, 'text/html');
+      // remove contenteditable on `td`
       const tr = doc.querySelector('tr')!;
       if (td.rowId !== lastTrId) {
         tdRows += 1;
