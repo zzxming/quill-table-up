@@ -1,7 +1,7 @@
-import type { Range, Parchment as TypeParchment } from 'quill';
+import type { Parchment as TypeParchment, Range as TypeRange } from 'quill';
 import type { Context } from 'quill/modules/keyboard';
-import type Keyboard from 'quill/modules/keyboard';
-import type Toolbar from 'quill/modules/toolbar';
+import type TypeKeyboard from 'quill/modules/keyboard';
+import type TypeToolbar from 'quill/modules/toolbar';
 import type { InternalModule, InternalTableSelectionModule, QuillTheme, QuillThemePicker, TableConstantsData, TableTextOptions, TableUpOptions } from './utils';
 import Quill from 'quill';
 import { BlockOverride, ContainerFormat, ScrollOverride, TableBodyFormat, TableCellFormat, TableCellInnerFormat, TableColFormat, TableColgroupFormat, TableMainFormat, TableRowFormat, TableWrapperFormat } from './formats';
@@ -70,7 +70,7 @@ function generateTableArrowHandler(up: boolean) {
     collapsed: true,
     format: [blotName.tableCellInner],
     bindInHead: false,
-    handler(this: { quill: Quill }, range: Range, context: Context) {
+    handler(this: { quill: Quill }, range: TypeRange, context: Context) {
       let tableBlot: TableWrapperFormat;
       let tableMain: TableMainFormat;
       let tableRow: TableRowFormat;
@@ -119,7 +119,7 @@ export class TableUp {
       key: 'Backspace',
       collapsed: true,
       offset: 0,
-      handler(this: { quill: Quill }, range: Range, context: Context) {
+      handler(this: { quill: Quill }, range: TypeRange, context: Context) {
         const line = this.quill.getLine(range.index);
         const blot = line[0] as TypeParchment.BlockBlot;
         if (blot.prev instanceof TableWrapperFormat) {
@@ -141,7 +141,7 @@ export class TableUp {
       bindInHead: true,
       key: 'Delete',
       collapsed: true,
-      handler(this: { quill: Quill }, range: Range, context: Context) {
+      handler(this: { quill: Quill }, range: TypeRange, context: Context) {
         const line = this.quill.getLine(range.index);
         const blot = line[0] as TypeParchment.BlockBlot;
         const offsetInline = line[1];
@@ -237,7 +237,7 @@ export class TableUp {
       this.tableSelection = new this.options.selection(this, this.quill, this.options.selectionOptions);
     }
 
-    const toolbar = this.quill.getModule('toolbar') as Toolbar;
+    const toolbar = this.quill.getModule('toolbar') as TypeToolbar;
     if (toolbar && (this.quill.theme as QuillTheme).pickers) {
       const [, select] = (toolbar.controls as [string, HTMLElement][] || []).find(([name]) => name === this.statics.toolName) || [];
       if (select && select.tagName.toLocaleLowerCase() === 'select') {
@@ -261,7 +261,7 @@ export class TableUp {
       }
     }
 
-    const keyboard = this.quill.getModule('keyboard') as Keyboard;
+    const keyboard = this.quill.getModule('keyboard') as TypeKeyboard;
     for (const handle of Object.values(TableUp.keyboradHandler)) {
       // insert before default key handler
       if (handle.bindInHead) {
@@ -297,6 +297,7 @@ export class TableUp {
       false,
     );
 
+    this.quillHack();
     this.listenBalanceCells();
   }
 
@@ -357,6 +358,23 @@ export class TableUp {
       BackgroundColor: 'Set background color',
       BorderColor: 'Set border color',
     }, options);
+  }
+
+  quillHack() {
+    const originGetSemanticHTML = this.quill.getSemanticHTML;
+    this.quill.getSemanticHTML = ((index: number = 0, length?: number) => {
+      const tableCellInnerFormat = Quill.import(`formats/${blotName.tableCellInner}`) as typeof TableCellInnerFormat;
+      const inners = this.quill.scroll.domNode.querySelectorAll(`.${tableCellInnerFormat.className}`);
+      for (const inner of Array.from(inners)) {
+        inner.setAttribute('contenteditable', String(false));
+      }
+      const html = originGetSemanticHTML.call(this.quill, index, length);
+      const isEnabled = this.quill.isEnabled();
+      for (const inner of Array.from(inners)) {
+        inner.setAttribute('contenteditable', String(isEnabled));
+      }
+      return html;
+    }) as typeof originGetSemanticHTML;
   }
 
   showTableTools(table: HTMLElement) {
@@ -465,8 +483,10 @@ export class TableUp {
       return '';
     }
 
-    const colgroupBlot = tableMain!.children.head;
-    const tbodyBlot = tableMain!.children.tail;
+    if (!tableMain) return '';
+
+    const colgroupBlot = tableMain.children.head;
+    const tbodyBlot = tableMain.children.tail;
     if (!tbodyBlot || !colgroupBlot) {
       console.error('tableMain has no tbody or colgroup');
       return '';
@@ -511,7 +531,10 @@ export class TableUp {
       const htmlStr = this.quill.getSemanticHTML(i, len);
       const parser = new DOMParser();
       const doc = parser.parseFromString(htmlStr, 'text/html');
-      // remove contenteditable on `td`
+      // remove contenteditable on tableCellInner
+      for (const td of Array.from(doc.querySelectorAll('td > div[contenteditable]'))) {
+        td.removeAttribute('contenteditable');
+      }
       const tr = doc.querySelector('tr')!;
       if (td.rowId !== lastTrId) {
         tdRows += 1;
@@ -529,30 +552,41 @@ export class TableUp {
     const { startTag, endTag } = getElementTags(tbodyBlot.domNode as HTMLElement);
     html = `${startTag}${html}${endTag}`;
 
-    const cols = tableMain!.getCols();
+    const cols = tableMain.getCols();
     const { startTag: colgroupStartTag, endTag: colgroupEndTag } = getElementTags(colgroupBlot.domNode as HTMLElement);
     let colStr = '';
     let width = 0;
-    let isFull = false;
-    for (const col of cols.filter(col => colIds.has(col.colId))) {
+    const convertCols = cols.filter(col => colIds.has(col.colId)).map(col => col.clone() as TableColFormat);
+    if (tableMain.full) {
+      // Complete the remaining width
+      const totalWidth = convertCols.reduce((total, col) => total + col.width, 0);
+      const totalRemainingWidth = 100 - totalWidth;
+      const part = totalRemainingWidth / totalWidth;
+
+      for (const col of convertCols) {
+        col.width += Math.round(col.width * part);
+      }
+    }
+    for (const col of convertCols) {
       const { startTag } = getElementTags(col.domNode as HTMLElement);
       colStr += startTag;
       width += col.width;
-      isFull &&= col.full;
     }
     html = colgroupStartTag + colStr + colgroupEndTag + html;
 
-    const tableMainDom = tableMain!.domNode.cloneNode() as HTMLElement;
-    tableMainDom.style.width = `${width}${isFull ? '%' : 'px'}`;
+    const tableMainDom = tableMain.domNode.cloneNode() as HTMLElement;
+    if (!tableMain.full) {
+      tableMainDom.style.width = `${width}px`;
+    }
 
     const { startTag: mainStartTag, endTag: mainEndTag } = getElementTags(tableMainDom);
     html = mainStartTag + html + mainEndTag;
 
-    const { startTag: wrapperStartTag, endTag: wrapperEndTag } = getElementTags(tableMain!.parent.domNode as HTMLElement);
+    const { startTag: wrapperStartTag, endTag: wrapperEndTag } = getElementTags(tableMain.parent.domNode as HTMLElement);
     html = wrapperStartTag + html + wrapperEndTag;
 
     if (isCut) {
-      const trs = tableMain!.getRows();
+      const trs = tableMain.getRows();
       if (tdRows === trs.length) {
         this.removeCol(tds);
       }
