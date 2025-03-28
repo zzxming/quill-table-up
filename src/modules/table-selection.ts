@@ -1,4 +1,5 @@
 import type { EmitterSource, Parchment as TypeParchment, Range as TypeRange } from 'quill';
+import type TypeToolbar from 'quill/modules/toolbar';
 import type { TableMainFormat, TableWrapperFormat } from '../formats';
 import type { TableUp } from '../table-up';
 import type { InternalTableMenuModule, RelactiveRect, TableSelectionOptions } from '../utils';
@@ -70,7 +71,7 @@ export class TableSelection {
   };
 
   quillHack() {
-    // tableSelection format cellInner style
+    // make sure toolbar item can format selected cells
     const originFormat = this.quill.format;
     this.quill.format = function (name: string, value: unknown, source: EmitterSource = Quill.sources.API) {
       const blot = this.scroll.query(name);
@@ -105,12 +106,42 @@ export class TableSelection {
 
           // set selection at the end of the last selected cell. (for make sure the toolbar handler get the origin correct value)
           this.setSelection(Math.max(0, end - 1), 0, Quill.sources.SILENT);
+          this.blur();
           return this.updateContents(delta);
         }
       }
 
       return originFormat.call(this, name, value, source);
     };
+    // handle clean
+    const toolbar = this.quill.theme.modules.toolbar;
+    if (toolbar) {
+      const cleanHandler = toolbar.handlers?.clean;
+      if (cleanHandler) {
+        toolbar.handlers!.clean = function (this: TypeToolbar, value: unknown) {
+          const tableUpModule = this.quill.getModule(tableUpInternal.moduleName) as TableUp;
+          if (tableUpModule && tableUpModule.tableSelection && tableUpModule.tableSelection.selectedTds.length > 0) {
+            const selectedTds = tableUpModule.tableSelection.selectedTds;
+
+            const delta = new Delta();
+            let lastIndex = 0;
+            for (const innerTd of selectedTds) {
+              const index = innerTd.offset(this.quill.scroll);
+              const length = innerTd.length();
+              const { [blotName.tableCellInner]: tableCellInner, ...formats } = this.quill.getFormat(index, length);
+              const attrs = Object.keys(formats).reduce((acc, key) => {
+                acc[key] = null;
+                return acc;
+              }, {} as Record<string, unknown>);
+              delta.retain(index - lastIndex).retain(length, attrs);
+              lastIndex = index + length;
+            }
+            return this.quill.updateContents(delta);
+          }
+          cleanHandler.call(this, value);
+        };
+      }
+    }
   }
 
   getFirstTextNode(dom: HTMLElement | Node): Node {
