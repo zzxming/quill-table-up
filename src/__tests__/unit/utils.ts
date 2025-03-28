@@ -1,8 +1,10 @@
-import type { Delta } from 'quill';
+import type { Delta as TypeDelta, Range as TypeRange } from 'quill';
 import type { TableColValue } from '../../utils';
 import Quill from 'quill';
 import { expect, vi } from 'vitest';
 import { TableUp } from '../../table-up';
+
+const Delta = Quill.import('delta');
 
 export const normalizeHTML = (html: string | { html: string }) => typeof html === 'object' ? html.html : html.replaceAll(/\n\s*/g, '');
 export const sortAttributes = (element: HTMLElement) => {
@@ -88,7 +90,7 @@ expect.extend({
   },
 });
 
-export function expectDelta(received: Delta, expected: Delta) {
+export function expectDelta(received: TypeDelta, expected: TypeDelta) {
   for (const [i, op] of expected.ops.entries()) {
     expect(op).toMatchObject(received.ops[i]);
   }
@@ -219,4 +221,18 @@ export const createTableHTML = (row: number, col: number, colOptions?: ColOption
       </table>
     </div>
   `;
+};
+
+export const simulatePasteHTML = (quill: Quill, range: TypeRange, html: string) => {
+  const formats = quill.getFormat(range.index);
+  const pastedDelta = quill.clipboard.convert(
+    { html },
+    formats,
+  );
+  const delta = new Delta()
+    .retain(range.index)
+    .delete(range.length)
+    .concat(pastedDelta);
+  quill.updateContents(delta);
+  return vi.runAllTimersAsync();
 };

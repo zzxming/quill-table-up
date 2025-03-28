@@ -1,10 +1,17 @@
 import type { Parchment as TypeParchment } from 'quill';
 import type { Delta as TypeDelta } from 'quill/core';
+import type TypeClipboard from 'quill/modules/clipboard';
 import Quill from 'quill';
 import { TableCellFormat, TableColFormat } from '../formats';
 import { blotName, isObject, isString, randomId, tableUpSize } from '../utils';
 
 const Delta = Quill.import('delta');
+const Clipboard = Quill.import('modules/clipboard') as typeof TypeClipboard;
+export type Selector = string | Node['TEXT_NODE'] | Node['ELEMENT_NODE'];
+export type Matcher = (node: Node, delta: TypeDelta, scroll: TypeParchment.ScrollBlot) => TypeDelta;
+export interface ClipboardOptions {
+  matchers: [Selector, Matcher][];
+}
 
 function getCellWidth(cell: HTMLElement): number {
   let width = Number.parseFloat(cell.getAttribute('width') || tableUpSize.colDefaultWidth);
@@ -35,44 +42,26 @@ function calculateCols(tableNode: HTMLElement, colNums: number): number[] {
   return colWidths;
 }
 
-export class TablePasteParser {
+export class TableClipboard extends Clipboard {
   tableId = randomId();
   rowId = randomId();
   colIds: string[] = [];
   rowspanCount: { rowspan: number; colspan: number }[] = [];
   cellCount = 0;
   colCount = 0;
-  constructor(public quill: Quill) {
-    this.quill.clipboard.addMatcher('table', this.matchTable.bind(this));
-    this.quill.clipboard.addMatcher('colgroup', this.matchColgroup.bind(this));
-    this.quill.clipboard.addMatcher('col', this.matchCol.bind(this));
-    this.quill.clipboard.addMatcher('tr', this.matchTr.bind(this));
-    this.quill.clipboard.addMatcher('td', this.matchTd.bind(this));
-    this.quill.clipboard.addMatcher('th', this.matchTd.bind(this));
-
-    this.quill.clipboard.addMatcher(Node.TEXT_NODE, this.matchEveryNode.bind(this));
-    this.quill.clipboard.addMatcher(Node.ELEMENT_NODE, this.matchEveryNode.bind(this));
-  }
-
-  // handle paste html or text into table cell
-  matchEveryNode(node: Node, delta: TypeDelta, _scroll: TypeParchment.ScrollBlot) {
-    const range = this.quill.getSelection(true);
-    const formats = this.quill.getFormat(range);
-    const tableCellInnerValue = formats[blotName.tableCellInner];
-    if (tableCellInnerValue) {
-      for (const op of delta.ops) {
-        if (!op.attributes) op.attributes = {};
-        op.attributes[blotName.tableCellInner] = tableCellInnerValue;
-      }
-    }
-    return delta;
+  constructor(public quill: Quill, options: Partial<ClipboardOptions>) {
+    super(quill, options);
+    this.addMatcher('table', this.matchTable.bind(this));
+    this.addMatcher('colgroup', this.matchColgroup.bind(this));
+    this.addMatcher('col', this.matchCol.bind(this));
+    this.addMatcher('tr', this.matchTr.bind(this));
+    this.addMatcher('td', this.matchTd.bind(this));
+    this.addMatcher('th', this.matchTd.bind(this));
   }
 
   matchTable(node: Node, delta: TypeDelta) {
     if (delta.ops.length === 0) return delta;
 
-    const format = this.quill.getFormat();
-    const currentCellFormat = format[blotName.tableCellInner];
     const ops: Record<string, any>[] = [];
     const cols: Record<string, any>[] = [];
     for (let i = 0; i < delta.ops.length; i++) {
@@ -80,51 +69,35 @@ export class TablePasteParser {
       // remove quill origin table format and tableCell format
       const { table, [blotName.tableCell]: tableCell, ...attrs } = attributes || {};
       const hasCol = isObject(insert) && insert[blotName.tableCol];
-      if (currentCellFormat) {
-        // if current in cell. no need add col. but need replace paste cell format with current cell format
-        if (hasCol) continue;
-        const { [blotName.tableCellInner]: tableCellInner, ...keepAtttrs } = attrs;
-        ops.push({
-          attributes: {
-            ...keepAtttrs,
-            [blotName.tableCellInner]: currentCellFormat,
-          },
-          insert,
-        });
+
+      if (hasCol) {
+        cols.push({ insert });
       }
       else {
-        if (hasCol) {
-          cols.push({ insert });
-        }
-        else {
-          ops.push({ attributes: attrs, insert });
-        }
+        ops.push({ attributes: attrs, insert });
       }
     }
 
-    // if current in cell. no need add col
-    if (!currentCellFormat) {
-      const colWidths = calculateCols(node as HTMLElement, this.colIds.length);
-      const newCols = colWidths.reduce((colOps, width, i) => {
-        if (!cols[i]) {
-          colOps.push({
-            insert: {
-              [blotName.tableCol]: {
-                tableId: this.tableId,
-                colId: this.colIds[i],
-                width,
-                full: false,
-              },
+    const colWidths = calculateCols(node as HTMLElement, this.colIds.length);
+    const newCols = colWidths.reduce((colOps, width, i) => {
+      if (!cols[i]) {
+        colOps.push({
+          insert: {
+            [blotName.tableCol]: {
+              tableId: this.tableId,
+              colId: this.colIds[i],
+              width,
+              full: false,
             },
-          });
-        }
-        else {
-          colOps.push(cols[i]);
-        }
-        return colOps;
-      }, [] as Record<string, any>[]);
-      ops.unshift(...newCols);
-    }
+          },
+        });
+      }
+      else {
+        colOps.push(cols[i]);
+      }
+      return colOps;
+    }, [] as Record<string, any>[]);
+    ops.unshift(...newCols);
 
     // reset variable to avoid conflict with other table
     this.tableId = randomId();
@@ -247,5 +220,23 @@ export class TablePasteParser {
       ops.push({ insert: '\n', attributes: { [blotName.tableCellInner]: value } });
     }
     return new Delta(ops);
+  }
+
+  convert(
+    { html, text }: { html?: string; text?: string },
+    formats: Record<string, unknown> = {},
+  ): TypeDelta {
+    const delta = super.convert({ html, text }, formats);
+    if (formats[blotName.tableCellInner]) {
+      for (const op of delta.ops) {
+        if (isObject(op.insert) && op.insert[blotName.tableCol]) {
+          op.insert = '';
+          continue;
+        }
+        if (!op.attributes) op.attributes = {};
+        op.attributes[blotName.tableCellInner] = formats[blotName.tableCellInner];
+      }
+    }
+    return delta;
   }
 }

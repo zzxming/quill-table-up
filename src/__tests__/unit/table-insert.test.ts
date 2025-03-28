@@ -785,7 +785,6 @@ describe('cell editable', () => {
     quill.setContents(createTableDeltaOps(3, 3));
     await vi.runAllTimersAsync();
 
-    console.log(quill.root.innerHTML);
     const disabledInners = quill.root.querySelectorAll('.ql-table-cell-inner');
     expect(disabledInners.length).toBe(9);
     for (const inner of Array.from(disabledInners)) {
