@@ -1,3 +1,4 @@
+import { spawn } from 'node:child_process';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { nodeResolve } from '@rollup/plugin-node-resolve';
@@ -108,6 +109,11 @@ const buildTheme = async (isDev: boolean = false) => {
 const dev = () => {
   watch(['./src/**/*.ts', '!./src/**/__tests__/**/*'], parallel(buildTs.bind(undefined, true), buildDts));
   watch('./src/**/*.less', buildTheme.bind(undefined, true));
+  spawn('node', ['./server.js'], {
+    cwd: __dirname,
+    stdio: 'inherit',
+    shell: process.platform === 'win32',
+  });
 };
 task('dev', series(dev));
 
