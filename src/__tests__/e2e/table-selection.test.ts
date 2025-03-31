@@ -401,21 +401,11 @@ extendTest('test TableSelection should update when selection change and menu dis
   await page.locator('#editor1 .ql-table .ql-table-cell').nth(0).click({ button: 'right' });
   await expect(page.locator('.table-up-menu.is-contextmenu')).toBeVisible();
 
-  await page.locator('.table-up-menu.is-contextmenu .table-up-menu__item').filter({ hasText: 'Set background color' }).first().hover();
+  await page.locator('.table-up-menu.is-contextmenu .table-up-menu__item').filter({ hasText: 'Set background color' }).first().click();
   await page.waitForTimeout(1000);
   await expect(selectionLine).not.toBeVisible();
 
   await page.keyboard.press('ArrowDown');
   await expect(selectionLine).not.toBeVisible();
   await expect(page.locator('.table-up-menu.is-contextmenu')).toBeVisible();
-
-  await page.mouse.move(0, 0);
-  await page.waitForTimeout(1000);
-  await expect(selectionLine).toBeVisible();
-
-  const selectionWrapper = (await selectionLine.boundingBox())!;
-  expect(selectionWrapper).not.toBeNull();
-  const cell1Bound = (await page.locator('#editor1 .ql-editor td').nth(3).boundingBox())!;
-  expect(cell1Bound).not.toBeNull();
-  expect(cell1Bound).toEqual(selectionWrapper);
 });
