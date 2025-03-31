@@ -255,6 +255,30 @@ extendTest('test TableSelection should update when table resize', async ({ page,
   expect(newSelectionBound.width).toBeCloseTo(selectionBound.width + 100, 5);
 });
 
+extendTest('table resize should update TableSelection', async ({ page, editorPage }) => {
+  editorPage.index = 0;
+  await createTableBySelect(page, 'container1', 3, 3);
+
+  await page.locator('#editor1 .ql-table .ql-table-cell').nth(0).click();
+  const selection = page.locator('#container1 .table-up-selection .table-up-selection__line');
+  await page.locator('#editor1').getByRole('cell').nth(2).click();
+  await expect(selection).toBeVisible();
+
+  await editorPage.updateContents(
+    [
+      { retain: 6 },
+      { insert: { image: 'https://71f32f3f-ce5e-4222-95b1-a8f7b05ea469.mdnplay.dev/shared-assets/images/examples/grapefruit-slice.jpg' } },
+    ],
+  );
+  await page.waitForSelector('#editor1 img');
+
+  const newThirdCellSelectionBound = (await selection.boundingBox())!;
+  expect(newThirdCellSelectionBound).not.toBeNull();
+  const newCellBound = (await page.locator('#editor1').getByRole('cell').nth(2).boundingBox())!;
+  expect(newCellBound).not.toBeNull();
+  expect(newThirdCellSelectionBound).toEqual(newCellBound);
+});
+
 extendTest('test TableSelection should update when selection change', async ({ page, editorPage }) => {
   editorPage.index = 0;
   await createTableBySelect(page, 'container1', 3, 3);
