@@ -230,13 +230,19 @@ export class TableSelection {
       // default move cursor to first cell
       if (isAnchorInColgroup) {
         const tableWrapperBlot = anchorNames.get(blotName.tableWrapper) as TableWrapperFormat;
-        newAnchorNode = tableWrapperBlot.descendants(TableCellInnerFormat)[0].domNode;
-        newAnchorOffset = 0;
+        const cellInner = tableWrapperBlot.descendants(TableCellInnerFormat);
+        if (cellInner.length > 0) {
+          newAnchorNode = cellInner[0].domNode;
+          newAnchorOffset = 0;
+        }
       }
       if (isFocusInColgroup) {
         const tableWrapperBlot = focusNames.get(blotName.tableWrapper) as TableWrapperFormat;
-        newFocusNode = tableWrapperBlot.descendants(TableCellInnerFormat)[0].domNode;
-        newFocusOffset = 0;
+        const cellInner = tableWrapperBlot.descendants(TableCellInnerFormat);
+        if (cellInner.length > 0) {
+          newFocusNode = cellInner[0].domNode;
+          newFocusOffset = 0;
+        }
       }
       this.setSelectionData(selection, {
         anchorNode: newAnchorNode,

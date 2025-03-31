@@ -1,4 +1,4 @@
-import type { EmitterSource, Delta as TypeDelta, Parchment as TypeParchment, Range as TypeRange } from 'quill';
+import type { EmitterSource, Op, Parchment as TypeParchment, Range as TypeRange } from 'quill';
 import type { Context } from 'quill/modules/keyboard';
 import type TypeKeyboard from 'quill/modules/keyboard';
 import type TypeToolbar from 'quill/modules/toolbar';
@@ -430,27 +430,27 @@ export class TableUp {
     if (toolbar) {
       const cleanHandler = toolbar.handlers?.clean;
       if (cleanHandler) {
-        const cleanAttributeExcludeTable = (attrs: Record<string, unknown>) => {
-          const { [blotName.tableCellInner]: tableCellInnerValue, ...otherFormat } = attrs;
-          return Object.keys(otherFormat).reduce((result, key) => {
-            result[key] = null;
-            return result;
-          }, {} as Record<string, unknown>);
-        };
         const cleanFormatExcludeTable = (index: number, length: number) => {
-          const contents = this.quill.getContents(index, length);
-          const delta = new Delta();
-          contents.eachLine((inserts: TypeDelta, attrs: Record<string, unknown>) => {
-            // clean inline attribute
-            for (const op of inserts.ops) {
-              const cleanFormat = cleanAttributeExcludeTable(op.attributes || {});
-              delta.retain(isString(op.insert) ? op.insert.length : 1, cleanFormat);
+          // base on `removeFormat`. but not remove tableCellInner
+          const text = this.quill.getText(index, length);
+          const [line, offset] = this.quill.getLine(index + length);
+          let suffixLength = 0;
+          let suffix = new Delta();
+          if (line != null) {
+            suffixLength = line.length() - offset;
+            suffix = line.delta().slice(offset, offset + suffixLength - 1).insert('\n');
+          }
+          const contents = this.quill.getContents(index, length + suffixLength);
+          const diff = contents.diff(new Delta().insert(text).concat(suffix));
+          const ops = diff.ops.map((op: Op) => {
+            const { attributes, ...other } = op;
+            if (attributes) {
+              const { [blotName.tableCellInner]: tableCellInnerValue, ...attrs } = attributes;
+              return { ...other, attributes: { ...attrs } };
             }
-            // clean block attribute
-            const cleanFormat = cleanAttributeExcludeTable(attrs);
-            delta.retain(1, cleanFormat);
+            return op;
           });
-          return delta;
+          return new Delta(ops);
         };
         toolbar.handlers!.clean = function (this: TypeToolbar, value: unknown): void {
           const tableUpModule = this.quill.getModule(tableUpInternal.moduleName) as TableUp;
@@ -474,7 +474,8 @@ export class TableUp {
             for (const innerTd of selectedTds) {
               const index = innerTd.offset(this.quill.scroll);
               const length = innerTd.length();
-              const diff = cleanFormatExcludeTable(index, length);
+              // `line` length will include a break(\n) at the end. minus 1 to remove break
+              const diff = cleanFormatExcludeTable(index, length - 1);
               const cellDiff = new Delta().retain(index - lastIndex).concat(diff);
               delta = delta.concat(cellDiff);
               lastIndex = index + length;

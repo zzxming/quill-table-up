@@ -52,3 +52,24 @@ extendTest('clean handler should not clean insert text format', async ({ page, e
     expect(op).toStrictEqual(contents[i]);
   }
 });
+
+extendTest('clean handler should not keep table format when have two empty line after block format(like header)', async ({ page, editorPage }) => {
+  editorPage.index = 0;
+  await editorPage.setContents([
+    { insert: '\n' },
+    { insert: { 'table-up-col': { tableId: '1', colId: '1', full: false, width: 100 } } },
+    { insert: 'header' },
+    { attributes: { 'header': 1, 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '1', rowspan: 1, colspan: 1 } }, insert: '\n' },
+    { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '1', rowspan: 1, colspan: 1 } }, insert: '\n\n' },
+    { insert: '\n' },
+  ]);
+
+  await editorPage.setSelection(0, 11);
+  await page.locator('#container1 .ql-toolbar .ql-clean').click();
+  const delta = await editorPage.getContents();
+  const contents = [{ insert: '\nheader\n\n\n\n' }];
+  for (const [i, op] of delta.ops.entries()) {
+    expect(op).toStrictEqual(contents[i]);
+  }
+  expect(await editorPage.getSelection()).toEqual({ index: 0, length: 10 });
+});

@@ -600,4 +600,102 @@ describe('hack format cell', () => {
     );
     expect(quill.getSelection()).toBeNull();
   });
+
+  it('clean handler should clean block format text in cell', async () => {
+    const quill = createQuillWithTableModule('<p></p>');
+    quill.setContents([
+      { insert: '\n' },
+      { insert: { 'table-up-col': { tableId: '1', colId: '1', full: false, width: 100 } } },
+      { insert: { 'table-up-col': { tableId: '1', colId: '2', full: false, width: 100 } } },
+      { insert: '123', attributes: { bold: true } },
+      { attributes: { 'list': 'bullet', 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '1', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '123', attributes: { bold: true } },
+      { attributes: { 'list': 'bullet', 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '1', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '2' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '2', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '3', attributes: { bold: true } },
+      { attributes: { 'list': 'bullet', 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '1', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '4' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '2', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '\n' },
+    ]);
+
+    quill.setSelection(4, 5, Quill.sources.SILENT);
+    quill.theme.modules.toolbar!.handlers!.clean.call(quill.theme.modules.toolbar as any, true);
+    expectDelta(
+      quill.getContents(),
+      new Delta([
+        { insert: '\n' },
+        { insert: { 'table-up-col': { tableId: '1', colId: '1', full: false, width: 100 } } },
+        { insert: { 'table-up-col': { tableId: '1', colId: '2', full: false, width: 100 } } },
+        { insert: '1', attributes: { bold: true } },
+        { insert: '23' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '1', rowspan: 1, colspan: 1 } }, insert: '\n' },
+        { insert: '12' },
+        { insert: '3', attributes: { bold: true } },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '1', rowspan: 1, colspan: 1 } }, insert: '\n' },
+        { insert: '2' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '2', rowspan: 1, colspan: 1 } }, insert: '\n' },
+        { insert: '3', attributes: { bold: true } },
+        { attributes: { 'list': 'bullet', 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '1', rowspan: 1, colspan: 1 } }, insert: '\n' },
+        { insert: '4' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '2', rowspan: 1, colspan: 1 } }, insert: '\n' },
+        { insert: '\n' },
+      ]),
+    );
+    expect(quill.getSelection()).toEqual({ index: 4, length: 5 });
+  });
+
+  it('clean handler should clean embed correct', async () => {
+    const quill = createQuillWithTableModule('<p></p>', { selection: TableSelection });
+    quill.setContents([
+      { insert: '\n' },
+      { insert: { 'table-up-col': { tableId: '1', colId: '1', full: false, width: 100 } } },
+      { insert: { 'table-up-col': { tableId: '1', colId: '2', full: false, width: 100 } } },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '1', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: { image: 'https://71f32f3f-ce5e-4222-95b1-a8f7b05ea469.mdnplay.dev/shared-assets/images/examples/grapefruit-slice.jpg' } },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '2', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '1', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '2', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '\n' },
+    ]);
+
+    quill.setSelection(4, 1, Quill.sources.SILENT);
+    quill.theme.modules.toolbar!.handlers!.clean.call(quill.theme.modules.toolbar as any, true);
+
+    expectDelta(
+      quill.getContents(),
+      new Delta([
+        { insert: '\n' },
+        { insert: { 'table-up-col': { tableId: '1', colId: '1', full: false, width: 100 } } },
+        { insert: { 'table-up-col': { tableId: '1', colId: '2', full: false, width: 100 } } },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '1', rowspan: 1, colspan: 1 } }, insert: '\n' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '2', rowspan: 1, colspan: 1 } }, insert: '\n' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '1', rowspan: 1, colspan: 1 } }, insert: '\n' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '2', rowspan: 1, colspan: 1 } }, insert: '\n' },
+        { insert: '\n' },
+      ]),
+    );
+    expect(quill.getSelection()).toEqual({ index: 4, length: 0 });
+
+    quill.history.undo();
+    await vi.runAllTimersAsync();
+    const tableUp = quill.getModule(TableUp.moduleName) as TableUp;
+    const tds = quill.scroll.descendants(TableCellInnerFormat, 0);
+    tableUp.tableSelection!.selectedTds = [tds[1]];
+    quill.theme.modules.toolbar!.handlers!.clean.call(quill.theme.modules.toolbar as any, true);
+    expectDelta(
+      quill.getContents(),
+      new Delta([
+        { insert: '\n' },
+        { insert: { 'table-up-col': { tableId: '1', colId: '1', full: false, width: 100 } } },
+        { insert: { 'table-up-col': { tableId: '1', colId: '2', full: false, width: 100 } } },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '1', rowspan: 1, colspan: 1 } }, insert: '\n' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '2', rowspan: 1, colspan: 1 } }, insert: '\n' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '1', rowspan: 1, colspan: 1 } }, insert: '\n' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '2', rowspan: 1, colspan: 1 } }, insert: '\n' },
+        { insert: '\n' },
+      ]),
+    );
+  });
 });
