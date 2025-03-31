@@ -1,5 +1,5 @@
 import type { Delta as TypeDelta, Range as TypeRange } from 'quill';
-import type { TableColValue } from '../../utils';
+import type { TableColValue, TableUpOptions } from '../../utils';
 import Quill from 'quill';
 import { expect, vi } from 'vitest';
 import { TableUp } from '../../table-up';
@@ -28,7 +28,7 @@ export const sortAttributes = (element: HTMLElement) => {
     }
   });
 };
-export const createQuillWithTableModule = (html: string, tableOptions = {}, moduleOptions = {}, quillOptions = {}, register = {}) => {
+export const createQuillWithTableModule = (html: string, tableOptions: Partial<TableUpOptions> = {}, moduleOptions = {}, quillOptions = {}, register = {}) => {
   Quill.register({
     [`modules/${TableUp.moduleName}`]: TableUp,
     ...register,
@@ -36,6 +36,7 @@ export const createQuillWithTableModule = (html: string, tableOptions = {}, modu
   const container = document.body.appendChild(document.createElement('div'));
   container.innerHTML = normalizeHTML(html);
   const quill = new Quill(container, {
+    theme: 'snow',
     modules: {
       [TableUp.moduleName]: {
         full: true,

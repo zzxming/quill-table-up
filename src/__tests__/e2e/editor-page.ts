@@ -1,5 +1,5 @@
 import type { Page } from '@playwright/test';
-import type { Op } from 'quill';
+import type { Delta, Op } from 'quill';
 
 // Specify the index of the editor before use.
 export class EditorPage {
@@ -50,9 +50,15 @@ export class EditorPage {
     }, { index: this.index, delta });
   }
 
-  getContents(): Promise<Op[]> {
+  getContents(): Promise<Delta> {
     return this.page.evaluate(({ index }) => {
-      return window.quills[index].getContents().ops;
+      return window.quills[index].getContents();
+    }, { index: this.index });
+  }
+
+  focus(): Promise<void> {
+    return this.page.evaluate(({ index }) => {
+      return window.quills[index].focus();
     }, { index: this.index });
   }
 }

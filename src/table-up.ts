@@ -1,4 +1,4 @@
-import type { Parchment as TypeParchment, Range as TypeRange } from 'quill';
+import type { EmitterSource, Delta as TypeDelta, Parchment as TypeParchment, Range as TypeRange } from 'quill';
 import type { Context } from 'quill/modules/keyboard';
 import type TypeKeyboard from 'quill/modules/keyboard';
 import type TypeToolbar from 'quill/modules/toolbar';
@@ -8,6 +8,7 @@ import { BlockOverride, ContainerFormat, ScrollOverride, TableBodyFormat, TableC
 import { TableClipboard } from './modules';
 import { blotName, createBEM, createSelectBox, debounce, findParentBlot, findParentBlots, isForbidInTable, isFunction, isString, limitDomInViewPort, mixinClass, randomId, tableCantInsert, tableUpEvent, tableUpInternal, tableUpSize } from './utils';
 
+const Parchment = Quill.import('parchment');
 const Delta = Quill.import('delta');
 const Break = Quill.import('blots/break') as TypeParchment.BlotConstructor;
 const icons = Quill.import('ui/icons') as Record<string, any>;
@@ -375,6 +376,117 @@ export class TableUp {
       }
       return html;
     }) as typeof originGetSemanticHTML;
+
+    // make sure toolbar item can format selected cells
+    const originFormat = this.quill.format;
+    this.quill.format = function (name: string, value: unknown, source: EmitterSource = Quill.sources.API) {
+      const blot = this.scroll.query(name);
+      // filter embed blot
+      if (!((blot as TypeParchment.BlotConstructor).prototype instanceof Parchment.EmbedBlot)) {
+        const tableUpModule = this.getModule(tableUpInternal.moduleName) as TableUp;
+
+        const range = this.getSelection();
+        if (range && range.length > 0) {
+          const formats = this.getFormat(range);
+          if (formats[blotName.tableCellInner]) {
+            return originFormat.call(this, name, value, source);
+          }
+        }
+        // if selection range is not in table, but use the TableSelection selected cells
+        // format in selected cells
+        if (tableUpModule && tableUpModule.tableSelection && tableUpModule.tableSelection.selectedTds.length > 0) {
+          const selectedTds = tableUpModule.tableSelection.selectedTds;
+          // calculate the format value. the format should be canceled when this value exists in all selected cells
+          let setOrigin = false;
+          const tdRanges = [];
+          for (const innerTd of selectedTds) {
+            const index = innerTd.offset(this.scroll);
+            const length = innerTd.length();
+            tdRanges.push({ index, length });
+            const format = this.getFormat(index, length);
+            if (format[name] !== value) {
+              setOrigin = true;
+            }
+          }
+          const resultValue = setOrigin ? value : false;
+
+          const delta = new Delta();
+          for (const [i, { index, length }] of tdRanges.entries()) {
+            const lastIndex = i === 0 ? 0 : tdRanges[i - 1].index + tdRanges[i - 1].length;
+            delta.retain(index - lastIndex).retain(length, { [name]: resultValue });
+          }
+
+          const updateDelta = this.updateContents(delta);
+          this.blur();
+          return updateDelta;
+        }
+      }
+
+      return originFormat.call(this, name, value, source);
+    };
+
+    // handle clean
+    const toolbar = this.quill.theme.modules.toolbar;
+    if (toolbar) {
+      const cleanHandler = toolbar.handlers?.clean;
+      if (cleanHandler) {
+        const cleanAttributeExcludeTable = (attrs: Record<string, unknown>) => {
+          const { [blotName.tableCellInner]: tableCellInnerValue, ...otherFormat } = attrs;
+          return Object.keys(otherFormat).reduce((result, key) => {
+            result[key] = null;
+            return result;
+          }, {} as Record<string, unknown>);
+        };
+        const cleanFormatExcludeTable = (index: number, length: number) => {
+          const contents = this.quill.getContents(index, length);
+          const delta = new Delta();
+          contents.eachLine((inserts: TypeDelta, attrs: Record<string, unknown>) => {
+            // clean inline attribute
+            for (const op of inserts.ops) {
+              const cleanFormat = cleanAttributeExcludeTable(op.attributes || {});
+              delta.retain(isString(op.insert) ? op.insert.length : 1, cleanFormat);
+            }
+            // clean block attribute
+            const cleanFormat = cleanAttributeExcludeTable(attrs);
+            delta.retain(1, cleanFormat);
+          });
+          return delta;
+        };
+        toolbar.handlers!.clean = function (this: TypeToolbar, value: unknown): void {
+          const tableUpModule = this.quill.getModule(tableUpInternal.moduleName) as TableUp;
+          const range = this.quill.getSelection();
+          if (range && range.length > 0) {
+            const formats = this.quill.getFormat(range);
+            if (formats[blotName.tableCellInner]) {
+              const diff = cleanFormatExcludeTable(range.index, range.length);
+              const delta = new Delta().retain(range.index).concat(diff);
+              this.quill.updateContents(delta);
+              return;
+            }
+          }
+          // if selection range is not in table, but use the TableSelection selected cells
+          // clean all other formats in cell
+          if (tableUpModule && tableUpModule.tableSelection && tableUpModule.tableSelection.selectedTds.length > 0) {
+            const selectedTds = tableUpModule.tableSelection.selectedTds;
+
+            let delta = new Delta();
+            let lastIndex = 0;
+            for (const innerTd of selectedTds) {
+              const index = innerTd.offset(this.quill.scroll);
+              const length = innerTd.length();
+              const diff = cleanFormatExcludeTable(index, length);
+              const cellDiff = new Delta().retain(index - lastIndex).concat(diff);
+              delta = delta.concat(cellDiff);
+              lastIndex = index + length;
+            }
+            this.quill.updateContents(delta);
+            if (selectedTds.length > 1) this.quill.blur();
+            return;
+          }
+          return cleanHandler.call(this, value);
+        };
+      }
+    }
   }
 
   showTableTools(table: HTMLElement) {

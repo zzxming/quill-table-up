@@ -1,15 +1,12 @@
 import type { EmitterSource, Parchment as TypeParchment, Range as TypeRange } from 'quill';
-import type TypeToolbar from 'quill/modules/toolbar';
 import type { TableMainFormat, TableWrapperFormat } from '../formats';
 import type { TableUp } from '../table-up';
 import type { InternalTableMenuModule, RelactiveRect, TableSelectionOptions } from '../utils';
 import Quill from 'quill';
 import { TableCellFormat, TableCellInnerFormat } from '../formats';
-import { addScrollEvent, blotName, clearScrollEvent, createBEM, createResizeObserver, findAllParentBlot, findParentBlot, getRelativeRect, isRectanglesIntersect, tableUpEvent, tableUpInternal } from '../utils';
+import { addScrollEvent, blotName, clearScrollEvent, createBEM, createResizeObserver, findAllParentBlot, findParentBlot, getRelativeRect, isRectanglesIntersect, tableUpEvent } from '../utils';
 
 const ERROR_LIMIT = 0;
-const Parchment = Quill.import('parchment');
-const Delta = Quill.import('delta');
 
 export interface SelectionData {
   anchorNode: Node | null;
@@ -47,8 +44,6 @@ export class TableSelection {
   constructor(public tableModule: TableUp, public quill: Quill, options: Partial<TableSelectionOptions> = {}) {
     this.options = this.resolveOptions(options);
 
-    this.quillHack();
-
     this.cellSelectWrap = tableModule.addContainer(this.bem.b());
     this.cellSelect = this.helpLinesInitial();
 
@@ -69,80 +64,6 @@ export class TableSelection {
   updateAfterEvent = () => {
     this.updateWithSelectedTds();
   };
-
-  quillHack() {
-    // make sure toolbar item can format selected cells
-    const originFormat = this.quill.format;
-    this.quill.format = function (name: string, value: unknown, source: EmitterSource = Quill.sources.API) {
-      const blot = this.scroll.query(name);
-      // filter embed blot
-      if (!((blot as TypeParchment.BlotConstructor).prototype instanceof Parchment.EmbedBlot)) {
-        const tableUpModule = this.getModule(tableUpInternal.moduleName) as TableUp;
-        if (tableUpModule && tableUpModule.tableSelection && tableUpModule.tableSelection.selectedTds.length > 0) {
-          const selectedTds = tableUpModule.tableSelection.selectedTds;
-
-          // calculate the format value. the format should be canceled when this value exists in all selected cells
-          let setOrigin = false;
-          let end = -1;
-          const tdRanges = [];
-          for (const innerTd of selectedTds) {
-            const index = innerTd.offset(this.scroll);
-            const length = innerTd.length();
-            tdRanges.push({ index, length });
-            const format = this.getFormat(index, length);
-            if (format[name] !== value) {
-              setOrigin = true;
-            }
-
-            end = index + length;
-          }
-          const resultValue = setOrigin ? value : false;
-
-          const delta = new Delta();
-          for (const [i, { index, length }] of tdRanges.entries()) {
-            const lastIndex = i === 0 ? 0 : tdRanges[i - 1].index + tdRanges[i - 1].length;
-            delta.retain(index - lastIndex).retain(length, { [name]: resultValue });
-          }
-
-          // set selection at the end of the last selected cell. (for make sure the toolbar handler get the origin correct value)
-          this.setSelection(Math.max(0, end - 1), 0, Quill.sources.SILENT);
-          this.blur();
-          return this.updateContents(delta);
-        }
-      }
-
-      return originFormat.call(this, name, value, source);
-    };
-    // handle clean
-    const toolbar = this.quill.theme.modules.toolbar;
-    if (toolbar) {
-      const cleanHandler = toolbar.handlers?.clean;
-      if (cleanHandler) {
-        toolbar.handlers!.clean = function (this: TypeToolbar, value: unknown) {
-          const tableUpModule = this.quill.getModule(tableUpInternal.moduleName) as TableUp;
-          if (tableUpModule && tableUpModule.tableSelection && tableUpModule.tableSelection.selectedTds.length > 0) {
-            const selectedTds = tableUpModule.tableSelection.selectedTds;
-
-            const delta = new Delta();
-            let lastIndex = 0;
-            for (const innerTd of selectedTds) {
-              const index = innerTd.offset(this.quill.scroll);
-              const length = innerTd.length();
-              const { [blotName.tableCellInner]: tableCellInner, ...formats } = this.quill.getFormat(index, length);
-              const attrs = Object.keys(formats).reduce((acc, key) => {
-                acc[key] = null;
-                return acc;
-              }, {} as Record<string, unknown>);
-              delta.retain(index - lastIndex).retain(length, attrs);
-              lastIndex = index + length;
-            }
-            return this.quill.updateContents(delta);
-          }
-          cleanHandler.call(this, value);
-        };
-      }
-    }
-  }
 
   getFirstTextNode(dom: HTMLElement | Node): Node {
     for (const node of Array.from(dom.childNodes)) {
