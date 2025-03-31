@@ -49,4 +49,45 @@ export class ContainerFormat extends Container {
       this.next.remove();
     }
   }
+
+  public enforceAllowedChildren(): void {
+    // the origin `enforceAllowedChildren` only unwrap the first block
+    // remove flag `done`. all block format in table container need be unwrap
+
+    // eslint-disable-next-line unicorn/no-array-for-each
+    this.children.forEach((child: TypeParchment.Blot) => {
+      const allowed = this.statics.allowedChildren.some(
+        (def: TypeParchment.BlotConstructor) => child instanceof def,
+      );
+      if (allowed) {
+        return;
+      }
+      if (child.statics.scope === Parchment.Scope.BLOCK_BLOT) {
+        // only child is in table format need keep split blot. else use the origin method
+        if (child.parent instanceof ContainerFormat) {
+          if (child.next != null) {
+            child.parent.splitAfter(child);
+          }
+          if (child.prev != null) {
+            child.parent.splitAfter(child.prev);
+          }
+        }
+        else {
+          if (child.next != null) {
+            this.splitAfter(child);
+          }
+          if (child.prev != null) {
+            this.splitAfter(child.prev);
+          }
+        }
+        child.parent.unwrap();
+      }
+      else if (child instanceof Parchment.ParentBlot) {
+        child.unwrap();
+      }
+      else {
+        child.remove();
+      }
+    });
+  }
 }

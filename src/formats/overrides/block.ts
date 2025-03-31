@@ -66,8 +66,13 @@ export class BlockOverride extends Block {
 
   format(name: string, value: any): void {
     if (name === blotName.tableCellInner && this.parent.statics.blotName === name && !value) {
-      const cellInner = findParentBlot(this, blotName.tableCellInner);
-      cellInner.unwrap();
+      try {
+        const cellInner = findParentBlot(this, blotName.tableCellInner);
+        cellInner.unwrap();
+      }
+      catch {
+        console.error('unwrap TableCellInner error');
+      }
     }
     else {
       super.format(name, value);
