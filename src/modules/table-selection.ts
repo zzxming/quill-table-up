@@ -47,7 +47,7 @@ export class TableSelection {
     this.cellSelectWrap = tableModule.addContainer(this.bem.b());
     this.cellSelect = this.helpLinesInitial();
 
-    this.resizeObserver = createResizeObserver(() => this.hide(), { ignoreFirstBind: true });
+    this.resizeObserver = createResizeObserver(() => this.updateAfterEvent(), { ignoreFirstBind: true });
     this.resizeObserver.observe(this.quill.root);
 
     this.quill.root.addEventListener('mousedown', this.mouseDownHandler, { passive: false });
@@ -455,22 +455,6 @@ export class TableSelection {
   }
 
   update() {
-    // skip `SCROLL_UPDATE`. SCROLL_UPDATE will trigger setNativeRange that will reset the selection
-    this.quill.scroll.observer.disconnect();
-    for (const td of Array.from(this.quill.root.querySelectorAll(`.ql-table .${this.bem.bm('selected')}`))) {
-      td.classList.remove(`${this.bem.bm('selected')}`);
-    }
-    for (const td of this.selectedTds) {
-      td.domNode.classList.add(`${this.bem.bm('selected')}`);
-    }
-    // rebind observer
-    this.quill.scroll.observer.observe(this.quill.scroll.domNode, {
-      attributes: true,
-      characterData: true,
-      characterDataOldValue: true,
-      childList: true,
-      subtree: true,
-    });
     if (this.selectedTds.length === 0 || !this.boundary || !this.table) return;
     const { x: editorScrollX, y: editorScrollY } = this.getQuillViewScroll();
     const { x: tableScrollX, y: tableScrollY } = this.getTableViewScroll();
@@ -524,6 +508,8 @@ export class TableSelection {
   showDisplay() {
     Object.assign(this.cellSelectWrap.style, { display: 'block' });
     this.isDisplaySelection = true;
+    if (!this.table) return;
+    this.resizeObserver.observe(this.table);
   }
 
   show() {
@@ -543,9 +529,8 @@ export class TableSelection {
   hideDisplay() {
     Object.assign(this.cellSelectWrap.style, { display: 'none' });
     this.isDisplaySelection = false;
-    for (const td of this.selectedTds) {
-      td.domNode.classList.remove(`${this.bem.bm('selected')}`);
-    }
+    if (!this.table) return;
+    this.resizeObserver.unobserve(this.table);
   }
 
   hide() {
