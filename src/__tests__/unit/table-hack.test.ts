@@ -405,7 +405,9 @@ describe('hack format cell', () => {
     );
     expect(quill.getSelection()).toBeNull();
   });
+});
 
+describe('hack toolbar clean handler', () => {
   it('clean handler should not effect when selection not have cell', async () => {
     const quill = createQuillWithTableModule('<p></p>');
     quill.setContents([
@@ -697,5 +699,26 @@ describe('hack format cell', () => {
         { insert: '\n' },
       ]),
     );
+  });
+
+  it('clean handler trigger source should be USER', async () => {
+    const quill = createQuillWithTableModule('<p></p>', { selection: TableSelection });
+    quill.setContents([
+      { insert: '\n' },
+      { insert: { 'table-up-col': { tableId: '1', colId: '1', full: false, width: 100 } } },
+      { insert: { 'table-up-col': { tableId: '1', colId: '2', full: false, width: 100 } } },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '1', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '2', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '1', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '2', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '\n' },
+    ]);
+
+    const textChangeSpy = vi.fn();
+    quill.on(Quill.events.TEXT_CHANGE, textChangeSpy);
+
+    quill.setSelection(3, 1, Quill.sources.SILENT);
+    quill.theme.modules.toolbar!.handlers!.clean.call(quill.theme.modules.toolbar as any, true);
+    expect(textChangeSpy).toHaveBeenCalledWith(expect.anything(), expect.anything(), Quill.sources.USER);
   });
 });
