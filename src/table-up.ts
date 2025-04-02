@@ -416,7 +416,7 @@ export class TableUp {
             delta.retain(index - lastIndex).retain(length, { [name]: resultValue });
           }
 
-          const updateDelta = this.updateContents(delta);
+          const updateDelta = this.updateContents(delta, source);
           this.blur();
           return updateDelta;
         }
@@ -460,7 +460,7 @@ export class TableUp {
             if (formats[blotName.tableCellInner]) {
               const diff = cleanFormatExcludeTable(range.index, range.length);
               const delta = new Delta().retain(range.index).concat(diff);
-              this.quill.updateContents(delta);
+              this.quill.updateContents(delta, Quill.sources.USER);
               return;
             }
           }
@@ -480,7 +480,7 @@ export class TableUp {
               delta = delta.concat(cellDiff);
               lastIndex = index + length;
             }
-            this.quill.updateContents(delta);
+            this.quill.updateContents(delta, Quill.sources.USER);
             if (selectedTds.length > 1) this.quill.blur();
             return;
           }
