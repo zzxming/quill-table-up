@@ -1,6 +1,7 @@
 import type { Parchment as TypeParchment } from 'quill';
 import type { Delta as TypeDelta } from 'quill/core';
 import type TypeClipboard from 'quill/modules/clipboard';
+import type { TableCellValue } from '../utils';
 import Quill from 'quill';
 import { TableCellFormat, TableColFormat } from '../formats';
 import { blotName, isObject, isString, randomId, tableUpSize } from '../utils';
@@ -57,6 +58,8 @@ export class TableClipboard extends Clipboard {
     this.addMatcher('tr', this.matchTr.bind(this));
     this.addMatcher('td', this.matchTd.bind(this));
     this.addMatcher('th', this.matchTd.bind(this));
+
+    this.addMatcher(Node.ELEMENT_NODE, this.matchTdAttributor.bind(this));
   }
 
   matchTable(node: Node, delta: TypeDelta) {
@@ -137,16 +140,6 @@ export class TableClipboard extends Clipboard {
   matchTr(node: Node, delta: TypeDelta) {
     this.rowId = randomId();
     this.cellCount = 0;
-    for (const op of delta.ops) {
-      if (
-        op.attributes && op.attributes.background
-        && op.attributes[blotName.tableCellInner]
-      ) {
-        const cellAttrs = op.attributes[blotName.tableCellInner] as Record<string, any>;
-        if (!cellAttrs.style) cellAttrs.style = '';
-        (op.attributes[blotName.tableCellInner] as Record<string, any>).style = `background:${op.attributes.background};${cellAttrs.style}`;
-      }
-    }
     // minus rowspan
     for (const [i, span] of this.rowspanCount.entries()) {
       if (span.rowspan > 0) {
@@ -196,30 +189,44 @@ export class TableClipboard extends Clipboard {
     if (cell.style.border === 'none') {
       value.style = value.style.replaceAll(/border-(top|right|bottom|left)-style:none;?/g, '');
     }
-    function isOnlyNewlines(input: string) {
-      for (const char of input) {
-        if (char !== '\n') {
-          return false;
-        }
-      }
-      return true;
-    }
     const ops = [];
     for (const op of delta.ops) {
-      const { insert, attributes = {} } = op;
-      if (insert) {
-        const { [blotName.tableCell]: tableCell, ...attrs } = attributes as Record<string, unknown>;
-        // background will effect on `td`. but we already handle backgroundColor in tableCell. need delete it
-        if (isString(insert) && isOnlyNewlines(insert)) {
-          delete attrs.background;
-        }
-        ops.push({ insert, attributes: { ...attrs, [blotName.tableCellInner]: value } });
-      }
+      const { attributes = {}, ...other } = op;
+      const { [blotName.tableCell]: tableCell, ...attrs } = attributes;
+      ops.push({ ...other, attributes: { ...attrs, [blotName.tableCellInner]: value } });
     }
     if (ops.length <= 0 || !isString(ops[ops.length - 1].insert) || !(ops[ops.length - 1].insert as string).endsWith('\n')) {
       ops.push({ insert: '\n', attributes: { [blotName.tableCellInner]: value } });
     }
     return new Delta(ops);
+  }
+
+  matchTdAttributor(node: Node, delta: TypeDelta) {
+    const el = node as HTMLElement;
+    if (el.tagName.toLocaleLowerCase() === 'td') {
+      const ops = [];
+      for (const op of delta.ops) {
+        const { attributes, ...other } = op;
+        const tableCellInner = attributes?.[blotName.tableCellInner] as TableCellValue;
+        if (attributes && tableCellInner && tableCellInner.style) {
+          const { background, ...attrs } = attributes;
+
+          const bgTemp = document.createElement('div');
+          bgTemp.style.background = background as string;
+          const cellTemp = document.createElement('div');
+          cellTemp.style.cssText = tableCellInner.style;
+          if (bgTemp.style.background === cellTemp.style.backgroundColor) {
+            ops.push({ ...other, attributes: { ...attrs } });
+            continue;
+          }
+        }
+
+        ops.push(op);
+      }
+      return new Delta(ops);
+    }
+
+    return delta;
   }
 
   convert(

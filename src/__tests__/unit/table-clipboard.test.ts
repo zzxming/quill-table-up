@@ -730,6 +730,91 @@ describe('clipboard cell structure', () => {
       { ignoreAttrs: ['class', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
     );
   });
+
+  it('clipboard convert cell background with default background', async () => {
+    const quill = createQuillWithTableModule(`<p><br></p>`);
+    quill.setContents(
+      quill.clipboard.convert({
+        html: `<table class="ql-table" data-table-id="blb417t011v" cellpadding="0" cellspacing="0" style="margin-right: auto; width: 242px;"><colgroup data-table-id="blb417t011v" contenteditable="false"><col width="121px" data-table-id="blb417t011v" data-col-id="o9gj05324t"><col width="121px" data-table-id="blb417t011v" data-col-id="fhyoaxplvom"></colgroup><tbody data-table-id="blb417t011v"><tr class="ql-table-row" data-table-id="blb417t011v" data-row-id="ryohl03jd9"><td class="ql-table-cell" data-table-id="blb417t011v" data-row-id="ryohl03jd9" data-col-id="o9gj05324t" rowspan="1" colspan="1" style="background-color: rgb(41, 114, 244);"><div class="ql-table-cell-inner" data-table-id="blb417t011v" data-row-id="ryohl03jd9" data-col-id="o9gj05324t" data-rowspan="1" data-colspan="1" data-style="background-color:rgb(41, 114, 244)" contenteditable="true"><p> <span style="background-color: rgb(230, 0, 0);">123</span>456<span style="background-color: rgb(0, 138, 0);">789</span></p><h1>h<span style="background-color: rgb(0, 0, 0);">ea</span>d</h1></div></td><td class="ql-table-cell" data-table-id="blb417t011v" data-row-id="ryohl03jd9" data-col-id="fhyoaxplvom" rowspan="1" colspan="1"><div class="ql-table-cell-inner" data-table-id="blb417t011v" data-row-id="ryohl03jd9" data-col-id="fhyoaxplvom" data-rowspan="1" data-colspan="1" contenteditable="true"><p>2</p></div></td></tr></tbody></table>`,
+      }),
+    );
+    await vi.runAllTimersAsync();
+
+    expect(quill.root).toEqualHTML(
+      `<p><br></p>
+      <div>
+        <table cellpadding="0" cellspacing="0" style="margin-right: auto; width: 242px;">
+          ${createTaleColHTML(2, { full: false, width: 121 })}
+          <tbody>
+            <tr>
+              <td colspan="1" rowspan="1" style="background-color: rgb(41, 114, 244);">
+                <div data-style="background-color:rgb(41, 114, 244)">
+                  <p><span style="background-color: rgb(230, 0, 0);">123</span>456<span style="background-color: rgb(0, 138, 0);">789</span></p>
+                  <h1>h<span style="background-color: rgb(0, 0, 0);">ea</span>d</h1>
+                </div>
+              </td>
+              <td colspan="1" rowspan="1">
+                <div>
+                  <p>2</p>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p><br></p>`,
+      { ignoreAttrs: ['class', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
+    );
+    expectDelta(
+      new Delta([
+        { insert: '\n' },
+        { insert: { 'table-up-col': { full: false, width: 121 } } },
+        { insert: { 'table-up-col': { full: false, width: 121 } } },
+        { attributes: { background: '#e60000' }, insert: '123' },
+        { insert: '456' },
+        { attributes: { background: '#008a00' }, insert: '789' },
+        { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1, style: 'background-color:rgb(41, 114, 244)' } }, insert: '\n' },
+        { insert: 'h' },
+        { attributes: { background: '#000000' }, insert: 'ea' },
+        { insert: 'd' },
+        { attributes: { 'header': 1, 'table-up-cell-inner': { rowspan: 1, colspan: 1, style: 'background-color:rgb(41, 114, 244)' } }, insert: '\n' },
+        { insert: '2' },
+        { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1 } }, insert: '\n' },
+        { insert: '\n' },
+      ]),
+      quill.getContents(),
+    );
+  });
+
+  it('clipboard convert cell background if text background equal cell background then clean text background', async () => {
+    const quill = createQuillWithTableModule(`<p><br></p>`);
+    quill.setContents(
+      quill.clipboard.convert({
+        html: `<table class="ql-table" data-table-id="7lkdloid2pb" cellpadding="0" cellspacing="0" style="margin-right: auto; width: 100px;"><colgroup data-table-id="7lkdloid2pb" contenteditable="false"><col width="100px" data-table-id="7lkdloid2pb" data-col-id="r6f08i7n39"></colgroup><tbody data-table-id="7lkdloid2pb"><tr class="ql-table-row" data-table-id="7lkdloid2pb" data-row-id="xb2pjkx1fkb"><td class="ql-table-cell" data-table-id="7lkdloid2pb" data-row-id="xb2pjkx1fkb" data-col-id="r6f08i7n39" rowspan="1" colspan="1" style="background-color: rgb(0, 102, 204);"><div class="ql-table-cell-inner" data-table-id="7lkdloid2pb" data-row-id="xb2pjkx1fkb" data-col-id="r6f08i7n39" data-rowspan="1" data-colspan="1" contenteditable="true" data-style="background-color: rgb(0, 102, 204);"><p><span style="background-color: rgb(0, 102, 204);">123</span></p></div></td></tr></tbody></table>`,
+      }),
+    );
+    await vi.runAllTimersAsync();
+
+    expect(quill.root).toEqualHTML(
+      `<p><br></p>
+      <div>
+        <table cellpadding="0" cellspacing="0" style="margin-right: auto; width: 100px;">
+          ${createTaleColHTML(1, { full: false, width: 100 })}
+          <tbody>
+            <tr>
+              <td colspan="1" rowspan="1" style="background-color: rgb(0, 102, 204);">
+                <div data-style="background-color:rgb(0, 102, 204)">
+                  <p>123</p>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p><br></p>`,
+      { ignoreAttrs: ['class', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
+    );
+  });
 });
 
 describe('clipboard content format', () => {
