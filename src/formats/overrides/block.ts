@@ -21,7 +21,7 @@ export class BlockOverride extends Block {
           if (selfParent != null) {
             selfParent.insertBefore(replacement, this.prev ? null : this.next);
           }
-          if (this.parent.statics.blotName === blotName.tableCellInner && this.prev) {
+          if (selfParent.statics.blotName === blotName.tableCellInner) {
             let block: TypeBlock | null = this;
             while (block) {
               const next = block.next as TypeBlock | null;
