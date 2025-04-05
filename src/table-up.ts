@@ -443,8 +443,6 @@ export class TableUp {
           const contents = this.quill.getContents(index, length + suffixLength);
           const diff = contents.diff(new Delta().insert(text).concat(suffix));
 
-          // block format 在 selection clean 时存在问题
-          // 实际 selection 时其实应该不删除 table 的 style
           let deltaIndex = 0;
           const ops = diff.ops.map((op: Op) => {
             const { attributes, ...other } = op;
