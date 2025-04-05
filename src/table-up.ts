@@ -2,11 +2,11 @@ import type { EmitterSource, Op, Parchment as TypeParchment, Range as TypeRange 
 import type { Context } from 'quill/modules/keyboard';
 import type TypeKeyboard from 'quill/modules/keyboard';
 import type TypeToolbar from 'quill/modules/toolbar';
-import type { InternalModule, InternalTableSelectionModule, QuillTheme, QuillThemePicker, TableConstantsData, TableTextOptions, TableUpOptions } from './utils';
+import type { InternalModule, InternalTableSelectionModule, QuillTheme, QuillThemePicker, TableCellValue, TableConstantsData, TableTextOptions, TableUpOptions } from './utils';
 import Quill from 'quill';
 import { BlockOverride, ContainerFormat, ScrollOverride, TableBodyFormat, TableCellFormat, TableCellInnerFormat, TableColFormat, TableColgroupFormat, TableMainFormat, TableRowFormat, TableWrapperFormat } from './formats';
 import { TableClipboard } from './modules';
-import { blotName, createBEM, createSelectBox, debounce, findParentBlot, findParentBlots, isForbidInTable, isFunction, isString, limitDomInViewPort, mixinClass, randomId, tableCantInsert, tableUpEvent, tableUpInternal, tableUpSize } from './utils';
+import { blotName, createBEM, createSelectBox, debounce, findParentBlot, findParentBlots, isForbidInTable, isFunction, isNumber, isString, limitDomInViewPort, mixinClass, randomId, tableCantInsert, tableUpEvent, tableUpInternal, tableUpSize } from './utils';
 
 const Parchment = Quill.import('parchment');
 const Delta = Quill.import('delta');
@@ -430,7 +430,7 @@ export class TableUp {
     if (toolbar) {
       const cleanHandler = toolbar.handlers?.clean;
       if (cleanHandler) {
-        const cleanFormatExcludeTable = (index: number, length: number) => {
+        const cleanFormatExcludeTable = (index: number, length: number, cleanCellStyle: boolean = true) => {
           // base on `removeFormat`. but not remove tableCellInner
           const text = this.quill.getText(index, length);
           const [line, offset] = this.quill.getLine(index + length);
@@ -442,10 +442,32 @@ export class TableUp {
           }
           const contents = this.quill.getContents(index, length + suffixLength);
           const diff = contents.diff(new Delta().insert(text).concat(suffix));
+
+          // block format 在 selection clean 时存在问题
+          // 实际 selection 时其实应该不删除 table 的 style
+          let deltaIndex = 0;
           const ops = diff.ops.map((op: Op) => {
             const { attributes, ...other } = op;
+            if (op.insert) {
+              deltaIndex -= isString(op.insert) ? op.insert.length : 1;
+            }
+            else if (op.retain) {
+              deltaIndex += isNumber(op.retain) ? op.retain : 1;
+            }
+            else if (op.delete) {
+              deltaIndex += op.delete;
+            }
+
             if (attributes) {
-              const { [blotName.tableCellInner]: tableCellInnerValue, ...attrs } = attributes;
+              const { [blotName.tableCellInner]: nullValue, ...attrs } = attributes;
+              if (cleanCellStyle) {
+                const tableCellInner = contents.slice(deltaIndex - 1, deltaIndex).ops[0];
+                if (tableCellInner && tableCellInner.attributes && tableCellInner.attributes[blotName.tableCellInner]) {
+                  const tableCellInnerValue = tableCellInner.attributes[blotName.tableCellInner] as TableCellValue;
+                  const { style, ...value } = tableCellInnerValue;
+                  return { ...other, attributes: { ...attrs, [blotName.tableCellInner]: value } };
+                }
+              }
               return { ...other, attributes: { ...attrs } };
             }
             return op;
@@ -458,7 +480,7 @@ export class TableUp {
           if (range && range.length > 0) {
             const formats = this.quill.getFormat(range);
             if (formats[blotName.tableCellInner]) {
-              const diff = cleanFormatExcludeTable(range.index, range.length);
+              const diff = cleanFormatExcludeTable(range.index, range.length, false);
               const delta = new Delta().retain(range.index).concat(diff);
               this.quill.updateContents(delta, Quill.sources.USER);
               return;

@@ -1,6 +1,6 @@
 import Quill from 'quill';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { TableCellInnerFormat, TableMainFormat } from '../../formats';
+import { TableCellInnerFormat } from '../../formats';
 import { TableSelection } from '../../modules';
 import { TableUp } from '../../table-up';
 import { createQuillWithTableModule, createTable, createTableBodyHTML, createTableDeltaOps, createTaleColHTML, expectDelta } from './utils';
@@ -529,8 +529,6 @@ describe('hack toolbar clean handler', () => {
       { insert: '\n' },
     ]);
     const tableUp = quill.getModule(TableUp.moduleName) as TableUp;
-    const table = quill.scroll.descendants(TableMainFormat, 0)[0];
-    tableUp.tableSelection!.table = table.domNode;
     const tds = quill.scroll.descendants(TableCellInnerFormat, 0);
     tableUp.tableSelection!.selectedTds = tds;
 
@@ -575,8 +573,6 @@ describe('hack toolbar clean handler', () => {
       { insert: '\n' },
     ]);
     const tableUp = quill.getModule(TableUp.moduleName) as TableUp;
-    const table = quill.scroll.descendants(TableMainFormat, 0)[0];
-    tableUp.tableSelection!.table = table.domNode;
     const tds = quill.scroll.descendants(TableCellInnerFormat, 0);
     tableUp.tableSelection!.selectedTds = tds;
     quill.setSelection(1, 3, Quill.sources.SILENT);
@@ -720,5 +716,171 @@ describe('hack toolbar clean handler', () => {
     quill.setSelection(3, 1, Quill.sources.SILENT);
     quill.theme.modules.toolbar!.handlers!.clean.call(quill.theme.modules.toolbar as any, true);
     expect(textChangeSpy).toHaveBeenCalledWith(expect.anything(), expect.anything(), Quill.sources.USER);
+  });
+
+  it('clean handler should not clean cell style when selection in cell', async () => {
+    const quill = createQuillWithTableModule('<p></p>', { selection: TableSelection });
+    quill.setContents([
+      { insert: '\n' },
+      { insert: { 'table-up-col': { tableId: 'jb784n9k6x', colId: '22nxu0uo4pa', full: false, width: 121 } } },
+      { insert: { 'table-up-col': { tableId: 'jb784n9k6x', colId: 'bmx6pu6y5s', full: false, width: 121 } } },
+      { attributes: { background: '#e60000' }, insert: '1' },
+      { attributes: { 'table-up-cell-inner': { tableId: 'jb784n9k6x', rowId: 'duq5dazb08o', colId: '22nxu0uo4pa', rowspan: 1, colspan: 1, style: 'background-color: rgb(41, 114, 244);' } }, insert: '\n' },
+      { insert: '2' },
+      { attributes: { 'table-up-cell-inner': { tableId: 'jb784n9k6x', rowId: 'duq5dazb08o', colId: 'bmx6pu6y5s', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '3' },
+      { attributes: { 'table-up-cell-inner': { tableId: 'jb784n9k6x', rowId: 'd4ckk1exgug', colId: '22nxu0uo4pa', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { attributes: { italic: true, bold: true }, insert: '5555' },
+      { attributes: { 'list': 'bullet', 'table-up-cell-inner': { tableId: 'jb784n9k6x', rowId: 'd4ckk1exgug', colId: 'bmx6pu6y5s', rowspan: 1, colspan: 1, style: 'background-color: rgb(49, 155, 98);' } }, insert: '\n' },
+      { attributes: { italic: true, bold: true }, insert: '6666' },
+      { attributes: { 'list': 'bullet', 'table-up-cell-inner': { tableId: 'jb784n9k6x', rowId: 'd4ckk1exgug', colId: 'bmx6pu6y5s', rowspan: 1, colspan: 1, style: 'background-color: rgb(49, 155, 98);' } }, insert: '\n' },
+      { insert: '\n' },
+    ]);
+
+    quill.setSelection(11, 5, Quill.sources.SILENT);
+    quill.theme.modules.toolbar!.handlers!.clean.call(quill.theme.modules.toolbar as any, true);
+
+    expectDelta(
+      new Delta([
+        { insert: '\n' },
+        { insert: { 'table-up-col': { full: false, width: 121 } } },
+        { insert: { 'table-up-col': { full: false, width: 121 } } },
+        { attributes: { background: '#e60000' }, insert: '1' },
+        { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1, style: 'background-color: rgb(41, 114, 244);' } }, insert: '\n' },
+        { insert: '2' },
+        { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1 } }, insert: '\n' },
+        { insert: '3' },
+        { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1 } }, insert: '\n' },
+        { attributes: { italic: true, bold: true }, insert: '55' },
+        { insert: '55' },
+        { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1, style: 'background-color: rgb(49, 155, 98);' } }, insert: '\n' },
+        { insert: '66' },
+        { attributes: { italic: true, bold: true }, insert: '66' },
+        { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1, style: 'background-color: rgb(49, 155, 98);' } }, insert: '\n' },
+        { insert: '\n' },
+      ]),
+      quill.getContents(),
+    );
+    expect(quill.root).toEqualHTML(
+      `
+        <p><br></p>
+        <div>
+          <table cellpadding="0" cellspacing="0">
+            <colgroup>
+              <col width="121px" />
+              <col width="121px" />
+            </colgroup>
+            <tbody>
+              <tr>
+                <td rowspan="1" colspan="1" style="background-color: rgb(41, 114, 244);">
+                  <div data-style="background-color: rgb(41, 114, 244);">
+                    <p><span style="background-color: rgb(230, 0, 0);">1</span></p>
+                  </div>
+                </td>
+                <td rowspan="1" colspan="1">
+                  <div>
+                    <p>2</p>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td rowspan="1" colspan="1"><div><p>3</p></div></td>
+                <td rowspan="1" colspan="1" style="background-color: rgb(49, 155, 98);">
+                  <div data-style="background-color: rgb(49, 155, 98);">
+                    <p><strong><em>55</em></strong>55</p>
+                    <p>66<strong><em>66</em></strong></p>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p><br></p>
+      `,
+      { ignoreAttrs: ['class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
+    );
+  });
+
+  it('clean handler should clean cell style when have selectedTds cleaning', async () => {
+    const quill = createQuillWithTableModule('<p></p>', { selection: TableSelection });
+    quill.setContents([
+      { insert: '\n' },
+      { insert: { 'table-up-col': { tableId: 'jb784n9k6x', colId: '22nxu0uo4pa', full: false, width: 121 } } },
+      { insert: { 'table-up-col': { tableId: 'jb784n9k6x', colId: 'bmx6pu6y5s', full: false, width: 121 } } },
+      { attributes: { background: '#e60000' }, insert: '1' },
+      { attributes: { 'table-up-cell-inner': { tableId: 'jb784n9k6x', rowId: 'duq5dazb08o', colId: '22nxu0uo4pa', rowspan: 1, colspan: 1, style: 'background-color: rgb(41, 114, 244);' } }, insert: '\n' },
+      { insert: '2' },
+      { attributes: { 'table-up-cell-inner': { tableId: 'jb784n9k6x', rowId: 'duq5dazb08o', colId: 'bmx6pu6y5s', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '3' },
+      { attributes: { 'table-up-cell-inner': { tableId: 'jb784n9k6x', rowId: 'd4ckk1exgug', colId: '22nxu0uo4pa', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { attributes: { italic: true, bold: true }, insert: '5555' },
+      { attributes: { 'list': 'bullet', 'table-up-cell-inner': { tableId: 'jb784n9k6x', rowId: 'd4ckk1exgug', colId: 'bmx6pu6y5s', rowspan: 1, colspan: 1, style: 'background-color: rgb(49, 155, 98);' } }, insert: '\n' },
+      { attributes: { italic: true, bold: true }, insert: '6666' },
+      { attributes: { 'list': 'bullet', 'table-up-cell-inner': { tableId: 'jb784n9k6x', rowId: 'd4ckk1exgug', colId: 'bmx6pu6y5s', rowspan: 1, colspan: 1, style: 'background-color: rgb(49, 155, 98);' } }, insert: '\n' },
+      { insert: '\n' },
+    ]);
+
+    const tableUp = quill.getModule(TableUp.moduleName) as TableUp;
+    const tds = quill.scroll.descendants(TableCellInnerFormat, 0);
+    tableUp.tableSelection!.selectedTds = tds;
+    quill.theme.modules.toolbar!.handlers!.clean.call(quill.theme.modules.toolbar as any, true);
+
+    expectDelta(
+      new Delta([
+        { insert: '\n' },
+        { insert: { 'table-up-col': { full: false, width: 121 } } },
+        { insert: { 'table-up-col': { full: false, width: 121 } } },
+        { insert: '1' },
+        { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1 } }, insert: '\n' },
+        { insert: '2' },
+        { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1 } }, insert: '\n' },
+        { insert: '3' },
+        { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1 } }, insert: '\n' },
+        { insert: '5555' },
+        { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1 } }, insert: '\n' },
+        { insert: '6666' },
+        { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1 } }, insert: '\n' },
+        { insert: '\n' },
+      ]),
+      quill.getContents(),
+    );
+    expect(quill.root).toEqualHTML(
+      `
+        <p><br></p>
+        <div>
+          <table cellpadding="0" cellspacing="0">
+            <colgroup>
+              <col width="121px" />
+              <col width="121px" />
+            </colgroup>
+            <tbody>
+              <tr>
+                <td rowspan="1" colspan="1">
+                  <div>
+                    <p>1</p>
+                  </div>
+                </td>
+                <td rowspan="1" colspan="1">
+                  <div>
+                    <p>2</p>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td rowspan="1" colspan="1"><div><p>3</p></div></td>
+                <td rowspan="1" colspan="1">
+                  <div>
+                    <p>5555</p>
+                    <p>6666</p>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p><br></p>
+      `,
+      { ignoreAttrs: ['class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
+    );
   });
 });
