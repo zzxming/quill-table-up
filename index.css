@@ -489,11 +489,11 @@
   height: 0.75rem;
   background-color: #f1f5f9;
   border: 0.0625rem solid #808080;
-  cursor: nw-resize;
+  cursor: nwse-resize;
   pointer-events: all;
 }
 .table-up-scale.is-align-right .table-up-scale__block {
-  cursor: ne-resize;
+  cursor: nesw-resize;
 }
 .table-up-scale.is-hidden {
   display: none;
