@@ -505,6 +505,22 @@ export class TableSelection {
     this.table = table;
   }
 
+  removeCell = (e: KeyboardEvent) => {
+    const range = this.quill.getSelection();
+    if (range || (e.key !== 'Backspace' && e.key !== 'Delete')) return;
+
+    for (const td of this.selectedTds) {
+      td.deleteAt(0, td.length() - 1);
+    }
+    if (this.table) {
+      const tableMain = Quill.find(this.table) as TableMainFormat;
+      const cells = tableMain.descendants(TableCellInnerFormat);
+      if (this.selectedTds.length === cells.length) {
+        tableMain.remove();
+      }
+    }
+  };
+
   showDisplay() {
     Object.assign(this.cellSelectWrap.style, { display: 'block' });
     this.isDisplaySelection = true;
@@ -518,6 +534,7 @@ export class TableSelection {
 
     this.update();
     this.showDisplay();
+    document.addEventListener('keydown', this.removeCell);
     addScrollEvent.call(this, this.quill.root, () => {
       this.update();
     });
@@ -534,6 +551,8 @@ export class TableSelection {
   }
 
   hide() {
+    clearScrollEvent.call(this);
+    document.removeEventListener('keydown', this.removeCell);
     this.hideDisplay();
     this.boundary = null;
     this.selectedTds = [];

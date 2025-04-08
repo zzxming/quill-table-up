@@ -61,4 +61,10 @@ export class EditorPage {
       return window.quills[index].focus();
     }, { index: this.index });
   }
+
+  blur(): Promise<void> {
+    return this.page.evaluate(({ index }) => {
+      return window.quills[index].blur();
+    }, { index: this.index });
+  }
 }
