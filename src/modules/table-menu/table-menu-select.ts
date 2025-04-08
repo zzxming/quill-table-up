@@ -20,7 +20,7 @@ export class TableMenuSelect extends TableMenuCommon {
 
     computePosition(this.tableModule.tableSelection.cellSelect, this.menu, {
       placement: 'bottom',
-      middleware: [flip(), shift({ limiter: limitShift() }), offset(8)],
+      middleware: [flip(), shift({ limiter: limitShift() }), offset(20)],
     }).then(({ x, y }) => {
       Object.assign(this.menu!.style, {
         left: `${x}px`,
