@@ -2,7 +2,7 @@ import type { TableUp } from '../../table-up';
 import type { TableMenuOptions, ToolOption, TooltipInstance, ToolTipOptions } from '../../utils';
 import Quill from 'quill';
 import { createBEM, createColorPicker, createTooltip, debounce, defaultColorMap, isArray, isFunction, randomId } from '../../utils';
-import { colorClassName, defaultTools, maxSaveColorCount, menuColorSelectClassName } from './constants';
+import { colorClassName, maxSaveColorCount, menuColorSelectClassName, tableMenuTools } from './constants';
 
 export type TableMenuOptionsInput = Partial<Omit<TableMenuOptions, 'texts'>>;
 export interface MenuTooltipInstance extends TooltipInstance {
@@ -75,7 +75,25 @@ export class TableMenuCommon {
   resolveOptions(options: TableMenuOptionsInput) {
     const value = Object.assign({
       tipText: true,
-      tools: defaultTools,
+      tools: [
+        tableMenuTools.CopyCell,
+        tableMenuTools.CutCell,
+        tableMenuTools.Break,
+        tableMenuTools.InsertTop,
+        tableMenuTools.InsertRight,
+        tableMenuTools.InsertBottom,
+        tableMenuTools.InsertLeft,
+        tableMenuTools.Break,
+        tableMenuTools.MergeCell,
+        tableMenuTools.SplitCell,
+        tableMenuTools.Break,
+        tableMenuTools.DeleteRow,
+        tableMenuTools.DeleteColumn,
+        tableMenuTools.DeleteTable,
+        tableMenuTools.Break,
+        tableMenuTools.BackgroundColor,
+        tableMenuTools.BorderColor,
+      ],
       localstorageKey: '__table-bg-used-color',
       defaultColorMap,
     }, options);
