@@ -15,8 +15,11 @@ import SplitCell from '../../svg/split-cell.svg';
 import { createBEM } from '../../utils';
 
 export const menuColorSelectClassName = 'color-selector';
-export const defaultTools: Tool[] = [
-  {
+export const tableMenuTools: Record<string, Tool> = {
+  Break: {
+    name: 'break',
+  },
+  CopyCell: {
     name: 'CopyCell',
     tip: 'Copy cell',
     icon: Copy,
@@ -32,7 +35,7 @@ export const defaultTools: Tool[] = [
       tableModule.hideTableTools();
     },
   },
-  {
+  CutCell: {
     name: 'CutCell',
     tip: 'Cut cell',
     icon: Cut,
@@ -48,10 +51,7 @@ export const defaultTools: Tool[] = [
       tableModule.hideTableTools();
     },
   },
-  {
-    name: 'break',
-  },
-  {
+  InsertTop: {
     name: 'InsertTop',
     icon: InsertTop,
     tip: 'Insert row above',
@@ -60,7 +60,7 @@ export const defaultTools: Tool[] = [
       tableModule.hideTableTools();
     },
   },
-  {
+  InsertRight: {
     name: 'InsertRight',
     icon: InsertRight,
     tip: 'Insert column right',
@@ -69,7 +69,7 @@ export const defaultTools: Tool[] = [
       tableModule.hideTableTools();
     },
   },
-  {
+  InsertBottom: {
     name: 'InsertBottom',
     icon: InsertBottom,
     tip: 'Insert row below',
@@ -78,7 +78,7 @@ export const defaultTools: Tool[] = [
       tableModule.hideTableTools();
     },
   },
-  {
+  InsertLeft: {
     name: 'InsertLeft',
     icon: InsertLeft,
     tip: 'Insert column Left',
@@ -87,10 +87,7 @@ export const defaultTools: Tool[] = [
       tableModule.hideTableTools();
     },
   },
-  {
-    name: 'break',
-  },
-  {
+  MergeCell: {
     name: 'MergeCell',
     icon: MergeCell,
     tip: 'Merge Cell',
@@ -99,7 +96,7 @@ export const defaultTools: Tool[] = [
       tableModule.hideTableTools();
     },
   },
-  {
+  SplitCell: {
     name: 'SplitCell',
     icon: SplitCell,
     tip: 'Split Cell',
@@ -108,10 +105,7 @@ export const defaultTools: Tool[] = [
       tableModule.hideTableTools();
     },
   },
-  {
-    name: 'break',
-  },
-  {
+  DeleteRow: {
     name: 'DeleteRow',
     icon: RemoveRow,
     tip: 'Delete Row',
@@ -120,7 +114,7 @@ export const defaultTools: Tool[] = [
       tableModule.hideTableTools();
     },
   },
-  {
+  DeleteColumn: {
     name: 'DeleteColumn',
     icon: RemoveColumn,
     tip: 'Delete Column',
@@ -129,7 +123,7 @@ export const defaultTools: Tool[] = [
       tableModule.hideTableTools();
     },
   },
-  {
+  DeleteTable: {
     name: 'DeleteTable',
     icon: RemoveTable,
     tip: 'Delete table',
@@ -137,10 +131,7 @@ export const defaultTools: Tool[] = [
       tableModule.deleteTable(selectedTds);
     },
   },
-  {
-    name: 'break',
-  },
-  {
+  BackgroundColor: {
     name: 'BackgroundColor',
     icon: Background,
     isColorChoose: true,
@@ -150,7 +141,7 @@ export const defaultTools: Tool[] = [
       tableModule.setCellAttrs(selectedTds, 'background-color', color, true);
     },
   },
-  {
+  BorderColor: {
     name: 'BorderColor',
     icon: Border,
     isColorChoose: true,
@@ -160,7 +151,7 @@ export const defaultTools: Tool[] = [
       tableModule.setCellAttrs(selectedTds, 'border-color', color, true);
     },
   },
-];
+};
 
 export const maxSaveColorCount = 10;
 const bem = createBEM('color-map');
