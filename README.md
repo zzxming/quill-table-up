@@ -113,6 +113,7 @@ const defaultTexts = {
   DeleteTable: 'Delete table',
   BackgroundColor: 'Set background color',
   BorderColor: 'Set border color',
+  SwitchWidth: 'Switch table width'
 };
 ```
 
@@ -157,80 +158,91 @@ interface ToolOptionBreak {
   name: 'break';
 }
 type Tool = ToolOption | ToolOptionBreak;
-
-const defaultTools = [
-  {
-    name: 'InsertTop',
-    icon: InsertTop,
-    tip: 'Insert a row above',
-    handle: (tableModule) => {},
-  },
-  {
-    name: 'InsertRight',
-    icon: InsertRight,
-    tip: 'Insert a column right',
-    handle: (tableModule) => {},
-  },
-  {
-    name: 'InsertBottom',
-    icon: InsertBottom,
-    tip: 'Insert a row below',
-    handle: (tableModule) => {},
-  },
-  {
-    name: 'InsertLeft',
-    icon: InsertLeft,
-    tip: 'Insert a column Left',
-    handle: (tableModule) => {},
-  },
-  {
+export const tableMenuTools: Record<string, Tool> = {
+  Break: {
     name: 'break',
   },
-  {
+  SwitchWidth: {
+    name: 'SwitchWidth',
+    icon: AutoFull,
+    tip: 'Switch table width',
+    handle: (tableModule) => {},
+  },
+  CopyCell: {
+    name: 'CopyCell',
+    tip: 'Copy cell',
+    icon: Copy,
+    handle: (tableModule, selectedTds) => {},
+  },
+  CutCell: {
+    name: 'CutCell',
+    tip: 'Cut cell',
+    icon: Cut,
+    handle: (tableModule, selectedTds) => {},
+  },
+  InsertTop: {
+    name: 'InsertTop',
+    icon: InsertTop,
+    tip: 'Insert row above',
+    handle: (tableModule, selectedTds) => {},
+  },
+  InsertRight: {
+    name: 'InsertRight',
+    icon: InsertRight,
+    tip: 'Insert column right',
+    handle: (tableModule, selectedTds) => {},
+  },
+  InsertBottom: {
+    name: 'InsertBottom',
+    icon: InsertBottom,
+    tip: 'Insert row below',
+    handle: (tableModule, selectedTds) => {},
+  },
+  InsertLeft: {
+    name: 'InsertLeft',
+    icon: InsertLeft,
+    tip: 'Insert column Left',
+    handle: (tableModule, selectedTds) => {},
+  },
+  MergeCell: {
     name: 'MergeCell',
     icon: MergeCell,
     tip: 'Merge Cell',
-    handle: (tableModule) => {},
+    handle: (tableModule, selectedTds) => {},
   },
-  {
+  SplitCell: {
     name: 'SplitCell',
     icon: SplitCell,
     tip: 'Split Cell',
-    handle: (tableModule) => {},
+    handle: (tableModule, selectedTds) => {},
   },
-  {
-    name: 'break',
-  },
-  {
+  DeleteRow: {
     name: 'DeleteRow',
     icon: RemoveRow,
     tip: 'Delete Row',
-    handle: (tableModule) => {},
+    handle: (tableModule, selectedTds) => {},
   },
-  {
+  DeleteColumn: {
     name: 'DeleteColumn',
     icon: RemoveColumn,
     tip: 'Delete Column',
-    handle: (tableModule) => {},
+    handle: (tableModule, selectedTds) => {},
   },
-  {
+  DeleteTable: {
     name: 'DeleteTable',
     icon: RemoveTable,
     tip: 'Delete table',
-    handle: (tableModule) => {},
+    handle: (tableModule, selectedTds) => {},
   },
-  {
-    name: 'break',
-  },
-  {
+  BackgroundColor: {
     name: 'BackgroundColor',
-    icon: Color,
+    icon: Background,
     isColorChoose: true,
     tip: 'Set background color',
     key: 'background-color',
     handle: (tableModule, selectedTds, color) => {},
   },
-  {
+  BorderColor: {
     name: 'BorderColor',
     icon: Border,
     isColorChoose: true,
@@ -238,6 +250,27 @@ const defaultTools = [
     key: 'border-color',
     handle: (tableModule, selectedTds, color) => {},
   },
+};
+const defaultTools = [
+  tableMenuTools.InsertTop,
+  tableMenuTools.InsertRight,
+  tableMenuTools.InsertBottom,
+  tableMenuTools.InsertLeft,
+  tableMenuTools.Break,
+  tableMenuTools.MergeCell,
+  tableMenuTools.SplitCell,
+  tableMenuTools.Break,
+  tableMenuTools.DeleteRow,
+  tableMenuTools.DeleteColumn,
+  tableMenuTools.DeleteTable,
+  tableMenuTools.Break,
+  tableMenuTools.BackgroundColor,
+  tableMenuTools.BorderColor,
+  tableMenuTools.Break,
+  tableMenuTools.CopyCell,
+  tableMenuTools.CutCell,
+  tableMenuTools.Break,
+  tableMenuTools.SwitchWidth,
 ];
 ```
 

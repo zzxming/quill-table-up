@@ -34,7 +34,7 @@ export class TableColFormat extends BlockEmbed {
 
   static value(domNode: HTMLElement) {
     const { tableId, colId } = domNode.dataset;
-    const width = domNode.getAttribute('width') || tableUpSize.colDefaultWidth;
+    const width = domNode.getAttribute('width') || String(tableUpSize.colDefaultWidth);
     const align = domNode.dataset.align;
     const full = Object.hasOwn(domNode.dataset, 'full');
     const value: Record<string, any> = {
@@ -86,6 +86,15 @@ export class TableColFormat extends BlockEmbed {
 
   get full() {
     return Object.hasOwn(this.domNode.dataset, 'full');
+  }
+
+  set full(value: boolean) {
+    if (value) {
+      this.domNode.dataset.full = String(value);
+    }
+    else {
+      this.domNode.removeAttribute('data-full');
+    }
   }
 
   get align() {

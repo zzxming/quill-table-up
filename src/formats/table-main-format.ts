@@ -1,6 +1,6 @@
 import type { TableValue } from '../utils';
 import type { TableColgroupFormat } from './table-colgroup-format';
-import { blotName } from '../utils';
+import { blotName, tableUpSize } from '../utils';
 import { ContainerFormat } from './container-format';
 import { TableColFormat } from './table-col-format';
 import { TableRowFormat } from './table-row-format';
@@ -32,11 +32,14 @@ export class TableMainFormat extends ContainerFormat {
   }
 
   colWidthFillTable() {
-    if (this.full) return;
+    if (this.full) {
+      Object.assign(this.domNode.style, { width: null });
+      return;
+    }
     const cols = this.getCols();
     if (!cols) return;
     const colsWidth = cols.reduce((sum, col) => col.width + sum, 0);
-    if (colsWidth === 0 || Number.isNaN(colsWidth)) return null;
+    if (colsWidth === 0 || Number.isNaN(colsWidth)) return;
     this.domNode.style.width = `${colsWidth}px`;
     return colsWidth;
   }
@@ -47,6 +50,16 @@ export class TableMainFormat extends ContainerFormat {
 
   get full() {
     return Object.hasOwn(this.domNode.dataset, 'full');
+  }
+
+  set full(value: boolean) {
+    if (value) {
+      this.domNode.dataset.full = String(true);
+    }
+    else {
+      this.domNode.removeAttribute('data-full');
+    }
+    this.colWidthFillTable();
   }
 
   get align() {
@@ -63,20 +76,35 @@ export class TableMainFormat extends ContainerFormat {
     this.updateAlign();
   }
 
+  setFull() {
+    if (this.full) return;
+    const cols = this.getCols();
+    if (cols.length === 0) return;
+    const tableWidth = Math.floor(this.domNode.getBoundingClientRect().width);
+    for (const col of cols) {
+      const value = col.width / tableWidth * 100;
+      col.full = true;
+      col.width = value;
+    }
+    const colgroup = cols[0].parent as TableColgroupFormat;
+    if (colgroup && colgroup.statics.blotName === blotName.tableColgroup) {
+      colgroup.full = true;
+    }
+  }
+
   cancelFull() {
     if (!this.full) return;
     const cols = this.getCols();
-    const tableWidth = this.domNode.getBoundingClientRect().width;
+    if (cols.length === 0) return;
+    const tableWidth = Math.floor(this.domNode.getBoundingClientRect().width);
     for (const col of cols) {
-      col.domNode.removeAttribute('data-full');
-      col.width = col.width / 100 * tableWidth;
+      col.full = false;
+      col.width = Math.max(col.width / 100 * tableWidth, tableUpSize.colMinWidthPx);
     }
-    const colgroup = this.children.head as TableColgroupFormat;
+    const colgroup = cols[0].parent as TableColgroupFormat;
     if (colgroup && colgroup.statics.blotName === blotName.tableColgroup) {
       colgroup.full = false;
     }
-    this.domNode.removeAttribute('data-full');
-    this.colWidthFillTable();
   }
 
   updateAlign() {

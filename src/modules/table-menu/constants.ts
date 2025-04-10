@@ -1,4 +1,7 @@
+import type { TableMainFormat } from 'src/formats';
 import type { Tool } from '../../utils';
+import Quill from 'quill';
+import AutoFull from '../../svg/auto-full.svg';
 import Background from '../../svg/background.svg';
 import Border from '../../svg/border.svg';
 import Copy from '../../svg/copy.svg';
@@ -149,6 +152,23 @@ export const tableMenuTools: Record<string, Tool> = {
     key: 'border-color',
     handle: (tableModule, selectedTds, color) => {
       tableModule.setCellAttrs(selectedTds, 'border-color', color, true);
+    },
+  },
+  SwitchWidth: {
+    name: 'SwitchWidth',
+    icon: AutoFull,
+    tip: 'Switch table width',
+    handle: (tableModule) => {
+      if (!tableModule.table) return;
+      const tableMainBlot = Quill.find(tableModule.table) as TableMainFormat;
+      if (!tableMainBlot) return;
+
+      if (tableMainBlot.full) {
+        tableMainBlot.cancelFull();
+      }
+      else {
+        tableMainBlot.setFull();
+      }
     },
   },
 };

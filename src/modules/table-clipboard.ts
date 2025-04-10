@@ -15,7 +15,7 @@ export interface ClipboardOptions {
 }
 
 function getCellWidth(cell: HTMLElement): number {
-  let width = Number.parseFloat(cell.getAttribute('width') || tableUpSize.colDefaultWidth);
+  let width = Number.parseFloat(cell.getAttribute('width') || String(tableUpSize.colDefaultWidth));
   if (Number.isNaN(width)) {
     const styleWidth = cell.style.width;
     width = styleWidth ? Number.parseFloat(styleWidth) : cell.offsetWidth;

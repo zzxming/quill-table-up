@@ -76,9 +76,6 @@ export class TableMenuCommon {
     const value = Object.assign({
       tipText: true,
       tools: [
-        tableMenuTools.CopyCell,
-        tableMenuTools.CutCell,
-        tableMenuTools.Break,
         tableMenuTools.InsertTop,
         tableMenuTools.InsertRight,
         tableMenuTools.InsertBottom,
@@ -93,6 +90,11 @@ export class TableMenuCommon {
         tableMenuTools.Break,
         tableMenuTools.BackgroundColor,
         tableMenuTools.BorderColor,
+        tableMenuTools.Break,
+        tableMenuTools.CopyCell,
+        tableMenuTools.CutCell,
+        tableMenuTools.Break,
+        tableMenuTools.SwitchWidth,
       ],
       localstorageKey: '__table-bg-used-color',
       defaultColorMap,
