@@ -143,3 +143,16 @@ extendTest('test TableSelection should not display when color pick display', asy
   await page.waitForTimeout(1000);
   await expect(page.locator('#container1 .table-up-toolbox .table-up-selection .table-up-selection__line')).not.toBeVisible();
 });
+
+extendTest('table width switch should work', async ({ page }) => {
+  await createTableBySelect(page, 'container1', 4, 4);
+  const cell = page.locator('#editor1 .ql-editor .ql-table td').nth(0);
+  await cell.click();
+  await cell.click({ button: 'right' });
+  await page.locator('.table-up-menu.is-contextmenu .table-up-menu__item').filter({ hasText: 'Switch table width' }).first().click();
+  expect(await page.locator('#editor1 .ql-editor .ql-table col[data-full="true"]').count()).toBe(4);
+
+  await cell.click({ button: 'right' });
+  await page.locator('.table-up-menu.is-contextmenu .table-up-menu__item').filter({ hasText: 'Switch table width' }).first().click();
+  expect(await page.locator('#editor1 .ql-editor .ql-table col:not([data-full])').count()).toBe(4);
+});
