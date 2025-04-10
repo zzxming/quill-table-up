@@ -34,7 +34,7 @@ export class TableColFormat extends BlockEmbed {
 
   static value(domNode: HTMLElement) {
     const { tableId, colId } = domNode.dataset;
-    const width = domNode.getAttribute('width') || tableUpSize.colDefaultWidth;
+    const width = domNode.getAttribute('width') || String(tableUpSize.colDefaultWidth);
     const align = domNode.dataset.align;
     const full = Object.hasOwn(domNode.dataset, 'full');
     const value: Record<string, any> = {
