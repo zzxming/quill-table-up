@@ -88,6 +88,15 @@ export class TableColFormat extends BlockEmbed {
     return Object.hasOwn(this.domNode.dataset, 'full');
   }
 
+  set full(value: boolean) {
+    if (value) {
+      this.domNode.dataset.full = String(value);
+    }
+    else {
+      this.domNode.removeAttribute('data-full');
+    }
+  }
+
   get align() {
     return this.domNode.dataset.align || '';
   }

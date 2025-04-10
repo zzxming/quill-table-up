@@ -31,10 +31,13 @@ export class TableColgroupFormat extends ContainerFormat {
 
   set full(value: boolean) {
     if (value) {
-      this.domNode.dataset.full = 'true';
+      this.domNode.dataset.full = String(true);
     }
     else {
       this.domNode.removeAttribute('data-full');
+    }
+    if (this.parent && this.parent.statics.blotName === blotName.tableMain) {
+      (this.parent as TableMainFormat).full = value;
     }
   }
 
