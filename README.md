@@ -150,8 +150,8 @@ interface ToolOption {
   name: string;
   icon: string | ((tableModule: TableUp) => HTMLElement);
   tip?: string;
-  key?: string; // the attribute name to set on td.
-  isColorChoose?: boolean;
+  isColorChoose?: boolean; // trigger a color picker first. need set `key`
+  key?: string; // the style name to set on td.
   handle: (tableModule: TableUp, selectedTds: TableCellInnerFormat[], e: Event | string) => void;
 }
 interface ToolOptionBreak {
