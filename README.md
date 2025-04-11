@@ -25,7 +25,7 @@ npm install quill-table-up
 
 ```js
 import Quill from 'quill';
-import TableUp, { TableAlign, TableMenuContextmenu, TableResizeBox, TableResizeScale, TableSelection, TableVirtualScrollbar } from 'quill-table-up';
+import TableUp, { defaultCustomSelect, TableAlign, TableMenuContextmenu, TableResizeBox, TableResizeScale, TableSelection, TableVirtualScrollbar } from 'quill-table-up';
 import 'quill/dist/quill.snow.css';
 import 'quill-table-up/index.css';
 // If using the default customSelect option. You need to import this css
@@ -158,7 +158,8 @@ interface ToolOptionBreak {
   name: 'break';
 }
 type Tool = ToolOption | ToolOptionBreak;
-export const tableMenuTools: Record<string, Tool> = {
+
+const tableMenuTools: Record<string, Tool> = {
   Break: {
     name: 'break',
   },
@@ -278,11 +279,11 @@ const defaultTools = [
 
 ## Overrides
 
-if you need to rewrite extends from quill `Block` or `Scroll` blot. you need to use `Quill.import()` after `TableUp` registed. beacuse module internal rewrite some functions, but those change only effect formats about table.
+If you need to rewrite extends from quill `Block` or `Scroll` blot. you need to use `Quill.import()` after `TableUp` registed. beacuse module internal rewrite some functions, but those change only effect formats about table.
 
-`Header`,`List'`,`Blockquote` and `CodeBlock` have been overrides. so if you need to rewrite them, you need to rewrite them before `TableUp` registed, or you want to rewrite the internal logic. you can use `Quill.import()` after `TableUp` registed.
+`Header`, `List'`, `Blockquote` and `CodeBlock` have been overrides. If you need to rewrite them, you need to rewrite them before `TableUp` registed.
 
-please read [source code](https://github.com/zzxming/quill-table-up/tree/master/src/formats/overrides) to know those change.
+Please read [source code](https://github.com/zzxming/quill-table-up/tree/master/src/formats/overrides) to know those change.
 
 ```ts
 import { BlockOverride, ScrollOverride, } from 'quill-table-up';
