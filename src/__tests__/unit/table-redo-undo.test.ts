@@ -1008,6 +1008,7 @@ describe('undo cell attribute', () => {
 
     const tableUp = quill.getModule(TableUp.moduleName) as TableUp;
     const tds = quill.scroll.descendants(TableCellInnerFormat, 0);
+    tableUp.tableSelection!.table = quill.root.querySelector('table')!;
     tableUp.tableSelection!.selectedTds = tds;
     quill.theme.modules.toolbar!.handlers!.clean.call(quill.theme.modules.toolbar as any, true);
     expect(quill.root).toEqualHTML(
