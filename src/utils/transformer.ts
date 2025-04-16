@@ -17,3 +17,8 @@ export function cssTextToObject(cssText: string): Record<string, string> {
 
   return styleObject;
 }
+export function objectToCssText(obj: Record<string, any>): string {
+  return Object.entries(obj)
+    .map(([key, value]) => `${key}: ${value};`)
+    .join(' ');
+}

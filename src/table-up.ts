@@ -6,7 +6,7 @@ import type { InternalModule, InternalTableSelectionModule, QuillTheme, QuillThe
 import Quill from 'quill';
 import { BlockOverride, ContainerFormat, ScrollOverride, TableBodyFormat, TableCellFormat, TableCellInnerFormat, TableColFormat, TableColgroupFormat, TableMainFormat, TableRowFormat, TableWrapperFormat } from './formats';
 import { TableClipboard } from './modules';
-import { blotName, createBEM, createSelectBox, debounce, findParentBlot, findParentBlots, isForbidInTable, isFunction, isNumber, isString, limitDomInViewPort, mixinClass, randomId, tableCantInsert, tableUpEvent, tableUpInternal, tableUpSize } from './utils';
+import { blotName, createBEM, createSelectBox, cssTextToObject, debounce, findParentBlot, findParentBlots, isForbidInTable, isFunction, isNumber, isString, limitDomInViewPort, mixinClass, objectToCssText, randomId, tableCantInsert, tableUpEvent, tableUpInternal, tableUpSize } from './utils';
 
 const Parchment = Quill.import('parchment');
 const Delta = Quill.import('delta');
@@ -430,7 +430,7 @@ export class TableUp {
     if (toolbar) {
       const cleanHandler = toolbar.handlers?.clean;
       if (cleanHandler) {
-        const cleanFormatExcludeTable = (index: number, length: number, cleanCellStyle: boolean = true) => {
+        const cleanFormatExcludeTable = (index: number, length: number, changeCellStyle: false | ((styleStr: string | undefined) => string) = () => '') => {
           // base on `removeFormat`. but not remove tableCellInner
           const text = this.quill.getText(index, length);
           const [line, offset] = this.quill.getLine(index + length);
@@ -458,11 +458,15 @@ export class TableUp {
 
             if (attributes) {
               const { [blotName.tableCellInner]: nullValue, ...attrs } = attributes;
-              if (cleanCellStyle) {
+              if (changeCellStyle) {
                 const tableCellInner = contents.slice(deltaIndex - 1, deltaIndex).ops[0];
                 if (tableCellInner && tableCellInner.attributes && tableCellInner.attributes[blotName.tableCellInner]) {
                   const tableCellInnerValue = tableCellInner.attributes[blotName.tableCellInner] as TableCellValue;
                   const { style, ...value } = tableCellInnerValue;
+                  const newStyle = changeCellStyle(style);
+                  if (newStyle) {
+                    return { ...other, attributes: { ...attrs, [blotName.tableCellInner]: { style: newStyle, ...value } } };
+                  }
                   return { ...other, attributes: { ...attrs, [blotName.tableCellInner]: value } };
                 }
               }
@@ -486,16 +490,60 @@ export class TableUp {
           }
           // if selection range is not in table, but use the TableSelection selected cells
           // clean all other formats in cell
-          if (tableUpModule && tableUpModule.tableSelection && tableUpModule.tableSelection.selectedTds.length > 0) {
+          if (tableUpModule && tableUpModule.tableSelection && tableUpModule.tableSelection.selectedTds.length > 0 && tableUpModule.tableSelection.table) {
+            const tableMain = Quill.find(tableUpModule.tableSelection.table) as TableMainFormat;
+            if (!tableMain) {
+              console.warn('TableMainFormat not found');
+              return;
+            }
             const selectedTds = tableUpModule.tableSelection.selectedTds;
 
+            // get all need clean style cells. include border-right/border-bottom effect cells
+            const editTds = new Set<TableCellFormat>();
+            const tds: { td: TableCellFormat; cleanBorder: 'bottom' | 'right' | true }[] = [];
+            for (const innerTd of selectedTds) {
+              if (innerTd.parent instanceof TableCellFormat) {
+                for (const td of innerTd.parent.getNearByCell('top')) {
+                  if (editTds.has(td)) continue;
+                  editTds.add(td);
+                  tds.push({ td, cleanBorder: 'bottom' });
+                }
+                for (const td of innerTd.parent.getNearByCell('left')) {
+                  if (editTds.has(td)) continue;
+                  editTds.add(td);
+                  tds.push({ td, cleanBorder: 'right' });
+                }
+
+                editTds.add(innerTd.parent);
+                tds.push({ td: innerTd.parent, cleanBorder: true });
+              }
+            }
+            // sort cells makesure index correct
+            const allCells = tableMain.descendants(TableCellFormat);
+            const cellIndexMap = new Map(allCells.map((cell, index) => [cell, index]));
+            tds.sort((a, b) => cellIndexMap.get(a.td)! - cellIndexMap.get(b.td)!);
+
+            // compute delta
             let delta = new Delta();
             let lastIndex = 0;
-            for (const innerTd of selectedTds) {
-              const index = innerTd.offset(this.quill.scroll);
-              const length = innerTd.length();
+            for (const { td, cleanBorder } of tds) {
+              const index = td.getCellInner().offset(this.quill.scroll);
+              const length = td.getCellInner().length();
               // `line` length will include a break(\n) at the end. minus 1 to remove break
-              const diff = cleanFormatExcludeTable(index, length - 1);
+              const diff = cleanFormatExcludeTable(
+                index,
+                length - 1,
+                (styleStr: string | undefined) => {
+                  if (!styleStr || cleanBorder === true) return '';
+                  // only clean border-right/border-bottom style
+                  const css = cssTextToObject(styleStr);
+                  const filterStyle = Object.keys(css).filter(key => !key.startsWith(`border-${cleanBorder}`)).reduce((acc: Record<string, string>, key: string) => {
+                    acc[key] = css[key];
+                    return acc;
+                  }, {});
+                  return objectToCssText(filterStyle);
+                },
+              );
               const cellDiff = new Delta().retain(index - lastIndex).concat(diff);
               delta = delta.concat(cellDiff);
               lastIndex = index + length;
