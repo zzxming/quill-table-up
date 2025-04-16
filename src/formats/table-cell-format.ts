@@ -1,8 +1,8 @@
 import type { TableCellValue } from '../utils';
-import type { TableRowFormat } from './table-row-format';
 import { blotName, findParentBlot } from '../utils';
 import { ContainerFormat } from './container-format';
 import { TableCellInnerFormat } from './table-cell-inner-format';
+import { TableRowFormat } from './table-row-format';
 import { getValidCellspan } from './utils';
 
 export class TableCellFormat extends ContainerFormat {
@@ -103,44 +103,74 @@ export class TableCellFormat extends ContainerFormat {
     const isMergeBorder = !['left', 'right', 'top', 'bottom'].some(direction => name.includes(direction)) && name.startsWith('border-');
     if (!isMergeBorder) return;
 
-    // only need set prev td. event current td is a span cell
-    if (this.prev && this.prev instanceof TableCellFormat) {
-      const [cell] = this.prev.descendant(TableCellInnerFormat, 0);
-      if (cell) {
-        cell.setFormatValue(name.replace('border-', 'border-right-'), setValue, true);
-      }
+    const leftCellInners = this.getNearByCell('left').map(td => td.descendant(TableCellInnerFormat, 0)[0]).filter(Boolean) as TableCellInnerFormat[];
+    for (const cell of leftCellInners) {
+      cell.setFormatValue(name.replace('border-', 'border-right-'), setValue, true);
     }
+    const topCellInners = this.getNearByCell('top').map(td => td.descendant(TableCellInnerFormat, 0)[0]).filter(Boolean) as TableCellInnerFormat[];
+    for (const cell of topCellInners) {
+      cell.setFormatValue(name.replace('border-', 'border-bottom-'), setValue, true);
+    }
+  }
 
-    // need find all the prev td that bottom near current td
-    if (this.parent.prev) {
-      try {
-        const tableMainBlot = findParentBlot(this, blotName.tableMain);
-        const colIds = tableMainBlot.getColIds();
-        const startColIndex = this.getColumnIndex();
-        const endColIndex = startColIndex + this.colspan;
-        const borderColIds = new Set(colIds.filter((_, i) => i >= startColIndex && i < endColIndex));
+  getNearByCell(direction: 'left' | 'top'): TableCellFormat[] {
+    const colIds: string[] = [];
+    try {
+      const tableMain = findParentBlot(this, blotName.tableMain);
+      colIds.push(...tableMain.getColIds());
+    }
+    catch (error) {
+      console.error(`Cell is not in table! ${error}`);
+    }
+    if (colIds.length === 0) return [];
 
-        let rowspan = 1;
-        let prevTr = this.parent.prev as TableRowFormat;
-        while (prevTr) {
-          let trReachCurrent = false;
-          prevTr.foreachCellInner((cell) => {
-            if (borderColIds.has(cell.colId) && cell.rowspan >= rowspan) {
-              cell.setFormatValue(name.replace('border-', 'border-bottom-'), setValue, true);
-              borderColIds.delete(cell.colId);
-            }
-
-            cell.rowspan >= rowspan && (trReachCurrent = true);
-          });
-          if (!trReachCurrent) break;
-          prevTr = prevTr.prev as TableRowFormat;
-          rowspan += 1;
+    if (direction === 'left') {
+      const nearByCell = new Set<TableCellFormat>();
+      let row = this.parent;
+      for (let i = 0; i < this.rowspan; i++) {
+        if (!(row instanceof TableRowFormat)) break;
+        const next = row.children.iterator();
+        let cur: null | TableCellFormat = null;
+        while ((cur = next())) {
+          const i = colIds.indexOf(cur.colId) + cur.colspan;
+          if (this.colId === colIds[i]) {
+            nearByCell.add(cur);
+          }
         }
+        row = row.next as TableRowFormat;
       }
-      catch (error) {
-        console.error(error);
-      }
+      return Array.from(nearByCell);
     }
+    else if (direction === 'top') {
+      if (!(this.parent instanceof TableRowFormat) || !this.parent.prev) return [];
+      const nearByCell = new Set<TableCellFormat>();
+
+      const startColIndex = this.getColumnIndex();
+      const endColIndex = startColIndex + this.colspan;
+      const borderColIds = new Set(colIds.filter((_, i) => i >= startColIndex && i < endColIndex));
+
+      let rowspan = 1;
+      let row = this.parent.prev as TableRowFormat;
+      while (row) {
+        let trReachCurrent = false;
+        const next = row.children.iterator();
+        let cur: null | TableCellFormat = null;
+        let colspan = 0;
+        while ((cur = next())) {
+          if (borderColIds.has(cur.colId) && cur.rowspan >= rowspan) {
+            nearByCell.add(cur);
+            borderColIds.delete(cur.colId);
+          }
+          colspan += cur.colspan;
+          cur.rowspan >= rowspan && (trReachCurrent = true);
+        }
+        if (!trReachCurrent && colspan === colIds.length) break;
+        row = row.prev as TableRowFormat;
+        rowspan += 1;
+      }
+      return Array.from(nearByCell);
+    }
+    return [];
   }
 
   get tableId() {
