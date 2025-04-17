@@ -1,5 +1,4 @@
 import type { TableValue } from '../utils';
-import type { TableColgroupFormat } from './table-colgroup-format';
 import { blotName, tableUpSize } from '../utils';
 import { ContainerFormat } from './container-format';
 import { TableColFormat } from './table-col-format';
@@ -86,10 +85,6 @@ export class TableMainFormat extends ContainerFormat {
       col.full = true;
       col.width = value;
     }
-    const colgroup = cols[0].parent as TableColgroupFormat;
-    if (colgroup && colgroup.statics.blotName === blotName.tableColgroup) {
-      colgroup.full = true;
-    }
   }
 
   cancelFull() {
@@ -100,10 +95,6 @@ export class TableMainFormat extends ContainerFormat {
     for (const col of cols) {
       col.full = false;
       col.width = Math.max(col.width / 100 * tableWidth, tableUpSize.colMinWidthPx);
-    }
-    const colgroup = cols[0].parent as TableColgroupFormat;
-    if (colgroup && colgroup.statics.blotName === blotName.tableColgroup) {
-      colgroup.full = false;
     }
   }
 
