@@ -47,13 +47,6 @@ export class TableColFormat extends BlockEmbed {
     return value;
   }
 
-  constructor(
-    public scroll: TypeParchment.Root,
-    public domNode: HTMLElement,
-  ) {
-    super(scroll, domNode);
-  }
-
   get width(): number {
     let width: number | string | null = this.domNode.getAttribute('width');
     if (!width) {
@@ -90,7 +83,7 @@ export class TableColFormat extends BlockEmbed {
 
   set full(value: boolean) {
     if (value) {
-      this.domNode.dataset.full = String(value);
+      this.domNode.dataset.full = String(true);
     }
     else {
       this.domNode.removeAttribute('data-full');
@@ -136,6 +129,17 @@ export class TableColFormat extends BlockEmbed {
     }
 
     super.optimize(context);
+
+    try {
+      const tableColgroup = findParentBlot(this, blotName.tableColgroup);
+      let isAllFull = true;
+      // eslint-disable-next-line unicorn/no-array-for-each
+      tableColgroup.children.forEach((col) => {
+        isAllFull &&= col.full;
+      });
+      tableColgroup.full = isAllFull;
+    }
+    catch {}
   }
 
   insertAt(index: number, value: string, def?: any): void {

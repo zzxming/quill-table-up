@@ -36,8 +36,8 @@ export class TableColgroupFormat extends ContainerFormat {
     else {
       this.domNode.removeAttribute('data-full');
     }
-    if (this.parent && this.parent.statics.blotName === blotName.tableMain) {
-      (this.parent as TableMainFormat).full = value;
+    if (this.parent && this.parent instanceof TableMainFormat) {
+      this.parent.full = value;
     }
   }
 
