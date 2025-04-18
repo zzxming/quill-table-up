@@ -178,3 +178,16 @@ extendTest('test TableResizeBox and TableResizeScale should update when text cha
   });
   expect(newBoxTop).toBeCloseTo(boxTop + lineBound.height * 2, 4);
 });
+
+extendTest('test TableResizeScale should hide when table width switch full', async ({ page, editorPage }) => {
+  editorPage.index = 1;
+  await createTableBySelect(page, 'container1', 3, 3);
+
+  const cell = page.locator('#editor1 .ql-editor .ql-table td').nth(0);
+  await cell.click();
+  await expect(page.locator('#container1 .table-up-scale')).toBeVisible();
+
+  await cell.click({ button: 'right' });
+  await page.locator('.table-up-menu.is-contextmenu .table-up-menu__item').filter({ hasText: 'Switch table width' }).first().click();
+  await expect(page.locator('#container1 .table-up-scale')).not.toBeVisible();
+});
