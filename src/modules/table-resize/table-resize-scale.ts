@@ -108,7 +108,12 @@ export class TableResizeScale {
   }
 
   update() {
-    if (!this.block || !this.root || !this.tableMainBlot || !this.tableWrapperBlot) return false;
+    console.log('update');
+    if (!this.block || !this.root || !this.tableMainBlot || !this.tableWrapperBlot) return;
+    if (this.tableMainBlot.full) {
+      this.hide();
+      return;
+    }
     const tableRect = this.tableMainBlot.domNode.getBoundingClientRect();
     const tableWrapperRect = this.tableWrapperBlot.domNode.getBoundingClientRect();
     const editorRect = this.quill.root.getBoundingClientRect();
