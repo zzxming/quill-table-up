@@ -38,11 +38,11 @@ export class TableColFormat extends BlockEmbed {
     const align = domNode.dataset.align;
     const full = Object.hasOwn(domNode.dataset, 'full');
     const value: Record<string, any> = {
-      tableId,
-      colId,
+      tableId: String(tableId),
+      colId: String(colId),
       full,
+      width: Number.parseFloat(width),
     };
-    width && (value.width = Number.parseFloat(width));
     align && (value.align = align);
     return value;
   }

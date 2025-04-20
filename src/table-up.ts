@@ -1010,7 +1010,7 @@ export class TableUp {
       colgroup.insertColByIndex(columnIndex, {
         tableId,
         colId: newColId,
-        width: tableBlot.full ? '6%' : '160px',
+        width: tableBlot.full ? 6 : 160,
         full: tableBlot.full,
       });
     }

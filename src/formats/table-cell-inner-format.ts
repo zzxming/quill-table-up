@@ -51,9 +51,9 @@ export class TableCellInnerFormat extends ContainerFormat {
   static formats(domNode: HTMLElement) {
     const { tableId, rowId, colId, rowspan, colspan, style } = domNode.dataset;
     const value: Record<string, any> = {
-      tableId,
-      rowId,
-      colId,
+      tableId: String(tableId),
+      rowId: String(rowId),
+      colId: String(colId),
       rowspan: Number(getValidCellspan(rowspan)),
       colspan: Number(getValidCellspan(colspan)),
     };

@@ -75,7 +75,7 @@ export interface TableUpOptions {
 export interface TableColValue {
   tableId: string;
   colId: string;
-  width: string;
+  width: number;
   full?: boolean;
   align?: string;
 }
