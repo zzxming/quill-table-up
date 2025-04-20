@@ -108,7 +108,6 @@ export class TableResizeScale {
   }
 
   update() {
-    console.log('update');
     if (!this.block || !this.root || !this.tableMainBlot || !this.tableWrapperBlot) return;
     if (this.tableMainBlot.full) {
       this.hide();
