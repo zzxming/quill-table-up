@@ -91,6 +91,9 @@ export interface TableRowValue {
   tableId: string;
   rowId: string;
 }
+export interface TableCaptionValue {
+  tableId: string;
+}
 export interface TableValue {
   tableId: string;
   full?: boolean;

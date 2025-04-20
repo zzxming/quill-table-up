@@ -1,6 +1,7 @@
 export * from './container-format';
 export * from './overrides';
 export * from './table-body-format';
+export * from './table-caption-format';
 export * from './table-cell-format';
 export * from './table-cell-inner-format';
 export * from './table-col-format';
