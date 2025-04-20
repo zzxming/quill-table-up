@@ -4,7 +4,7 @@ import type TypeKeyboard from 'quill/modules/keyboard';
 import type TypeToolbar from 'quill/modules/toolbar';
 import type { InternalModule, InternalTableSelectionModule, QuillTheme, QuillThemePicker, TableCellValue, TableConstantsData, TableTextOptions, TableUpOptions } from './utils';
 import Quill from 'quill';
-import { BlockOverride, ContainerFormat, ScrollOverride, TableBodyFormat, TableCellFormat, TableCellInnerFormat, TableColFormat, TableColgroupFormat, TableMainFormat, TableRowFormat, TableWrapperFormat } from './formats';
+import { BlockOverride, ContainerFormat, ScrollOverride, TableBodyFormat, TableCaptionFormat, TableCellFormat, TableCellInnerFormat, TableColFormat, TableColgroupFormat, TableMainFormat, TableRowFormat, TableWrapperFormat } from './formats';
 import { TableClipboard } from './modules';
 import { blotName, createBEM, createSelectBox, cssTextToObject, debounce, findParentBlot, findParentBlots, isForbidInTable, isFunction, isNumber, isString, limitDomInViewPort, mixinClass, objectToCssText, randomId, tableCantInsert, tableUpEvent, tableUpInternal, tableUpSize } from './utils';
 
@@ -67,10 +67,10 @@ export function defaultCustomSelect(tableModule: TableUp, picker: QuillThemePick
 
 function generateTableArrowHandler(up: boolean) {
   return {
+    bindInHead: false,
     key: up ? 'ArrowUp' : 'ArrowDown',
     collapsed: true,
     format: [blotName.tableCellInner],
-    bindInHead: false,
     handler(this: { quill: Quill }, range: TypeRange, context: Context) {
       let tableBlot: TableWrapperFormat;
       let tableMain: TableMainFormat;
@@ -86,7 +86,25 @@ function generateTableArrowHandler(up: boolean) {
       const colIds = tableMain.getColIds();
       const direction = up ? 'prev' : 'next';
       const childDirection = up ? 'tail' : 'head';
-      const aroundLine = tableBlot[direction];
+      const tableCaption = tableBlot.descendants(TableCaptionFormat, 0)[0];
+
+      let aroundLine;
+      if (tableCaption) {
+        const captionSide = window.getComputedStyle(tableCaption.domNode);
+        if (direction === 'next' && captionSide.captionSide === 'bottom') {
+          aroundLine = tableCaption;
+        }
+        else if (direction === 'next') {
+          aroundLine = tableBlot.next;
+        }
+        else {
+          aroundLine = tableCaption;
+        }
+      }
+      else {
+        aroundLine = tableBlot[direction];
+      }
+
       if (context.line[direction] || !aroundLine) {
         return true;
       }
@@ -114,6 +132,7 @@ function generateTableArrowHandler(up: boolean) {
 export class TableUp {
   static moduleName: string = tableUpInternal.moduleName;
   static toolName: string = blotName.tableWrapper;
+  // TODO: add custom property `bindInHead`, but Quill doesn't export `BindingObject`
   static keyboradHandler = {
     'forbid remove table by backspace': {
       bindInHead: true,
@@ -159,13 +178,24 @@ export class TableUp {
     },
     'table up': generateTableArrowHandler(true),
     'table down': generateTableArrowHandler(false),
+    'table caption break': {
+      bindInHead: true,
+      key: 'Enter',
+      shiftKey: null,
+      format: [blotName.tableCaption],
+      handler(this: { quill: Quill }, _range: TypeRange, _context: Context) {
+        return false;
+      },
+    },
   };
 
   static register() {
     TableWrapperFormat.allowedChildren = [TableMainFormat];
 
-    TableMainFormat.allowedChildren = [TableBodyFormat, TableColgroupFormat];
+    TableMainFormat.allowedChildren = [TableBodyFormat, TableColgroupFormat, TableCaptionFormat];
     TableMainFormat.requiredContainer = TableWrapperFormat;
+
+    TableCaptionFormat.requiredContainer = TableMainFormat;
 
     TableColgroupFormat.allowedChildren = [TableColFormat];
     TableColgroupFormat.requiredContainer = TableMainFormat;
@@ -201,6 +231,7 @@ export class TableUp {
       [`formats/${blotName.tableBody}`]: TableBodyFormat,
       [`formats/${blotName.tableCol}`]: TableColFormat,
       [`formats/${blotName.tableColgroup}`]: TableColgroupFormat,
+      [`formats/${blotName.tableCaption}`]: TableCaptionFormat,
       [`formats/${blotName.tableMain}`]: TableMainFormat,
       [`formats/${blotName.tableWrapper}`]: TableWrapperFormat,
       'modules/clipboard': TableClipboard,
@@ -366,9 +397,12 @@ export class TableUp {
     this.quill.getSemanticHTML = ((index: number = 0, length?: number) => {
       const tableCellInnerFormat = Quill.import(`formats/${blotName.tableCellInner}`) as typeof TableCellInnerFormat;
       const inners = this.quill.scroll.domNode.querySelectorAll(`.${tableCellInnerFormat.className}`);
-      for (const inner of Array.from(inners)) {
-        inner.setAttribute('contenteditable', String(false));
+      const tableCaptionFormat = Quill.import(`formats/${blotName.tableCaption}`) as typeof TableCaptionFormat;
+      const captions = this.quill.scroll.domNode.querySelectorAll(`.${tableCaptionFormat.className}`);
+      for (const node of Array.from(captions).concat(Array.from(inners))) {
+        node.setAttribute('contenteditable', String(false));
       }
+
       const html = originGetSemanticHTML.call(this.quill, index, length);
       const isEnabled = this.quill.isEnabled();
       for (const inner of Array.from(inners)) {
@@ -1010,7 +1044,7 @@ export class TableUp {
       colgroup.insertColByIndex(columnIndex, {
         tableId,
         colId: newColId,
-        width: tableBlot.full ? '6%' : '160px',
+        width: tableBlot.full ? 6 : 160,
         full: tableBlot.full,
       });
     }

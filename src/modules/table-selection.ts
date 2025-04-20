@@ -3,7 +3,7 @@ import type { TableMainFormat, TableWrapperFormat } from '../formats';
 import type { TableUp } from '../table-up';
 import type { InternalTableMenuModule, RelactiveRect, TableSelectionOptions } from '../utils';
 import Quill from 'quill';
-import { TableCellFormat, TableCellInnerFormat } from '../formats';
+import { TableBodyFormat, TableCellFormat, TableCellInnerFormat } from '../formats';
 import { addScrollEvent, blotName, clearScrollEvent, createBEM, createResizeObserver, findAllParentBlot, findParentBlot, getRelativeRect, isRectanglesIntersect, tableUpEvent } from '../utils';
 
 const ERROR_LIMIT = 0;
@@ -296,13 +296,15 @@ export class TableSelection {
 
     const tableMain = Quill.find(this.table) as TableMainFormat;
     if (!tableMain) return [];
+    const tableBody = tableMain.descendants(TableBodyFormat)[0];
+    if (!tableBody) return [];
     // Use TableCell to calculation selected range, because TableCellInner is scrollable, the width will effect calculate
     const tableCells = new Set(
       // reverse cell. search from bottom.
       // when mouse click on the cell border. the selection will be in the lower cell.
       // but `isRectanglesIntersect` judge intersect include border. the upper cell bottom border will intersect with boundary
       // so need to search the cell from bottom
-      (tableMain.descendants(TableCellFormat) as TempSortedTableCellFormat[]).map((cell, i) => {
+      (tableBody.descendants(TableCellFormat) as TempSortedTableCellFormat[]).map((cell, i) => {
         cell.index = i;
         return cell;
       }),
@@ -316,7 +318,7 @@ export class TableSelection {
     this.selectedEditorScrollY = editorScrollY;
 
     // set boundary to initially mouse move rectangle
-    const tableRect = this.table.getBoundingClientRect();
+    const tableRect = tableBody.domNode.getBoundingClientRect();
     const startPointX = startPoint.x - tableScrollX + this.startScrollX;
     const startPointY = startPoint.y - tableScrollY + this.startScrollY;
     let boundary = {
@@ -382,8 +384,9 @@ export class TableSelection {
 
   mouseDownHandler = (mousedownEvent: MouseEvent) => {
     const { button, target, clientX, clientY } = mousedownEvent;
-    const closestTable = (target as HTMLElement).closest('.ql-table') as HTMLTableElement;
-    if (button !== 0 || !closestTable) return;
+    const closestTable = (target as HTMLElement).closest<HTMLTableElement>('.ql-table');
+    const closestTableBody = (target as HTMLElement).closest<HTMLTableSectionElement>('tbody');
+    if (button !== 0 || !closestTable || !closestTableBody) return;
 
     this.setSelectionTable(closestTable);
     const startTableId = closestTable.dataset.tableId;
@@ -403,11 +406,11 @@ export class TableSelection {
         this.tableModule.tableResize.hide();
       }
       const { button, target, clientX, clientY } = mousemoveEvent;
-      const closestTable = (target as HTMLElement).closest('.ql-table') as HTMLElement;
+      const closestTableBody = (target as HTMLElement).closest<HTMLTableSectionElement>('tbody');
       if (
         button !== 0
-        || !closestTable
-        || closestTable.dataset.tableId !== startTableId
+        || !closestTableBody
+        || closestTableBody.dataset.tableId !== startTableId
       ) {
         return;
       }

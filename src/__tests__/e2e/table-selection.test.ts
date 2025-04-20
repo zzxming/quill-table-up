@@ -54,31 +54,28 @@ test('test TableSelection vertical', async ({ page }) => {
   const cellBounding = (await cell.boundingBox())!;
   expect(cellBounding).not.toBeNull();
   await cell.click();
-  await cell.click();
-  const selectionLine = page.locator('#editor1 .table-up-selection__line');
-  await expect(selectionLine).toBeVisible();
+  await expect(page.locator('#editor1 .table-up-selection__line')).toBeVisible();
 
   await page.locator('#editor1 .ql-editor .ql-table td').nth(0).click();
   await page.locator('#editor1 .ql-editor .ql-table td').nth(0).click();
-  await expect(selectionLine).toBeVisible();
+  await expect(page.locator('#editor1 .table-up-selection__line')).toBeVisible();
   await page.mouse.down();
-  await page.mouse.move(cellBounding.x, cellBounding.y + cellBounding.height * 3);
+  await page.mouse.move(cellBounding.x + cellBounding.width * 0.5, cellBounding.y + cellBounding.height * 3);
   await page.mouse.up();
   await cell.click({ button: 'right' });
   await page.locator('.table-up-menu.is-contextmenu .table-up-menu__item').filter({ hasText: 'Merge Cell' }).first().click();
 
   await page.locator('#editor1 .ql-editor .ql-table td').nth(0).click();
-  await page.locator('#editor1 .ql-editor .ql-table td').nth(0).click();
-  await expect(selectionLine).toBeVisible();
+  await expect(page.locator('#editor1 .table-up-selection__line')).toBeVisible();
   await page.mouse.down();
-  await page.mouse.move(cellBounding.x + cellBounding.width * 2 - 10, cellBounding.y + 10);
+  await page.mouse.move(cellBounding.x + cellBounding.width * 1.5, cellBounding.y + cellBounding.height * 0.5);
   await page.mouse.up();
 
   expect(
-    Number.parseFloat(await selectionLine.evaluate(el => getComputedStyle(el).width)),
+    Number.parseFloat(await page.locator('#editor1 .table-up-selection__line').evaluate(el => getComputedStyle(el).width)),
   ).toBeCloseTo(cellBounding.width * 2, -1);
   expect(
-    Number.parseFloat(await selectionLine.evaluate(el => getComputedStyle(el).height)),
+    Number.parseFloat(await page.locator('#editor1 .table-up-selection__line').evaluate(el => getComputedStyle(el).height)),
   ).toBeCloseTo(cellBounding.height * 3, -1);
 });
 

@@ -14,6 +14,7 @@ Enhancement of quill table module
 - [x] line break in cells
 - [x] redo and undo
 - [x] support whole table align left/center/right
+- [ ] `<caption>` support
 
 ## Usage
 

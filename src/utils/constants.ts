@@ -2,6 +2,7 @@ import type { Parchment as TypeParchment } from 'quill';
 
 export const blotName = {
   container: 'table-up-container',
+  tableCaption: 'table-up-caption',
   tableWrapper: 'table-up',
   tableMain: 'table-up-main',
   tableColgroup: 'table-up-colgroup',

@@ -1,7 +1,7 @@
 import type { Parchment as TypeParchment } from 'quill';
 import type { Delta as TypeDelta } from 'quill/core';
 import type TypeClipboard from 'quill/modules/clipboard';
-import type { TableCellValue } from '../utils';
+import type { TableCaptionValue, TableCellValue } from '../utils';
 import Quill from 'quill';
 import { TableCellFormat, TableColFormat } from '../formats';
 import { blotName, isObject, isString, randomId, tableUpSize } from '../utils';
@@ -58,6 +58,7 @@ export class TableClipboard extends Clipboard {
     this.addMatcher('tr', this.matchTr.bind(this));
     this.addMatcher('td', this.matchTd.bind(this));
     this.addMatcher('th', this.matchTd.bind(this));
+    this.addMatcher('caption', this.matchCaption.bind(this));
 
     this.addMatcher(Node.ELEMENT_NODE, this.matchTdAttributor.bind(this));
   }
@@ -67,17 +68,21 @@ export class TableClipboard extends Clipboard {
 
     const ops: Record<string, any>[] = [];
     const cols: Record<string, any>[] = [];
+    let bodyStartIndex = -1;
     for (let i = 0; i < delta.ops.length; i++) {
       const { attributes, insert } = delta.ops[i];
       // remove quill origin table format and tableCell format
       const { table, [blotName.tableCell]: tableCell, ...attrs } = attributes || {};
       const hasCol = isObject(insert) && insert[blotName.tableCol];
-
       if (hasCol) {
         cols.push({ insert });
       }
       else {
         ops.push({ attributes: attrs, insert });
+      }
+      // record col insert index
+      if (!attrs?.[blotName.tableCellInner] && !hasCol) {
+        bodyStartIndex = i;
       }
     }
 
@@ -100,7 +105,7 @@ export class TableClipboard extends Clipboard {
       }
       return colOps;
     }, [] as Record<string, any>[]);
-    ops.unshift(...newCols);
+    ops.splice(bodyStartIndex + 1, 0, ...newCols);
 
     // reset variable to avoid conflict with other table
     this.tableId = randomId();
@@ -244,6 +249,19 @@ export class TableClipboard extends Clipboard {
         op.attributes[blotName.tableCellInner] = formats[blotName.tableCellInner];
       }
     }
+    return delta;
+  }
+
+  matchCaption(node: Node, delta: TypeDelta) {
+    for (let i = 0; i < delta.ops.length; i++) {
+      const op = delta.ops[i];
+      const { attributes } = op;
+      if (attributes && attributes[blotName.tableCaption]) {
+        (attributes[blotName.tableCaption] as TableCaptionValue).tableId = this.tableId;
+        op.attributes = attributes;
+      }
+    }
+
     return delta;
   }
 }
