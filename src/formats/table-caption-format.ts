@@ -21,6 +21,9 @@ export class TableCaptionFormat extends Block {
     const node = super.create() as HTMLElement;
     node.dataset.tableId = tableId;
     node.setAttribute('contenteditable', 'true');
+    if (value.side === 'bottom') {
+      node.style.captionSide = 'bottom';
+    }
     return node;
   }
 
@@ -28,12 +31,17 @@ export class TableCaptionFormat extends Block {
     const { tableId } = domNode.dataset;
     const value: TableCaptionValue = {
       tableId: String(tableId),
+      side: domNode.style.captionSide === 'bottom' ? 'bottom' : 'top',
     };
     return value;
   }
 
   get tableId() {
     return this.domNode.dataset.tableId!;
+  }
+
+  get side() {
+    return this.domNode.style.captionSide === 'bottom' ? 'bottom' : 'top';
   }
 
   format(name: string, value: any): void {

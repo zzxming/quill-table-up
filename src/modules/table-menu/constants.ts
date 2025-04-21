@@ -15,7 +15,8 @@ import RemoveColumn from '../../svg/remove-column.svg';
 import RemoveRow from '../../svg/remove-row.svg';
 import RemoveTable from '../../svg/remove-table.svg';
 import SplitCell from '../../svg/split-cell.svg';
-import { createBEM } from '../../utils';
+import TableHead from '../../svg/table-head.svg';
+import { blotName, createBEM } from '../../utils';
 
 export const menuColorSelectClassName = 'color-selector';
 export const tableMenuTools: Record<string, Tool> = {
@@ -169,6 +170,21 @@ export const tableMenuTools: Record<string, Tool> = {
       else {
         tableMainBlot.setFull();
       }
+    },
+  },
+  InsertCaption: {
+    name: 'InsertCaption',
+    icon: TableHead,
+    tip: 'Insert table caption',
+    handle(tableModule) {
+      if (!tableModule.table) return;
+      const tableMainBlot = Quill.find(tableModule.table) as TableMainFormat;
+      if (!tableMainBlot) return;
+
+      const tableCaption = tableModule.quill.scroll.create('text', 'Table Caption').wrap(blotName.tableCaption, {
+        tableId: tableMainBlot.tableId,
+      });
+      tableMainBlot.insertBefore(tableCaption, tableMainBlot.children.head);
     },
   },
 };
