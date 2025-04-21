@@ -93,6 +93,7 @@ export interface TableRowValue {
 }
 export interface TableCaptionValue {
   tableId: string;
+  side: 'top' | 'bottom';
 }
 export interface TableValue {
   tableId: string;
