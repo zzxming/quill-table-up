@@ -167,15 +167,17 @@ export class TableResizeBox extends TableResizeCommon {
       left: `${tableBodyRect.x - rootRect.x}px`,
     });
 
-    const tableMainRect = this.tableMain.domNode.getBoundingClientRect();
-    const tableWrapperRect = this.tableWrapper.domNode.getBoundingClientRect();
-
     let cornerTranslateX = -1 * this.size;
     let rowHeadWrapperTranslateX = -1 * this.size;
     if (isTableAlignRight(this.tableMain)) {
-      this.root.classList.add(this.bem.is('align-right'));
-      cornerTranslateX = Math.min(tableWrapperRect.width, tableMainRect.width);
-      rowHeadWrapperTranslateX = Math.min(tableWrapperRect.width, tableMainRect.width);
+      const [tableBodyBlot] = this.tableMain.descendant(TableBodyFormat, this.tableMain.length() - 1);
+      if (tableBodyBlot) {
+        const tableBodyRect = tableBodyBlot.domNode.getBoundingClientRect();
+        const tableWrapperRect = this.tableWrapper.domNode.getBoundingClientRect();
+        this.root.classList.add(this.bem.is('align-right'));
+        cornerTranslateX = Math.min(tableWrapperRect.width, tableBodyRect.width);
+        rowHeadWrapperTranslateX = Math.min(tableWrapperRect.width, tableBodyRect.width);
+      }
     }
     else {
       this.root.classList.remove(this.bem.is('align-right'));
@@ -197,8 +199,10 @@ export class TableResizeBox extends TableResizeCommon {
     this.tableCols = this.tableMain.getCols();
     this.tableRows = this.tableMain.getRows();
     this.root.innerHTML = '';
+    const [tableBodyBlot] = this.tableMain.descendant(TableBodyFormat, this.tableMain.length() - 1);
+    if (!tableBodyBlot) return;
+    const tableBodyRect = tableBodyBlot.domNode.getBoundingClientRect();
     const tableWrapperRect = this.tableWrapper.domNode.getBoundingClientRect();
-    const tableMainRect = this.tableMain.domNode.getBoundingClientRect();
 
     if (this.tableCols.length > 0 && this.tableRows.length > 0) {
       this.corner = document.createElement('div');
@@ -224,7 +228,7 @@ export class TableResizeBox extends TableResizeCommon {
       for (const [, col] of this.tableCols.entries()) {
         const width = col.domNode.getBoundingClientRect().width;
         colHeadStr += `<div class="${this.bem.be('col-header')}" style="width: ${width}px">
-          <div class="${this.bem.be('col-separator')}" style="height: ${tableMainRect.height + this.size - 3}px"></div>
+          <div class="${this.bem.be('col-separator')}" style="height: ${tableBodyRect.height + this.size - 3}px"></div>
         </div>`;
       }
       const colHeadWrapper = document.createElement('div');
@@ -237,7 +241,7 @@ export class TableResizeBox extends TableResizeCommon {
         height: `${this.size}px`,
       });
       Object.assign(colHead.style, {
-        width: `${tableMainRect.width}px`,
+        width: `${tableBodyRect.width}px`,
       });
       colHead.innerHTML = colHeadStr;
       colHeadWrapper.appendChild(colHead);
@@ -252,7 +256,7 @@ export class TableResizeBox extends TableResizeCommon {
       for (const [, row] of this.tableRows.entries()) {
         const height = `${row.domNode.getBoundingClientRect().height}px`;
         rowHeadStr += `<div class="${this.bem.be('row-header')}" style="height: ${Number.parseFloat(height)}px">
-          <div class="${this.bem.be('row-separator')}" style="width: ${tableMainRect.width + this.size - 3}px"></div>
+          <div class="${this.bem.be('row-separator')}" style="width: ${tableBodyRect.width + this.size - 3}px"></div>
         </div>`;
       }
       const rowHeadWrapper = document.createElement('div');
@@ -266,7 +270,7 @@ export class TableResizeBox extends TableResizeCommon {
         maxHeight: `${tableWrapperRect.height}px`,
       });
       Object.assign(rowHead.style, {
-        height: `${tableMainRect.height}px`,
+        height: `${tableBodyRect.height}px`,
       });
       rowHead.innerHTML = rowHeadStr;
       rowHeadWrapper.appendChild(rowHead);
