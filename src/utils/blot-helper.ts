@@ -63,6 +63,18 @@ export function findAllParentBlot(Blot: TypeParchment.Blot) {
   return blots;
 }
 
+export function findChildBlot<T extends TypeParchment.BlotConstructor>(parent: TypeParchment.Parent, blot: T) {
+  const descendants: InstanceType<T>[] = [];
+  const next = parent.children.iterator();
+  let cur: TypeParchment.Blot | null = null;
+  while ((cur = next())) {
+    if (cur instanceof blot) {
+      descendants.push(cur as InstanceType<T>);
+    }
+  }
+  return descendants;
+}
+
 function mixinProps<T = any, U = any>(target: T, source: U) {
   for (const prop of Object.getOwnPropertyNames(source)) {
     if (/^constructor$/.test(prop)) continue;
