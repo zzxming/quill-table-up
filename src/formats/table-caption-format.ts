@@ -20,7 +20,6 @@ export class TableCaptionFormat extends Block {
     const { tableId } = value;
     const node = super.create() as HTMLElement;
     node.dataset.tableId = tableId;
-    node.setAttribute('contenteditable', 'true');
     if (value.side === 'bottom') {
       node.style.captionSide = 'bottom';
     }

@@ -1,4 +1,5 @@
 import type { Parchment as TypeParchment } from 'quill';
+import type { TableCaptionFormat } from '../table-caption-format';
 import Quill from 'quill';
 import { blotName } from '../../utils';
 import { TableCellInnerFormat } from '../table-cell-inner-format';
@@ -16,6 +17,11 @@ export class ScrollOverride extends ScrollBlot {
     const inners = this.domNode.querySelectorAll(`.${tableCellInnerFormat.className}`);
     for (const inner of Array.from(inners)) {
       inner.setAttribute('contenteditable', String(!!enabled));
+    }
+    const tableCaptionFormat = Quill.import(`formats/${blotName.tableCaption}`) as typeof TableCaptionFormat;
+    const tableCaption = this.domNode.querySelectorAll(`.${tableCaptionFormat.className}`);
+    for (const caption of Array.from(tableCaption)) {
+      caption.setAttribute('contenteditable', String(!!enabled));
     }
     super.enable(enabled);
   }

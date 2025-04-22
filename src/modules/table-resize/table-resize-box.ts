@@ -3,8 +3,8 @@ import type { TableColFormat, TableMainFormat, TableRowFormat } from '../../form
 import type { TableUp } from '../../table-up';
 import type { sizeChangeValue } from './table-resize-common';
 import Quill from 'quill';
-import { TableBodyFormat, TableCellInnerFormat } from '../../formats';
-import { addScrollEvent, clearScrollEvent, createBEM } from '../../utils';
+import { TableBodyFormat, TableCaptionFormat, TableCellInnerFormat } from '../../formats';
+import { addScrollEvent, clearScrollEvent, createBEM, findChildBlot } from '../../utils';
 import { TableResizeCommon } from './table-resize-common';
 import { isTableAlignRight } from './utils';
 
@@ -48,6 +48,7 @@ export class TableResizeBox extends TableResizeCommon {
   };
 
   handleResizerHeader(isX: boolean, e: MouseEvent) {
+    // TODO: click select wrong boundary when table width out of root
     const { clientX, clientY } = e;
     const tableRect = this.table.getBoundingClientRect();
     if (this.tableModule.tableSelection) {
@@ -91,8 +92,10 @@ export class TableResizeBox extends TableResizeCommon {
   handleColMouseDownFunc = function (this: TableResizeBox, e: MouseEvent) {
     const value = this.handleColMouseDown(e);
     if (value && this.dragColBreak) {
+      const [tableCaptionBlot] = findChildBlot(this.tableMain, TableCaptionFormat);
+      const offset = tableCaptionBlot.side === 'top' ? 0 : this.size;
       Object.assign(this.dragColBreak.style, {
-        top: `${value.top - this.size}px`,
+        top: `${value.top - offset}px`,
         left: `${value.left}px`,
         height: `${value.height + this.size}px`,
       });
@@ -158,39 +161,50 @@ export class TableResizeBox extends TableResizeCommon {
   }
 
   update() {
-    const [tableBodyBlot] = this.tableMain.descendant(TableBodyFormat, this.tableMain.length() - 1);
+    const [tableBodyBlot] = findChildBlot(this.tableMain, TableBodyFormat);
     if (!tableBodyBlot) return;
+    const tableWrapperRect = this.tableWrapper.domNode.getBoundingClientRect();
     const tableBodyRect = tableBodyBlot.domNode.getBoundingClientRect();
     const rootRect = this.quill.root.getBoundingClientRect();
     Object.assign(this.root.style, {
-      top: `${tableBodyRect.y - rootRect.y}px`,
-      left: `${tableBodyRect.x - rootRect.x}px`,
+      top: `${Math.max(tableBodyRect.y, tableWrapperRect.y) - rootRect.y}px`,
+      left: `${Math.max(tableBodyRect.x, tableWrapperRect.x) - rootRect.x}px`,
     });
 
     let cornerTranslateX = -1 * this.size;
     let rowHeadWrapperTranslateX = -1 * this.size;
     if (isTableAlignRight(this.tableMain)) {
-      const [tableBodyBlot] = this.tableMain.descendant(TableBodyFormat, this.tableMain.length() - 1);
-      if (tableBodyBlot) {
-        const tableBodyRect = tableBodyBlot.domNode.getBoundingClientRect();
-        const tableWrapperRect = this.tableWrapper.domNode.getBoundingClientRect();
-        this.root.classList.add(this.bem.is('align-right'));
-        cornerTranslateX = Math.min(tableWrapperRect.width, tableBodyRect.width);
-        rowHeadWrapperTranslateX = Math.min(tableWrapperRect.width, tableBodyRect.width);
-      }
+      this.root.classList.add(this.bem.is('align-right'));
+      cornerTranslateX = Math.min(tableWrapperRect.width, tableBodyRect.width);
+      rowHeadWrapperTranslateX = Math.min(tableWrapperRect.width, tableBodyRect.width);
     }
     else {
       this.root.classList.remove(this.bem.is('align-right'));
     }
 
+    const [tableCaptionBlot] = findChildBlot(this.tableMain, TableCaptionFormat);
+    const tableCaptionIsTop = !tableCaptionBlot || !(tableCaptionBlot && tableCaptionBlot.side === 'top');
+    if (tableCaptionIsTop) {
+      this.root.classList.remove(this.bem.is('caption-bottom'));
+    }
+    else {
+      this.root.classList.add(this.bem.is('caption-bottom'));
+    }
+
     if (this.corner) {
       Object.assign(this.corner.style, {
         transform: `translateY(${-1 * this.size}px) translateX(${cornerTranslateX}px)`,
+        top: `${tableCaptionIsTop ? 0 : tableBodyRect.height + this.size}px`,
       });
     }
     if (this.rowHeadWrapper) {
       Object.assign(this.rowHeadWrapper.style, {
         transform: `translateX(${rowHeadWrapperTranslateX}px)`,
+      });
+    }
+    if (this.colHeadWrapper) {
+      Object.assign(this.colHeadWrapper.style, {
+        top: `${tableCaptionIsTop ? 0 : tableBodyRect.height + this.size}px`,
       });
     }
   }
@@ -199,7 +213,7 @@ export class TableResizeBox extends TableResizeCommon {
     this.tableCols = this.tableMain.getCols();
     this.tableRows = this.tableMain.getRows();
     this.root.innerHTML = '';
-    const [tableBodyBlot] = this.tableMain.descendant(TableBodyFormat, this.tableMain.length() - 1);
+    const [tableBodyBlot] = findChildBlot(this.tableMain, TableBodyFormat);
     if (!tableBodyBlot) return;
     const tableBodyRect = tableBodyBlot.domNode.getBoundingClientRect();
     const tableWrapperRect = this.tableWrapper.domNode.getBoundingClientRect();

@@ -162,17 +162,23 @@ extendTest('test TableResizeBox and TableResizeScale should update when text cha
   const boxTop = await page.locator('#container2 .table-up-resize-box').evaluate((element) => {
     return Number.parseFloat(window.getComputedStyle(element).top);
   });
+  const scaleTop = await scale.evaluate((element) => {
+    return Number.parseFloat(window.getComputedStyle(element).top);
+  });
   await expect(scale).toBeVisible();
   await expect(page.locator('#container2 .table-up-resize-box .table-up-resize-box__corner')).toBeVisible();
 
   await editorPage.updateContents([{ insert: '12345\n12345\n12345' }], 'user');
+  await page.evaluate(() => {
+    window.scrollTo(0, 0);
+  });
 
   await expect(scale).toBeVisible();
   await expect(page.locator('#container2 .table-up-resize-box .table-up-resize-box__corner')).toBeVisible();
-  const scaleTop = await scale.evaluate((element) => {
+  const newScaleTop = await scale.evaluate((element) => {
     return Number.parseFloat(window.getComputedStyle(element).top);
   });
-  expect(scaleTop).toBeCloseTo(lineBound.height * 3, 4);
+  expect(newScaleTop).toBeCloseTo(scaleTop + lineBound.height * 2, 4);
   const newBoxTop = await page.locator('#container2 .table-up-resize-box').evaluate((element) => {
     return Number.parseFloat(window.getComputedStyle(element).top);
   });

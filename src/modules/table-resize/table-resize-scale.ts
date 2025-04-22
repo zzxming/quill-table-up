@@ -1,8 +1,8 @@
-import type { TableColFormat, TableMainFormat, TableRowFormat, TableWrapperFormat } from '../../formats';
 import type { TableUp } from '../../table-up';
 import type { TableResizeScaleOptions } from '../../utils';
 import Quill from 'quill';
-import { addScrollEvent, clearScrollEvent, createBEM, tableUpSize } from '../../utils';
+import { TableBodyFormat, type TableColFormat, type TableMainFormat, type TableRowFormat, type TableWrapperFormat } from '../../formats';
+import { addScrollEvent, clearScrollEvent, createBEM, findChildBlot, tableUpSize } from '../../utils';
 import { isTableAlignRight } from './utils';
 
 export class TableResizeScale {
@@ -12,6 +12,7 @@ export class TableResizeScale {
   bem = createBEM('scale');
   startX: number = 0;
   startY: number = 0;
+  offset: number = 6;
   options: TableResizeScaleOptions;
   root?: HTMLElement;
   block?: HTMLElement;
@@ -113,11 +114,13 @@ export class TableResizeScale {
       this.hide();
       return;
     }
-    const tableRect = this.tableMainBlot.domNode.getBoundingClientRect();
+    const [tableBody] = findChildBlot(this.tableMainBlot, TableBodyFormat);
+    if (!tableBody) return;
+    const tableRect = tableBody.domNode.getBoundingClientRect();
     const tableWrapperRect = this.tableWrapperBlot.domNode.getBoundingClientRect();
     const editorRect = this.quill.root.getBoundingClientRect();
     const { scrollTop, scrollLeft } = this.tableWrapperBlot.domNode;
-    const blockSize = this.options.blockSize * 2;
+    const blockSize = this.options.blockSize * 2 + this.offset;
     const rootWidth = Math.min(tableRect.width, tableWrapperRect.width) + blockSize;
     const rootHeight = Math.min(tableRect.height, tableWrapperRect.height) + blockSize;
     Object.assign(this.root.style, {

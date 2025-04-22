@@ -49,15 +49,30 @@
   &.is-hidden {
     display: none;
   }
+  &.is-caption-bottom {
+    .@{namespace}-resize-box__corner {
+      border-top-width: 0;
+      border-bottom-width: 1px;
+      border-top-left-radius: 0;
+      border-bottom-left-radius: 50%;
+    }
+  }
   &.is-align-right {
     .@{namespace}-resize-box__col-separator {
       left: -2px;
     }
     .@{namespace}-resize-box__corner {
-      border-left-width: 1px;
+      border-left-width: 0;
       border-right-width: 1px;
       border-top-left-radius: 0;
       border-top-right-radius: 50%;
+    }
+    &.is-caption-bottom {
+      .@{namespace}-resize-box__corner {
+        border-top-right-radius: 0;
+        border-bottom-left-radius: 0;
+        border-bottom-right-radius: 50%;
+      }
     }
   }
   &__row,
