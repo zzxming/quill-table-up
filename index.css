@@ -26,6 +26,7 @@
   scrollbar-width: none;
 }
 .ql-editor .ql-table-caption {
+  word-break: break-word;
   outline: none;
 }
 .ql-editor .ql-table-cell {
@@ -352,14 +353,25 @@
 .table-up-resize-box.is-hidden {
   display: none;
 }
+.table-up-resize-box.is-caption-bottom .table-up-resize-box__corner {
+  border-top-width: 0;
+  border-bottom-width: 0.0625rem;
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 50%;
+}
 .table-up-resize-box.is-align-right .table-up-resize-box__col-separator {
   left: -0.125rem;
 }
 .table-up-resize-box.is-align-right .table-up-resize-box__corner {
-  border-left-width: 0.0625rem;
+  border-left-width: 0;
   border-right-width: 0.0625rem;
   border-top-left-radius: 0;
   border-top-right-radius: 50%;
+}
+.table-up-resize-box.is-align-right.is-caption-bottom .table-up-resize-box__corner {
+  border-top-right-radius: 0;
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 50%;
 }
 .table-up-resize-box__row,
 .table-up-resize-box__col {
