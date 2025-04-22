@@ -1,7 +1,8 @@
 import type { TableMainFormat } from '../formats';
 import type { TableUp } from '../table-up';
 import Quill from 'quill';
-import { addScrollEvent, clearScrollEvent, createBEM, debounce } from '../utils';
+import { TableBodyFormat } from '../formats';
+import { addScrollEvent, clearScrollEvent, createBEM, debounce, findChildBlot } from '../utils';
 
 export class Scrollbar {
   minSize: number = 20;
@@ -29,7 +30,9 @@ export class Scrollbar {
   scrollHandler: [HTMLElement, (e: Event) => void][] = [];
   propertyMap: { readonly size: 'height'; readonly offset: 'offsetHeight'; readonly scrollDirection: 'scrollTop'; readonly scrollSize: 'scrollHeight'; readonly axis: 'Y'; readonly direction: 'top'; readonly client: 'clientY' } | { readonly size: 'width'; readonly offset: 'offsetWidth'; readonly scrollDirection: 'scrollLeft'; readonly scrollSize: 'scrollWidth'; readonly axis: 'X'; readonly direction: 'left'; readonly client: 'clientX' };
   bem = createBEM('scrollbar');
+  tableMainBlot: TableMainFormat;
   constructor(public quill: Quill, public isVertical: boolean, public table: HTMLElement, public scrollbarContainer: HTMLElement) {
+    this.tableMainBlot = Quill.find(this.table) as TableMainFormat;
     this.container = table.parentElement!;
     this.propertyMap = this.isVertical
       ? {
@@ -67,13 +70,16 @@ export class Scrollbar {
   }
 
   setScrollbarPosition() {
+    const [tableBodyBlot] = findChildBlot(this.tableMainBlot, TableBodyFormat);
+    if (!tableBodyBlot) return;
     const { scrollLeft: editorScrollX, scrollTop: editorScrollY } = this.quill.root;
     const { offsetLeft: containerOffsetLeft, offsetTop: containerOffsetTop } = this.container;
+    const { offsetLeft: bodyOffsetLeft, offsetTop: bodyOffsetTop } = tableBodyBlot.domNode;
     const { width: containerWidth, height: containerHeight } = this.container.getBoundingClientRect();
-    const { width: tableWidth, height: tableHeight } = this.table.getBoundingClientRect();
+    const { width: tableWidth, height: tableHeight } = tableBodyBlot.domNode.getBoundingClientRect();
 
-    let x = containerOffsetLeft;
-    let y = containerOffsetTop;
+    let x = containerOffsetLeft + bodyOffsetLeft;
+    let y = containerOffsetTop + bodyOffsetTop;
     if (this.isVertical) {
       x += Math.min(containerWidth, tableWidth);
     }
@@ -82,13 +88,12 @@ export class Scrollbar {
     }
 
     // table align right effect
-    const tableMainBlot = Quill.find(this.table) as TableMainFormat | null;
-    if (tableMainBlot && tableMainBlot.align !== 'left') {
+    if (this.tableMainBlot && this.tableMainBlot.align !== 'left') {
       x += this.table.offsetLeft - containerOffsetLeft;
     }
 
     Object.assign(this.scrollbar.style, {
-      [this.propertyMap.size]: `${this.isVertical ? containerHeight : containerWidth}px`,
+      [this.propertyMap.size]: `${this.isVertical ? Math.min(containerHeight, tableHeight) : containerWidth}px`,
       transform: `translate(${x - editorScrollX}px, ${y - editorScrollY}px)`,
     });
     this.containerScrollHandler(this.container);
