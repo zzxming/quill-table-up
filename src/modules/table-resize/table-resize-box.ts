@@ -183,18 +183,18 @@ export class TableResizeBox extends TableResizeCommon {
     }
 
     const [tableCaptionBlot] = findChildBlot(this.tableMain, TableCaptionFormat);
-    const tableCaptionIsBottom = tableCaptionBlot && tableCaptionBlot.side === 'bottom';
-    if (tableCaptionIsBottom) {
-      this.root.classList.remove(this.bem.is('caption-top'));
+    const tableCaptionIsTop = !tableCaptionBlot || !(tableCaptionBlot && tableCaptionBlot.side === 'top');
+    if (tableCaptionIsTop) {
+      this.root.classList.remove(this.bem.is('caption-bottom'));
     }
     else {
-      this.root.classList.add(this.bem.is('caption-top'));
+      this.root.classList.add(this.bem.is('caption-bottom'));
     }
 
     if (this.corner) {
       Object.assign(this.corner.style, {
         transform: `translateY(${-1 * this.size}px) translateX(${cornerTranslateX}px)`,
-        top: `${tableCaptionIsBottom ? 0 : tableBodyRect.height + this.size}px`,
+        top: `${tableCaptionIsTop ? 0 : tableBodyRect.height + this.size}px`,
       });
     }
     if (this.rowHeadWrapper) {
@@ -204,7 +204,7 @@ export class TableResizeBox extends TableResizeCommon {
     }
     if (this.colHeadWrapper) {
       Object.assign(this.colHeadWrapper.style, {
-        top: `${tableCaptionIsBottom ? 0 : tableBodyRect.height + this.size}px`,
+        top: `${tableCaptionIsTop ? 0 : tableBodyRect.height + this.size}px`,
       });
     }
   }
