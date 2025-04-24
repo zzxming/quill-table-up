@@ -469,8 +469,8 @@ export class TableSelection {
     Object.assign(this.cellSelectWrap.style, {
       left: `${wrapLeft}px`,
       top: `${wrapTop}px`,
-      width: `${tableWrapperRect.width + 2}px`,
-      height: `${tableWrapperRect.height + 2}px`,
+      width: `${tableWrapperRect.width}px`,
+      height: `${tableWrapperRect.height}px`,
     });
     if (!this.dragging && this.tableMenu) {
       this.tableMenu.update();

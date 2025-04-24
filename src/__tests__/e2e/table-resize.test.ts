@@ -197,3 +197,116 @@ extendTest('test TableResizeScale should hide when table width switch full', asy
   await page.locator('.table-up-menu.is-contextmenu .table-up-menu__item').filter({ hasText: 'Switch table width' }).first().click();
   await expect(page.locator('#container1 .table-up-scale')).not.toBeVisible();
 });
+
+extendTest('test TableResizeBox head click and shift click (column)', async ({ page }) => {
+  await createTableBySelect(page, 'container2', 3, 3);
+
+  const firstCell = page.locator('#editor2').getByRole('cell').nth(0);
+  await firstCell.click();
+  expect(page.locator('#editor2 .table-up-resize-box .table-up-resize-box__corner')).toBeVisible();
+
+  await page.locator('#editor2 .table-up-resize-box__col-header').nth(0).click();
+  const selection = page.locator('#editor2 .table-up-selection .table-up-selection__line');
+  const selectionBounding = (await selection.boundingBox())!;
+  expect(selectionBounding).not.toBeNull();
+
+  const tableBounding = (await page.locator('#editor2 .ql-table').boundingBox())!;
+  expect(tableBounding).not.toBeNull();
+  // minus beacuse `border-collapse: collapse;`
+  expect(selectionBounding.height).toBe(tableBounding.height - 1);
+
+  await page.keyboard.down('Shift');
+  await page.locator('#editor2 .table-up-resize-box__col-header').nth(2).click();
+
+  const selectionBounding2 = (await selection.boundingBox())!;
+  expect(selectionBounding2).not.toBeNull();
+  expect(selectionBounding2.height).toBe(tableBounding.height - 1);
+  expect(selectionBounding2.width).toBe(tableBounding.width - 1);
+});
+
+extendTest('test TableResizeBox head click and shift click (row)', async ({ page }) => {
+  await createTableBySelect(page, 'container2', 3, 3);
+
+  const firstCell = page.locator('#editor2').getByRole('cell').nth(0);
+  await firstCell.click();
+  expect(page.locator('#editor2 .table-up-resize-box .table-up-resize-box__corner')).toBeVisible();
+
+  await page.locator('#editor2 .table-up-resize-box__row-header').nth(0).click();
+  const selection = page.locator('#editor2 .table-up-selection .table-up-selection__line');
+  const selectionBounding = (await selection.boundingBox())!;
+  expect(selectionBounding).not.toBeNull();
+
+  const tableBounding = (await page.locator('#editor2 .ql-table').boundingBox())!;
+  expect(tableBounding).not.toBeNull();
+  // minus beacuse `border-collapse: collapse;`
+  expect(selectionBounding.width).toBe(tableBounding.width - 1);
+
+  await page.keyboard.down('Shift');
+  await page.locator('#editor2 .table-up-resize-box__row-header').nth(2).click();
+
+  const selectionBounding2 = (await selection.boundingBox())!;
+  expect(selectionBounding2).not.toBeNull();
+  expect(selectionBounding2.height).toBe(tableBounding.height - 1);
+  expect(selectionBounding2.width).toBe(tableBounding.width - 1);
+});
+
+extendTest('test TableResizeBox head click and shift click (row mixin column)', async ({ page }) => {
+  await createTableBySelect(page, 'container2', 3, 3);
+  const firstCell = page.locator('#editor2').getByRole('cell').nth(0);
+  await firstCell.click();
+  expect(page.locator('#editor2 .table-up-resize-box .table-up-resize-box__corner')).toBeVisible();
+
+  await page.locator('#editor2 .table-up-resize-box__row-header').nth(1).click();
+  await page.keyboard.down('Shift');
+  await page.locator('#editor2 .table-up-resize-box__col-header').nth(1).click();
+
+  const selectionBounding = (await page.locator('#editor2 .table-up-selection .table-up-selection__line').boundingBox())!;
+  expect(selectionBounding).not.toBeNull();
+  const cellBounding = (await page.locator('#editor2 .ql-editor .ql-table td').nth(0).boundingBox())!;
+  expect(cellBounding).not.toBeNull();
+  expect(selectionBounding.height).toBe(cellBounding.height * 2);
+  expect(selectionBounding.width).toBe(cellBounding.width * 2);
+});
+
+extendTest('test TableResizeBox head click and shift click (scroll table wrapper)', async ({ page, editorPage }) => {
+  editorPage.index = 1;
+  editorPage.setContents([
+    { insert: '\n' },
+    { insert: { 'table-up-col': { tableId: '1', colId: '1', full: false, width: 500 } } },
+    { insert: { 'table-up-col': { tableId: '1', colId: '2', full: false, width: 500 } } },
+    { insert: { 'table-up-col': { tableId: '1', colId: '3', full: false, width: 500 } } },
+    { insert: { 'table-up-col': { tableId: '1', colId: '4', full: false, width: 500 } } },
+    { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '1', rowspan: 1, colspan: 1 } }, insert: '\n' },
+    { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '2', rowspan: 1, colspan: 1 } }, insert: '\n' },
+    { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '3', rowspan: 1, colspan: 1 } }, insert: '\n' },
+    { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '4', rowspan: 1, colspan: 1 } }, insert: '\n' },
+    { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '1', rowspan: 1, colspan: 1 } }, insert: '\n' },
+    { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '2', rowspan: 1, colspan: 1 } }, insert: '\n' },
+    { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '3', rowspan: 1, colspan: 1 } }, insert: '\n' },
+    { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '4', rowspan: 1, colspan: 1 } }, insert: '\n' },
+    { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '3', colId: '1', rowspan: 1, colspan: 1 } }, insert: '\n' },
+    { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '3', colId: '2', rowspan: 1, colspan: 1 } }, insert: '\n' },
+    { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '3', colId: '3', rowspan: 1, colspan: 1 } }, insert: '\n' },
+    { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '3', colId: '4', rowspan: 1, colspan: 1 } }, insert: '\n' },
+    { insert: '\n' },
+  ]);
+
+  const firstCell = page.locator('#editor2').getByRole('cell').nth(0);
+  await firstCell.click();
+  expect(page.locator('#editor2 .table-up-resize-box .table-up-resize-box__corner')).toBeVisible();
+  await page.locator('#editor2 .ql-table-wrapper').evaluate((el) => {
+    el.scrollLeft = el.scrollWidth;
+  });
+
+  await page.locator('#editor2 .table-up-resize-box__col-header').nth(2).click();
+  await page.locator('#editor2 .ql-table-wrapper').evaluate((el) => {
+    el.scrollLeft = 0;
+  });
+  await page.keyboard.down('Shift');
+  await page.locator('#editor2 .table-up-resize-box__col-header').nth(0).click();
+
+  const selectionBounding = (await page.locator('#editor2 .table-up-selection .table-up-selection__line').boundingBox())!;
+  const cellBounding = (await page.locator('#editor2 .ql-editor .ql-table td').nth(0).boundingBox())!;
+  expect(cellBounding).not.toBeNull();
+  expect(selectionBounding.width).toBe(cellBounding.width * 3);
+});
