@@ -93,7 +93,7 @@ export class TableResizeBox extends TableResizeCommon {
     const value = this.handleColMouseDown(e);
     if (value && this.dragColBreak) {
       const [tableCaptionBlot] = findChildBlot(this.tableMain, TableCaptionFormat);
-      const offset = tableCaptionBlot.side === 'top' ? 0 : this.size;
+      const offset = tableCaptionBlot && tableCaptionBlot.side === 'top' ? 0 : this.size;
       Object.assign(this.dragColBreak.style, {
         top: `${value.top - offset}px`,
         left: `${value.left}px`,
