@@ -23,7 +23,7 @@ export class TableResizeBox extends TableResizeCommon {
   colHeadWrapper: HTMLElement | null = null;
   corner: HTMLElement | null = null;
   scrollHandler: [HTMLElement, (e: Event) => void][] = [];
-  lastHeaderSelect: [Point, Point] | null = null;
+  lastHeaderSelect: { isX: boolean; index: number } | null = null;
   size: number = 12;
   bem = createBEM('resize-box');
 
@@ -47,8 +47,7 @@ export class TableResizeBox extends TableResizeCommon {
     this.update();
   };
 
-  handleResizerHeader(isX: boolean, e: MouseEvent) {
-    // TODO: click select wrong boundary when table width out of root
+  handleResizerHeader(isX: boolean, index: number, e: MouseEvent) {
     const { clientX, clientY } = e;
     const tableRect = this.table.getBoundingClientRect();
     if (this.tableModule.tableSelection) {
@@ -61,17 +60,43 @@ export class TableResizeBox extends TableResizeCommon {
         { x: isX ? tableRect.right : clientX, y: isX ? clientY : tableRect.bottom },
       ];
       if (this.lastHeaderSelect) {
-        currentBoundary[0] = {
-          x: Math.min(currentBoundary[0].x, this.lastHeaderSelect[0].x),
-          y: Math.min(currentBoundary[0].y, this.lastHeaderSelect[0].y),
-        };
-        currentBoundary[1] = {
-          x: Math.max(currentBoundary[1].x, this.lastHeaderSelect[1].x),
-          y: Math.max(currentBoundary[1].y, this.lastHeaderSelect[1].y),
-        };
+        // find last click head
+        let lastX: number;
+        let lastY: number;
+        if (this.lastHeaderSelect.isX) {
+          const tableRowHeads = Array.from(this.root.getElementsByClassName(this.bem.be('row-header'))) as HTMLElement[];
+          const rect = tableRowHeads[this.lastHeaderSelect.index].getBoundingClientRect();
+          lastX = Math.min(rect.left, tableRect.left);
+          lastY = rect.top + rect.height / 2;
+        }
+        else {
+          const tableColHeads = Array.from(this.root.getElementsByClassName(this.bem.be('col-header'))) as HTMLElement[];
+          const rect = tableColHeads[this.lastHeaderSelect.index].getBoundingClientRect();
+          lastX = rect.left + rect.width / 2;
+          lastY = Math.min(rect.top, tableRect.top);
+        }
+
+        if (this.lastHeaderSelect.isX !== isX) {
+          currentBoundary[1] = {
+            x: Math.max(currentBoundary[0].x, lastX),
+            y: Math.max(currentBoundary[0].y, lastY),
+          };
+          currentBoundary[0] = {
+            x: Math.min(currentBoundary[0].x, lastX),
+            y: Math.min(currentBoundary[0].y, lastY),
+          };
+        }
+        else if (isX) {
+          currentBoundary[0].y = Math.min(currentBoundary[0].y, lastY);
+          currentBoundary[1].y = Math.max(currentBoundary[1].y, lastY);
+        }
+        else {
+          currentBoundary[0].x = Math.min(currentBoundary[0].x, lastX);
+          currentBoundary[1].x = Math.max(currentBoundary[1].x, lastX);
+        }
       }
       else {
-        this.lastHeaderSelect = currentBoundary;
+        this.lastHeaderSelect = { isX, index };
       }
 
       tableSelection.table = this.table;
@@ -111,8 +136,8 @@ export class TableResizeBox extends TableResizeCommon {
       this.colHeadWrapper!.scrollLeft = this.tableWrapper.domNode.scrollLeft;
     });
 
-    for (const el of tableColHeads) {
-      el.addEventListener('click', this.handleResizerHeader.bind(this, false));
+    for (const [i, el] of tableColHeads.entries()) {
+      el.addEventListener('click', this.handleResizerHeader.bind(this, false, i));
     }
     for (const el of tableColHeadSeparators) {
       el.addEventListener('mousedown', this.handleColMouseDownFunc);
@@ -150,8 +175,8 @@ export class TableResizeBox extends TableResizeCommon {
       this.rowHeadWrapper!.scrollTop = this.tableWrapper.domNode.scrollTop;
     });
 
-    for (const el of tableRowHeads) {
-      el.addEventListener('click', this.handleResizerHeader.bind(this, true));
+    for (const [i, el] of tableRowHeads.entries()) {
+      el.addEventListener('click', this.handleResizerHeader.bind(this, true, i));
     }
     for (const el of tableRowHeadSeparators) {
       el.addEventListener('mousedown', this.handleRowMouseDownFunc);
