@@ -339,7 +339,7 @@ export class TableSelection {
         }
         // Determine whether the cell intersects with the current boundary
         const { x, y, right, bottom } = cell.__rect;
-        // bowser MouseEvent clientY\clientX is floored.judge data need floored too
+        // bowser MouseEvent clientY\clientX is floored. judge data need floored too
         if (
           isRectanglesIntersect(
             { x: Math.floor(boundary.x), y: Math.floor(boundary.y), x1: Math.floor(boundary.x1), y1: Math.floor(boundary.y1) },
@@ -362,9 +362,6 @@ export class TableSelection {
           findEnd = true;
           break;
         }
-        // else if (x < boundary.x && y < boundary.y) {
-        //   break;
-        // }
       }
     }
     for (const cell of [...selectedCells, ...tableCells]) {
@@ -391,9 +388,6 @@ export class TableSelection {
     this.setSelectionTable(closestTable);
     const startTableId = closestTable.dataset.tableId;
     const startPoint = { x: clientX, y: clientY };
-    const { x: tableScrollX, y: tableScrollY } = this.getTableViewScroll();
-    this.startScrollX = tableScrollX;
-    this.startScrollY = tableScrollY;
     this.selectedTds = this.computeSelectedTds(startPoint, startPoint);
     this.dragging = true;
     this.show();
@@ -426,8 +420,6 @@ export class TableSelection {
       document.body.removeEventListener('mousemove', mouseMoveHandler, false);
       document.body.removeEventListener('mouseup', mouseUpHandler, false);
       this.dragging = false;
-      this.startScrollX = 0;
-      this.startScrollY = 0;
       if (this.tableMenu && this.selectedTds.length > 0) {
         this.tableMenu.show();
       }
@@ -465,6 +457,8 @@ export class TableSelection {
     const rootRect = this.quill.root.getBoundingClientRect();
     const wrapLeft = tableWrapperRect.x - rootRect.x;
     const wrapTop = tableWrapperRect.y - rootRect.y;
+    this.startScrollX = tableScrollX;
+    this.startScrollY = tableScrollY;
 
     Object.assign(this.cellSelect.style, {
       left: `${this.selectedEditorScrollX * 2 - editorScrollX + this.boundary.x + this.selectedTableScrollX - tableScrollX - wrapLeft}px`,
