@@ -114,7 +114,8 @@ const defaultTexts = {
   DeleteTable: 'Delete table',
   BackgroundColor: 'Set background color',
   BorderColor: 'Set border color',
-  SwitchWidth: 'Switch table width'
+  SwitchWidth: 'Switch table width',
+  InsertCaption: 'Insert table caption',
 };
 ```
 
@@ -163,12 +164,6 @@ type Tool = ToolOption | ToolOptionBreak;
 const tableMenuTools: Record<string, Tool> = {
   Break: {
     name: 'break',
-  },
-  SwitchWidth: {
-    name: 'SwitchWidth',
-    icon: AutoFull,
-    tip: 'Switch table width',
-    handle: (tableModule) => {},
   },
   CopyCell: {
     name: 'CopyCell',
@@ -252,6 +247,18 @@ const tableMenuTools: Record<string, Tool> = {
     key: 'border-color',
     handle: (tableModule, selectedTds, color) => {},
   },
+  SwitchWidth: {
+    name: 'SwitchWidth',
+    icon: AutoFull,
+    tip: 'Switch table width',
+    handle: (tableModule) => {},
+  },
+  InsertCaption: {
+    name: 'InsertCaption',
+    icon: TableHead,
+    tip: 'Insert table caption',
+    handle: (tableModule) => {},
+  },
 };
 const defaultTools = [
   tableMenuTools.InsertTop,
@@ -268,11 +275,6 @@ const defaultTools = [
   tableMenuTools.Break,
   tableMenuTools.BackgroundColor,
   tableMenuTools.BorderColor,
-  tableMenuTools.Break,
-  tableMenuTools.CopyCell,
-  tableMenuTools.CutCell,
-  tableMenuTools.Break,
-  tableMenuTools.SwitchWidth,
 ];
 ```
 
