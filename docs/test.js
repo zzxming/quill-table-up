@@ -11,6 +11,7 @@ const {
   TableResizeScale,
   defaultCustomSelect,
   TableSelection,
+  tableMenuTools,
 } = window.TableUp;
 
 Quill.register({
@@ -33,7 +34,28 @@ const toolbarConfig = [
   [{ [TableUp.toolName]: [] }],
   ['clean'],
 ];
-
+const menuTools = [
+  tableMenuTools.InsertCaption,
+  tableMenuTools.InsertTop,
+  tableMenuTools.InsertRight,
+  tableMenuTools.InsertBottom,
+  tableMenuTools.InsertLeft,
+  tableMenuTools.Break,
+  tableMenuTools.MergeCell,
+  tableMenuTools.SplitCell,
+  tableMenuTools.Break,
+  tableMenuTools.DeleteRow,
+  tableMenuTools.DeleteColumn,
+  tableMenuTools.DeleteTable,
+  tableMenuTools.Break,
+  tableMenuTools.BackgroundColor,
+  tableMenuTools.BorderColor,
+  tableMenuTools.Break,
+  tableMenuTools.CopyCell,
+  tableMenuTools.CutCell,
+  tableMenuTools.Break,
+  tableMenuTools.SwitchWidth,
+];
 const quills = [
   {
     full: false,
@@ -46,6 +68,9 @@ const quills = [
     selection: TableSelection,
     selectionOptions: {
       tableMenu: TableMenuContextmenu,
+      tableMenuOptions: {
+        tools: menuTools,
+      },
     },
   },
   {
@@ -59,6 +84,9 @@ const quills = [
     selection: TableSelection,
     selectionOptions: {
       tableMenu: TableMenuSelect,
+      tableMenuOptions: {
+        tools: menuTools,
+      },
     },
   },
   {
@@ -72,6 +100,9 @@ const quills = [
     selection: TableSelection,
     selectionOptions: {
       tableMenu: TableMenuContextmenu,
+      tableMenuOptions: {
+        tools: menuTools,
+      },
     },
   },
   {
@@ -85,6 +116,9 @@ const quills = [
     selection: TableSelection,
     selectionOptions: {
       tableMenu: TableMenuSelect,
+      tableMenuOptions: {
+        tools: menuTools,
+      },
     },
   },
 ].map((ops, i) => {

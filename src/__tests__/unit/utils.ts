@@ -1,5 +1,5 @@
-import type { Delta as TypeDelta, Range as TypeRange } from 'quill';
-import type { TableColValue, TableUpOptions } from '../../utils';
+import type { Op, Delta as TypeDelta, Range as TypeRange } from 'quill';
+import type { TableCaptionValue, TableColValue, TableUpOptions } from '../../utils';
 import Quill from 'quill';
 import { expect, vi } from 'vitest';
 import { TableUp } from '../../table-up';
@@ -107,7 +107,9 @@ interface TableCreatorOptions {
   editable: boolean;
 }
 type ColOptions = Omit<TableColValue, 'width' | 'tableId' | 'colId'> & { width?: number };
-
+interface TableCaptionCreatorOptions extends Omit<TableCaptionValue, 'tableId'> {
+  text: string;
+}
 export const datasetTableId = (id: string) => `data-table-id="${id}"`;
 export const datasetFull = (full: boolean) => full ? ' data-full="true"' : '';
 export const datasetAlign = (align: string) => align === 'left' ? '' : ` data-align="${align}"`;
@@ -119,10 +121,20 @@ export const getColWidthStyle = (options: Required<Omit<ColOptions, 'align' | 't
   }
   return `width="${colWidth}"`;
 };
-export const createTableDeltaOps = (row: number, col: number, colOptions?: ColOptions, options: Partial<TableCreatorOptions> = {}) => {
+export const createTableDeltaOps = (row: number, col: number, colOptions?: ColOptions, captionOptions?: Partial<TableCaptionCreatorOptions>, options: Partial<TableCreatorOptions> = {}) => {
   const { isEmpty = false, tableId = '1' } = options;
   const { full = true, width = 100, align = 'left' } = colOptions || {};
-  const table: any[] = [{ insert: '\n' }];
+  const { text = '', side = 'top' } = captionOptions || {};
+  const table: Op[] = [{ insert: '\n' }];
+  if (text) {
+    table.push(
+      { insert: text },
+      {
+        attributes: { tableCaption: { side, align, tableId } },
+        insert: '\n',
+      },
+    );
+  }
   for (const [i, _] of new Array(col).fill(0).entries()) {
     const value: TableColDeltaValue = { tableId, colId: `${i + 1}`, width: 1 / col * 100 };
     if (full) {
@@ -152,13 +164,18 @@ export const createTableDeltaOps = (row: number, col: number, colOptions?: ColOp
   table.push({ insert: '\n' });
   return table;
 };
-export const createTable = async (row: number, col: number, colOptions?: ColOptions, options?: Partial<TableCreatorOptions>) => {
+export const createTable = async (row: number, col: number, colOptions?: ColOptions, captionOptions?: Partial<TableCaptionCreatorOptions>, options?: Partial<TableCreatorOptions>) => {
   const quill = createQuillWithTableModule(`<p><br></p>`);
-  quill.setContents(createTableDeltaOps(row, col, colOptions, options));
+  quill.setContents(createTableDeltaOps(row, col, colOptions, captionOptions, options));
   // set range for undo won't scrollSelectionIntoView
   quill.setSelection({ index: 0, length: 0 });
   await vi.runAllTimersAsync();
   return quill;
+};
+export const createTableCaptionHTML = (captionOptions?: Partial<TableCaptionCreatorOptions>, options?: Partial<TableCreatorOptions>) => {
+  const { text = '', side = 'top' } = captionOptions || {};
+  const { tableId = '1', editable = true } = options || {};
+  return `<caption contenteditable="${editable}" ${datasetTableId(tableId)}${side === 'top' ? '' : ' style="caption-side: bottom;"'}>${text}</caption>`;
 };
 export const createTaleColHTML = (colNum: number, colOptions?: Partial<ColOptions>, options?: Partial<TableCreatorOptions>) => {
   const { full = true, width = 100, align = 'left' } = colOptions || {};

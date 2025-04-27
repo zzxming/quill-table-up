@@ -269,7 +269,7 @@ describe('set contents', () => {
 
   it('should display an empty table', async () => {
     const quill = createQuillWithTableModule(`<p><br></p>`);
-    quill.setContents(createTableDeltaOps(2, 2, {}, { isEmpty: true }));
+    quill.setContents(createTableDeltaOps(2, 2, {}, {}, { isEmpty: true }));
     await vi.runAllTimersAsync();
     expect(quill.root).toEqualHTML(
       `
@@ -666,7 +666,7 @@ describe('set cell attribute', () => {
   });
 
   it('set span cell border color', async () => {
-    const quill = await createTable(5, 5, {}, { isEmpty: true });
+    const quill = await createTable(5, 5, {}, {}, { isEmpty: true });
     const tableModule = quill.getModule(TableUp.moduleName) as TableUp;
 
     const tds = quill.scroll.descendants(TableCellInnerFormat, 0);
@@ -707,7 +707,7 @@ describe('set cell attribute', () => {
   });
 
   it('set rowspan and colspan cell border color', async () => {
-    const quill = await createTable(6, 4, {}, { isEmpty: true });
+    const quill = await createTable(6, 4, {}, {}, { isEmpty: true });
     const tableModule = quill.getModule(TableUp.moduleName) as TableUp;
 
     const tds = quill.scroll.descendants(TableCellInnerFormat, 0);

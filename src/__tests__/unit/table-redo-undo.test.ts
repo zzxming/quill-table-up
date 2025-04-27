@@ -1,10 +1,13 @@
-import type { TableMainFormat } from '../../formats';
+import type { TableCaptionFormat, TableMainFormat } from '../../formats';
+import type { ToolOption } from '../../utils';
 import Quill from 'quill';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { TableCellInnerFormat } from '../../formats';
-import { TableSelection } from '../../modules';
+import { tableMenuTools, TableSelection } from '../../modules';
 import { TableUp } from '../../table-up';
-import { createQuillWithTableModule, createTable, createTableBodyHTML, createTableHTML, createTaleColHTML, datasetAlign, datasetFull } from './utils';
+import { createQuillWithTableModule, createTable, createTableBodyHTML, createTableHTML, createTaleColHTML, datasetAlign, datasetFull, expectDelta } from './utils';
+
+const Delta = Quill.import('delta');
 
 if (!Range.prototype.getBoundingClientRect) {
   Range.prototype.getBoundingClientRect = function () {
@@ -1132,6 +1135,251 @@ describe('undo cell attribute', () => {
         <p><br></p>
       `,
       { ignoreAttrs: ['class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
+    );
+  });
+});
+
+describe('table caption', () => {
+  it('undo and redo tableCaption insert', async () => {
+    const quill = await createTable(3, 3, { full: false });
+    const tableModule = quill.getModule(TableUp.moduleName) as TableUp;
+    await vi.runAllTimersAsync();
+    const table = quill.root.querySelector('table')!;
+    tableModule.table = table;
+    (tableMenuTools.InsertCaption as ToolOption).handle(tableModule, [], null);
+    await vi.runAllTimersAsync();
+    const tableCaptionDelta = new Delta([
+      { insert: '\nTable Caption' },
+      { attributes: { 'table-up-caption': { tableId: '1', side: 'top' } }, insert: '\n' },
+      { insert: { 'table-up-col': { tableId: '1', colId: '1', full: false, width: 100 } } },
+      { insert: { 'table-up-col': { tableId: '1', colId: '2', full: false, width: 100 } } },
+      { insert: { 'table-up-col': { tableId: '1', colId: '3', full: false, width: 100 } } },
+      { insert: '1' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '1', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '2' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '2', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '3' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '3', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '4' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '1', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '5' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '2', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '6' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '3', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '7' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '3', colId: '1', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '8' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '3', colId: '2', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '9' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '3', colId: '3', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '\n' },
+    ]);
+    expectDelta(
+      tableCaptionDelta,
+      quill.getContents(),
+    );
+
+    quill.history.undo();
+    await vi.runAllTimersAsync();
+    expectDelta(
+      new Delta([
+        { insert: '\n' },
+        { insert: { 'table-up-col': { tableId: '1', colId: '1', full: false, width: 100 } } },
+        { insert: { 'table-up-col': { tableId: '1', colId: '2', full: false, width: 100 } } },
+        { insert: { 'table-up-col': { tableId: '1', colId: '3', full: false, width: 100 } } },
+        { insert: '1' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '1', rowspan: 1, colspan: 1 } }, insert: '\n' },
+        { insert: '2' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '2', rowspan: 1, colspan: 1 } }, insert: '\n' },
+        { insert: '3' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '3', rowspan: 1, colspan: 1 } }, insert: '\n' },
+        { insert: '4' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '1', rowspan: 1, colspan: 1 } }, insert: '\n' },
+        { insert: '5' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '2', rowspan: 1, colspan: 1 } }, insert: '\n' },
+        { insert: '6' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '3', rowspan: 1, colspan: 1 } }, insert: '\n' },
+        { insert: '7' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '3', colId: '1', rowspan: 1, colspan: 1 } }, insert: '\n' },
+        { insert: '8' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '3', colId: '2', rowspan: 1, colspan: 1 } }, insert: '\n' },
+        { insert: '9' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '3', colId: '3', rowspan: 1, colspan: 1 } }, insert: '\n' },
+        { insert: '\n' },
+      ]),
+      quill.getContents(),
+    );
+
+    quill.history.redo();
+    await vi.runAllTimersAsync();
+    expectDelta(
+      tableCaptionDelta,
+      quill.getContents(),
+    );
+  });
+
+  it('undo and redo tableCaption edit', async () => {
+    const quill = await createTable(3, 3, { full: false });
+    const tableModule = quill.getModule(TableUp.moduleName) as TableUp;
+    await vi.runAllTimersAsync();
+    const table = quill.root.querySelector('table')!;
+    tableModule.table = table;
+    (tableMenuTools.InsertCaption as ToolOption).handle(tableModule, [], null);
+    await vi.runAllTimersAsync();
+    quill.deleteText({ index: 2, length: 4 });
+    await vi.runAllTimersAsync();
+    const tableCaptionDelta = new Delta([
+      { insert: '\nT Caption' },
+      { attributes: { 'table-up-caption': { tableId: '1', side: 'top' } }, insert: '\n' },
+      { insert: { 'table-up-col': { tableId: '1', colId: '1', full: false, width: 100 } } },
+      { insert: { 'table-up-col': { tableId: '1', colId: '2', full: false, width: 100 } } },
+      { insert: { 'table-up-col': { tableId: '1', colId: '3', full: false, width: 100 } } },
+      { insert: '1' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '1', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '2' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '2', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '3' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '3', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '4' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '1', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '5' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '2', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '6' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '3', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '7' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '3', colId: '1', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '8' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '3', colId: '2', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '9' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '3', colId: '3', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '\n' },
+    ]);
+    expectDelta(
+      tableCaptionDelta,
+      quill.getContents(),
+    );
+
+    quill.history.undo();
+    await vi.runAllTimersAsync();
+    expectDelta(
+      new Delta([
+        { insert: '\nTable Caption' },
+        { attributes: { 'table-up-caption': { tableId: '1', side: 'top' } }, insert: '\n' },
+        { insert: { 'table-up-col': { tableId: '1', colId: '1', full: false, width: 100 } } },
+        { insert: { 'table-up-col': { tableId: '1', colId: '2', full: false, width: 100 } } },
+        { insert: { 'table-up-col': { tableId: '1', colId: '3', full: false, width: 100 } } },
+        { insert: '1' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '1', rowspan: 1, colspan: 1 } }, insert: '\n' },
+        { insert: '2' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '2', rowspan: 1, colspan: 1 } }, insert: '\n' },
+        { insert: '3' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '3', rowspan: 1, colspan: 1 } }, insert: '\n' },
+        { insert: '4' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '1', rowspan: 1, colspan: 1 } }, insert: '\n' },
+        { insert: '5' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '2', rowspan: 1, colspan: 1 } }, insert: '\n' },
+        { insert: '6' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '3', rowspan: 1, colspan: 1 } }, insert: '\n' },
+        { insert: '7' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '3', colId: '1', rowspan: 1, colspan: 1 } }, insert: '\n' },
+        { insert: '8' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '3', colId: '2', rowspan: 1, colspan: 1 } }, insert: '\n' },
+        { insert: '9' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '3', colId: '3', rowspan: 1, colspan: 1 } }, insert: '\n' },
+        { insert: '\n' },
+      ]),
+      quill.getContents(),
+    );
+
+    quill.history.redo();
+    await vi.runAllTimersAsync();
+    expectDelta(
+      tableCaptionDelta,
+      quill.getContents(),
+    );
+  });
+
+  it('undo and redo tableCaption position switch', async () => {
+    const quill = await createTable(3, 3, { full: false });
+    const tableModule = quill.getModule(TableUp.moduleName) as TableUp;
+    await vi.runAllTimersAsync();
+    const table = quill.root.querySelector('table')!;
+    tableModule.table = table;
+    (tableMenuTools.InsertCaption as ToolOption).handle(tableModule, [], null);
+    await vi.runAllTimersAsync();
+
+    const tableCaption = Quill.find(table.querySelector('caption')!)! as TableCaptionFormat;
+    expect(tableCaption).not.toBeNull();
+    tableCaption.side = 'bottom';
+    await vi.runAllTimersAsync();
+    const tableCaptionDelta = new Delta([
+      { insert: '\nTable Caption' },
+      { attributes: { 'table-up-caption': { tableId: '1', side: 'bottom' } }, insert: '\n' },
+      { insert: { 'table-up-col': { tableId: '1', colId: '1', full: false, width: 100 } } },
+      { insert: { 'table-up-col': { tableId: '1', colId: '2', full: false, width: 100 } } },
+      { insert: { 'table-up-col': { tableId: '1', colId: '3', full: false, width: 100 } } },
+      { insert: '1' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '1', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '2' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '2', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '3' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '3', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '4' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '1', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '5' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '2', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '6' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '3', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '7' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '3', colId: '1', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '8' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '3', colId: '2', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '9' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '3', colId: '3', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '\n' },
+    ]);
+    expectDelta(
+      tableCaptionDelta,
+      quill.getContents(),
+    );
+
+    quill.history.undo();
+    await vi.runAllTimersAsync();
+    expectDelta(
+      new Delta([
+        { insert: '\nTable Caption' },
+        { attributes: { 'table-up-caption': { tableId: '1', side: 'top' } }, insert: '\n' },
+        { insert: { 'table-up-col': { tableId: '1', colId: '1', full: false, width: 100 } } },
+        { insert: { 'table-up-col': { tableId: '1', colId: '2', full: false, width: 100 } } },
+        { insert: { 'table-up-col': { tableId: '1', colId: '3', full: false, width: 100 } } },
+        { insert: '1' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '1', rowspan: 1, colspan: 1 } }, insert: '\n' },
+        { insert: '2' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '2', rowspan: 1, colspan: 1 } }, insert: '\n' },
+        { insert: '3' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '3', rowspan: 1, colspan: 1 } }, insert: '\n' },
+        { insert: '4' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '1', rowspan: 1, colspan: 1 } }, insert: '\n' },
+        { insert: '5' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '2', rowspan: 1, colspan: 1 } }, insert: '\n' },
+        { insert: '6' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '3', rowspan: 1, colspan: 1 } }, insert: '\n' },
+        { insert: '7' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '3', colId: '1', rowspan: 1, colspan: 1 } }, insert: '\n' },
+        { insert: '8' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '3', colId: '2', rowspan: 1, colspan: 1 } }, insert: '\n' },
+        { insert: '9' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '3', colId: '3', rowspan: 1, colspan: 1 } }, insert: '\n' },
+        { insert: '\n' },
+      ]),
+      quill.getContents(),
+    );
+
+    quill.history.redo();
+    await vi.runAllTimersAsync();
+    expectDelta(
+      tableCaptionDelta,
+      quill.getContents(),
     );
   });
 });

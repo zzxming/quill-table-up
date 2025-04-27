@@ -398,13 +398,13 @@ export class TableUp {
       const tableCellInnerFormat = Quill.import(`formats/${blotName.tableCellInner}`) as typeof TableCellInnerFormat;
       const inners = this.quill.scroll.domNode.querySelectorAll(`.${tableCellInnerFormat.className}`);
       const tableCaptionFormat = Quill.import(`formats/${blotName.tableCaption}`) as typeof TableCaptionFormat;
-      const captions = this.quill.scroll.domNode.querySelectorAll(`.${tableCaptionFormat.className}`);
-      for (const node of Array.from(captions).concat(Array.from(inners))) {
-        node.setAttribute('contenteditable', String(false));
-      }
-
       const html = originGetSemanticHTML.call(this.quill, index, length);
       const isEnabled = this.quill.isEnabled();
+
+      const captions = this.quill.scroll.domNode.querySelectorAll(`.${tableCaptionFormat.className}`);
+      for (const node of Array.from(captions).concat(Array.from(inners))) {
+        node.setAttribute('contenteditable', String(isEnabled));
+      }
       for (const inner of Array.from(inners)) {
         inner.setAttribute('contenteditable', String(isEnabled));
       }

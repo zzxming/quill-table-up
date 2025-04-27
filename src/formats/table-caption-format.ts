@@ -44,13 +44,17 @@ export class TableCaptionFormat extends BlockOverride {
     return this.domNode.dataset.tableId!;
   }
 
+  set side(value: TableCaptionValue['side']) {
+    this.domNode.style.captionSide = value === 'bottom' ? 'bottom' : 'top';
+  }
+
   get side() {
     return this.domNode.style.captionSide === 'bottom' ? 'bottom' : 'top';
   }
 
   format(name: string, value: any): void {
     const isBlock = this.scroll.query(name, Parchment.Scope.BLOCK_BLOT);
-    if (!isBlock) {
+    if (!isBlock || name === this.statics.blotName) {
       super.format(name, value);
     }
   }
