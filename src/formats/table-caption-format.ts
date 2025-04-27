@@ -1,16 +1,16 @@
-import type TypeBlock from 'quill/blots/block';
 import type TypeInline from 'quill/blots/inline';
+import type TypeScroll from 'quill/blots/scroll';
 import type TypeText from 'quill/blots/text';
 import type { TableCaptionValue } from '../utils';
 import Quill from 'quill';
 import { blotName } from '../utils';
+import { BlockOverride } from './overrides';
 
 const Parchment = Quill.import('parchment');
-const Block = Quill.import('blots/block') as typeof TypeBlock;
 const Inline = Quill.import('blots/inline') as typeof TypeInline;
 const Text = Quill.import('blots/text') as typeof TypeText;
 
-export class TableCaptionFormat extends Block {
+export class TableCaptionFormat extends BlockOverride {
   static blotName = blotName.tableCaption;
   static tagName = 'caption';
   static className = 'ql-table-caption';
@@ -33,6 +33,11 @@ export class TableCaptionFormat extends Block {
       side: domNode.style.captionSide === 'bottom' ? 'bottom' : 'top',
     };
     return value;
+  }
+
+  constructor(scroll: TypeScroll, domNode: HTMLElement, _value: TableCaptionValue) {
+    super(scroll, domNode);
+    domNode.setAttribute('contenteditable', String(scroll.isEnabled()));
   }
 
   get tableId() {
