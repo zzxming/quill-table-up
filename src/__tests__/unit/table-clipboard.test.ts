@@ -1152,7 +1152,7 @@ describe('clipboard content format', () => {
 describe('clipboard cell in cell', () => {
   it('paste simple text into table', async () => {
     const quill = createQuillWithTableModule(`<p><br></p>`);
-    quill.setContents(createTableDeltaOps(1, 1, { full: false, width: 100 }, { isEmpty: true }));
+    quill.setContents(createTableDeltaOps(1, 1, { full: false, width: 100 }, {}, { isEmpty: true }));
     await vi.runAllTimersAsync();
     await simulatePasteHTML(
       quill,
@@ -1176,7 +1176,7 @@ describe('clipboard cell in cell', () => {
 
   it('paste format text into table', async () => {
     const quill = createQuillWithTableModule(`<p><br></p>`);
-    quill.setContents(createTableDeltaOps(1, 1, { full: false, width: 100 }, { isEmpty: true }));
+    quill.setContents(createTableDeltaOps(1, 1, { full: false, width: 100 }, {}, { isEmpty: true }));
     await vi.runAllTimersAsync();
     await simulatePasteHTML(
       quill,
@@ -1202,7 +1202,7 @@ describe('clipboard cell in cell', () => {
 
   it('paste cell text into table', async () => {
     const quill = createQuillWithTableModule(`<p><br></p>`);
-    quill.setContents(createTableDeltaOps(1, 1, { full: false, width: 100 }, { isEmpty: true }));
+    quill.setContents(createTableDeltaOps(1, 1, { full: false, width: 100 }, {}, { isEmpty: true }));
     await vi.runAllTimersAsync();
     const range = { index: 2, length: 0 };
     quill.setSelection(range);
@@ -1228,7 +1228,7 @@ describe('clipboard cell in cell', () => {
 
   it('paste cell with format text into table', async () => {
     const quill = createQuillWithTableModule(`<p><br></p>`);
-    quill.setContents(createTableDeltaOps(1, 1, { full: false, width: 100 }, { isEmpty: true }));
+    quill.setContents(createTableDeltaOps(1, 1, { full: false, width: 100 }, {}, { isEmpty: true }));
     await vi.runAllTimersAsync();
     const range = { index: 2, length: 0 };
     quill.setSelection(range);

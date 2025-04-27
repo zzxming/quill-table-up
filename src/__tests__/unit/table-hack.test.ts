@@ -31,7 +31,7 @@ afterEach(() => {
 
 describe('hack html convert', () => {
   it('getSemanticHTML should not get contenteditable table cell', async () => {
-    const quill = await createTable(3, 3, { full: false, width: 100, align: 'right' }, { isEmpty: false });
+    const quill = await createTable(3, 3, { full: false, width: 100, align: 'right' });
     await vi.runAllTimersAsync();
     const html = quill.getSemanticHTML();
     const parser = new DOMParser();
@@ -52,7 +52,7 @@ describe('hack html convert', () => {
   });
 
   it('getHTMLByCell should not get contenteditable table cell', async () => {
-    const quill = await createTable(3, 3, { full: false, width: 100, align: 'right' }, { isEmpty: false });
+    const quill = await createTable(3, 3, { full: false, width: 100, align: 'right' });
     const tableModule = quill.getModule(TableUp.moduleName) as TableUp;
     const tds = quill.scroll.descendants(TableCellInnerFormat, 0);
     const html = tableModule.getHTMLByCell([tds[0], tds[1], tds[3], tds[4]]);
@@ -100,7 +100,7 @@ describe('hack html convert', () => {
   });
 
   it('getHTMLByCell should not get contenteditable table cell with attribute', async () => {
-    const quill = await createTable(4, 4, { full: true, width: 100 }, { isEmpty: false });
+    const quill = await createTable(4, 4, { full: true, width: 100 });
     const tableModule = quill.getModule(TableUp.moduleName) as TableUp;
     const tds = quill.scroll.descendants(TableCellInnerFormat, 0);
     const html = tableModule.getHTMLByCell([tds[0], tds[1], tds[4], tds[5]]);
@@ -177,7 +177,7 @@ describe('hack format cell', () => {
   });
 
   it('select part of text in cell should text like origin', async () => {
-    const quill = await createTable(2, 2, { full: false }, { isEmpty: false });
+    const quill = await createTable(2, 2, { full: false });
     quill.updateContents(
       new Delta()
         .retain(4)
@@ -278,7 +278,7 @@ describe('hack format cell', () => {
   });
 
   it('select length is 0 and not have selecteds should format like origin', async () => {
-    const quill = await createTable(2, 2, { full: false }, { isEmpty: false });
+    const quill = await createTable(2, 2, { full: false });
     quill.updateContents(
       new Delta()
         .retain(4)
@@ -316,7 +316,7 @@ describe('hack format cell', () => {
 
   it('select length is 0 and selectedTds not empty should format all text in cell', async () => {
     const quill = createQuillWithTableModule('<p></p>', { selection: TableSelection });
-    quill.setContents(createTableDeltaOps(2, 2, { full: false }, { isEmpty: false }));
+    quill.setContents(createTableDeltaOps(2, 2, { full: false }));
     quill.updateContents(
       new Delta()
         .retain(4)
