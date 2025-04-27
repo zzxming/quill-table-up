@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { TableCellInnerFormat } from '../../formats';
 import { TableSelection } from '../../modules';
 import { TableUp } from '../../table-up';
-import { createQuillWithTableModule, createTable, createTableBodyHTML, createTableDeltaOps, createTaleColHTML, expectDelta } from './utils';
+import { createQuillWithTableModule, createTable, createTableBodyHTML, createTableCaptionHTML, createTableDeltaOps, createTaleColHTML, expectDelta } from './utils';
 
 const Delta = Quill.import('delta');
 if (!Range.prototype.getBoundingClientRect) {
@@ -31,18 +31,66 @@ afterEach(() => {
 
 describe('hack html convert', () => {
   it('getSemanticHTML should not get contenteditable table cell', async () => {
-    const quill = await createTable(3, 3, { full: false, width: 100, align: 'right' });
+    const quill = createQuillWithTableModule(`<p><br></p>`);
+    quill.setContents([
+      { insert: '\nTable Caption' },
+      { attributes: { 'table-up-caption': { tableId: '1', side: 'bottom' } }, insert: '\n' },
+      { insert: { 'table-up-col': { tableId: '1', colId: '1', full: false, width: 100, align: 'right' } } },
+      { insert: { 'table-up-col': { tableId: '1', colId: '2', full: false, width: 100, align: 'right' } } },
+      { insert: { 'table-up-col': { tableId: '1', colId: '3', full: false, width: 100, align: 'right' } } },
+      { insert: '1' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '1', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '2' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '2', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '3' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '3', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '4' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '1', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '5' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '2', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '6' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '3', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '7' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '3', colId: '1', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '8' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '3', colId: '2', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '9' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '3', colId: '3', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '\n' },
+    ]);
+    quill.enable(false);
     await vi.runAllTimersAsync();
-    const html = quill.getSemanticHTML();
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(html, 'text/html');
-    expect(doc.body).toEqualHTML(
+    const html1 = quill.getSemanticHTML();
+    const parser1 = new DOMParser();
+    const doc1 = parser1.parseFromString(html1, 'text/html');
+    expect(doc1.body).toEqualHTML(
       `
         <p></p>
         <div contenteditable="false">
-          <table cellpadding="0" cellspacing="0" style="margin-left: auto; width: 300px;" data-align="right">
+          <table cellpadding="0" cellspacing="0" style="width: 300px; margin-left: auto;" data-align="right">
+            ${createTableCaptionHTML({ text: 'Table&nbsp;Caption', side: 'bottom' }, { editable: false })}
             ${createTaleColHTML(3, { full: false, width: 100, align: 'right' })}
             ${createTableBodyHTML(3, 3, { isEmpty: false, editable: false })}
+          </table>
+        </div>
+        <p></p>
+      `,
+      { ignoreAttrs: ['class', 'data-table-id'] },
+    );
+
+    quill.enable(true);
+    await vi.runAllTimersAsync();
+    const html2 = quill.getSemanticHTML();
+    const parser2 = new DOMParser();
+    const doc2 = parser2.parseFromString(html2, 'text/html');
+    expect(doc2.body).toEqualHTML(
+      `
+        <p></p>
+        <div contenteditable="false">
+          <table cellpadding="0" cellspacing="0" style="width: 300px; margin-left: auto;" data-align="right">
+            ${createTableCaptionHTML({ text: 'Table&nbsp;Caption', side: 'bottom' })}
+            ${createTaleColHTML(3, { full: false, width: 100, align: 'right' })}
+            ${createTableBodyHTML(3, 3, { isEmpty: false })}
           </table>
         </div>
         <p></p>

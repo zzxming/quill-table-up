@@ -174,10 +174,8 @@ export const createTable = async (row: number, col: number, colOptions?: ColOpti
 };
 export const createTableCaptionHTML = (captionOptions?: Partial<TableCaptionCreatorOptions>, options?: Partial<TableCreatorOptions>) => {
   const { text = '', side = 'top' } = captionOptions || {};
-  const { tableId = '1' } = options || {};
-  return `
-    <caption ${datasetTableId(tableId)}${side === 'top' ? '' : ' style="caption-side: bottom;"'}>${text}</caption>
-  `;
+  const { tableId = '1', editable = true } = options || {};
+  return `<caption contenteditable="${editable}" ${datasetTableId(tableId)}${side === 'top' ? '' : ' style="caption-side: bottom;"'}>${text}</caption>`;
 };
 export const createTaleColHTML = (colNum: number, colOptions?: Partial<ColOptions>, options?: Partial<TableCreatorOptions>) => {
   const { full = true, width = 100, align = 'left' } = colOptions || {};
