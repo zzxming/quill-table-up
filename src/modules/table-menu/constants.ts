@@ -1,4 +1,4 @@
-import type { TableMainFormat } from 'src/formats';
+import type { TableMainFormat } from '../../formats';
 import type { Tool } from '../../utils';
 import Quill from 'quill';
 import AutoFull from '../../svg/auto-full.svg';
