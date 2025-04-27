@@ -11,6 +11,7 @@ const {
   TableResizeScale,
   defaultCustomSelect,
   TableSelection,
+  tableMenuTools,
 } = window.TableUp;
 
 Quill.register({
@@ -53,6 +54,28 @@ const quill1 = new Quill('#editor1', {
         tableMenuOptions: {
           localstorageKey: 'used-color',
           tipText: true,
+          tools: [
+            tableMenuTools.InsertCaption,
+            tableMenuTools.InsertTop,
+            tableMenuTools.InsertRight,
+            tableMenuTools.InsertBottom,
+            tableMenuTools.InsertLeft,
+            tableMenuTools.Break,
+            tableMenuTools.MergeCell,
+            tableMenuTools.SplitCell,
+            tableMenuTools.Break,
+            tableMenuTools.DeleteRow,
+            tableMenuTools.DeleteColumn,
+            tableMenuTools.DeleteTable,
+            tableMenuTools.Break,
+            tableMenuTools.BackgroundColor,
+            tableMenuTools.BorderColor,
+            tableMenuTools.Break,
+            tableMenuTools.CopyCell,
+            tableMenuTools.CutCell,
+            tableMenuTools.Break,
+            tableMenuTools.SwitchWidth,
+          ],
           defaultColorMap: [
             [
               'rgb(255, 255, 255)',
@@ -109,6 +132,7 @@ const quill1 = new Quill('#editor1', {
         BackgroundColor: '设置背景颜色',
         BorderColor: '设置边框颜色',
         SwitchWidth: '切换表格宽度',
+        InsertCaption: '插入表格标题',
       },
     },
   },
