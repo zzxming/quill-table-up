@@ -1,3 +1,4 @@
+import type { Parchment as TypeParchment } from 'quill';
 import type TypeInline from 'quill/blots/inline';
 import type TypeScroll from 'quill/blots/scroll';
 import type TypeText from 'quill/blots/text';
@@ -61,6 +62,7 @@ export class TableCaptionFormat extends BlockOverride {
 
   checkMerge(): boolean {
     const next = this.next as TableCaptionFormat;
+
     return (
       next !== null
       && next.statics.blotName === this.statics.blotName
@@ -80,6 +82,10 @@ export class TableCaptionFormat extends BlockOverride {
     }
     else {
       super.optimize(context);
+      if (this.next != null && this.checkMerge()) {
+        (this.next as TypeParchment.ParentBlot).moveChildren(this);
+        this.next.remove();
+      }
     }
   }
 }
