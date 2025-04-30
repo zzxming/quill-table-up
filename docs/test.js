@@ -99,7 +99,7 @@ const quills = [
     customBtn: true,
     selection: TableSelection,
     selectionOptions: {
-      tableMenu: TableMenuContextmenu,
+      tableMenu: TableMenuSelect,
       tableMenuOptions: {
         tools: menuTools,
       },
@@ -115,7 +115,7 @@ const quills = [
     customBtn: true,
     selection: TableSelection,
     selectionOptions: {
-      tableMenu: TableMenuSelect,
+      tableMenu: TableMenuContextmenu,
       tableMenuOptions: {
         tools: menuTools,
       },

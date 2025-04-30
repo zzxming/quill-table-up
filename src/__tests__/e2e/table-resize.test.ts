@@ -83,12 +83,12 @@ test('test TableResizeLine full width', async ({ page }) => {
   expect(cellBounding).not.toBeNull();
   expect(tableBounding).not.toBeNull();
 
-  await page.mouse.move(cellBounding.x + 10, cellBounding.y + 10);
+  await page.mouse.move(cellBounding.x + cellBounding.width / 2, cellBounding.y + cellBounding.height / 2);
   const colBoundingBox = (await page.locator('#editor3 .table-up-resize-line__col').boundingBox())!;
   expect(colBoundingBox).not.toBeNull();
-  await page.mouse.move(colBoundingBox.x + colBoundingBox.width / 2, colBoundingBox.y + colBoundingBox.height / 2);
+  await page.mouse.move(colBoundingBox.x + colBoundingBox.width / 2, colBoundingBox.y + cellBounding.height / 2);
   await page.mouse.down();
-  await page.mouse.move(colBoundingBox.x + colBoundingBox.width / 2 + tableBounding.width * 0.05, colBoundingBox.y + colBoundingBox.height / 2);
+  await page.mouse.move(colBoundingBox.x + colBoundingBox.width / 2 + tableBounding.width * 0.05, colBoundingBox.y + cellBounding.height / 2);
   await page.mouse.up();
   const cols = page.locator('#editor3 .ql-table-wrapper col');
   await expect(cols.nth(1)).toHaveAttribute('width', '30%');
@@ -185,8 +185,7 @@ extendTest('test TableResizeBox and TableResizeScale should update when text cha
   expect(newBoxTop).toBeCloseTo(boxTop + lineBound.height * 2, 4);
 });
 
-extendTest('test TableResizeScale should hide when table width switch full', async ({ page, editorPage }) => {
-  editorPage.index = 1;
+extendTest('test TableResizeScale should hide when table width switch full', async ({ page }) => {
   await createTableBySelect(page, 'container1', 3, 3);
 
   const cell = page.locator('#editor1 .ql-editor .ql-table td').nth(0);
