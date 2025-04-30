@@ -18,7 +18,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const distBundle = resolve(__dirname, './dist');
 const demoBundle = resolve(__dirname, './docs');
 
-const buildDts = async () => {
+async function buildDts() {
   const bundle = await rollup(
     {
       input: './src/index.ts',
@@ -32,8 +32,8 @@ const buildDts = async () => {
     sourcemap: false,
     format: 'es',
   });
-};
-const buildTs = async (isDev: boolean = false) => {
+}
+async function buildTs(isDev: boolean = false) {
   const plugins = [
     typescript({ tsconfig: './tsconfig.json', exclude: ['src/__tests__'] }),
     nodeResolve(),
@@ -76,8 +76,8 @@ const buildTs = async (isDev: boolean = false) => {
     sourcemap: true,
     format: 'es',
   });
-};
-const buildTheme = async (isDev: boolean = false) => {
+}
+async function buildTheme(isDev: boolean = false) {
   const bunlde = await src(['./src/style/index.less', './src/style/table-creator.less'])
     .pipe(less())
     .pipe(
@@ -104,9 +104,9 @@ const buildTheme = async (isDev: boolean = false) => {
       .pipe(dest(distBundle));
   }
   return bunlde.pipe(dest(demoBundle));
-};
+}
 
-const dev = () => {
+function dev() {
   watch(['./src/**/*.ts', '!./src/**/__tests__/**/*'], parallel(buildTs.bind(undefined, true), buildDts));
   watch('./src/**/*.less', buildTheme.bind(undefined, true));
   spawn('node', ['./server.js'], {
@@ -114,7 +114,7 @@ const dev = () => {
     stdio: 'inherit',
     shell: process.platform === 'win32',
   });
-};
+}
 task('dev', series(dev));
 
 task('default', parallel(

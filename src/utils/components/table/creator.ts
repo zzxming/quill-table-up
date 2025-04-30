@@ -8,7 +8,7 @@ interface TableCreatorOptions extends Omit<TableCreatorTextOptions, 'customBtnTe
   row: number;
   col: number;
 }
-export const showTableCreator = async (options: Partial<TableCreatorOptions> = {}) => {
+export async function showTableCreator(options: Partial<TableCreatorOptions> = {}) {
   const bem = createBEM('creator');
   const box = document.createElement('div');
   box.classList.add(bem.b());
@@ -83,4 +83,4 @@ export const showTableCreator = async (options: Partial<TableCreatorOptions> = {
     document.addEventListener('keydown', keyboardClose);
     cancelBtn.addEventListener('click', close);
   });
-};
+}

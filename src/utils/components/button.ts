@@ -5,7 +5,7 @@ interface ButtonOptions {
   type: 'confirm' | 'default';
   content: HTMLElement | string;
 }
-export const createButton = (options?: Partial<ButtonOptions>) => {
+export function createButton(options?: Partial<ButtonOptions>) {
   const { type = 'default', content } = options || {};
   const bem = createBEM('button');
   const btn = document.createElement('button');
@@ -19,4 +19,4 @@ export const createButton = (options?: Partial<ButtonOptions>) => {
     }
   }
   return btn;
-};
+}

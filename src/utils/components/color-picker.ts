@@ -6,7 +6,7 @@ interface ColorPickerOptions {
   color: string;
   onChange: (color: string) => void;
 }
-export const createColorPicker = (options: Partial<ColorPickerOptions> = {}) => {
+export function createColorPicker(options: Partial<ColorPickerOptions> = {}) {
   const contentWidth = 230;
   const contentHeight = 150;
   const handleSizeSec = 10;
@@ -233,4 +233,4 @@ export const createColorPicker = (options: Partial<ColorPickerOptions> = {}) => 
 
   updateUI();
   return root;
-};
+}

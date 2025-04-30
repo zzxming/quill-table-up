@@ -1,7 +1,7 @@
 export interface CreateResizeObserverOptions {
   ignoreFirstBind: boolean;
 }
-export const createResizeObserver = (callback: (entries: ResizeObserverEntry[]) => void, options: Partial<CreateResizeObserverOptions> = {}) => {
+export function createResizeObserver(callback: (entries: ResizeObserverEntry[]) => void, options: Partial<CreateResizeObserverOptions> = {}) {
   const ignoreFirstBindSymbol = Symbol('ignoreFirstBind');
   type ResizeObserveTarget = Element & { [ignoreFirstBindSymbol]?: boolean };
   const observeEls: Set<ResizeObserveTarget> = new Set();
@@ -44,4 +44,4 @@ export const createResizeObserver = (callback: (entries: ResizeObserverEntry[]) 
   };
 
   return observer;
-};
+}

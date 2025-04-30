@@ -12,7 +12,7 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
-const createOverridesTable = (html: string, options = true, moduleOptions = {}, register = {}) => {
+function createOverridesTable(html: string, options = true, moduleOptions = {}, register = {}) {
   updateTableConstants({
     blotName: {
       tableCol: 'a-col',
@@ -137,7 +137,7 @@ const createOverridesTable = (html: string, options = true, moduleOptions = {}, 
     },
   });
   return quill;
-};
+}
 
 describe('test utils', () => {
   it('test findParentBlot', async () => {

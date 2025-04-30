@@ -1,5 +1,5 @@
 export const randomId = () => Math.random().toString(36).slice(2);
-export const debounce = <T extends (...args: any[]) => any>(fn: T, delay: number) => {
+export function debounce<T extends (...args: any[]) => any>(fn: T, delay: number) {
   let timestamp: ReturnType<typeof setTimeout>;
   return function (this: any, ...args: Parameters<T>) {
     if (timestamp) {
@@ -9,4 +9,4 @@ export const debounce = <T extends (...args: any[]) => any>(fn: T, delay: number
       fn.apply(this, args);
     }, delay);
   };
-};
+}

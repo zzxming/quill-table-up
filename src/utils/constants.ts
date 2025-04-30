@@ -109,9 +109,10 @@ export const cssNamespace = 'table-up';
 export const tableCantInsert: Set<string> = new Set([blotName.tableCellInner]);
 
 export const isForbidInTableBlot = (blot: TypeParchment.Blot) => tableCantInsert.has(blot.statics.blotName);
-export const isForbidInTable = (current: TypeParchment.Blot): boolean =>
-  current && current.parent
+export function isForbidInTable(current: TypeParchment.Blot): boolean {
+  return current && current.parent
     ? isForbidInTableBlot(current.parent)
       ? true
       : isForbidInTable(current.parent)
     : false;
+}

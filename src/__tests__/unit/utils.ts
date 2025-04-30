@@ -7,7 +7,7 @@ import { TableUp } from '../../table-up';
 const Delta = Quill.import('delta');
 
 export const normalizeHTML = (html: string | { html: string }) => typeof html === 'object' ? html.html : html.replaceAll(/\n\s*/g, '');
-export const sortAttributes = (element: HTMLElement) => {
+export function sortAttributes(element: HTMLElement) {
   const attributes = Array.from(element.attributes);
   const sortedAttributes = attributes.sort((a, b) =>
     a.name.localeCompare(b.name),
@@ -27,8 +27,8 @@ export const sortAttributes = (element: HTMLElement) => {
       sortAttributes(child);
     }
   });
-};
-export const createQuillWithTableModule = (html: string, tableOptions: Partial<TableUpOptions> = {}, moduleOptions = {}, quillOptions = {}, register = {}) => {
+}
+export function createQuillWithTableModule(html: string, tableOptions: Partial<TableUpOptions> = {}, moduleOptions = {}, quillOptions = {}, register = {}) {
   Quill.register({
     [`modules/${TableUp.moduleName}`]: TableUp,
     ...register,
@@ -50,7 +50,7 @@ export const createQuillWithTableModule = (html: string, tableOptions: Partial<T
     ...quillOptions,
   });
   return quill;
-};
+}
 
 expect.extend({
   toEqualHTML(received, expected, options = {}) {
@@ -114,15 +114,15 @@ export const datasetTableId = (id: string) => `data-table-id="${id}"`;
 export const datasetFull = (full: boolean) => full ? ' data-full="true"' : '';
 export const datasetAlign = (align: string) => align === 'left' ? '' : ` data-align="${align}"`;
 export const contenteditableString = (value: boolean | null) => value === null ? '' : ` contenteditable="${value}"`;
-export const getColWidthStyle = (options: Required<Omit<ColOptions, 'align' | 'tableId' | 'width'>> & { width?: number; colNum: number }) => {
+export function getColWidthStyle(options: Required<Omit<ColOptions, 'align' | 'tableId' | 'width'>> & { width?: number; colNum: number }) {
   const { full, width, colNum } = options;
   let colWidth = `${width}px`;
   if (full) {
     colWidth = `${1 / colNum * 100}%`;
   }
   return `width="${colWidth}"`;
-};
-export const createTableDeltaOps = (row: number, col: number, colOptions?: ColOptions, captionOptions?: Partial<TableCaptionCreatorOptions>, options: Partial<TableCreatorOptions> = {}) => {
+}
+export function createTableDeltaOps(row: number, col: number, colOptions?: ColOptions, captionOptions?: Partial<TableCaptionCreatorOptions>, options: Partial<TableCreatorOptions> = {}) {
   const { isEmpty = false, tableId = '1' } = options;
   const { full = true, width = 100, align = 'left' } = colOptions || {};
   const { text = '', side = 'top' } = captionOptions || {};
@@ -164,21 +164,21 @@ export const createTableDeltaOps = (row: number, col: number, colOptions?: ColOp
   }
   table.push({ insert: '\n' });
   return table;
-};
-export const createTable = async (row: number, col: number, colOptions?: ColOptions, captionOptions?: Partial<TableCaptionCreatorOptions>, options?: Partial<TableCreatorOptions>) => {
+}
+export async function createTable(row: number, col: number, colOptions?: ColOptions, captionOptions?: Partial<TableCaptionCreatorOptions>, options?: Partial<TableCreatorOptions>) {
   const quill = createQuillWithTableModule(`<p><br></p>`);
   quill.setContents(createTableDeltaOps(row, col, colOptions, captionOptions, options));
   // set range for undo won't scrollSelectionIntoView
   quill.setSelection({ index: 0, length: 0 });
   await vi.runAllTimersAsync();
   return quill;
-};
-export const createTableCaptionHTML = (captionOptions?: Partial<TableCaptionCreatorOptions>, options?: Partial<TableCreatorOptions>) => {
+}
+export function createTableCaptionHTML(captionOptions?: Partial<TableCaptionCreatorOptions>, options?: Partial<TableCreatorOptions>) {
   const { text = '', side = 'top' } = captionOptions || {};
   const { tableId = '1', editable = true } = options || {};
   return `<caption${contenteditableString(editable)} ${datasetTableId(tableId)}${side === 'top' ? '' : ' style="caption-side: bottom;"'}>${text}</caption>`;
-};
-export const createTaleColHTML = (colNum: number, colOptions?: Partial<ColOptions>, options?: Partial<TableCreatorOptions>) => {
+}
+export function createTaleColHTML(colNum: number, colOptions?: Partial<ColOptions>, options?: Partial<TableCreatorOptions>) {
   const { full = true, width = 100, align = 'left' } = colOptions || {};
   const { tableId = '1' } = options || {};
   const colWidth = getColWidthStyle({ full, width, colNum });
@@ -187,8 +187,8 @@ export const createTaleColHTML = (colNum: number, colOptions?: Partial<ColOption
       ${new Array(colNum).fill(0).map((_, i) => `<col ${colWidth} ${datasetTableId(tableId)} data-col-id="${i + 1}"${datasetFull(full)}${datasetAlign(align)} />`).join('\n')}
     </colgroup>
   `;
-};
-export const createTableBodyHTML = (row: number, col: number, options?: Partial<TableCreatorOptions>) => {
+}
+export function createTableBodyHTML(row: number, col: number, options?: Partial<TableCreatorOptions>) {
   const { isEmpty = false, tableId = '1', editable = true } = options || {};
   return `
     <tbody ${datasetTableId(tableId)}>
@@ -209,28 +209,28 @@ export const createTableBodyHTML = (row: number, col: number, options?: Partial<
       }
     </tbody>
   `;
-};
-export const createTableHTML = (row: number, col: number, colOptions?: ColOptions, options?: Partial<TableCreatorOptions>) => {
+}
+export function createTableHTML(row: number, col: number, colOptions?: ColOptions, options?: Partial<TableCreatorOptions>) {
   const { full = true, width = 100, align = 'left' } = colOptions || {};
   const { tableId = '1' } = options || {};
   let alignStyle = 'margin-right: auto;';
   switch (align) {
-    case 'center': {
-      alignStyle = 'margin-left: auto; margin-right: auto;';
-      break;
-    }
-    case '':
-    case 'left': {
-      alignStyle = 'margin-right: auto;';
-      break;
-    }
-    case 'right': {
-      alignStyle = 'margin-left: auto;';
-      break;
-    }
-    default: {
-      break;
-    }
+  case 'center': {
+    alignStyle = 'margin-left: auto; margin-right: auto;';
+    break;
+  }
+  case '':
+  case 'left': {
+    alignStyle = 'margin-right: auto;';
+    break;
+  }
+  case 'right': {
+    alignStyle = 'margin-left: auto;';
+    break;
+  }
+  default: {
+    break;
+  }
   }
 
   return `
@@ -241,9 +241,9 @@ export const createTableHTML = (row: number, col: number, colOptions?: ColOption
       </table>
     </div>
   `;
-};
+}
 
-export const simulatePasteHTML = (quill: Quill, range: TypeRange, html: string) => {
+export function simulatePasteHTML(quill: Quill, range: TypeRange, html: string) {
   const formats = quill.getFormat(range.index);
   const pastedDelta = quill.clipboard.convert(
     { html },
@@ -255,4 +255,4 @@ export const simulatePasteHTML = (quill: Quill, range: TypeRange, html: string) 
     .concat(pastedDelta);
   quill.updateContents(delta);
   return vi.runAllTimersAsync();
-};
+}

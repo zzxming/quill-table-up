@@ -114,7 +114,7 @@ export class TableColFormat extends BlockEmbed {
     );
   }
 
-  optimize(context: Record< string, any>) {
+  optimize(context: Record<string, any>) {
     const parent = this.parent;
     if (parent != null && parent.statics.blotName !== blotName.tableColgroup) {
       const value = this.statics.value(this.domNode);
