@@ -9,7 +9,7 @@ interface TableSelectOptions {
   customBtn: boolean;
   texts: Partial<TableCreatorTextOptions>;
 }
-export const createSelectBox = (options: Partial<TableSelectOptions> = {}) => {
+export function createSelectBox(options: Partial<TableSelectOptions> = {}) {
   const bem = createBEM('select-box');
   const selectDom = document.createElement('div');
   selectDom.classList.add(bem.b());
@@ -80,4 +80,4 @@ export const createSelectBox = (options: Partial<TableSelectOptions> = {}) => {
   }
 
   return selectDom;
-};
+}

@@ -30,7 +30,7 @@ export function getRelativeRect(targetRect: Omit<RelactiveRect, 'x1' | 'y1'>, co
 }
 
 const viewportPadding = 8;
-export const limitDomInViewPort = (rect: { left: number; top: number; width: number; height: number }) => {
+export function limitDomInViewPort(rect: { left: number; top: number; width: number; height: number }) {
   let { left, top, width, height } = rect;
   const { clientWidth, clientHeight } = document.documentElement;
   let leftLimited = false;
@@ -57,4 +57,4 @@ export const limitDomInViewPort = (rect: { left: number; top: number; width: num
     leftLimited,
     topLimited,
   };
-};
+}

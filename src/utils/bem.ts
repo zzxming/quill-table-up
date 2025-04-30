@@ -1,6 +1,6 @@
 import { cssNamespace } from './constants';
 
-export const createBEM = (b: string, n: string = cssNamespace) => {
+export function createBEM(b: string, n: string = cssNamespace) {
   const prefix = n ? `${n}-` : '';
   return {
     /** n-b */
@@ -20,4 +20,4 @@ export const createBEM = (b: string, n: string = cssNamespace) => {
     /** is-n */
     is: (n: string) => `is-${n}`,
   };
-};
+}

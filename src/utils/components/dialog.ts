@@ -6,7 +6,7 @@ interface DialogOptions {
   beforeClose?: () => void;
 }
 let zindex = 8000;
-export const createDialog = ({ child, target = document.body, beforeClose = () => {} }: DialogOptions = {}) => {
+export function createDialog({ child, target = document.body, beforeClose = () => {} }: DialogOptions = {}) {
   const bem = createBEM('dialog');
   const appendTo = target;
   const dialog = document.createElement('div');
@@ -38,4 +38,4 @@ export const createDialog = ({ child, target = document.body, beforeClose = () =
   zindex += 1;
 
   return { dialog, close };
-};
+}

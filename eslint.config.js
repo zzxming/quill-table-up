@@ -11,6 +11,8 @@ export default factory({
         'unicorn/consistent-function-scoping': 'off',
         'no-cond-assign': 'off',
         'new-cap': 'off',
+        'ts/no-this-alias': 'off',
+        'ts/no-unsafe-function-type': 'off',
       },
     },
   ],

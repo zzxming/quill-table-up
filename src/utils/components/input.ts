@@ -7,7 +7,7 @@ interface InputOptions {
   min?: number;
   [key: string]: any;
 }
-export const createInputItem = (label: string, options: InputOptions) => {
+export function createInputItem(label: string, options: InputOptions) {
   const bem = createBEM('input');
   options.type || (options.type = 'text');
   options.value || (options.value = '');
@@ -71,4 +71,4 @@ export const createInputItem = (label: string, options: InputOptions) => {
   };
 
   return { item: inputItem, input, errorTip };
-};
+}
