@@ -1,3 +1,17 @@
+/** This file is an example of modifying the blot name and delta data structure
+
+  * Change the blot name
+  *  table-up-col -> a-col
+  *  table-up-cell -> a-cell
+  *  table-up-cell-inner -> a-cell-inner
+
+  * Change the delta data structure
+  *  colId -> column
+  *  rowId -> row
+  *  colId -> cell
+
+*/
+
 import Quill from 'quill';
 import { defaultCustomSelect, TableAlign, TableCellFormat, TableCellInnerFormat, TableColFormat, TableMenuContextmenu, TableResizeBox, TableSelection, TableUp, TableVirtualScrollbar, updateTableConstants } from 'table-up';
 
@@ -20,7 +34,6 @@ class TableColFormatOverride extends TableColFormat {
     const { colId, column } = value;
     const node = super.create(value);
     node.dataset.colId = column || colId;
-    node.setAttribute('contenteditable', 'false');
     return node;
   }
 
@@ -154,39 +167,11 @@ const quill = new Quill('#editor1', {
 
 quill.setContents([
   { insert: '\n' },
-  {
-    insert: {
-      'a-col': { tableId: '1', column: '1', full: true, width: 50 },
-    },
-  },
-  {
-    insert: {
-      'a-col': { tableId: '1', column: '2', full: true, width: 50 },
-    },
-  },
-  {
-    attributes: {
-      'a-cell-inner': { tableId: '1', row: '1', cell: '1', rowspan: 1, colspan: 1 },
-    },
-    insert: '\n',
-  },
-  {
-    attributes: {
-      'a-cell-inner': { tableId: '1', row: '1', cell: '2', rowspan: 1, colspan: 1 },
-    },
-    insert: '\n',
-  },
-  {
-    attributes: {
-      'a-cell-inner': { tableId: '1', row: '2', cell: '1', rowspan: 1, colspan: 1 },
-    },
-    insert: '\n',
-  },
-  {
-    attributes: {
-      'a-cell-inner': { tableId: '1', row: '2', cell: '2', rowspan: 1, colspan: 1 },
-    },
-    insert: '\n',
-  },
+  { insert: { 'a-col': { tableId: '1', column: '1', full: true, width: 50 } } },
+  { insert: { 'a-col': { tableId: '1', column: '2', full: true, width: 50 } } },
+  { attributes: { 'a-cell-inner': { tableId: '1', row: '1', cell: '1', rowspan: 1, colspan: 1 } }, insert: '\n' },
+  { attributes: { 'a-cell-inner': { tableId: '1', row: '1', cell: '2', rowspan: 1, colspan: 1 } }, insert: '\n' },
+  { attributes: { 'a-cell-inner': { tableId: '1', row: '2', cell: '1', rowspan: 1, colspan: 1 } }, insert: '\n' },
+  { attributes: { 'a-cell-inner': { tableId: '1', row: '2', cell: '2', rowspan: 1, colspan: 1 } }, insert: '\n' },
   { insert: '\n' },
 ]);

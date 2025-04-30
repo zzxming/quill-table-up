@@ -42,14 +42,20 @@ const quill1 = new Quill('#editor1', {
     toolbar: toolbarConfig,
     [TableUp.moduleName]: {
       full: false,
+      fullSwitch: true,
+      icon: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><!-- Icon from Tabler Icons by Paweł Kuna - https://github.com/tabler/tabler-icons/blob/master/LICENSE --><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2zm0 5h18M10 3v18"/></svg>',
       scrollbar: TableVirtualScrollbar,
       align: TableAlign,
       resize: TableResizeLine,
       resizeScale: TableResizeScale,
+      resizeScaleOptions: {
+        blockSize: 12,
+      },
       customSelect: defaultCustomSelect,
       customBtn: true,
       selection: TableSelection,
       selectionOptions: {
+        selectColor: '#00ff8b4d',
         tableMenu: TableMenuContextmenu,
         tableMenuOptions: {
           localstorageKey: 'used-color',
