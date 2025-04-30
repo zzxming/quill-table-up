@@ -57,7 +57,7 @@
     "@typescript-eslint/parser": "^8.31.1",
     "@vitest/coverage-v8": "^3.1.2",
     "@vitest/ui": "^3.1.2",
-    "@zzxming/eslint-config": "0.4.4",
+    "@zzxming/eslint-config": "0.4.5",
     "autoprefixer": "^10.4.21",
     "eslint": "^9.25.0",
     "gulp": "^4.0.2",

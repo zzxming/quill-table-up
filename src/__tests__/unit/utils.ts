@@ -215,22 +215,22 @@ export function createTableHTML(row: number, col: number, colOptions?: ColOption
   const { tableId = '1' } = options || {};
   let alignStyle = 'margin-right: auto;';
   switch (align) {
-  case 'center': {
-    alignStyle = 'margin-left: auto; margin-right: auto;';
-    break;
-  }
-  case '':
-  case 'left': {
-    alignStyle = 'margin-right: auto;';
-    break;
-  }
-  case 'right': {
-    alignStyle = 'margin-left: auto;';
-    break;
-  }
-  default: {
-    break;
-  }
+    case 'center': {
+      alignStyle = 'margin-left: auto; margin-right: auto;';
+      break;
+    }
+    case '':
+    case 'left': {
+      alignStyle = 'margin-right: auto;';
+      break;
+    }
+    case 'right': {
+      alignStyle = 'margin-left: auto;';
+      break;
+    }
+    default: {
+      break;
+    }
   }
 
   return `

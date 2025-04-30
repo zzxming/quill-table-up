@@ -105,23 +105,23 @@ export class TableMainFormat extends ContainerFormat {
       marginRight: null,
     };
     switch (value) {
-    case 'center': {
-      style.marginLeft = 'auto';
-      style.marginRight = 'auto';
-      break;
-    }
-    case '':
-    case 'left': {
-      style.marginRight = 'auto';
-      break;
-    }
-    case 'right': {
-      style.marginLeft = 'auto';
-      break;
-    }
-    default: {
-      break;
-    }
+      case 'center': {
+        style.marginLeft = 'auto';
+        style.marginRight = 'auto';
+        break;
+      }
+      case '':
+      case 'left': {
+        style.marginRight = 'auto';
+        break;
+      }
+      case 'right': {
+        style.marginLeft = 'auto';
+        break;
+      }
+      default: {
+        break;
+      }
     }
     Object.assign(this.domNode.style, style);
   }
