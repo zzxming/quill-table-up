@@ -395,20 +395,16 @@ export class TableUp {
   quillHack() {
     const originGetSemanticHTML = this.quill.getSemanticHTML;
     this.quill.getSemanticHTML = ((index: number = 0, length?: number) => {
-      const tableCellInnerFormat = Quill.import(`formats/${blotName.tableCellInner}`) as typeof TableCellInnerFormat;
-      const inners = this.quill.scroll.domNode.querySelectorAll(`.${tableCellInnerFormat.className}`);
-      const tableCaptionFormat = Quill.import(`formats/${blotName.tableCaption}`) as typeof TableCaptionFormat;
       const html = originGetSemanticHTML.call(this.quill, index, length);
-      const isEnabled = this.quill.isEnabled();
 
-      const captions = this.quill.scroll.domNode.querySelectorAll(`.${tableCaptionFormat.className}`);
-      for (const node of Array.from(captions).concat(Array.from(inners))) {
-        node.setAttribute('contenteditable', String(isEnabled));
+      const tableWrapperFormat = Quill.import(`formats/${blotName.tableWrapper}`) as typeof TableWrapperFormat;
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(html, 'text/html');
+      for (const node of Array.from(doc.querySelectorAll(`.${tableWrapperFormat.className} caption[contenteditable], .${tableWrapperFormat.className} td > [contenteditable]`))) {
+        node.removeAttribute('contenteditable');
       }
-      for (const inner of Array.from(inners)) {
-        inner.setAttribute('contenteditable', String(isEnabled));
-      }
-      return html;
+
+      return doc.body.innerHTML;
     }) as typeof originGetSemanticHTML;
 
     // make sure toolbar item can format selected cells
@@ -699,110 +695,69 @@ export class TableUp {
     }
 
     if (!tableMain) return '';
+    const tableIndex = this.quill.getIndex(tableMain);
+    const tableLength = tableMain.length();
+    const tableHTML = this.quill.getSemanticHTML(tableIndex, tableLength);
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(tableHTML, 'text/html');
 
-    const colgroupBlot = tableMain.children.head;
-    const tbodyBlot = tableMain.children.tail;
-    if (!tbodyBlot || !colgroupBlot) {
-      console.error('tableMain has no tbody or colgroup');
-      return '';
-    }
-
-    function getElementTags(element: HTMLElement) {
-      const tagName = element.tagName.toLowerCase();
-      const attributes = Array.from(element.attributes)
-        .map(attr => `${attr.name}="${attr.value}"`)
-        .join(' ');
-      const startTag = `<${tagName}${attributes ? ` ${attributes}` : ''}>`;
-      const selfClosingTags = [
-        'area',
-        'base',
-        'br',
-        'col',
-        'embed',
-        'hr',
-        'img',
-        'input',
-        'link',
-        'meta',
-        'param',
-        'source',
-        'track',
-        'wbr',
-      ];
-
-      return {
-        startTag,
-        endTag: selfClosingTags.includes(tagName) ? '' : `</${tagName}>`,
-      };
-    }
-
-    let html = '';
-    const colIds: Set<string> = new Set();
-    let tdRows = 0;
-    let lastTrId: string | null = null;
+    const cellColWidth: string[] = [];
+    const cellColIds = new Set<string>();
+    const cellIds = new Set<string>();
     for (const td of tds) {
-      const i = this.quill.getIndex(td);
-      const len = td.length();
-      const htmlStr = this.quill.getSemanticHTML(i, len);
-      const parser = new DOMParser();
-      const doc = parser.parseFromString(htmlStr, 'text/html');
-      // remove contenteditable on tableCellInner
-      for (const td of Array.from(doc.querySelectorAll('td > div[contenteditable]'))) {
-        td.removeAttribute('contenteditable');
-      }
-      const tr = doc.querySelector('tr')!;
-      if (td.rowId !== lastTrId) {
-        tdRows += 1;
-        const { startTag, endTag } = getElementTags(tr);
-        html += `${html ? endTag : ''}${startTag}${tr.innerHTML}`;
+      cellColIds.add(td.colId);
+      cellIds.add(`${td.rowId}-${td.colId}`);
+    }
+    // filter col
+    for (const col of Array.from(doc.querySelectorAll('col'))) {
+      if (!cellColIds.has(col.dataset.colId!)) {
+        col.remove();
       }
       else {
-        html += tr.innerHTML;
+        cellColWidth.push(col.getAttribute('width')!);
       }
-      lastTrId = td.rowId;
-      colIds.add(td.colId);
     }
-    html += '</tr>';
-
-    const { startTag, endTag } = getElementTags(tbodyBlot.domNode as HTMLElement);
-    html = `${startTag}${html}${endTag}`;
-
-    const cols = tableMain.getCols();
-    const { startTag: colgroupStartTag, endTag: colgroupEndTag } = getElementTags(colgroupBlot.domNode as HTMLElement);
-    let colStr = '';
-    let width = 0;
-    const convertCols = cols.filter(col => colIds.has(col.colId)).map(col => col.clone() as TableColFormat);
+    // filter td
+    let rowCount = 0;
+    let lastRowId: string | null = null;
+    for (const td of Array.from(doc.querySelectorAll('td'))) {
+      if (!cellIds.has(`${td.dataset.rowId}-${td.dataset.colId}`)) {
+        const parent = td.parentElement;
+        td.remove();
+        if (parent && parent.children.length <= 0) {
+          parent.remove();
+        }
+      }
+      else {
+        if (lastRowId !== td.dataset.rowId) {
+          rowCount += 1;
+          lastRowId = td.dataset.rowId!;
+        }
+      }
+    }
+    // calculate width
+    const cols = Array.from(doc.querySelectorAll('col'));
+    const colsValue = cols.map(col => TableColFormat.value(col));
     if (tableMain.full) {
-      // Complete the remaining width
-      const totalWidth = convertCols.reduce((total, col) => total + col.width, 0);
-      const totalRemainingWidth = 100 - totalWidth;
-      const part = totalRemainingWidth / totalWidth;
+      const totalWidth = colsValue.reduce((total, col) => col.width + total, 0);
 
-      for (const col of convertCols) {
-        col.width += Math.round(col.width * part);
+      for (const [i, col] of colsValue.entries()) {
+        col.width = Math.round((col.width / totalWidth) * 100);
+        cols[i].setAttribute('width', `${col.width}%`);
       }
     }
-    for (const col of convertCols) {
-      const { startTag } = getElementTags(col.domNode as HTMLElement);
-      colStr += startTag;
-      width += col.width;
-    }
-    html = colgroupStartTag + colStr + colgroupEndTag + html;
-
-    const tableMainDom = tableMain.domNode.cloneNode() as HTMLElement;
-    if (!tableMain.full) {
+    else {
+      let width = 0;
+      for (const col of colsValue) {
+        width += col.width;
+      }
+      const tableMainDom = doc.querySelector('table')!;
       tableMainDom.style.width = `${width}px`;
     }
 
-    const { startTag: mainStartTag, endTag: mainEndTag } = getElementTags(tableMainDom);
-    html = mainStartTag + html + mainEndTag;
-
-    const { startTag: wrapperStartTag, endTag: wrapperEndTag } = getElementTags(tableMain.parent.domNode as HTMLElement);
-    html = wrapperStartTag + html + wrapperEndTag;
-
     if (isCut) {
       const trs = tableMain.getRows();
-      if (tdRows === trs.length) {
+      if (rowCount === trs.length) {
         this.removeCol(tds);
       }
       else {
@@ -811,7 +766,7 @@ export class TableUp {
         }
       }
     }
-    return html;
+    return doc.body.innerHTML;
   }
 
   insertTable(rows: number, columns: number) {

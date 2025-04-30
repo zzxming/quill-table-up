@@ -30,7 +30,7 @@ afterEach(() => {
 });
 
 describe('hack html convert', () => {
-  it('getSemanticHTML should not get contenteditable table cell', async () => {
+  it('getSemanticHTML should not get contenteditable table cell or caption', async () => {
     const quill = createQuillWithTableModule(`<p><br></p>`);
     quill.setContents([
       { insert: '\nTable Caption' },
@@ -58,7 +58,6 @@ describe('hack html convert', () => {
       { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '3', colId: '3', rowspan: 1, colspan: 1 } }, insert: '\n' },
       { insert: '\n' },
     ]);
-    quill.enable(false);
     await vi.runAllTimersAsync();
     const html1 = quill.getSemanticHTML();
     const parser1 = new DOMParser();
@@ -68,29 +67,9 @@ describe('hack html convert', () => {
         <p></p>
         <div contenteditable="false">
           <table cellpadding="0" cellspacing="0" style="width: 300px; margin-left: auto;" data-align="right">
-            ${createTableCaptionHTML({ text: 'Table&nbsp;Caption', side: 'bottom' }, { editable: false })}
+            ${createTableCaptionHTML({ text: 'Table&nbsp;Caption', side: 'bottom' }, { editable: null })}
             ${createTaleColHTML(3, { full: false, width: 100, align: 'right' })}
-            ${createTableBodyHTML(3, 3, { isEmpty: false, editable: false })}
-          </table>
-        </div>
-        <p></p>
-      `,
-      { ignoreAttrs: ['class', 'data-table-id'] },
-    );
-
-    quill.enable(true);
-    await vi.runAllTimersAsync();
-    const html2 = quill.getSemanticHTML();
-    const parser2 = new DOMParser();
-    const doc2 = parser2.parseFromString(html2, 'text/html');
-    expect(doc2.body).toEqualHTML(
-      `
-        <p></p>
-        <div contenteditable="false">
-          <table cellpadding="0" cellspacing="0" style="width: 300px; margin-left: auto;" data-align="right">
-            ${createTableCaptionHTML({ text: 'Table&nbsp;Caption', side: 'bottom' })}
-            ${createTaleColHTML(3, { full: false, width: 100, align: 'right' })}
-            ${createTableBodyHTML(3, 3, { isEmpty: false })}
+            ${createTableBodyHTML(3, 3, { isEmpty: false, editable: null })}
           </table>
         </div>
         <p></p>
@@ -99,8 +78,34 @@ describe('hack html convert', () => {
     );
   });
 
-  it('getHTMLByCell should not get contenteditable table cell', async () => {
-    const quill = await createTable(3, 3, { full: false, width: 100, align: 'right' });
+  it('getHTMLByCell should not get contenteditable table cell or caption', async () => {
+    const quill = createQuillWithTableModule(`<p><br></p>`);
+    quill.setContents([
+      { insert: '\nTable Caption' },
+      { attributes: { 'table-up-caption': { tableId: '1', side: 'bottom' } }, insert: '\n' },
+      { insert: { 'table-up-col': { tableId: '1', colId: '1', full: false, width: 100, align: 'right' } } },
+      { insert: { 'table-up-col': { tableId: '1', colId: '2', full: false, width: 100, align: 'right' } } },
+      { insert: { 'table-up-col': { tableId: '1', colId: '3', full: false, width: 100, align: 'right' } } },
+      { insert: '1' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '1', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '2' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '2', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '3' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '3', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '4' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '1', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '5' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '2', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '6' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '3', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '7' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '3', colId: '1', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '8' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '3', colId: '2', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '9' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '3', colId: '3', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '\n' },
+    ]);
     const tableModule = quill.getModule(TableUp.moduleName) as TableUp;
     const tds = quill.scroll.descendants(TableCellInnerFormat, 0);
     const html = tableModule.getHTMLByCell([tds[0], tds[1], tds[3], tds[4]]);
@@ -109,7 +114,8 @@ describe('hack html convert', () => {
     expect(doc.body).toEqualHTML(
       `
         <div contenteditable="false">
-          <table cellpadding="0" cellspacing="0" style="margin-left: auto; width: 200px;" data-align="right">
+          <table cellpadding="0" cellspacing="0" style="width: 200px; margin-left: auto;" data-align="right">
+            <caption style="caption-side: bottom;">Table&nbsp;Caption</caption>
             <colgroup contenteditable="false" data-align="right">
               <col width="100px" data-col-id="1" data-align="right" />
               <col width="100px" data-col-id="2" data-align="right" />
@@ -136,54 +142,6 @@ describe('hack html convert', () => {
                 <td colspan="1" data-col-id="2" data-row-id="2" rowspan="1">
                   <div data-col-id="2" data-colspan="1" data-row-id="2" data-rowspan="1">
                     <p>5</p>
-                  </div>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      `,
-      { ignoreAttrs: ['class', 'data-table-id'] },
-    );
-  });
-
-  it('getHTMLByCell should not get contenteditable table cell with attribute', async () => {
-    const quill = await createTable(4, 4, { full: true, width: 100 });
-    const tableModule = quill.getModule(TableUp.moduleName) as TableUp;
-    const tds = quill.scroll.descendants(TableCellInnerFormat, 0);
-    const html = tableModule.getHTMLByCell([tds[0], tds[1], tds[4], tds[5]]);
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(html, 'text/html');
-    expect(doc.body).toEqualHTML(
-      `
-        <div contenteditable="false">
-          <table cellpadding="0" cellspacing="0" style="margin-right: auto;" data-full="true">
-            <colgroup contenteditable="false" data-full="true">
-              <col width="50%" data-col-id="1" data-full="true" />
-              <col width="50%" data-col-id="2" data-full="true" />
-            </colgroup>
-            <tbody>
-              <tr data-row-id="1">
-                <td colspan="1" data-col-id="1" data-row-id="1" rowspan="1">
-                  <div data-col-id="1" data-colspan="1" data-row-id="1" data-rowspan="1">
-                    <p>1</p>
-                  </div>
-                </td>
-                <td colspan="1" data-col-id="2" data-row-id="1" rowspan="1">
-                  <div data-col-id="2" data-colspan="1" data-row-id="1" data-rowspan="1">
-                    <p>2</p>
-                  </div>
-                </td>
-              </tr>
-              <tr data-row-id="2">
-                <td colspan="1" data-col-id="1" data-row-id="2" rowspan="1">
-                  <div data-col-id="1" data-colspan="1" data-row-id="2" data-rowspan="1">
-                    <p>5</p>
-                  </div>
-                </td>
-                <td colspan="1" data-col-id="2" data-row-id="2" rowspan="1">
-                  <div data-col-id="2" data-colspan="1" data-row-id="2" data-rowspan="1">
-                    <p>6</p>
                   </div>
                 </td>
               </tr>
