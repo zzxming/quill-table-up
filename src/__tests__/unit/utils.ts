@@ -104,7 +104,7 @@ interface TableColDeltaValue extends Omit<TableColValue, 'width' | 'full'> {
 interface TableCreatorOptions {
   isEmpty: boolean;
   tableId: string;
-  editable: boolean;
+  editable: boolean | null;
 }
 type ColOptions = Omit<TableColValue, 'width' | 'tableId' | 'colId'> & { width?: number };
 interface TableCaptionCreatorOptions extends Omit<TableCaptionValue, 'tableId'> {
@@ -113,6 +113,7 @@ interface TableCaptionCreatorOptions extends Omit<TableCaptionValue, 'tableId'> 
 export const datasetTableId = (id: string) => `data-table-id="${id}"`;
 export const datasetFull = (full: boolean) => full ? ' data-full="true"' : '';
 export const datasetAlign = (align: string) => align === 'left' ? '' : ` data-align="${align}"`;
+export const contenteditableString = (value: boolean | null) => value === null ? '' : ` contenteditable="${value}"`;
 export const getColWidthStyle = (options: Required<Omit<ColOptions, 'align' | 'tableId' | 'width'>> & { width?: number; colNum: number }) => {
   const { full, width, colNum } = options;
   let colWidth = `${width}px`;
@@ -175,7 +176,7 @@ export const createTable = async (row: number, col: number, colOptions?: ColOpti
 export const createTableCaptionHTML = (captionOptions?: Partial<TableCaptionCreatorOptions>, options?: Partial<TableCreatorOptions>) => {
   const { text = '', side = 'top' } = captionOptions || {};
   const { tableId = '1', editable = true } = options || {};
-  return `<caption contenteditable="${editable}" ${datasetTableId(tableId)}${side === 'top' ? '' : ' style="caption-side: bottom;"'}>${text}</caption>`;
+  return `<caption${contenteditableString(editable)} ${datasetTableId(tableId)}${side === 'top' ? '' : ' style="caption-side: bottom;"'}>${text}</caption>`;
 };
 export const createTaleColHTML = (colNum: number, colOptions?: Partial<ColOptions>, options?: Partial<TableCreatorOptions>) => {
   const { full = true, width = 100, align = 'left' } = colOptions || {};
@@ -196,7 +197,7 @@ export const createTableBodyHTML = (row: number, col: number, options?: Partial<
           <tr ${datasetTableId(tableId)} data-row-id="${i + 1}">
             ${
               new Array(col).fill(0).map((_, j) => `<td rowspan="1" colspan="1" ${datasetTableId(tableId)} data-row-id="${i + 1}" data-col-id="${j + 1}">
-                <div ${datasetTableId(tableId)} data-rowspan="1" data-colspan="1" data-row-id="${i + 1}" data-col-id="${j + 1}" contenteditable="${editable}">
+                <div ${datasetTableId(tableId)} data-rowspan="1" data-colspan="1" data-row-id="${i + 1}" data-col-id="${j + 1}"${contenteditableString(editable)}>
                   <p>
                     ${isEmpty ? '<br>' : i * row + j + 1}
                   </p>
