@@ -274,7 +274,7 @@ describe('set contents', () => {
     expect(quill.root).toEqualHTML(
       `
         <p><br></p>
-        ${createTableHTML(2, 2, {}, { isEmpty: true })}
+        ${createTableHTML(2, 2, {}, undefined, { isEmpty: true })}
         <p><br></p>
       `,
       { ignoreAttrs: ['class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },

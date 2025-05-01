@@ -4,6 +4,7 @@ import type TypeScroll from 'quill/blots/scroll';
 import type TypeText from 'quill/blots/text';
 import type { TableCaptionValue } from '../utils';
 import Quill from 'quill';
+import ArrowUpDown from '../svg/arrow-up-down.svg';
 import { blotName } from '../utils';
 import { BlockOverride } from './overrides';
 
@@ -36,9 +37,32 @@ export class TableCaptionFormat extends BlockOverride {
     return value;
   }
 
+  declare scroll: TypeScroll;
+  declare uiNode: HTMLElement;
   constructor(scroll: TypeScroll, domNode: HTMLElement, _value: TableCaptionValue) {
     super(scroll, domNode);
     domNode.setAttribute('contenteditable', String(scroll.isEnabled()));
+
+    this.attachUI(this.createUI());
+    this.domNode.addEventListener('mouseenter', () => {
+      if (!this.scroll.isEnabled()) return;
+      this.uiNode.style.display = 'flex';
+    });
+    this.domNode.addEventListener('mouseleave', () => {
+      if (!this.scroll.isEnabled()) return;
+      this.uiNode.style.display = 'none';
+    });
+  }
+
+  createUI(): HTMLElement {
+    const node = document.createElement('i');
+    node.classList.add('ql-table-caption--switch');
+    node.innerHTML = ArrowUpDown;
+    node.addEventListener('click', () => {
+      if (!this.scroll.isEnabled()) return;
+      this.side = this.side === 'top' ? 'bottom' : 'top';
+    });
+    return node;
   }
 
   get tableId() {

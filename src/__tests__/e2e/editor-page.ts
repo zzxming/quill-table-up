@@ -67,4 +67,10 @@ export class EditorPage {
       return window.quills[index].blur();
     }, { index: this.index });
   }
+
+  enable(enabled: boolean) {
+    return this.page.evaluate(({ index, enabled }) => {
+      return window.quills[index].enable(enabled);
+    }, { index: this.index, enabled });
+  }
 }
