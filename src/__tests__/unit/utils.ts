@@ -210,7 +210,7 @@ export function createTableBodyHTML(row: number, col: number, options?: Partial<
     </tbody>
   `;
 }
-export function createTableHTML(row: number, col: number, colOptions?: ColOptions, options?: Partial<TableCreatorOptions>) {
+export function createTableHTML(row: number, col: number, colOptions?: ColOptions, captionOptions?: Partial<TableCaptionCreatorOptions>, options?: Partial<TableCreatorOptions>) {
   const { full = true, width = 100, align = 'left' } = colOptions || {};
   const { tableId = '1' } = options || {};
   let alignStyle = 'margin-right: auto;';
@@ -236,6 +236,7 @@ export function createTableHTML(row: number, col: number, colOptions?: ColOption
   return `
     <div contenteditable="false" ${datasetTableId(tableId)}>
       <table cellpadding="0" cellspacing="0" ${datasetTableId(tableId)}${datasetFull(full)}${datasetAlign(align)} style="${alignStyle}${full ? '' : ` width: ${width * col}px;`}">
+        ${captionOptions ? createTableCaptionHTML(captionOptions, options) : ''}
         ${createTaleColHTML(col, colOptions)}
         ${createTableBodyHTML(row, col, options)}
       </table>

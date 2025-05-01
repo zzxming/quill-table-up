@@ -26,7 +26,7 @@ describe('clipboard cell structure', () => {
     expect(quill.root).toEqualHTML(
       `
         <p><br></p>
-        ${createTableHTML(3, 3, { width: 100, full: false }, { isEmpty: false })}
+        ${createTableHTML(3, 3, { width: 100, full: false }, undefined, { isEmpty: false })}
         <p><br></p>
       `,
       { ignoreAttrs: ['class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'contenteditable'] },
@@ -255,7 +255,7 @@ describe('clipboard cell structure', () => {
     expect(quill.root).toEqualHTML(
       `
         <p>123</p>
-        ${createTableHTML(3, 3, { width: 100, full: false }, { isEmpty: false })}
+        ${createTableHTML(3, 3, { width: 100, full: false }, undefined, { isEmpty: false })}
         <p>123</p>
       `,
       { ignoreAttrs: ['class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'contenteditable'] },

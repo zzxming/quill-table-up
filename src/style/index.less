@@ -30,8 +30,23 @@
         scrollbar-width: none;
       }
       &-caption {
+        position: relative;
         word-break: break-word;
         outline: none;
+        .ql-table-caption--switch {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 2px;
+          border-radius: 4px;
+          border: 1px solid #0003;
+          font-size: 12px;
+          cursor: pointer;
+          background-color: #ffffff;
+          &:hover {
+            background-color: #eeeeee;
+          }
+        }
       }
       &-cell {
         padding: 8px 12px;
