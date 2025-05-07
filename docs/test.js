@@ -1,4 +1,3 @@
-/* eslint-disable no-undef */
 const Quill = window.Quill;
 const {
   default: TableUp,
@@ -121,6 +120,22 @@ const quills = [
       },
     },
   },
+  {
+    full: false,
+    scrollbar: TableVirtualScrollbar,
+    align: TableAlign,
+    resize: TableResizeLine,
+    resizeScale: TableResizeScale,
+    customSelect: defaultCustomSelect,
+    customBtn: true,
+    selection: TableSelection,
+    selectionOptions: {
+      tableMenu: TableMenuContextmenu,
+      tableMenuOptions: {
+        tools: menuTools,
+      },
+    },
+  },
 ].map((ops, i) => {
   return new Quill(`#editor${i + 1}`, {
     // debug: 'info',
@@ -134,19 +149,9 @@ const quills = [
 
 window.quills = quills;
 
-const output = [
-  output1,
-  output2,
-  output3,
-  output4,
-];
-
-for (const [i, btn] of [
-  btn1,
-  btn2,
-  btn3,
-  btn4,
-].entries()) {
+const output = new Array(quills.length).fill(0).map((_, i) => document.getElementById(`output${i + 1}`));
+const btns = new Array(quills.length).fill(0).map((_, i) => document.getElementById(`btn${i + 1}`));
+for (const [i, btn] of btns.entries()) {
   btn.addEventListener('click', () => {
     const content = quills[i].getContents();
     console.log(content);
