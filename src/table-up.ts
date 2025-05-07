@@ -257,8 +257,7 @@ export class TableUp {
   constructor(quill: Quill, options: Partial<TableUpOptions>) {
     this.quill = quill;
     this.options = this.resolveOptions(options || {});
-    const toolboxBEM = createBEM('toolbox');
-    this.toolBox = this.quill.addContainer(toolboxBEM.b());
+    this.toolBox = this.initialContainer();
 
     if (!this.options.scrollbar) {
       const scrollbarBEM = createBEM('scrollbar');
@@ -331,6 +330,20 @@ export class TableUp {
 
     this.quillHack();
     this.listenBalanceCells();
+  }
+
+  initialContainer() {
+    const toolboxBEM = createBEM('toolbox');
+    const container = this.quill.addContainer(toolboxBEM.b());
+    const quillRootRect = this.quill.root.getBoundingClientRect();
+    const { offsetLeft, offsetTop } = this.quill.root;
+    Object.assign(container.style, {
+      top: `${offsetTop}px`,
+      left: `${offsetLeft}px`,
+      width: `${quillRootRect.width}px`,
+      height: `${quillRootRect.height}px`,
+    });
+    return container;
   }
 
   addContainer(classes: string | HTMLElement) {

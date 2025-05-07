@@ -515,3 +515,33 @@ extendTest('should delete tablewhen selected all cells and press delete', async 
 
   expect(await page.locator('#editor1 .ql-table').count()).toBe(0);
 });
+
+extendTest('selection should be no offset when container have padding', async ({ page, editorPage }) => {
+  editorPage.index = 4;
+  await editorPage.setContents([
+    { insert: '\n' },
+    { insert: { 'table-up-col': { tableId: '1', colId: '1', full: false, width: 300 } } },
+    { insert: { 'table-up-col': { tableId: '1', colId: '2', full: false, width: 300 } } },
+    { insert: { 'table-up-col': { tableId: '1', colId: '3', full: false, width: 300 } } },
+    { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '1', rowspan: 1, colspan: 1 } }, insert: '\n' },
+    { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '2', rowspan: 1, colspan: 1 } }, insert: '\n' },
+    { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '3', rowspan: 1, colspan: 1 } }, insert: '\n' },
+    { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '1', rowspan: 1, colspan: 1 } }, insert: '\n' },
+    { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '2', rowspan: 1, colspan: 1 } }, insert: '\n' },
+    { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '3', rowspan: 1, colspan: 1 } }, insert: '\n' },
+    { insert: '\n' },
+  ]);
+
+  const toolbox = page.locator('#editor5 .table-up-toolbox').nth(0);
+  await expect(toolbox).toHaveCSS('left', '20px');
+  await expect(toolbox).toHaveCSS('top', '20px');
+
+  await page.locator('#editor5 .ql-editor td').nth(0).click();
+
+  const tableBounding = (await page.locator('#editor5 .ql-editor .ql-table-wrapper').boundingBox())!;
+  const selectionBounding = (await page.locator('#editor5 .table-up-selection').boundingBox())!;
+  expect(tableBounding).not.toBeNull();
+  expect(selectionBounding).not.toBeNull();
+  expect(tableBounding.x).toBe(selectionBounding.x);
+  expect(tableBounding.y).toBe(selectionBounding.y);
+});

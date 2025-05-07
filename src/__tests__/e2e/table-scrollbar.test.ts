@@ -107,3 +107,38 @@ extendTest('test TableScrollbar should not effect selection', async ({ page, edi
     return !document.onselectstart || (document.onselectstart && document.onselectstart(new Event('selectstart')) === true);
   })).toBe(true);
 });
+
+extendTest('scrollbar should be no offset when container have padding', async ({ page, editorPage, browserName }) => {
+  editorPage.index = 4;
+  await editorPage.setContents([
+    { insert: '\n' },
+    { insert: { 'table-up-col': { tableId: '1', colId: '1', full: false, width: 500 } } },
+    { insert: { 'table-up-col': { tableId: '1', colId: '2', full: false, width: 500 } } },
+    { insert: { 'table-up-col': { tableId: '1', colId: '3', full: false, width: 500 } } },
+    { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '1', rowspan: 1, colspan: 1 } }, insert: '\n' },
+    { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '2', rowspan: 1, colspan: 1 } }, insert: '\n' },
+    { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '3', rowspan: 1, colspan: 1 } }, insert: '\n' },
+    { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '1', rowspan: 1, colspan: 1 } }, insert: '\n' },
+    { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '2', rowspan: 1, colspan: 1 } }, insert: '\n' },
+    { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '3', rowspan: 1, colspan: 1 } }, insert: '\n' },
+    { insert: '\n' },
+  ]);
+
+  const toolbox = page.locator('#editor5 .table-up-toolbox').nth(0);
+  await expect(toolbox).toHaveCSS('left', '20px');
+  await expect(toolbox).toHaveCSS('top', '20px');
+
+  await page.locator('#editor5 .ql-editor td').nth(0).click();
+  await page.waitForTimeout(1000);
+  const selectionBounding = (await page.locator('#editor5 .table-up-selection').boundingBox())!;
+  const scrollHorizontalScroll = (await page.locator('#editor5 .table-up-scrollbar.is-horizontal').boundingBox())!;
+  expect(scrollHorizontalScroll).not.toBeNull();
+  expect(selectionBounding).not.toBeNull();
+  if (browserName === 'firefox') {
+    // extra 1px for broder
+    expect(scrollHorizontalScroll.x).toBe(selectionBounding.x + 3);
+  }
+  else {
+    expect(scrollHorizontalScroll.x).toBe(selectionBounding.x + 2);
+  }
+});
