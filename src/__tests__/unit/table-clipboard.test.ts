@@ -293,8 +293,9 @@ describe('clipboard cell structure', () => {
     // string convert html style have different behavior. in node will merge same attribute
     // like: border-left-color:;border-right-color:;border-top-color:;border-bottom-color:; will merge to border-color:;
     expect(quill.root).toEqualHTML(
-      `<p><br></p>
-       <div>
+      `
+        <p><br></p>
+        <div>
           <table data-full="true" cellpadding="0" cellspacing="0" style="margin-right: auto;">
             <colgroup data-full="true">
               <col width="50%" data-full="true">
@@ -303,12 +304,12 @@ describe('clipboard cell structure', () => {
             <tbody>
               <tr>
                 <td rowspan="1" colspan="1" style="border-color: transparent;">
-                  <div data-style="border-color:transparent">
+                  <div data-style="border-color: transparent">
                     <p><strong>Col 1</strong></p>
                   </div>
                 </td>
                 <td rowspan="1" colspan="1" style="border-color: transparent;">
-                  <div data-style="border-color:transparent">
+                  <div data-style="border-color: transparent">
                     <p class="ql-align-right"><strong>Data 1</strong></p>
                   </div>
                 </td>
@@ -316,7 +317,8 @@ describe('clipboard cell structure', () => {
             </tbody>
           </table>
         </div>
-        <p><br></p>`,
+        <p><br></p>
+      `,
       { ignoreAttrs: ['class', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
     );
   });
@@ -330,19 +332,20 @@ describe('clipboard cell structure', () => {
     );
     await vi.runAllTimersAsync();
     expect(quill.root).toEqualHTML(
-      `<p><br></p>
-       <div>
+      `
+        <p><br></p>
+        <div>
           <table cellpadding="0" cellspacing="0" style="margin-right: auto; width: 633px;">
             ${createTaleColHTML(3, { full: false, width: 211 })}
             <tbody>
               <tr>
                 <td rowspan="1" colspan="1" style="border-color: transparent;">
-                  <div data-style="border-color:transparent">
+                  <div data-style="border-color: transparent">
                     <p><br></p>
                   </div>
                 </td>
                 <td rowspan="1" colspan="1" style="border-bottom-color: transparent;">
-                  <div data-style="border-bottom-color:transparent">
+                  <div data-style="border-bottom-color: transparent">
                     <p><br></p>
                   </div>
                 </td>
@@ -354,12 +357,12 @@ describe('clipboard cell structure', () => {
               </tr>
               </tr>
                 <td rowspan="1" colspan="1" style="border-right-color: transparent;">
-                  <div data-style="border-right-color:transparent">
+                  <div data-style="border-right-color: transparent">
                     <p><br></p>
                   </div>
                 </td>
                 <td rowspan="1" colspan="1" style="border-color: transparent;">
-                  <div data-style="border-color:transparent">
+                  <div data-style="border-color: transparent">
                     <p><br></p>
                   </div>
                 </td>
@@ -389,7 +392,8 @@ describe('clipboard cell structure', () => {
             </tbody>
           </table>
         </div>
-        <p><br></p>`,
+        <p><br></p>
+      `,
       { ignoreAttrs: ['class', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
     );
   });
@@ -404,8 +408,9 @@ describe('clipboard cell structure', () => {
     await vi.runAllTimersAsync();
 
     expect(quill.root).toEqualHTML(
-      `<p><br></p>
-       <div>
+      `
+        <p><br></p>
+        <div>
           <table cellpadding="0" cellspacing="0" style="margin-right: auto; width: 633px;">
             ${createTaleColHTML(3, { full: false, width: 211 })}
             <tbody>
@@ -433,7 +438,7 @@ describe('clipboard cell structure', () => {
                   </div>
                 </td>
                 <td rowspan="1" colspan="1" style="background-color: transparent;">
-                  <div data-style="background-color:transparent">
+                  <div data-style="background-color: transparent">
                     <p><br></p>
                   </div>
                 </td>
@@ -463,7 +468,8 @@ describe('clipboard cell structure', () => {
             </tbody>
           </table>
         </div>
-        <p><br></p>`,
+        <p><br></p>
+      `,
       { ignoreAttrs: ['class', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
     );
   });
@@ -478,19 +484,20 @@ describe('clipboard cell structure', () => {
     await vi.runAllTimersAsync();
 
     expect(quill.root).toEqualHTML(
-      `<p><br></p>
-       <div>
+      `
+        <p><br></p>
+        <div>
           <table cellpadding="0" cellspacing="0" style="margin-right: auto; width: 634px;">
             ${createTaleColHTML(2, { full: false, width: 317 })}
             <tbody>
               <tr>
                 <td rowspan="1" colspan="1" style="height: 73px;">
-                  <div data-style="height:73px">
+                  <div data-style="height: 73px">
                     <p><br></p>
                   </div>
                 </td>
                 <td rowspan="1" colspan="1" style="height: 73px;">
-                  <div data-style="height:73px">
+                  <div data-style="height: 73px">
                     <p><br></p>
                   </div>
                 </td>
@@ -510,7 +517,8 @@ describe('clipboard cell structure', () => {
             </tbody>
           </table>
         </div>
-        <p><br></p>`,
+        <p><br></p>
+      `,
       { ignoreAttrs: ['class', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
     );
   });
@@ -741,28 +749,30 @@ describe('clipboard cell structure', () => {
     await vi.runAllTimersAsync();
 
     expect(quill.root).toEqualHTML(
-      `<p><br></p>
-      <div>
-        <table cellpadding="0" cellspacing="0" style="margin-right: auto; width: 242px;">
-          ${createTaleColHTML(2, { full: false, width: 121 })}
-          <tbody>
-            <tr>
-              <td colspan="1" rowspan="1" style="background-color: rgb(41, 114, 244);">
-                <div data-style="background-color:rgb(41, 114, 244)">
-                  <p><span style="background-color: rgb(230, 0, 0);">123</span>456<span style="background-color: rgb(0, 138, 0);">789</span></p>
-                  <h1>h<span style="background-color: rgb(0, 0, 0);">ea</span>d</h1>
-                </div>
-              </td>
-              <td colspan="1" rowspan="1">
-                <div>
-                  <p>2</p>
-                </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-      <p><br></p>`,
+      `
+        <p><br></p>
+        <div>
+          <table cellpadding="0" cellspacing="0" style="margin-right: auto; width: 242px;">
+            ${createTaleColHTML(2, { full: false, width: 121 })}
+            <tbody>
+              <tr>
+                <td colspan="1" rowspan="1" style="background-color: rgb(41, 114, 244);">
+                  <div data-style="background-color: rgb(41, 114, 244)">
+                    <p><span style="background-color: rgb(230, 0, 0);">123</span>456<span style="background-color: rgb(0, 138, 0);">789</span></p>
+                    <h1>h<span style="background-color: rgb(0, 0, 0);">ea</span>d</h1>
+                  </div>
+                </td>
+                <td colspan="1" rowspan="1">
+                  <div>
+                    <p>2</p>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p><br></p>
+      `,
       { ignoreAttrs: ['class', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
     );
     expectDelta(
@@ -773,11 +783,11 @@ describe('clipboard cell structure', () => {
         { attributes: { background: '#e60000' }, insert: '123' },
         { insert: '456' },
         { attributes: { background: '#008a00' }, insert: '789' },
-        { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1, style: 'background-color:rgb(41, 114, 244)' } }, insert: '\n' },
+        { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1, style: 'background-color: rgb(41, 114, 244)' } }, insert: '\n' },
         { insert: 'h' },
         { attributes: { background: '#000000' }, insert: 'ea' },
         { insert: 'd' },
-        { attributes: { 'header': 1, 'table-up-cell-inner': { rowspan: 1, colspan: 1, style: 'background-color:rgb(41, 114, 244)' } }, insert: '\n' },
+        { attributes: { 'header': 1, 'table-up-cell-inner': { rowspan: 1, colspan: 1, style: 'background-color: rgb(41, 114, 244)' } }, insert: '\n' },
         { insert: '2' },
         { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1 } }, insert: '\n' },
         { insert: '\n' },
@@ -796,22 +806,24 @@ describe('clipboard cell structure', () => {
     await vi.runAllTimersAsync();
 
     expect(quill.root).toEqualHTML(
-      `<p><br></p>
-      <div>
-        <table cellpadding="0" cellspacing="0" style="margin-right: auto; width: 100px;">
-          ${createTaleColHTML(1, { full: false, width: 100 })}
-          <tbody>
-            <tr>
-              <td colspan="1" rowspan="1" style="background-color: rgb(0, 102, 204);">
-                <div data-style="background-color:rgb(0, 102, 204)">
-                  <p>123</p>
-                </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-      <p><br></p>`,
+      `
+        <p><br></p>
+        <div>
+          <table cellpadding="0" cellspacing="0" style="margin-right: auto; width: 100px;">
+            ${createTaleColHTML(1, { full: false, width: 100 })}
+            <tbody>
+              <tr>
+                <td colspan="1" rowspan="1" style="background-color: rgb(0, 102, 204);">
+                  <div data-style="background-color: rgb(0, 102, 204)">
+                    <p>123</p>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p><br></p>
+      `,
       { ignoreAttrs: ['class', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
     );
   });
@@ -1082,68 +1094,70 @@ describe('clipboard content format', () => {
     await vi.runAllTimersAsync();
 
     expect(quill.root).toEqualHTML(
-      `<p><br></p>
-     <div>
-        <table cellpadding="0" cellspacing="0" style="margin-right: auto; width: 300px;">
-          ${createTaleColHTML(3, { full: false, width: 100 })}
-          <tbody>
-            <tr>
-              <td rowspan="1" colspan="1" style="height: 90px; background-color: rgb(94, 255, 0);">
-                <div data-style="height:90px;background-color:rgb(94, 255, 0)">
-                  <p>
-                    <span style="background-color: rgb(0, 102, 204); color: rgb(230, 0, 0);">qwf</span>
-                  </p>
-                </div>
-              </td>
-              <td rowspan="2" colspan="1" style="height: 90px;">
-                <div data-style="height:90px">
-                  <blockquote><code style="color: rgb(230, 0, 0); background-color: rgb(0, 102, 204);">qwfqwfw</code></blockquote>
-                  <ol>
-                    <li data-list="bullet">
-                      <span class="ql-ui" contenteditable="false"></span>qwg<sub>qwg</sub>
-                      <sub style="background-color: rgb(0, 102, 204);">wqg</sub>
-                    </li>
-                  </ol>
-                </div>
-              </td>
-              <td rowspan="1" colspan="1" style="height: 90px;">
-                <div data-style="height:90px">
-                  <p>
-                    <span style="background-color: rgb(0, 102, 204);">qwg</span>
-                  </p>
-                </div>
-              </td>
-            </tr>
-            <tr>
-              <td rowspan="1" colspan="1">
-                <div>
-                  <p><br></p>
-                </div>
-              </td>
-              <td rowspan="1" colspan="1">
-                <div>
-                  <p><br></p>
-                </div>
-              </td>
-            </tr>
-            <tr>
-              <td rowspan="1" colspan="2">
-                <div>
-                  <div class="ql-code-block-container" spellcheck="false">
-                    <div class="ql-code-block" data-language="plain">qwgwqgwgqwg</div>
+      `
+        <p><br></p>
+        <div>
+          <table cellpadding="0" cellspacing="0" style="margin-right: auto; width: 300px;">
+            ${createTaleColHTML(3, { full: false, width: 100 })}
+            <tbody>
+              <tr>
+                <td rowspan="1" colspan="1" style="height: 90px; background-color: rgb(94, 255, 0);">
+                  <div data-style="height: 90px;background-color: rgb(94, 255, 0)">
+                    <p>
+                      <span style="background-color: rgb(0, 102, 204); color: rgb(230, 0, 0);">qwf</span>
+                    </p>
                   </div>
-                </div>
-              </td>
-              <td rowspan="1" colspan="1">
-                <div>
-                  <p><strong class="ql-size-large ql-font-monospace"><em><s><u>qwgwqg</u></s></em></strong></p>
-                </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-      <p><br></p>`,
+                </td>
+                <td rowspan="2" colspan="1" style="height: 90px;">
+                  <div data-style="height: 90px">
+                    <blockquote><code style="color: rgb(230, 0, 0); background-color: rgb(0, 102, 204);">qwfqwfw</code></blockquote>
+                    <ol>
+                      <li data-list="bullet">
+                        <span class="ql-ui" contenteditable="false"></span>qwg<sub>qwg</sub>
+                        <sub style="background-color: rgb(0, 102, 204);">wqg</sub>
+                      </li>
+                    </ol>
+                  </div>
+                </td>
+                <td rowspan="1" colspan="1" style="height: 90px;">
+                  <div data-style="height: 90px">
+                    <p>
+                      <span style="background-color: rgb(0, 102, 204);">qwg</span>
+                    </p>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td rowspan="1" colspan="1">
+                  <div>
+                    <p><br></p>
+                  </div>
+                </td>
+                <td rowspan="1" colspan="1">
+                  <div>
+                    <p><br></p>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td rowspan="1" colspan="2">
+                  <div>
+                    <div class="ql-code-block-container" spellcheck="false">
+                      <div class="ql-code-block" data-language="plain">qwgwqgwgqwg</div>
+                    </div>
+                  </div>
+                </td>
+                <td rowspan="1" colspan="1">
+                  <div>
+                    <p><strong class="ql-size-large ql-font-monospace"><em><s><u>qwgwqg</u></s></em></strong></p>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p><br></p>
+      `,
       { ignoreAttrs: ['class', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
     );
   });
