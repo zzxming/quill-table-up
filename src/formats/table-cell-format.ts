@@ -64,7 +64,7 @@ export class TableCellFormat extends ContainerFormat {
     }
     const entries = Object.entries(inlineStyles);
     if (entries.length > 0) {
-      value.style = entries.map(([key, value]) => `${key}:${value}`).join(';');
+      value.style = entries.map(([key, value]) => `${key}: ${value}`).join(';');
     }
 
     return value;
