@@ -4,7 +4,7 @@ import type TypeClipboard from 'quill/modules/clipboard';
 import type { TableCaptionValue, TableCellValue } from '../utils';
 import Quill from 'quill';
 import { TableCellFormat, TableColFormat } from '../formats';
-import { blotName, isObject, isString, randomId, tableUpSize } from '../utils';
+import { blotName, cssTextToObject, isObject, isString, objectToCssText, randomId, tableUpSize } from '../utils';
 
 const Delta = Quill.import('delta');
 const Clipboard = Quill.import('modules/clipboard') as typeof TypeClipboard;
@@ -152,6 +152,18 @@ export class TableClipboard extends Clipboard {
       }
       if (span.rowspan <= 0) {
         this.rowspanCount[i] = { rowspan: 0, colspan: 0 };
+      }
+    }
+    for (const op of delta.ops) {
+      const { attributes } = op;
+      if (attributes) {
+        const { background, [blotName.tableCellInner]: tableCellInner } = attributes;
+        if (tableCellInner && background) {
+          const { style = '' } = tableCellInner as TableCellValue;
+          const styleObj = cssTextToObject(style);
+          styleObj['background-color'] = background as string;
+          (op.attributes![blotName.tableCellInner] as TableCellValue).style = objectToCssText(styleObj);
+        }
       }
     }
     return delta;

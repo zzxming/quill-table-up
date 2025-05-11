@@ -1161,6 +1161,130 @@ describe('clipboard content format', () => {
       { ignoreAttrs: ['class', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
     );
   });
+
+  it('clipboard convert cell with background on tr', async () => {
+    const quill = createQuillWithTableModule(`<p><br></p>`);
+    // color convert hex in quill internal
+    quill.setContents(
+      quill.clipboard.convert({
+        html: `
+          <table>
+            <tbody>
+              <tr style="background-color: rgb(237, 238, 242);">
+                <td>1</th>
+                <td>2</td>
+                <td>3</td>
+              </tr>
+              <tr>
+                <td>4</th>
+                <td>5</td>
+                <td>6</td>
+              </tr>
+              <tr style="background-color: rgb(237, 238, 242);">
+                <td>7</th>
+                <td>8</td>
+                <td>9</td>
+              </tr>
+            </tbody>
+          </table>
+        `,
+      }),
+    );
+    await vi.runAllTimersAsync();
+    expect(quill.root).toEqualHTML(
+      `
+        <p><br></p>
+        <div>
+          <table cellpadding="0" cellspacing="0" style="margin-right: auto; width: 300px;">
+            ${createTaleColHTML(3, { width: 100, full: false })}
+            <tbody>
+              <tr>
+                <td style="background-color: rgb(237, 238, 242);">
+                  <div data-style="background-color: #edeef2;">
+                    <p><span style="background-color: rgb(237, 238, 242);">1</span></p>
+                  </div>
+                </td>
+                <td style="background-color: rgb(237, 238, 242);">
+                  <div data-style="background-color: #edeef2;">
+                    <p><span style="background-color: rgb(237, 238, 242);">2</span></p>
+                  </div>
+                </td>
+                <td style="background-color: rgb(237, 238, 242);">
+                  <div data-style="background-color: #edeef2;">
+                    <p><span style="background-color: rgb(237, 238, 242);">3</span></p>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <div>
+                    <p>4</p>
+                  </div>
+                </td>
+                <td>
+                  <div>
+                    <p>5</p>
+                  </div>
+                </td>
+                <td>
+                  <div>
+                    <p>6</p>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td style="background-color: rgb(237, 238, 242);">
+                  <div data-style="background-color: #edeef2;">
+                    <p><span style="background-color: rgb(237, 238, 242);">7</span></p>
+                  </div>
+                </td>
+                <td style="background-color: rgb(237, 238, 242);">
+                  <div data-style="background-color: #edeef2;">
+                    <p><span style="background-color: rgb(237, 238, 242);">8</span></p>
+                  </div>
+                </td>
+                <td style="background-color: rgb(237, 238, 242);">
+                  <div data-style="background-color: #edeef2;">
+                    <p><span style="background-color: rgb(237, 238, 242);">9</span></p>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p><br></p>
+      `,
+      { ignoreAttrs: ['class', 'colspan', 'rowspan', 'data-colspan', 'data-rowspan', 'data-table-id', 'data-row-id', 'data-col-id', 'contenteditable'] },
+    );
+    expectDelta(
+      new Delta([
+        { insert: '\n' },
+        { insert: { 'table-up-col': { full: false, width: 100 } } },
+        { insert: { 'table-up-col': { full: false, width: 100 } } },
+        { insert: { 'table-up-col': { full: false, width: 100 } } },
+        { attributes: { background: '#edeef2' }, insert: '1' },
+        { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1, style: 'background-color: #edeef2;' } }, insert: '\n' },
+        { attributes: { background: '#edeef2' }, insert: '2' },
+        { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1, style: 'background-color: #edeef2;' } }, insert: '\n' },
+        { attributes: { background: '#edeef2' }, insert: '3' },
+        { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1, style: 'background-color: #edeef2;' } }, insert: '\n' },
+        { insert: '4' },
+        { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1 } }, insert: '\n' },
+        { insert: '5' },
+        { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1 } }, insert: '\n' },
+        { insert: '6' },
+        { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1 } }, insert: '\n' },
+        { attributes: { background: '#edeef2' }, insert: '7' },
+        { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1, style: 'background-color: #edeef2;' } }, insert: '\n' },
+        { attributes: { background: '#edeef2' }, insert: '8' },
+        { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1, style: 'background-color: #edeef2;' } }, insert: '\n' },
+        { attributes: { background: '#edeef2' }, insert: '9' },
+        { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1, style: 'background-color: #edeef2;' } }, insert: '\n' },
+        { insert: '\n' },
+      ]),
+      quill.getContents(),
+    );
+  });
 });
 
 describe('clipboard cell in cell', () => {
