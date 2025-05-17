@@ -155,13 +155,12 @@ export class TableClipboard extends Clipboard {
       }
     }
     for (const op of delta.ops) {
-      const { attributes } = op;
-      if (attributes) {
-        const { background, [blotName.tableCellInner]: tableCellInner } = attributes;
+      if (op.attributes) {
+        const { background, [blotName.tableCellInner]: tableCellInner } = op.attributes;
         if (tableCellInner && background) {
           const { style = '' } = tableCellInner as TableCellValue;
           const styleObj = cssTextToObject(style);
-          styleObj['background-color'] = background as string;
+          styleObj.backgroundColor = background as string;
           (op.attributes![blotName.tableCellInner] as TableCellValue).style = objectToCssText(styleObj);
         }
       }

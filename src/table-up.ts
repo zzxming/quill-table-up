@@ -6,7 +6,7 @@ import type { InternalModule, InternalTableSelectionModule, QuillTheme, QuillThe
 import Quill from 'quill';
 import { BlockOverride, ContainerFormat, ScrollOverride, TableBodyFormat, TableCaptionFormat, TableCellFormat, TableCellInnerFormat, TableColFormat, TableColgroupFormat, TableMainFormat, TableRowFormat, TableWrapperFormat } from './formats';
 import { TableClipboard } from './modules';
-import { blotName, createBEM, createSelectBox, cssTextToObject, debounce, findParentBlot, findParentBlots, isForbidInTable, isFunction, isNumber, isString, limitDomInViewPort, mixinClass, objectToCssText, randomId, tableCantInsert, tableUpEvent, tableUpInternal, tableUpSize } from './utils';
+import { blotName, createBEM, createSelectBox, cssTextToObject, debounce, findParentBlot, findParentBlots, isForbidInTable, isFunction, isNumber, isString, limitDomInViewPort, mixinClass, objectToCssText, randomId, tableCantInsert, tableUpEvent, tableUpInternal, tableUpSize, toCamelCase } from './utils';
 
 const Parchment = Quill.import('parchment');
 const Delta = Quill.import('delta');
@@ -580,7 +580,7 @@ export class TableUp {
                   if (!styleStr || cleanBorder === true) return '';
                   // only clean border-right/border-bottom style
                   const css = cssTextToObject(styleStr);
-                  const filterStyle = Object.keys(css).filter(key => !key.startsWith(`border-${cleanBorder}`)).reduce((acc: Record<string, string>, key: string) => {
+                  const filterStyle = Object.keys(css).filter(key => !key.startsWith(toCamelCase(`border-${cleanBorder}`))).reduce((acc: Record<string, string>, key: string) => {
                     acc[key] = css[key];
                     return acc;
                   }, {});
