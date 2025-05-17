@@ -3,7 +3,7 @@ import type { TableMainFormat, TableWrapperFormat } from '../formats';
 import type { TableUp } from '../table-up';
 import type { InternalTableMenuModule, RelactiveRect, TableSelectionOptions } from '../utils';
 import Quill from 'quill';
-import { TableBodyFormat, TableCellFormat, TableCellInnerFormat } from '../formats';
+import { getTableMainRect, TableBodyFormat, TableCellFormat, TableCellInnerFormat } from '../formats';
 import { addScrollEvent, blotName, clearScrollEvent, createBEM, createResizeObserver, findAllParentBlot, findParentBlot, getRelativeRect, isRectanglesIntersect, tableUpEvent } from '../utils';
 
 const ERROR_LIMIT = 0;
@@ -294,17 +294,17 @@ export class TableSelection {
     if (!this.table) return [];
     type TempSortedTableCellFormat = TableCellFormat & { index?: number; __rect?: DOMRect };
 
-    const tableMain = Quill.find(this.table) as TableMainFormat;
-    if (!tableMain) return [];
-    const tableBody = tableMain.descendants(TableBodyFormat)[0];
-    if (!tableBody) return [];
+    const tableMainBlot = Quill.find(this.table) as TableMainFormat;
+    if (!tableMainBlot) return [];
+    const tableBodyBlot = tableMainBlot.descendants(TableBodyFormat)[0];
+    if (!tableBodyBlot) return [];
     // Use TableCell to calculation selected range, because TableCellInner is scrollable, the width will effect calculate
     const tableCells = new Set(
       // reverse cell. search from bottom.
       // when mouse click on the cell border. the selection will be in the lower cell.
       // but `isRectanglesIntersect` judge intersect include border. the upper cell bottom border will intersect with boundary
       // so need to search the cell from bottom
-      (tableBody.descendants(TableCellFormat) as TempSortedTableCellFormat[]).map((cell, i) => {
+      (tableBodyBlot.descendants(TableCellFormat) as TempSortedTableCellFormat[]).map((cell, i) => {
         cell.index = i;
         return cell;
       }),
@@ -318,7 +318,7 @@ export class TableSelection {
     this.selectedEditorScrollY = editorScrollY;
 
     // set boundary to initially mouse move rectangle
-    const tableRect = tableBody.domNode.getBoundingClientRect();
+    const { rect: tableRect } = getTableMainRect(tableMainBlot);
     const startPointX = startPoint.x - tableScrollX + this.startScrollX;
     const startPointY = startPoint.y - tableScrollY + this.startScrollY;
     let boundary = {

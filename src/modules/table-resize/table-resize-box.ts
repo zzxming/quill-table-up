@@ -3,7 +3,7 @@ import type { TableColFormat, TableMainFormat, TableRowFormat } from '../../form
 import type { TableUp } from '../../table-up';
 import type { sizeChangeValue } from './table-resize-common';
 import Quill from 'quill';
-import { TableBodyFormat, TableCaptionFormat, TableCellInnerFormat } from '../../formats';
+import { getTableMainRect, TableCaptionFormat, TableCellInnerFormat } from '../../formats';
 import { addScrollEvent, clearScrollEvent, createBEM, findChildBlot } from '../../utils';
 import { TableResizeCommon } from './table-resize-common';
 import { isTableAlignRight } from './utils';
@@ -186,22 +186,21 @@ export class TableResizeBox extends TableResizeCommon {
   }
 
   update() {
-    const [tableBodyBlot] = findChildBlot(this.tableMain, TableBodyFormat);
+    const { rect: tableRect, body: tableBodyBlot } = getTableMainRect(this.tableMain);
     if (!tableBodyBlot) return;
     const tableWrapperRect = this.tableWrapper.domNode.getBoundingClientRect();
-    const tableBodyRect = tableBodyBlot.domNode.getBoundingClientRect();
     const rootRect = this.quill.root.getBoundingClientRect();
     Object.assign(this.root.style, {
-      top: `${Math.max(tableBodyRect.y, tableWrapperRect.y) - rootRect.y}px`,
-      left: `${Math.max(tableBodyRect.x, tableWrapperRect.x) - rootRect.x}px`,
+      top: `${Math.max(tableRect.y, tableWrapperRect.y) - rootRect.y}px`,
+      left: `${Math.max(tableRect.x, tableWrapperRect.x) - rootRect.x}px`,
     });
 
     let cornerTranslateX = -1 * this.size;
     let rowHeadWrapperTranslateX = -1 * this.size;
     if (isTableAlignRight(this.tableMain)) {
       this.root.classList.add(this.bem.is('align-right'));
-      cornerTranslateX = Math.min(tableWrapperRect.width, tableBodyRect.width);
-      rowHeadWrapperTranslateX = Math.min(tableWrapperRect.width, tableBodyRect.width);
+      cornerTranslateX = Math.min(tableWrapperRect.width, tableRect.width);
+      rowHeadWrapperTranslateX = Math.min(tableWrapperRect.width, tableRect.width);
     }
     else {
       this.root.classList.remove(this.bem.is('align-right'));
@@ -219,7 +218,7 @@ export class TableResizeBox extends TableResizeCommon {
     if (this.corner) {
       Object.assign(this.corner.style, {
         transform: `translateY(${-1 * this.size}px) translateX(${cornerTranslateX}px)`,
-        top: `${tableCaptionIsTop ? 0 : tableBodyRect.height + this.size}px`,
+        top: `${tableCaptionIsTop ? 0 : tableRect.height + this.size}px`,
       });
     }
     if (this.rowHeadWrapper) {
@@ -229,7 +228,7 @@ export class TableResizeBox extends TableResizeCommon {
     }
     if (this.colHeadWrapper) {
       Object.assign(this.colHeadWrapper.style, {
-        top: `${tableCaptionIsTop ? 0 : tableBodyRect.height + this.size}px`,
+        top: `${tableCaptionIsTop ? 0 : tableRect.height + this.size}px`,
       });
     }
   }
@@ -238,9 +237,8 @@ export class TableResizeBox extends TableResizeCommon {
     this.tableCols = this.tableMain.getCols();
     this.tableRows = this.tableMain.getRows();
     this.root.innerHTML = '';
-    const [tableBodyBlot] = findChildBlot(this.tableMain, TableBodyFormat);
+    const { rect: tableRect, body: tableBodyBlot } = getTableMainRect(this.tableMain);
     if (!tableBodyBlot) return;
-    const tableBodyRect = tableBodyBlot.domNode.getBoundingClientRect();
     const tableWrapperRect = this.tableWrapper.domNode.getBoundingClientRect();
 
     if (this.tableCols.length > 0 && this.tableRows.length > 0) {
@@ -267,7 +265,7 @@ export class TableResizeBox extends TableResizeCommon {
       for (const [, col] of this.tableCols.entries()) {
         const width = col.domNode.getBoundingClientRect().width;
         colHeadStr += `<div class="${this.bem.be('col-header')}" style="width: ${width}px">
-          <div class="${this.bem.be('col-separator')}" style="height: ${tableBodyRect.height + this.size - 3}px"></div>
+          <div class="${this.bem.be('col-separator')}" style="height: ${tableRect.height + this.size - 3}px"></div>
         </div>`;
       }
       const colHeadWrapper = document.createElement('div');
@@ -280,7 +278,7 @@ export class TableResizeBox extends TableResizeCommon {
         height: `${this.size}px`,
       });
       Object.assign(colHead.style, {
-        width: `${tableBodyRect.width}px`,
+        width: `${tableRect.width}px`,
       });
       colHead.innerHTML = colHeadStr;
       colHeadWrapper.appendChild(colHead);
@@ -295,7 +293,7 @@ export class TableResizeBox extends TableResizeCommon {
       for (const [, row] of this.tableRows.entries()) {
         const height = `${row.domNode.getBoundingClientRect().height}px`;
         rowHeadStr += `<div class="${this.bem.be('row-header')}" style="height: ${Number.parseFloat(height)}px">
-          <div class="${this.bem.be('row-separator')}" style="width: ${tableBodyRect.width + this.size - 3}px"></div>
+          <div class="${this.bem.be('row-separator')}" style="width: ${tableRect.width + this.size - 3}px"></div>
         </div>`;
       }
       const rowHeadWrapper = document.createElement('div');
@@ -309,7 +307,7 @@ export class TableResizeBox extends TableResizeCommon {
         maxHeight: `${tableWrapperRect.height}px`,
       });
       Object.assign(rowHead.style, {
-        height: `${tableBodyRect.height}px`,
+        height: `${tableRect.height}px`,
       });
       rowHead.innerHTML = rowHeadStr;
       rowHeadWrapper.appendChild(rowHead);

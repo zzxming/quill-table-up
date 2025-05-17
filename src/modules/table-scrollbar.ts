@@ -1,8 +1,8 @@
 import type { TableMainFormat } from '../formats';
 import type { TableUp } from '../table-up';
 import Quill from 'quill';
-import { TableBodyFormat } from '../formats';
-import { addScrollEvent, clearScrollEvent, createBEM, debounce, findChildBlot } from '../utils';
+import { getTableMainRect } from '../formats';
+import { addScrollEvent, clearScrollEvent, createBEM, debounce } from '../utils';
 
 export class Scrollbar {
   minSize: number = 20;
@@ -70,13 +70,12 @@ export class Scrollbar {
   }
 
   setScrollbarPosition() {
-    const [tableBodyBlot] = findChildBlot(this.tableMainBlot, TableBodyFormat);
+    const { rect: { width: tableWidth, height: tableHeight }, body: tableBodyBlot } = getTableMainRect(this.tableMainBlot);
     if (!tableBodyBlot) return;
     const { scrollLeft: editorScrollX, scrollTop: editorScrollY, offsetLeft: rootOffsetLeft, offsetTop: rootOffsetTop } = this.quill.root;
     const { offsetLeft: containerOffsetLeft, offsetTop: containerOffsetTop } = this.container;
     const { offsetLeft: bodyOffsetLeft, offsetTop: bodyOffsetTop } = tableBodyBlot.domNode;
     const { width: containerWidth, height: containerHeight } = this.container.getBoundingClientRect();
-    const { width: tableWidth, height: tableHeight } = tableBodyBlot.domNode.getBoundingClientRect();
 
     let x = containerOffsetLeft + bodyOffsetLeft - rootOffsetLeft;
     let y = containerOffsetTop + bodyOffsetTop - rootOffsetTop;
