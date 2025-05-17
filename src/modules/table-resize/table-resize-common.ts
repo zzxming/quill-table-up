@@ -1,7 +1,8 @@
 import type Quill from 'quill';
+import type { TableMainFormat } from '../../formats';
 import type { TableUp } from '../../table-up';
-import { TableBodyFormat, type TableMainFormat } from '../../formats';
-import { createBEM, createButton, createDialog, findChildBlot, tableUpEvent, tableUpSize } from '../../utils';
+import { getTableMainRect } from '../../formats';
+import { createBEM, createButton, createDialog, tableUpEvent, tableUpSize } from '../../utils';
 import { isTableAlignRight } from './utils';
 
 export interface sizeChangeValue {
@@ -230,15 +231,14 @@ export class TableResizeCommon {
     if (e.button !== 0) return;
     e.preventDefault();
     if (!this.tableMain) return;
-    const [tableBody] = findChildBlot(this.tableMain, TableBodyFormat);
-    if (!tableBody) return;
+    const { rect: tableRect, body: tableBodyBlot } = getTableMainRect(this.tableMain);
+    if (!tableBodyBlot) return;
     // set drag init width
     const cols = this.tableMain.getCols();
-    const tableBodyRect = tableBody.domNode.getBoundingClientRect();
     this.colIndex = this.findCurrentColIndex(e);
     if (this.colIndex === -1) return;
     const colWidthAttr = cols[this.colIndex].width;
-    const width = this.tableMain.full ? colWidthAttr / 100 * tableBodyRect.width : colWidthAttr;
+    const width = this.tableMain.full ? colWidthAttr / 100 * tableRect.width : colWidthAttr;
 
     document.addEventListener('mouseup', this.handleColMouseUpFunc);
     document.addEventListener('mousemove', this.handleColMouseMoveFunc);
@@ -251,9 +251,9 @@ export class TableResizeCommon {
     divDom.dataset.w = String(width);
 
     const styleValue = {
-      top: tableBodyRect.y,
+      top: tableRect.y,
       left: e.clientX,
-      height: tableBodyRect.height,
+      height: tableRect.height,
     };
     Object.assign(divDom.style, {
       top: `${styleValue.top}px`,

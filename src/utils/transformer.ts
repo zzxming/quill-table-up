@@ -12,13 +12,24 @@ export function cssTextToObject(cssText: string): Record<string, string> {
 
     const property = style.slice(0, Math.max(0, colonPosition)).trim();
     const value = style.slice(Math.max(0, colonPosition + 1)).trim();
-    styleObject[property] = value;
+    styleObject[toCamelCase(property)] = value;
   }
 
   return styleObject;
 }
 export function objectToCssText(obj: Record<string, any>): string {
   return Object.entries(obj)
-    .map(([key, value]) => `${key}: ${value};`)
+    .map(([key, value]) => `${toKebabCase(key)}: ${value};`)
     .join(' ');
+}
+
+export function toKebabCase(key: string) {
+  const result = key.replaceAll(/([A-Z])/g, ' $1').trim();
+  return result.split(' ').join('-').toLowerCase();
+}
+
+export function toCamelCase(key: string) {
+  return key.replaceAll(/-(\w)/g, (all, letter) => {
+    return letter.toUpperCase();
+  });
 }
