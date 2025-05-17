@@ -53,6 +53,7 @@ export class TableClipboard extends Clipboard {
   constructor(public quill: Quill, options: Partial<ClipboardOptions>) {
     super(quill, options);
     this.addMatcher('table', this.matchTable.bind(this));
+    this.addMatcher('tbody', this.matchTbody.bind(this));
     this.addMatcher('colgroup', this.matchColgroup.bind(this));
     this.addMatcher('col', this.matchCol.bind(this));
     this.addMatcher('tr', this.matchTr.bind(this));
@@ -114,6 +115,23 @@ export class TableClipboard extends Clipboard {
     this.cellCount = 0;
     this.colCount = 0;
     return new Delta(ops);
+  }
+
+  matchTbody(node: Node, delta: TypeDelta) {
+    const backgroundColor = (node as HTMLElement).style.backgroundColor;
+    if (backgroundColor) {
+      for (const op of delta.ops) {
+        if (op.attributes?.[blotName.tableCellInner]) {
+          const { style, ...value } = op.attributes[blotName.tableCellInner] as TableCellValue;
+          const styleObj = cssTextToObject(style || '');
+          if (!styleObj.backgroundColor) {
+            styleObj.backgroundColor = backgroundColor;
+            op.attributes[blotName.tableCellInner] = { ...value, style: objectToCssText(styleObj) };
+          }
+        }
+      }
+    }
+    return delta;
   }
 
   matchColgroup(node: Node, delta: TypeDelta) {
