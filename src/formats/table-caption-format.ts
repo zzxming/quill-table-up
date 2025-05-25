@@ -52,6 +52,7 @@ export class TableCaptionFormat extends BlockOverride {
       if (!this.scroll.isEnabled()) return;
       this.uiNode.style.display = 'none';
     });
+    this.uiNode.style.display = 'none';
   }
 
   createUI(): HTMLElement {
