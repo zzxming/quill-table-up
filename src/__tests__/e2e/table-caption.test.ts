@@ -6,6 +6,47 @@ test.beforeEach(async ({ page }) => {
   page.locator('.ql-container.ql-snow');
 });
 
+extendTest('tableCaption switch visiable', async ({ page, editorPage }) => {
+  editorPage.index = 0;
+  await editorPage.setContents([
+    { insert: '\nTable Caption' },
+    { attributes: { 'table-up-caption': { tableId: '1', side: 'top' } }, insert: '\n' },
+    { insert: { 'table-up-col': { tableId: '1', colId: '1', full: false, width: 100 } } },
+    { insert: { 'table-up-col': { tableId: '1', colId: '2', full: false, width: 100 } } },
+    { insert: { 'table-up-col': { tableId: '1', colId: '3', full: false, width: 100 } } },
+    { insert: '1' },
+    { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '1', rowspan: 1, colspan: 1 } }, insert: '\n' },
+    { insert: '2' },
+    { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '2', rowspan: 1, colspan: 1 } }, insert: '\n' },
+    { insert: '3' },
+    { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '3', rowspan: 1, colspan: 1 } }, insert: '\n' },
+    { insert: '4' },
+    { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '1', rowspan: 1, colspan: 1 } }, insert: '\n' },
+    { insert: '5' },
+    { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '2', rowspan: 1, colspan: 1 } }, insert: '\n' },
+    { insert: '6' },
+    { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '3', rowspan: 1, colspan: 1 } }, insert: '\n' },
+    { insert: '7' },
+    { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '3', colId: '1', rowspan: 1, colspan: 1 } }, insert: '\n' },
+    { insert: '8' },
+    { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '3', colId: '2', rowspan: 1, colspan: 1 } }, insert: '\n' },
+    { insert: '9' },
+    { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '3', colId: '3', rowspan: 1, colspan: 1 } }, insert: '\n' },
+    { insert: '\n' },
+  ]);
+  await page.waitForTimeout(1000);
+
+  const captionSwitch = page.locator('#editor1 .ql-editor .ql-table caption.ql-table-caption .ql-table-caption--switch').nth(0);
+  await expect(captionSwitch).not.toBeVisible();
+
+  const boundingBox = (await page.locator('#editor1 .ql-editor .ql-table caption.ql-table-caption').boundingBox())!;
+  expect(boundingBox).not.toBeNull();
+  await page.mouse.move(boundingBox.x + boundingBox.width / 2, boundingBox.y + boundingBox.height / 2);
+  await expect(captionSwitch).toBeVisible();
+  await page.mouse.move(0, 0);
+  await expect(captionSwitch).not.toBeVisible();
+});
+
 extendTest('text tableCaption insert', async ({ page, editorPage }) => {
   editorPage.index = 0;
   await editorPage.setContents([
