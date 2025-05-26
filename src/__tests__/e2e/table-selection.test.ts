@@ -545,3 +545,34 @@ extendTest('selection should be no offset when container have padding', async ({
   expect(tableBounding.x).toBe(selectionBounding.x);
   expect(tableBounding.y).toBe(selectionBounding.y);
 });
+
+extendTest('toolbox bounds should same with quill.root', async ({ page, editorPage }) => {
+  editorPage.index = 4;
+  const toolbox = page.locator('#editor5 .table-up-toolbox').nth(0);
+  const quillRoot = page.locator('#editor5 .ql-editor').nth(0);
+  const toolboxBoundingBefore = (await toolbox.boundingBox())!;
+  const quillRootBoundingBefore = (await quillRoot.boundingBox())!;
+  expect(toolboxBoundingBefore).not.toBeNull();
+  expect(quillRootBoundingBefore).not.toBeNull();
+  expect(toolboxBoundingBefore).toEqual(quillRootBoundingBefore);
+
+  await editorPage.setContents([
+    { insert: '\n' },
+    { insert: { 'table-up-col': { tableId: '1', colId: '1', full: false, width: 300 } } },
+    { insert: { 'table-up-col': { tableId: '1', colId: '2', full: false, width: 300 } } },
+    { insert: { 'table-up-col': { tableId: '1', colId: '3', full: false, width: 300 } } },
+    { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '1', rowspan: 1, colspan: 1 } }, insert: '\n' },
+    { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '2', rowspan: 1, colspan: 1 } }, insert: '\n' },
+    { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '3', rowspan: 1, colspan: 1 } }, insert: '\n' },
+    { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '1', rowspan: 1, colspan: 1 } }, insert: '\n' },
+    { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '2', rowspan: 1, colspan: 1 } }, insert: '\n' },
+    { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '3', rowspan: 1, colspan: 1 } }, insert: '\n' },
+    { insert: '\n' },
+  ]);
+
+  const toolboxBoundingAfter = (await toolbox.boundingBox())!;
+  const quillRootBoundingAfter = (await quillRoot.boundingBox())!;
+  expect(toolboxBoundingAfter).not.toBeNull();
+  expect(quillRootBoundingAfter).not.toBeNull();
+  expect(toolboxBoundingAfter).toEqual(quillRootBoundingAfter);
+});
