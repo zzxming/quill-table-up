@@ -249,6 +249,7 @@ export class TableUp {
   tableScrollbar?: InternalModule;
   tableAlign?: InternalModule;
   tableResizeScale?: InternalModule;
+  resizeOb!: ResizeObserver;
 
   get statics(): any {
     return this.constructor;
@@ -335,14 +336,18 @@ export class TableUp {
   initialContainer() {
     const toolboxBEM = createBEM('toolbox');
     const container = this.quill.addContainer(toolboxBEM.b());
-    const quillRootRect = this.quill.root.getBoundingClientRect();
-    const { offsetLeft, offsetTop } = this.quill.root;
-    Object.assign(container.style, {
-      top: `${offsetTop}px`,
-      left: `${offsetLeft}px`,
-      width: `${quillRootRect.width}px`,
-      height: `${quillRootRect.height}px`,
-    });
+    const updateContainerStyle = () => {
+      const quillRootRect = this.quill.root.getBoundingClientRect();
+      const { offsetLeft, offsetTop } = this.quill.root;
+      Object.assign(container.style, {
+        top: `${offsetTop}px`,
+        left: `${offsetLeft}px`,
+        width: `${quillRootRect.width}px`,
+        height: `${quillRootRect.height}px`,
+      });
+    };
+    this.resizeOb = new ResizeObserver(updateContainerStyle);
+    this.resizeOb.observe(this.quill.root);
     return container;
   }
 
