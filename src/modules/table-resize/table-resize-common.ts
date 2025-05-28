@@ -181,11 +181,22 @@ export class TableResizeCommon {
     this.quill.emitter.emit(tableUpEvent.AFTER_TABLE_RESIZE);
   }
 
+  // use table td node to get column position
+  // fix browser compatibility
+  getColumnPosition(columnIndex: number) {
+    if(!this.tableMain) return {};
+    const firstRow = this.tableMain.domNode.rows[0];
+    if (!firstRow || columnIndex >= firstRow.cells.length) return null;
+    
+    const cell = firstRow.cells[columnIndex];
+    return cell.getBoundingClientRect();
+  }
+
   handleColMouseMove(e: MouseEvent): { left: number; width: number } | undefined {
     e.preventDefault();
     if (!this.dragColBreak || !this.tableMain || this.colIndex === -1) return;
     const cols = this.tableMain.getCols();
-    const changeColRect = cols[this.colIndex].domNode.getBoundingClientRect();
+    const changeColRect = this.getColumnPosition(this.colIndex);
     const tableRect = this.tableMain.domNode.getBoundingClientRect();
     let resX = e.clientX;
 
@@ -196,7 +207,7 @@ export class TableResizeCommon {
       const minWidth = (tableUpSize.colMinWidthPre / 100) * tableRect.width;
       let maxRange = tableRect.right;
       if (resX > changeColRect.right && cols[this.colIndex + 1]) {
-        maxRange = Math.max(cols[this.colIndex + 1].domNode.getBoundingClientRect().right - minWidth, changeColRect.left + minWidth);
+        maxRange = Math.max(this.getColumnPosition(this.colIndex + 1).right - minWidth, changeColRect.left + minWidth);
       }
       const minRange = changeColRect.x + minWidth;
       resX = Math.min(Math.max(resX, minRange), maxRange);
