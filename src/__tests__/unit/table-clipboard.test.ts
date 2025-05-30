@@ -244,6 +244,60 @@ describe('clipboard cell structure', () => {
     );
   });
 
+  it('clipboard convert multiple merged cell 3', async () => {
+    const quill = createQuillWithTableModule(`<p><br></p>`);
+    quill.setContents(
+      quill.clipboard.convert({
+        html: '<table><tbody><tr><td rowspan="3">merge1</td><td colspan="2">merge2</td><td>3</td></tr><tr><td rowspan="2">merge3</td><td>1</td><td>4</td></tr><tr><td>2</td><td>5</td></tr></tbody></table>',
+      }),
+    );
+    await vi.runAllTimersAsync();
+    expect(quill.root).toEqualHTML(
+      `
+        <p><br></p>
+        <div>
+          <table cellpadding="0" cellspacing="0">
+            ${createTaleColHTML(4, { width: 100, full: false })}
+            <tbody>
+              <tr>
+                <td rowspan="3" colspan="1">
+                  <div data-rowspan="3" data-colspan="1"><p>merge1</p></div>
+                </td>
+                <td rowspan="1" colspan="2">
+                  <div data-rowspan="1" data-colspan="2"><p>merge2</p></div>
+                </td>
+                <td rowspan="1" colspan="1">
+                  <div data-rowspan="1" data-colspan="1"><p>3</p></div>
+                </td>
+              </tr>
+              <tr>
+                <td rowspan="2" colspan="1">
+                  <div data-rowspan="2" data-colspan="1"><p>merge3</p></div>
+                </td>
+                <td rowspan="1" colspan="1">
+                  <div data-rowspan="1" data-colspan="1"><p>1</p></div>
+                </td>
+                <td rowspan="1" colspan="1">
+                  <div data-rowspan="1" data-colspan="1"><p>4</p></div>
+                </td>
+              </tr>
+              <tr>
+                <td rowspan="1" colspan="1">
+                  <div data-rowspan="1" data-colspan="1"><p>2</p></div>
+                </td>
+                <td rowspan="1" colspan="1">
+                  <div data-rowspan="1" data-colspan="1"><p>5</p></div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p><br></p>
+      `,
+      { ignoreAttrs: ['class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'contenteditable'] },
+    );
+  });
+
   it('clipboard convert table without new line', async () => {
     const quill = createQuillWithTableModule(`<p><br></p>`);
     quill.setContents(

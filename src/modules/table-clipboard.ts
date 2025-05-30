@@ -200,13 +200,15 @@ export class TableClipboard extends Clipboard {
       }
     }
     // skip the colspan of the cell in the previous row
-    const { colspan } = this.rowspanCount[this.cellCount];
-    this.cellCount += colspan;
+    for (let i = this.cellCount; i < this.rowspanCount.length; i++) {
+      const { rowspan, colspan } = this.rowspanCount[i];
+      if (rowspan === 0) break;
+      this.cellCount += colspan;
+    }
     // add current cell rowspan in `rowspanCount` to calculate next row cell
     if (cellFormat.rowspan > 1) {
       this.rowspanCount[this.cellCount] = { rowspan: cellFormat.rowspan, colspan: cellFormat.colspan };
     }
-
     const colId = this.colIds[this.cellCount];
     this.cellCount += cellFormat.colspan;
 
