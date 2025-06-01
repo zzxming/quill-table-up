@@ -1,3 +1,4 @@
+import type TypeScroll from 'quill/blots/scroll';
 import type { TableValue } from '../utils';
 import { blotName, tableUpSize } from '../utils';
 import { ContainerFormat } from './container-format';
@@ -25,7 +26,7 @@ export class TableMainFormat extends ContainerFormat {
     return node;
   }
 
-  constructor(scroll: any, domNode: HTMLElement, _value: any) {
+  constructor(public scroll: TypeScroll, domNode: HTMLElement, _value: unknown) {
     super(scroll, domNode);
     this.updateAlign();
   }
@@ -158,5 +159,47 @@ export class TableMainFormat extends ContainerFormat {
     }
 
     super.optimize(context);
+  }
+
+  sortMergeChildren() {
+    // move same type children to the first child
+    const childs: Record<string, ContainerFormat[]> = {
+      [blotName.tableCaption]: [],
+      [blotName.tableColgroup]: [],
+      [blotName.tableBody]: [],
+    };
+    // eslint-disable-next-line unicorn/no-array-for-each
+    this.children.forEach((child) => {
+      if (childs[child.statics.blotName]) {
+        childs[child.statics.blotName].push(child as ContainerFormat);
+      }
+    });
+    for (const formats of Object.values(childs)) {
+      for (let i = 1; i < formats.length; i++) {
+        formats[i].moveChildren(formats[0]);
+      }
+    }
+
+    // check sort child
+    const tableCaption = childs[blotName.tableCaption][0];
+    const tableColgroup = childs[blotName.tableColgroup][0];
+    const tableBody = childs[blotName.tableBody][0];
+
+    const isCaptionFirst = tableCaption && this.children.head !== tableCaption;
+    const isColgroupSecond = tableColgroup && tableCaption && tableCaption.next !== tableColgroup;
+    const isColgroupFirst = tableColgroup && !tableCaption && this.children.head !== tableColgroup;
+    const isBodyLast = tableBody && this.children.tail !== tableBody;
+
+    // sort child
+    if (isCaptionFirst || isColgroupSecond || isColgroupFirst || isBodyLast) {
+      const tableMain = this.clone() as TableMainFormat;
+      tableCaption && tableMain.appendChild(tableCaption);
+      tableColgroup && tableMain.appendChild(tableColgroup);
+      tableBody && tableMain.appendChild(tableBody);
+
+      // eslint-disable-next-line unicorn/no-array-for-each
+      this.children.forEach(child => child.remove());
+      tableMain.moveChildren(this);
+    }
   }
 }

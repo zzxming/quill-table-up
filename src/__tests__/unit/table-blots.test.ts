@@ -1,7 +1,10 @@
+import Quill from 'quill';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { TableCellFormat } from '../../formats';
 import { TableUp } from '../../table-up';
-import { createQuillWithTableModule } from './utils';
+import { createQuillWithTableModule, createTableBodyHTML, createTableCaptionHTML, createTaleColHTML, expectDelta } from './utils';
+
+const Delta = Quill.import('delta');
 
 beforeEach(() => {
   vi.useFakeTimers();
@@ -219,5 +222,59 @@ describe('test tableCell getNearByCell', () => {
     await vi.runAllTimersAsync();
     const tds = quill.scroll.descendants(TableCellFormat, 0);
     expect(tds[2].getNearByCell('top')).toEqual([tds[1]]);
+  });
+});
+
+describe('test table child sort', () => {
+  it('table child should sort by correct order event delta not', async () => {
+    const quill = createQuillWithTableModule(`<p><br></p>`);
+    quill.setContents([
+      { insert: '\n' },
+      { insert: '1' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '1', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '2' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '2', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '3' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '3', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: { 'table-up-col': { tableId: '1', colId: '1', full: false, width: 100 } } },
+      { insert: { 'table-up-col': { tableId: '1', colId: '2', full: false, width: 100 } } },
+      { insert: { 'table-up-col': { tableId: '1', colId: '3', full: false, width: 100 } } },
+      { insert: 'title' },
+      { attributes: { 'table-up-caption': { tableId: '1', side: 'top' } }, insert: '\n' },
+      { insert: '\n' },
+    ]);
+    await vi.runAllTimersAsync();
+
+    expect(quill.root).toEqualHTML(
+      `
+        <p><br></p>
+        <div>
+          <table cellpadding="0" cellspacing="0" style="margin-right: auto; width: 300px;">
+            ${createTableCaptionHTML({ text: 'title' })}
+            ${createTaleColHTML(3, { full: false, width: 100 })}
+            ${createTableBodyHTML(1, 3, { isEmpty: false })}
+          </table>
+        </div>
+        <p><br></p>
+      `,
+      { ignoreAttrs: ['class', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
+    );
+    expectDelta(
+      new Delta([
+        { insert: '\ntitle' },
+        { attributes: { 'table-up-caption': { side: 'top' } }, insert: '\n' },
+        { insert: { 'table-up-col': { full: false, width: 100 } } },
+        { insert: { 'table-up-col': { full: false, width: 100 } } },
+        { insert: { 'table-up-col': { full: false, width: 100 } } },
+        { insert: '1' },
+        { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1 } }, insert: '\n' },
+        { insert: '2' },
+        { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1 } }, insert: '\n' },
+        { insert: '3' },
+        { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1 } }, insert: '\n' },
+        { insert: '\n' },
+      ]),
+      quill.getContents(),
+    );
   });
 });
