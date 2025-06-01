@@ -328,6 +328,11 @@ export class TableUp {
       },
       false,
     );
+    this.quill.on(Quill.events.EDITOR_CHANGE, (type: typeof Quill.events.TEXT_CHANGE | typeof Quill.events.SELECTION_CHANGE) => {
+      if (type === Quill.events.TEXT_CHANGE && (!this.table || !this.quill.root.contains(this.table))) {
+        this.hideTableTools();
+      }
+    });
 
     this.quillHack();
     this.listenBalanceCells();
