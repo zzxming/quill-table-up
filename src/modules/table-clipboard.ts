@@ -82,7 +82,13 @@ export class TableClipboard extends Clipboard {
         ops.push({ attributes: attrs, insert });
       }
       // record col insert index
-      if (!attrs?.[blotName.tableCellInner] && !hasCol) {
+      if (
+        !attrs?.[blotName.tableCellInner]
+        && !attrs?.[blotName.tableCaption]
+        && !hasCol
+        && isString(insert)
+        && insert.trim().length > 0
+      ) {
         bodyStartIndex = i;
       }
     }

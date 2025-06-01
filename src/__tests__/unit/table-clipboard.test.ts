@@ -1,7 +1,7 @@
 import Quill from 'quill';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { TableUp } from '../../table-up';
-import { createQuillWithTableModule, createTableDeltaOps, createTableHTML, createTaleColHTML, expectDelta, simulatePasteHTML } from './utils';
+import { createQuillWithTableModule, createTableBodyHTML, createTableCaptionHTML, createTableDeltaOps, createTableHTML, createTaleColHTML, expectDelta, simulatePasteHTML } from './utils';
 
 const Delta = Quill.import('delta');
 
@@ -879,6 +879,49 @@ describe('clipboard cell structure', () => {
         <p><br></p>
       `,
       { ignoreAttrs: ['class', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
+    );
+  });
+
+  it('clipboard convert colgroup should generat at start of the table', async () => {
+    const quill = createQuillWithTableModule(`<p><br></p>`);
+    quill.setContents(
+      quill.clipboard.convert({
+        html: '<table class="ql-table" data-table-id="0u473v7j5th" cellpadding="0" cellspacing="0"><tbody data-table-id="0u473v7j5th"><tr class="ql-table-row" data-table-id="0u473v7j5th" data-row-id="1de78ie70hj"><td class="ql-table-cell" data-table-id="0u473v7j5th" data-row-id="1de78ie70hj" data-col-id="0025lmzkmn85x" rowspan="1" colspan="1"><div class="ql-table-cell-inner" data-table-id="0u473v7j5th" data-row-id="1de78ie70hj" data-col-id="0025lmzkmn85x" data-rowspan="1" data-colspan="1" contenteditable="true"><p>1</p></div></td><td class="ql-table-cell" data-table-id="0u473v7j5th" data-row-id="1de78ie70hj" data-col-id="g8v4waukxpe" rowspan="1" colspan="1"><div class="ql-table-cell-inner" data-table-id="0u473v7j5th" data-row-id="1de78ie70hj" data-col-id="g8v4waukxpe" data-rowspan="1" data-colspan="1" contenteditable="true"><p>2</p></div></td><td class="ql-table-cell" data-table-id="0u473v7j5th" data-row-id="1de78ie70hj" data-col-id="7ubw564uue5" rowspan="1" colspan="1"><div class="ql-table-cell-inner" data-table-id="0u473v7j5th" data-row-id="1de78ie70hj" data-col-id="7ubw564uue5" data-rowspan="1" data-colspan="1" contenteditable="true"><p>3</p></div></td></tr></tbody><caption class="ql-table-caption" data-table-id="0u473v7j5th" contenteditable="true">title</caption></table>',
+      }),
+    );
+    await vi.runAllTimersAsync();
+
+    expect(quill.root).toEqualHTML(
+      `
+        <p><br></p>
+        <div>
+          <table cellpadding="0" cellspacing="0" style="margin-right: auto; width: 300px;">
+            ${createTaleColHTML(3, { full: false, width: 100 })}
+            ${createTableBodyHTML(1, 3, { isEmpty: false })}
+            ${createTableCaptionHTML({ text: 'title' })}
+          </table>
+        </div>
+        <p><br></p>
+      `,
+      { ignoreAttrs: ['class', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
+    );
+    expectDelta(
+      new Delta([
+        { insert: '\n' },
+        { insert: { 'table-up-col': { full: false, width: 100 } } },
+        { insert: { 'table-up-col': { full: false, width: 100 } } },
+        { insert: { 'table-up-col': { full: false, width: 100 } } },
+        { insert: '1' },
+        { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1 } }, insert: '\n' },
+        { insert: '2' },
+        { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1 } }, insert: '\n' },
+        { insert: '3' },
+        { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1 } }, insert: '\n' },
+        { insert: 'title' },
+        { attributes: { 'table-up-caption': { side: 'top' } }, insert: '\n' },
+        { insert: '\n' },
+      ]),
+      quill.getContents(),
     );
   });
 });
