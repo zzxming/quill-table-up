@@ -960,6 +960,23 @@ export class TableUp {
       Quill.events.SCROLL_OPTIMIZE,
       (mutations: MutationRecord[]) => {
         mutations.some((mutation) => {
+          const mutationTarget = mutation.target as HTMLElement;
+          if (mutationTarget.tagName === 'TABLE') {
+            const tableMain = Quill.find(mutationTarget) as TableMainFormat;
+            if (tableMain) {
+              tableMain.sortMergeChildren();
+              return true;
+            }
+          }
+          return false;
+        });
+      },
+    );
+
+    this.quill.on(
+      Quill.events.SCROLL_OPTIMIZE,
+      (mutations: MutationRecord[]) => {
+        mutations.some((mutation) => {
           if (
             // TODO: if need add ['COL', 'COLGROUP']
             ['TD', 'TR', 'TBODY', 'TABLE'].includes((mutation.target as HTMLElement).tagName)

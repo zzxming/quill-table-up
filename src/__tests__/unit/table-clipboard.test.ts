@@ -882,7 +882,7 @@ describe('clipboard cell structure', () => {
     );
   });
 
-  it('clipboard convert colgroup should generat at start of the table', async () => {
+  it('clipboard convert should generate colgroup at correct position', async () => {
     const quill = createQuillWithTableModule(`<p><br></p>`);
     quill.setContents(
       quill.clipboard.convert({
@@ -896,9 +896,9 @@ describe('clipboard cell structure', () => {
         <p><br></p>
         <div>
           <table cellpadding="0" cellspacing="0" style="margin-right: auto; width: 300px;">
+            ${createTableCaptionHTML({ text: 'title' })}
             ${createTaleColHTML(3, { full: false, width: 100 })}
             ${createTableBodyHTML(1, 3, { isEmpty: false })}
-            ${createTableCaptionHTML({ text: 'title' })}
           </table>
         </div>
         <p><br></p>
@@ -907,7 +907,8 @@ describe('clipboard cell structure', () => {
     );
     expectDelta(
       new Delta([
-        { insert: '\n' },
+        { insert: '\ntitle' },
+        { attributes: { 'table-up-caption': { side: 'top' } }, insert: '\n' },
         { insert: { 'table-up-col': { full: false, width: 100 } } },
         { insert: { 'table-up-col': { full: false, width: 100 } } },
         { insert: { 'table-up-col': { full: false, width: 100 } } },
@@ -917,8 +918,6 @@ describe('clipboard cell structure', () => {
         { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1 } }, insert: '\n' },
         { insert: '3' },
         { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1 } }, insert: '\n' },
-        { insert: 'title' },
-        { attributes: { 'table-up-caption': { side: 'top' } }, insert: '\n' },
         { insert: '\n' },
       ]),
       quill.getContents(),
