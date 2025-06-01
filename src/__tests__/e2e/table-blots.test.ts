@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { extendTest } from './utils';
+import { createTableBySelect, extendTest } from './utils';
 
 test.beforeEach(async ({ page }) => {
   await page.goto('http://127.0.0.1:5500/docs/test.html');
@@ -49,4 +49,42 @@ extendTest('test table full width switch redo and undo', async ({ page, editorPa
   expect(await page.locator('#editor1 .ql-editor .ql-table[data-full="true"]').count()).toBe(1);
   expect(await page.locator('#editor1 .ql-editor .ql-table colgroup[data-full="true"]').count()).toBe(1);
   expect(await page.locator('#editor1 .ql-editor .ql-table col[data-full="true"]').count()).toBe(4);
+});
+
+extendTest('test table tools should hide after table removed', async ({ page, editorPage }) => {
+  editorPage.index = 0;
+  await createTableBySelect(page, 'container1', 3, 3);
+  await page.locator('#container1 .ql-editor .ql-table td').nth(0).click();
+  await page.waitForTimeout(1000);
+  await expect(page.locator('#container1 .table-up-toolbox .table-up-selection')).toBeVisible();
+  await expect(page.locator('#container1 .table-up-toolbox .table-up-align')).toBeAttached();
+  await expect(page.locator('#container1 .table-up-toolbox .table-up-scrollbar__container')).toBeAttached();
+  await expect(page.locator('#container1 .table-up-toolbox .table-up-resize-line__col')).toBeAttached();
+  await expect(page.locator('#container1 .table-up-toolbox .table-up-resize-line__row')).toBeAttached();
+  await expect(page.locator('#container1 .table-up-toolbox .table-up-scale')).toBeAttached();
+  await editorPage.setContents([{ insert: 'replace' }]);
+  await expect(page.locator('#container1 .table-up-toolbox .table-up-selection')).not.toBeVisible();
+  await expect(page.locator('#container1 .table-up-toolbox .table-up-align')).not.toBeAttached();
+  await expect(page.locator('#container1 .table-up-toolbox .table-up-scrollbar__container')).not.toBeAttached();
+  await expect(page.locator('#container1 .table-up-toolbox .table-up-resize-line__col')).not.toBeAttached();
+  await expect(page.locator('#container1 .table-up-toolbox .table-up-resize-line__row')).not.toBeAttached();
+  await expect(page.locator('#container1 .table-up-toolbox .table-up-scale')).not.toBeAttached();
+
+  editorPage.index = 1;
+  await createTableBySelect(page, 'container2', 3, 3);
+  await page.locator('#container2 .ql-editor .ql-table td').nth(0).click();
+  await page.waitForTimeout(1000);
+  await expect(page.locator('#container2 .table-up-toolbox .table-up-selection')).toBeVisible();
+  await expect(page.locator('#container2 .table-up-toolbox .table-up-align')).toBeAttached();
+  await expect(page.locator('#container2 .table-up-toolbox .table-up-menu')).toBeAttached();
+  await expect(page.locator('#container2 .table-up-toolbox .table-up-scrollbar__container')).toBeAttached();
+  await expect(page.locator('#container2 .table-up-toolbox .table-up-resize-box')).toBeAttached();
+  await expect(page.locator('#container2 .table-up-toolbox .table-up-scale')).toBeAttached();
+  await editorPage.setContents([{ insert: 'replace' }]);
+  await expect(page.locator('#container2 .table-up-toolbox .table-up-selection')).not.toBeVisible();
+  await expect(page.locator('#container2 .table-up-toolbox .table-up-menu')).not.toBeVisible();
+  await expect(page.locator('#container2 .table-up-toolbox .table-up-align')).not.toBeAttached();
+  await expect(page.locator('#container2 .table-up-toolbox .table-up-scrollbar__container')).not.toBeAttached();
+  await expect(page.locator('#container2 .table-up-toolbox .table-up-resize-box')).not.toBeAttached();
+  await expect(page.locator('#container2 .table-up-toolbox .table-up-scale')).not.toBeAttached();
 });

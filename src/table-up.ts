@@ -328,6 +328,11 @@ export class TableUp {
       },
       false,
     );
+    this.quill.on(Quill.events.EDITOR_CHANGE, (type: typeof Quill.events.TEXT_CHANGE | typeof Quill.events.SELECTION_CHANGE) => {
+      if (type === Quill.events.TEXT_CHANGE && (!this.table || !this.quill.root.contains(this.table))) {
+        this.hideTableTools();
+      }
+    });
 
     this.quillHack();
     this.listenBalanceCells();
@@ -960,32 +965,23 @@ export class TableUp {
       Quill.events.SCROLL_OPTIMIZE,
       (mutations: MutationRecord[]) => {
         mutations.some((mutation) => {
-          const mutationTarget = mutation.target as HTMLElement;
-          if (mutationTarget.tagName === 'TABLE') {
-            const tableMain = Quill.find(mutationTarget) as TableMainFormat;
-            if (tableMain) {
-              tableMain.sortMergeChildren();
-              return true;
-            }
-          }
-          return false;
-        });
-      },
-    );
-
-    this.quill.on(
-      Quill.events.SCROLL_OPTIMIZE,
-      (mutations: MutationRecord[]) => {
-        mutations.some((mutation) => {
-          if (
-            // TODO: if need add ['COL', 'COLGROUP']
-            ['TD', 'TR', 'TBODY', 'TABLE'].includes((mutation.target as HTMLElement).tagName)
-          ) {
+          // TODO: if need add ['COL', 'COLGROUP']
+          if (['TD', 'TR', 'TBODY', 'TABLE'].includes((mutation.target as HTMLElement).tagName)) {
             this.fixTableByLisenter();
             return true;
           }
           return false;
         });
+        for (const mutation of mutations) {
+          const mutationTarget = mutation.target as HTMLElement;
+          if (mutationTarget.tagName === 'TABLE') {
+            const tableMain = Quill.find(mutationTarget) as TableMainFormat;
+            if (tableMain) {
+              tableMain.sortMergeChildren();
+              break;
+            }
+          }
+        }
       },
     );
   }

@@ -159,6 +159,7 @@ export class TableResizeScale {
   destroy() {
     this.hide();
     this.quill.off(Quill.events.TEXT_CHANGE, this.updateWhenTextChange);
+    this.resizeobserver.disconnect();
     if (this.root) {
       this.root.remove();
     }
