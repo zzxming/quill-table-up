@@ -181,11 +181,39 @@ export class TableResizeCommon {
     this.quill.emitter.emit(tableUpEvent.AFTER_TABLE_RESIZE);
   }
 
+  // get column rect
+  // fix browser compatibility, get column rect left/x inaccurate
+  getColumnRect(columnIndex: number) {
+    if (!this.tableMain) return {};
+    const cols = this.tableMain.getCols();
+    if (columnIndex >= cols.length) return {};
+
+    // get table rect
+    const tableRect = this.tableMain.domNode.getBoundingClientRect();
+    let left = tableRect.left;
+
+    // calculate column position
+    for (let i = 0; i < columnIndex; i++) {
+      const colWidth = cols[i].domNode.getBoundingClientRect().width;
+      left += colWidth;
+    }
+
+    const currentCol = cols[columnIndex];
+    const colWidth = currentCol.domNode.getBoundingClientRect().width;
+
+    return {
+      x: left,
+      left,
+      right: left + colWidth,
+      width: colWidth,
+    };
+  }
+
   handleColMouseMove(e: MouseEvent): { left: number; width: number } | undefined {
     e.preventDefault();
     if (!this.dragColBreak || !this.tableMain || this.colIndex === -1) return;
     const cols = this.tableMain.getCols();
-    const changeColRect = cols[this.colIndex].domNode.getBoundingClientRect();
+    const changeColRect = this.getColumnRect(this.colIndex);
     const tableRect = this.tableMain.domNode.getBoundingClientRect();
     let resX = e.clientX;
 
@@ -196,7 +224,7 @@ export class TableResizeCommon {
       const minWidth = (tableUpSize.colMinWidthPre / 100) * tableRect.width;
       let maxRange = tableRect.right;
       if (resX > changeColRect.right && cols[this.colIndex + 1]) {
-        maxRange = Math.max(cols[this.colIndex + 1].domNode.getBoundingClientRect().right - minWidth, changeColRect.left + minWidth);
+        maxRange = Math.max(this.getColumnRect(this.colIndex + 1).right - minWidth, changeColRect.left + minWidth);
       }
       const minRange = changeColRect.x + minWidth;
       resX = Math.min(Math.max(resX, minRange), maxRange);
