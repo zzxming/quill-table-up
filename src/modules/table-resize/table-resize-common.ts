@@ -181,12 +181,11 @@ export class TableResizeCommon {
     this.quill.emitter.emit(tableUpEvent.AFTER_TABLE_RESIZE);
   }
 
-  // get column rect
   // fix browser compatibility, get column rect left/x inaccurate
   getColumnRect(columnIndex: number) {
-    if (!this.tableMain) return {};
+    if (!this.tableMain) return null;
     const cols = this.tableMain.getCols();
-    if (columnIndex >= cols.length) return {};
+    if (columnIndex >= cols.length) return null;
 
     // get table rect
     const tableRect = this.tableMain.domNode.getBoundingClientRect();
@@ -202,7 +201,6 @@ export class TableResizeCommon {
     const colWidth = currentCol.domNode.getBoundingClientRect().width;
 
     return {
-      x: left,
       left,
       right: left + colWidth,
       width: colWidth,
@@ -213,7 +211,7 @@ export class TableResizeCommon {
     e.preventDefault();
     if (!this.dragColBreak || !this.tableMain || this.colIndex === -1) return;
     const cols = this.tableMain.getCols();
-    const changeColRect = this.getColumnRect(this.colIndex);
+    const changeColRect = this.getColumnRect(this.colIndex)!;
     const tableRect = this.tableMain.domNode.getBoundingClientRect();
     let resX = e.clientX;
 
@@ -224,9 +222,9 @@ export class TableResizeCommon {
       const minWidth = (tableUpSize.colMinWidthPre / 100) * tableRect.width;
       let maxRange = tableRect.right;
       if (resX > changeColRect.right && cols[this.colIndex + 1]) {
-        maxRange = Math.max(this.getColumnRect(this.colIndex + 1).right - minWidth, changeColRect.left + minWidth);
+        maxRange = Math.max(this.getColumnRect(this.colIndex + 1)!.right - minWidth, changeColRect.left + minWidth);
       }
-      const minRange = changeColRect.x + minWidth;
+      const minRange = changeColRect.left + minWidth;
       resX = Math.min(Math.max(resX, minRange), maxRange);
     }
     else {
@@ -237,13 +235,13 @@ export class TableResizeCommon {
         }
       }
       else {
-        if (resX - changeColRect.x < tableUpSize.colMinWidthPx) {
-          resX = changeColRect.x + tableUpSize.colMinWidthPx;
+        if (resX - changeColRect.left < tableUpSize.colMinWidthPx) {
+          resX = changeColRect.left + tableUpSize.colMinWidthPx;
         }
       }
     }
 
-    let width = resX - changeColRect.x;
+    let width = resX - changeColRect.left;
     if (isTableAlignRight(this.tableMain)) {
       width = changeColRect.right - resX;
     }
