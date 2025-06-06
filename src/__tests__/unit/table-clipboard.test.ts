@@ -923,6 +923,187 @@ describe('clipboard cell structure', () => {
       quill.getContents(),
     );
   });
+
+  it('clipboard convert rowspan and struct have empty tr', async () => {
+    const quill = createQuillWithTableModule(`<p><br></p>`);
+    quill.setContents(
+      quill.clipboard.convert({
+        html: `
+          <body link=blue vlink=purple>
+
+          <table border=0 cellpadding=0 cellspacing=0 width=126 style='border-collapse:
+          collapse;width:94pt'>
+          <!--StartFragment-->
+          <col width=63 span=2 style='width:47pt'>
+          <tr height=19 style='height:14.4pt'>
+            <td rowspan=6 height=114 class=xl65 width=63 style='border-bottom:.5pt solid black;
+            height:86.4pt;width:47pt'>合并1</td>
+            <td rowspan=2 class=xl65 width=63 style='border-bottom:.5pt solid black;
+            width:47pt'>合并2</td>
+          </tr>
+          <tr height=19 style='height:14.4pt'>
+          </tr>
+          <tr height=19 style='height:14.4pt'>
+            <td rowspan=2 height=38 class=xl65 style='border-bottom:.5pt solid black;
+            height:28.8pt;border-top:none'>合并3</td>
+          </tr>
+          <tr height=19 style='height:14.4pt'>
+          </tr>
+          <tr height=19 style='height:14.4pt'>
+            <td rowspan=2 height=38 class=xl65 style='border-bottom:.5pt solid black;
+            height:28.8pt;border-top:none'>合并4</td>
+          </tr>
+          <tr height=19 style='height:14.4pt'>
+          </tr>
+          <!--EndFragment-->
+          </table>
+
+          </body>
+        `,
+      }),
+    );
+    await vi.runAllTimersAsync();
+
+    expect(quill.root).toEqualHTML(
+      `
+        <p><br></p>
+        <div>
+          <table cellpadding="0" cellspacing="0">
+            ${createTaleColHTML(2, { full: false, width: 63 })}
+            <tbody>
+              <tr>
+                <td rowspan="3" colspan="1">
+                  <div><p>合并1</p></div>
+                </td>
+                <td rowspan="1" colspan="1">
+                  <div><p>合并2</p></div>
+                </td>
+              </tr>
+              <tr>
+                <td rowspan="1" colspan="1">
+                  <div><p>合并3</p></div>
+                </td>
+              </tr>
+              <tr>
+                <td rowspan="1" colspan="1">
+                  <div><p>合并4</p></div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p><br></p>
+      `,
+      { ignoreAttrs: ['class', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'data-style', 'style', 'contenteditable'] },
+    );
+    expectDelta(
+      new Delta([
+        { insert: '\n' },
+        { insert: { 'table-up-col': { full: false, width: 63 } } },
+        { insert: { 'table-up-col': { full: false, width: 63 } } },
+        { insert: '合并1' },
+        { attributes: { 'table-up-cell-inner': { rowspan: 3, colspan: 1 } }, insert: '\n' },
+        { insert: '合并2' },
+        { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1 } }, insert: '\n' },
+        { insert: '合并3' },
+        { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1 } }, insert: '\n' },
+        { insert: '合并4' },
+        { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1 } }, insert: '\n' },
+        { insert: '\n' },
+      ]),
+      quill.getContents(),
+    );
+  });
+
+  it('clipboard convert col with span attribute', async () => {
+    const quill = createQuillWithTableModule(`<p><br></p>`);
+    quill.setContents(
+      quill.clipboard.convert({
+        html: `
+          <body link=blue vlink=purple>
+
+          <table border=0 cellpadding=0 cellspacing=0 width=252 style='border-collapse:
+          collapse;width:188pt'>
+          <!--StartFragment-->
+          <col width=63 span=4 style='width:47pt'>
+          <tr height=19 style='height:14.4pt'>
+            <td colspan=2 rowspan=6 height=114 class=xl65 width=126 style='height:86.4pt;
+            width:94pt'>1</td>
+            <td colspan=2 rowspan=2 class=xl65 width=126 style='width:94pt'>2</td>
+          </tr>
+          <tr height=19 style='height:14.4pt'>
+          </tr>
+          <tr height=19 style='height:14.4pt'>
+            <td colspan=2 rowspan=2 height=38 class=xl65 style='height:28.8pt'>3</td>
+          </tr>
+          <tr height=19 style='height:14.4pt'>
+          </tr>
+          <tr height=19 style='height:14.4pt'>
+            <td colspan=2 rowspan=2 height=38 class=xl65 style='height:28.8pt'>4</td>
+          </tr>
+          <tr height=19 style='height:14.4pt'>
+          </tr>
+          <!--EndFragment-->
+          </table>
+
+          </body>
+        `,
+      }),
+    );
+    await vi.runAllTimersAsync();
+
+    expect(quill.root).toEqualHTML(
+      `
+        <p><br></p>
+        <div>
+          <table cellpadding="0" cellspacing="0">
+            ${createTaleColHTML(4, { full: false, width: 63 })}
+            <tbody>
+              <tr>
+                <td rowspan="3" colspan="2">
+                  <div><p>1</p></div>
+                </td>
+                <td rowspan="1" colspan="2">
+                  <div><p>2</p></div>
+                </td>
+              </tr>
+              <tr>
+                <td rowspan="1" colspan="2">
+                  <div><p>3</p></div>
+                </td>
+              </tr>
+              <tr>
+                <td rowspan="1" colspan="2">
+                  <div><p>4</p></div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p><br></p>
+      `,
+      { ignoreAttrs: ['class', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'data-style', 'style', 'contenteditable'] },
+    );
+    expectDelta(
+      new Delta([
+        { insert: '\n' },
+        { insert: { 'table-up-col': { full: false, width: 63 } } },
+        { insert: { 'table-up-col': { full: false, width: 63 } } },
+        { insert: { 'table-up-col': { full: false, width: 63 } } },
+        { insert: { 'table-up-col': { full: false, width: 63 } } },
+        { insert: '1' },
+        { attributes: { 'table-up-cell-inner': { rowspan: 3, colspan: 2 } }, insert: '\n' },
+        { insert: '2' },
+        { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 2 } }, insert: '\n' },
+        { insert: '3' },
+        { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 2 } }, insert: '\n' },
+        { insert: '4' },
+        { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 2 } }, insert: '\n' },
+        { insert: '\n' },
+      ]),
+      quill.getContents(),
+    );
+  });
 });
 
 describe('clipboard content format', () => {
