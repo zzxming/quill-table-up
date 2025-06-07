@@ -685,6 +685,57 @@ describe('table undo', () => {
       { ignoreAttrs: ['class', 'style', 'data-table-id', 'contenteditable'] },
     );
   });
+
+  it('undo and redo remove last column', async () => {
+    const quill = await createTable(2, 2, { full: false });
+    const tableModule = quill.getModule(TableUp.moduleName) as TableUp;
+    const tds = quill.scroll.descendants(TableCellInnerFormat, 0);
+    tableModule.removeCol([tds[1]]);
+    await vi.runAllTimersAsync();
+    const afterColHtml = `
+      <p><br></p>
+      <div contenteditable="false">
+        <table cellpadding="0" cellspacing="0" style="margin-right: auto; width: 200px;">
+          <colgroup contenteditable="false">
+            <col width="100px" data-col-id="1">
+          </colgroup>
+          <tbody>
+            <tr>
+              <td rowspan="1" colspan="1" data-col-id="1">
+                <div data-col-id="1"><p>1</p></div>
+              </td>
+            </tr>
+            <tr>
+              <td rowspan="1" colspan="1" data-col-id="1">
+                <div data-col-id="1"><p>3</p></div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p><br></p>
+    `;
+    expect(quill.root).toEqualHTML(
+      afterColHtml,
+      { ignoreAttrs: ['class', 'style', 'data-full', 'data-table-id', 'data-row-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
+    );
+    quill.history.undo();
+    await vi.runAllTimersAsync();
+    expect(quill.root).toEqualHTML(
+      `
+        <p><br></p>
+        ${createTableHTML(2, 2, { full: false })}
+        <p><br></p>
+      `,
+      { ignoreAttrs: ['class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'contenteditable'] },
+    );
+    quill.history.redo();
+    await vi.runAllTimersAsync();
+    expect(quill.root).toEqualHTML(
+      afterColHtml,
+      { ignoreAttrs: ['class', 'style', 'data-full', 'data-table-id', 'data-row-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
+    );
+  });
 });
 
 describe('undo cell attribute', () => {

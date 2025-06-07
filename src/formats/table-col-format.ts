@@ -2,7 +2,7 @@ import type { Parchment as TypeParchment } from 'quill';
 import type { BlockEmbed as TypeBlockEmbed } from 'quill/blots/block';
 import type { TableColValue } from '../utils';
 import Quill from 'quill';
-import { blotName, findParentBlot, findParentBlots, tableUpSize } from '../utils';
+import { blotName, findParentBlot, tableUpSize } from '../utils';
 import { TableCellInnerFormat } from './table-cell-inner-format';
 
 const BlockEmbed = Quill.import('blots/block/embed') as typeof TypeBlockEmbed;
@@ -147,45 +147,45 @@ export class TableColFormat extends BlockEmbed {
       super.insertAt(index, value, def);
       return;
     }
-    const lines = value.split('\n');
-    const text = lines.pop();
-    const blocks = lines.map((line) => {
-      const block = this.scroll.create('block');
-      block.insertAt(0, line);
-      return block;
-    });
-    const ref = this.split(index);
-    const [tableColgroupBlot, tableMainBlot] = findParentBlots(this, [blotName.tableColgroup, blotName.tableMain] as const);
-    const tableBodyBlot = tableColgroupBlot.next;
-    if (ref) {
-      const index = ref.offset(tableColgroupBlot);
-      tableColgroupBlot.split(index);
-    }
-    // create tbody
-    let insertBlot = tableMainBlot.parent.parent;
-    let nextBlotRef: TypeParchment.Blot | null = tableMainBlot.parent.next;
-    if (tableBodyBlot) {
-      const cellInners = tableBodyBlot.descendants(TableCellInnerFormat);
-      if (cellInners.length > 0) {
-        const cellInnerBlot = cellInners[0];
-        const value = TableCellInnerFormat.formats(cellInnerBlot.domNode);
-        const newBlock = this.scroll.create('block') as TypeParchment.BlockBlot;
-        const newTableCellInner = newBlock.wrap(blotName.tableCellInner, value);
-        const newTableCell = newTableCellInner.wrap(blotName.tableCell, value);
-        const newTableRow = newTableCell.wrap(blotName.tableRow, value);
-        const newTableBody = newTableRow.wrap(blotName.tableBody, value.tableId);
-        tableColgroupBlot.parent.insertBefore(newTableBody, tableColgroupBlot.next);
+    try {
+      const lines = value.split('\n');
+      const text = lines.pop();
+      const tableColgroupBlot = findParentBlot(this, blotName.tableColgroup);
+      const tableBodyBlot = tableColgroupBlot.next;
 
-        insertBlot = newBlock;
-        nextBlotRef = newBlock.next;
+      // create tbody
+      let insertBlot: TypeParchment.Parent = this.scroll;
+      // split colgroup
+      const nextBlotRef: TypeParchment.Blot | null = tableColgroupBlot.split(this.offset(tableColgroupBlot));
+      if (tableBodyBlot) {
+        const cellInners = tableBodyBlot.descendants(TableCellInnerFormat);
+        if (cellInners.length > 0) {
+          const cellInnerBlot = cellInners[0];
+          const value = TableCellInnerFormat.formats(cellInnerBlot.domNode);
+          const newTableCellInner = this.scroll.create(blotName.tableCellInner, value) as TableCellInnerFormat;
+          const newTableCell = newTableCellInner.wrap(blotName.tableCell, value);
+          const newTableRow = newTableCell.wrap(blotName.tableRow, value);
+          const newTableBody = newTableRow.wrap(blotName.tableBody, value.tableId);
+          tableColgroupBlot.parent.insertBefore(newTableBody, nextBlotRef);
+
+          insertBlot = newTableCellInner;
+        }
+      }
+
+      for (const line of lines) {
+        const block = this.scroll.create('block');
+        block.insertAt(0, line);
+        insertBlot.appendChild(block);
+      }
+      if (text) {
+        const lineBlock = this.scroll.create('block') as TypeParchment.ParentBlot;
+        lineBlock.appendChild(this.scroll.create('text', text));
+        insertBlot.appendChild(lineBlock);
       }
     }
-
-    for (const block of blocks) {
-      insertBlot.insertBefore(block, nextBlotRef);
-    }
-    if (text) {
-      insertBlot.insertBefore(this.scroll.create('text', text), nextBlotRef);
+    catch {
+      // here should not trigger
+      console.warn('TableCol not in TableColgroup');
     }
   }
 }

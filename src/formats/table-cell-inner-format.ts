@@ -150,6 +150,16 @@ export class TableCellInnerFormat extends ContainerFormat {
     }
   }
 
+  insertAt(index: number, value: string, def?: any): void {
+    const [child] = this.children.find(index);
+    // always keep TableCellInner not empty
+    if (!child && this.statics.defaultChild) {
+      const defaultChild = this.scroll.create(this.statics.defaultChild.blotName || 'block');
+      this.appendChild(defaultChild);
+    }
+    super.insertAt(index, value, def);
+  }
+
   formats(): Record<string, any> {
     const value = this.statics.formats(this.domNode);
     return {
@@ -257,6 +267,20 @@ export class TableCellInnerFormat extends ContainerFormat {
       else {
         return this.parent.insertBefore(cellInnerBlot, this.next);
       }
+    }
+    else if (blot.statics.blotName === blotName.tableCol) {
+      try {
+        const bodyBlot = findParentBlot(this, blotName.tableBody);
+        const index = this.offset(bodyBlot);
+        const next = bodyBlot.split(index);
+        bodyBlot.parent.insertBefore(blot, next);
+        blot.optimize({});
+      }
+      catch {
+        // here should not trigger
+        console.warn('TableCellInner not in TableBody');
+      }
+      return;
     }
     super.insertBefore(blot, ref);
   }

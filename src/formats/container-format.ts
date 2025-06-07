@@ -24,15 +24,6 @@ export class ContainerFormat extends Container {
     return node;
   }
 
-  insertAt(index: number, value: string, def?: any): void {
-    const [child] = this.children.find(index);
-    if (!child) {
-      const defaultChild = this.scroll.create(this.statics.defaultChild.blotName || 'block');
-      this.appendChild(defaultChild);
-    }
-    super.insertAt(index, value, def);
-  }
-
   public optimize(_context: Record<string, any>) {
     if (this.children.length === 0) {
       if (this.statics.defaultChild != null) {
