@@ -320,7 +320,7 @@ describe('hack format cell', () => {
     expect(quill.getSelection()).toEqual({ index: 18, length: 0 });
   });
 
-  it('select length is 0 and selectedTds not empty should format all text in cell', async () => {
+  it('selection not in cell and selectedTds not empty should format all text in cell', async () => {
     const quill = createQuillWithTableModule('<p></p>', { selection: TableSelection });
     quill.setContents(createTableDeltaOps(2, 2, { full: false }));
     quill.updateContents(
@@ -333,14 +333,15 @@ describe('hack format cell', () => {
         .insert('123456789'),
     );
 
+    quill.setSelection({ index: 3, length: 0 });
+    quill.blur();
+    quill.focus();
     const tableUp = quill.getModule(TableUp.moduleName) as TableUp;
     const tds = quill.scroll.descendants(TableCellInnerFormat, 0);
     tableUp.tableSelection!.selectedTds = [tds[0], tds[2]];
-    quill.setSelection(18, 0, Quill.sources.SILENT);
     quill.format('bold', true);
     // simulate `getBoundingClientRect` will effect selectedTd computed position. need manual set
     tableUp.tableSelection!.selectedTds = [tds[0], tds[2]];
-    quill.setSelection(18, 0, Quill.sources.SILENT);
     quill.format('list', 'bullet');
     expectDelta(
       quill.getContents(),
@@ -363,10 +364,9 @@ describe('hack format cell', () => {
         { insert: '\n' },
       ]),
     );
-    expect(quill.getSelection()).toBeNull();
   });
 
-  it('selection not in cell but have selectedTds. should format all text in selected cell', async () => {
+  it('selection can get format tableCellInner. should format like origin', async () => {
     const quill = createQuillWithTableModule('<p></p>', { selection: TableSelection });
     quill.setContents([
       { insert: '12345\n' },
@@ -383,33 +383,29 @@ describe('hack format cell', () => {
       { insert: '\n' },
     ]);
 
-    const tableUp = quill.getModule(TableUp.moduleName) as TableUp;
-    const tds = quill.scroll.descendants(TableCellInnerFormat, 0);
-    tableUp.tableSelection!.selectedTds = [tds[0], tds[1]];
-    quill.setSelection(1, 3, Quill.sources.SILENT);
-    quill.format('bold', true);
-    // simulate `getBoundingClientRect` will effect selectedTd computed position. need manual set
-    tableUp.tableSelection!.selectedTds = [tds[0], tds[1]];
-    quill.setSelection(1, 3, Quill.sources.SILENT);
+    quill.setSelection(9, 0, Quill.sources.SILENT);
     quill.format('list', 'bullet');
+    // simulate `getBoundingClientRect` will effect selectedTd computed position. need manual set
+    quill.setSelection(14, 1, Quill.sources.SILENT);
+    quill.format('bold', true);
     expectDelta(
       quill.getContents(),
       new Delta([
         { insert: '12345\n' },
         { insert: { 'table-up-col': { tableId: '1', colId: '1', full: false, width: 100 } } },
         { insert: { 'table-up-col': { tableId: '1', colId: '2', full: false, width: 100 } } },
-        { insert: '1', attributes: { bold: true } },
+        { insert: '1' },
         { attributes: { 'list': 'bullet', 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '1', rowspan: 1, colspan: 1 } }, insert: '\n' },
-        { insert: '2', attributes: { bold: true } },
-        { attributes: { 'list': 'bullet', 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '2', rowspan: 1, colspan: 1 } }, insert: '\n' },
+        { insert: '2' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '2', rowspan: 1, colspan: 1 } }, insert: '\n' },
         { insert: '3' },
         { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '1', rowspan: 1, colspan: 1 } }, insert: '\n' },
-        { insert: '4' },
+        { attributes: { bold: true }, insert: '4' },
         { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '2', rowspan: 1, colspan: 1 } }, insert: '\n' },
         { insert: '\n' },
       ]),
     );
-    expect(quill.getSelection()).toBeNull();
+    expect(quill.getSelection()).toEqual({ index: 14, length: 1 });
   });
 });
 

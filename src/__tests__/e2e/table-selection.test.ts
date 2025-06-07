@@ -115,23 +115,32 @@ test('test TableSelection set indent format', async ({ page }) => {
   expect(await page.locator('#editor1 .ql-table-cell-inner p.ql-indent-1').count()).toBe(4);
 });
 
-test('test TableSelection set multiple format', async ({ page }) => {
-  await createTableBySelect(page, 'container1', 2, 2);
+extendTest('test TableSelection set multiple format', async ({ page, editorPage }) => {
+  editorPage.index = 0;
+  await editorPage.setContents([
+    { insert: '\n' },
+    { insert: { 'table-up-col': { tableId: '1', colId: '1', full: false, width: 100 } } },
+    { insert: { 'table-up-col': { tableId: '1', colId: '2', full: false, width: 100 } } },
+    { insert: '1' },
+    { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '1', rowspan: 1, colspan: 1 } }, insert: '\n' },
+    { insert: '2' },
+    { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '2', rowspan: 1, colspan: 1 } }, insert: '\n' },
+    { insert: '3' },
+    { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '1', rowspan: 1, colspan: 1 } }, insert: '\n' },
+    { insert: '4' },
+    { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '2', rowspan: 1, colspan: 1 } }, insert: '\n' },
+    { insert: '\n' },
+  ]);
+  await page.waitForTimeout(1000);
   const cell = page.locator('#editor1 .ql-editor .ql-table td').nth(0);
   const cellBounding = (await cell.boundingBox())!;
   expect(cellBounding).not.toBeNull();
   await cell.click();
   await page.mouse.down();
-  await page.mouse.move(cellBounding.x + cellBounding.width * 2 - 10, cellBounding.y + cellBounding.height * 2 - 10);
+  await page.mouse.move(cellBounding.x + cellBounding.width * 1.5, cellBounding.y + cellBounding.height * 1.5);
   await page.mouse.up();
-
-  await page.locator('#editor1 .ql-editor p').nth(0).type('1');
-  const cells = page.locator('#editor1 .ql-editor .ql-table-cell-inner');
-  await cells.all().then(async (elements) => {
-    for (const element of elements) {
-      await element.type('1');
-    }
-  });
+  await editorPage.blur();
+  await editorPage.focus();
 
   await page.locator('.ql-toolbar .ql-bold').nth(0).click();
   await page.locator('.ql-toolbar .ql-italic').nth(0).click();
@@ -145,7 +154,6 @@ test('test TableSelection set multiple format', async ({ page }) => {
   expect(await page.locator('#editor1 .ql-table-cell-inner em').count()).toBe(4);
   expect(await page.locator('#editor1 .ql-table-cell-inner s').count()).toBe(4);
   expect(await page.locator('#editor1 .ql-table-cell-inner u').count()).toBe(4);
-
   await strongEl.all().then(async (elements) => {
     for (const element of elements) {
       await expect(element).toHaveCSS('background-color', 'rgb(230, 0, 0)');
