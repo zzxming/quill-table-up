@@ -1,4 +1,4 @@
-import type { EmitterSource, Op, Parchment as TypeParchment, Range as TypeRange } from 'quill';
+import type { EmitterSource, Op, Delta as TypeDelta, Parchment as TypeParchment, Range as TypeRange } from 'quill';
 import type { Context } from 'quill/modules/keyboard';
 import type TypeKeyboard from 'quill/modules/keyboard';
 import type TypeToolbar from 'quill/modules/toolbar';
@@ -250,6 +250,8 @@ export class TableUp {
   tableAlign?: InternalModule;
   tableResizeScale?: InternalModule;
   resizeOb!: ResizeObserver;
+  // `savedRange` save the last not null range. like `quill.selection.savedRange` but only update with `SELECTION_CHANGE`, not update when call `focus`
+  savedRange: TypeRange = { index: 0, length: 0 };
 
   get statics(): any {
     return this.constructor;
@@ -328,9 +330,12 @@ export class TableUp {
       },
       false,
     );
-    this.quill.on(Quill.events.EDITOR_CHANGE, (type: typeof Quill.events.TEXT_CHANGE | typeof Quill.events.SELECTION_CHANGE) => {
+    this.quill.on(Quill.events.EDITOR_CHANGE, (type: typeof Quill.events.TEXT_CHANGE | typeof Quill.events.SELECTION_CHANGE, _val: TypeDelta | TypeRange, lastVal: TypeDelta | TypeRange) => {
       if (type === Quill.events.TEXT_CHANGE && (!this.table || !this.quill.root.contains(this.table))) {
         this.hideTableTools();
+      }
+      else if (type === Quill.events.SELECTION_CHANGE && lastVal !== null) {
+        this.savedRange = lastVal as TypeRange;
       }
     });
 
@@ -439,39 +444,43 @@ export class TableUp {
         const tableUpModule = this.getModule(tableUpInternal.moduleName) as TableUp;
 
         const range = this.getSelection();
-        if (range && range.length > 0) {
+        if (range) {
           const formats = this.getFormat(range);
-          if (formats[blotName.tableCellInner]) {
+          // because quill.selection.savedRange will update when call `focus`, and `focus` will called when toolbar item click or select
+          // range not in cell, range length not 0 or savedRange.index not equal currentRange.index. Call the `format` directly
+          if (!formats[blotName.tableCellInner] || range.length > 0 || tableUpModule.savedRange.index !== range.index) {
             return originFormat.call(this, name, value, source);
           }
-        }
-        // if selection range is not in table, but use the TableSelection selected cells
-        // format in selected cells
-        if (tableUpModule && tableUpModule.tableSelection && tableUpModule.tableSelection.selectedTds.length > 0) {
-          const selectedTds = tableUpModule.tableSelection.selectedTds;
-          // calculate the format value. the format should be canceled when this value exists in all selected cells
-          let setOrigin = false;
-          const tdRanges = [];
-          for (const innerTd of selectedTds) {
-            const index = innerTd.offset(this.scroll);
-            const length = innerTd.length();
-            tdRanges.push({ index, length });
-            const format = this.getFormat(index, length);
-            if (format[name] !== value) {
-              setOrigin = true;
+          // if savedRange.index equal with currentRange.index, length === 0 and range in cell
+          // it means the range should use selectedTds. because TableSelection internal called `blur`, and toolbar item click or select called `focus`
+          // that make savedRange is the currentRange. after update call blur makesure savedRange doesn't change
+          // format in selected cells
+          if (tableUpModule && tableUpModule.tableSelection && tableUpModule.tableSelection.selectedTds.length > 0) {
+            const selectedTds = tableUpModule.tableSelection.selectedTds;
+            // calculate the format value. the format should be canceled when this value exists in all selected cells
+            let setOrigin = false;
+            const tdRanges = [];
+            for (const innerTd of selectedTds) {
+              const index = innerTd.offset(this.scroll);
+              const length = innerTd.length();
+              tdRanges.push({ index, length });
+              const format = this.getFormat(index, length);
+              if (format[name] !== value) {
+                setOrigin = true;
+              }
             }
-          }
-          const resultValue = setOrigin ? value : false;
+            const resultValue = setOrigin ? value : false;
 
-          const delta = new Delta();
-          for (const [i, { index, length }] of tdRanges.entries()) {
-            const lastIndex = i === 0 ? 0 : tdRanges[i - 1].index + tdRanges[i - 1].length;
-            delta.retain(index - lastIndex).retain(length, { [name]: resultValue });
-          }
+            const delta = new Delta();
+            for (const [i, { index, length }] of tdRanges.entries()) {
+              const lastIndex = i === 0 ? 0 : tdRanges[i - 1].index + tdRanges[i - 1].length;
+              delta.retain(index - lastIndex).retain(length, { [name]: resultValue });
+            }
 
-          const updateDelta = this.updateContents(delta, source);
-          this.blur();
-          return updateDelta;
+            const updateDelta = this.updateContents(delta, source);
+            this.blur();
+            return updateDelta;
+          }
         }
       }
 
