@@ -209,7 +209,6 @@ export class TableResizeCommon {
     if (!this.dragColBreak || !this.tableMain || this.colIndex === -1) return;
     const cols = this.tableMain.getCols();
     const changeColRect = this.getColumnRect(this.colIndex)!;
-    const changeColRect1 = cols[this.colIndex].domNode.getBoundingClientRect();
     const tableRect = this.tableMain.domNode.getBoundingClientRect();
     let resX = e.clientX;
 
@@ -239,14 +238,12 @@ export class TableResizeCommon {
       }
     }
 
-    console.log(resX, JSON.stringify(changeColRect), JSON.stringify(changeColRect1));
     let width = resX - changeColRect.left;
     if (isTableAlignRight(this.tableMain)) {
       width = changeColRect.right - resX;
     }
     this.dragColBreak.style.left = `${resX}px`;
     this.dragColBreak.dataset.w = String(width);
-    console.log(resX, width);
     return {
       left: resX,
       width,
@@ -274,7 +271,6 @@ export class TableResizeCommon {
     const divDom = document.createElement('div');
     divDom.classList.add(this.dragBEM.b());
     divDom.classList.add(this.dragBEM.is('col'));
-    console.log(width);
     divDom.dataset.w = String(width);
 
     const styleValue = {
