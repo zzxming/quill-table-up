@@ -334,8 +334,11 @@ export class TableUp {
       if (type === Quill.events.TEXT_CHANGE && (!this.table || !this.quill.root.contains(this.table))) {
         this.hideTableTools();
       }
-      else if (type === Quill.events.SELECTION_CHANGE && lastVal !== null) {
-        this.savedRange = lastVal as TypeRange;
+      else if (type === Quill.events.SELECTION_CHANGE) {
+        console.log(_val, lastVal);
+        if (lastVal !== null) {
+          this.savedRange = lastVal as TypeRange;
+        }
       }
     });
 
@@ -442,45 +445,38 @@ export class TableUp {
       // filter embed blot
       if (!((blot as TypeParchment.BlotConstructor).prototype instanceof Parchment.EmbedBlot)) {
         const tableUpModule = this.getModule(tableUpInternal.moduleName) as TableUp;
-
-        const range = this.getSelection();
-        if (range) {
-          const formats = this.getFormat(range);
-          // because quill.selection.savedRange will update when call `focus`, and `focus` will called when toolbar item click or select
-          // range not in cell, range length not 0 or savedRange.index not equal currentRange.index. Call the `format` directly
-          if (!formats[blotName.tableCellInner] || range.length > 0 || tableUpModule.savedRange.index !== range.index) {
-            return originFormat.call(this, name, value, source);
-          }
-          // if savedRange.index equal with currentRange.index, length === 0 and range in cell
-          // it means the range should use selectedTds. because TableSelection internal called `blur`, and toolbar item click or select called `focus`
-          // that make savedRange is the currentRange. after update call blur makesure savedRange doesn't change
-          // format in selected cells
-          if (tableUpModule && tableUpModule.tableSelection && tableUpModule.tableSelection.selectedTds.length > 0) {
-            const selectedTds = tableUpModule.tableSelection.selectedTds;
-            // calculate the format value. the format should be canceled when this value exists in all selected cells
-            let setOrigin = false;
-            const tdRanges = [];
-            for (const innerTd of selectedTds) {
-              const index = innerTd.offset(this.scroll);
-              const length = innerTd.length();
-              tdRanges.push({ index, length });
-              const format = this.getFormat(index, length);
-              if (format[name] !== value) {
-                setOrigin = true;
-              }
+        const range = this.getSelection(true);
+        const formats = this.getFormat(range);
+        // only when selection in cell and selectedTds > 1 can format all cells
+        if (!formats[blotName.tableCellInner] || range.length > 0 || (tableUpModule && tableUpModule.tableSelection && tableUpModule.tableSelection.selectedTds.length <= 1)) {
+          return originFormat.call(this, name, value, source);
+        }
+        // format in selected cells
+        if (tableUpModule && tableUpModule.tableSelection && tableUpModule.tableSelection.selectedTds.length > 0) {
+          const selectedTds = tableUpModule.tableSelection.selectedTds;
+          // calculate the format value. the format should be canceled when this value exists in all selected cells
+          let setOrigin = false;
+          const tdRanges = [];
+          for (const innerTd of selectedTds) {
+            const index = innerTd.offset(this.scroll);
+            const length = innerTd.length();
+            tdRanges.push({ index, length });
+            const format = this.getFormat(index, length);
+            if (format[name] !== value) {
+              setOrigin = true;
             }
-            const resultValue = setOrigin ? value : false;
-
-            const delta = new Delta();
-            for (const [i, { index, length }] of tdRanges.entries()) {
-              const lastIndex = i === 0 ? 0 : tdRanges[i - 1].index + tdRanges[i - 1].length;
-              delta.retain(index - lastIndex).retain(length, { [name]: resultValue });
-            }
-
-            const updateDelta = this.updateContents(delta, source);
-            this.blur();
-            return updateDelta;
           }
+          const resultValue = setOrigin ? value : false;
+
+          const delta = new Delta();
+          for (const [i, { index, length }] of tdRanges.entries()) {
+            const lastIndex = i === 0 ? 0 : tdRanges[i - 1].index + tdRanges[i - 1].length;
+            delta.retain(index - lastIndex).retain(length, { [name]: resultValue });
+          }
+
+          const updateDelta = this.updateContents(delta, source);
+          this.blur();
+          return updateDelta;
         }
       }
 
