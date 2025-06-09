@@ -115,6 +115,22 @@ test('test TableSelection set indent format', async ({ page }) => {
   expect(await page.locator('#editor1 .ql-table-cell-inner p.ql-indent-1').count()).toBe(4);
 });
 
+test('test TableSelection set format header', async ({ page }) => {
+  await createTableBySelect(page, 'container1', 2, 2);
+  const cell = page.locator('#editor1 .ql-editor .ql-table td').nth(0);
+  const cellBounding = (await cell.boundingBox())!;
+  expect(cellBounding).not.toBeNull();
+  await cell.click();
+  await page.mouse.down();
+  await page.mouse.move(cellBounding.x + cellBounding.width * 2 - 10, cellBounding.y + cellBounding.height * 2 - 10);
+  await page.mouse.up();
+
+  await page.locator('#container1 .ql-toolbar .ql-header').nth(0).click();
+  await page.locator('#container1 .ql-toolbar .ql-header .ql-picker-options .ql-picker-item').nth(0).click();
+
+  expect(await page.locator('#editor1 .ql-table-cell-inner h1').count()).toBe(4);
+});
+
 extendTest('test TableSelection set multiple format', async ({ page, editorPage }) => {
   editorPage.index = 0;
   await editorPage.setContents([
@@ -181,6 +197,53 @@ test('test TableSelection clean format', async ({ page }) => {
   await page.locator('#container1 .ql-toolbar .ql-clean').nth(0).click();
   const cleanEl = page.locator('#editor1 .ql-table-cell-inner h1.ql-indent-1');
   expect(await cleanEl.count()).toBe(0);
+});
+
+extendTest('test TableSelection set format in part of cell text', async ({ page, editorPage }) => {
+  editorPage.index = 0;
+  await editorPage.setContents([
+    { insert: '\n' },
+    { insert: { 'table-up-col': { tableId: '1', colId: '1', full: false, width: 100 } } },
+    { insert: { 'table-up-col': { tableId: '1', colId: '2', full: false, width: 100 } } },
+    { insert: '1' },
+    { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '1', rowspan: 1, colspan: 1 } }, insert: '\n' },
+    { insert: '1' },
+    { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '1', rowspan: 1, colspan: 1 } }, insert: '\n' },
+    { insert: '1' },
+    { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '1', rowspan: 1, colspan: 1 } }, insert: '\n' },
+    { insert: '2' },
+    { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '2', rowspan: 1, colspan: 1 } }, insert: '\n' },
+    { insert: '2' },
+    { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '2', rowspan: 1, colspan: 1 } }, insert: '\n' },
+    { insert: '2' },
+    { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '2', rowspan: 1, colspan: 1 } }, insert: '\n' },
+    { insert: '3' },
+    { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '1', rowspan: 1, colspan: 1 } }, insert: '\n' },
+    { insert: '4' },
+    { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '2', rowspan: 1, colspan: 1 } }, insert: '\n' },
+    { insert: '\n' },
+  ]);
+  await page.waitForTimeout(1000);
+  await page.locator('#editor1 .ql-editor .ql-table td').nth(0).click();
+
+  await editorPage.setSelection(4, 0);
+  await page.locator('#container1 .ql-toolbar .ql-header').nth(0).click();
+  await page.locator('#container1 .ql-toolbar .ql-header .ql-picker-options .ql-picker-item').nth(0).click();
+  const selectionAfterHeader = await editorPage.getSelection();
+  expect(selectionAfterHeader).toEqual({ index: 4, length: 0 });
+
+  await editorPage.setSelection(6, 0);
+  await page.locator('.ql-toolbar .ql-list[value="bullet"]').nth(0).click();
+  const selectionAfterList = await editorPage.getSelection();
+  expect(selectionAfterList).toEqual({ index: 6, length: 0 });
+
+  await page.locator('#editor1 .ql-editor .ql-table td').nth(1).click();
+  await editorPage.setSelection(9, 3);
+  await page.locator('.ql-toolbar .ql-bold').nth(0).click();
+  await page.locator('.ql-toolbar .ql-italic').nth(0).click();
+
+  expect(await page.locator('#editor1 .ql-table-cell-inner strong').count()).toBe(2);
+  expect(await page.locator('#editor1 .ql-table-cell-inner em').count()).toBe(2);
 });
 
 extendTest('test TableSelection should update when text change', async ({ page, editorPage }) => {
