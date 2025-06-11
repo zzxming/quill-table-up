@@ -1,4 +1,4 @@
-import type { EmitterSource, Op, Delta as TypeDelta, Parchment as TypeParchment, Range as TypeRange } from 'quill';
+import type { EmitterSource, Op, Parchment as TypeParchment, Range as TypeRange } from 'quill';
 import type { Context } from 'quill/modules/keyboard';
 import type TypeKeyboard from 'quill/modules/keyboard';
 import type TypeToolbar from 'quill/modules/toolbar';
@@ -250,8 +250,6 @@ export class TableUp {
   tableAlign?: InternalModule;
   tableResizeScale?: InternalModule;
   resizeOb!: ResizeObserver;
-  // `savedRange` save the last not null range. like `quill.selection.savedRange` but only update with `SELECTION_CHANGE`, not update when call `focus`
-  savedRange: TypeRange = { index: 0, length: 0 };
 
   get statics(): any {
     return this.constructor;
@@ -330,15 +328,9 @@ export class TableUp {
       },
       false,
     );
-    this.quill.on(Quill.events.EDITOR_CHANGE, (type: typeof Quill.events.TEXT_CHANGE | typeof Quill.events.SELECTION_CHANGE, _val: TypeDelta | TypeRange, lastVal: TypeDelta | TypeRange) => {
+    this.quill.on(Quill.events.EDITOR_CHANGE, (type: typeof Quill.events.TEXT_CHANGE | typeof Quill.events.SELECTION_CHANGE) => {
       if (type === Quill.events.TEXT_CHANGE && (!this.table || !this.quill.root.contains(this.table))) {
         this.hideTableTools();
-      }
-      else if (type === Quill.events.SELECTION_CHANGE) {
-        console.log(_val, lastVal);
-        if (lastVal !== null) {
-          this.savedRange = lastVal as TypeRange;
-        }
       }
     });
 
