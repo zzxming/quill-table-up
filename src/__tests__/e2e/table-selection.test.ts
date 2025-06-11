@@ -647,3 +647,20 @@ extendTest('toolbox bounds should same with quill.root', async ({ page, editorPa
   expect(quillRootBoundingAfter).not.toBeNull();
   expect(toolboxBoundingAfter).toEqual(quillRootBoundingAfter);
 });
+
+extendTest('TableSelection should not update when input composition', async ({ page, editorPage }) => {
+  editorPage.index = 0;
+  await createTableBySelect(page, 'container1', 3, 3);
+
+  await page.locator('#editor1 .ql-table .ql-table-cell').nth(0).click();
+  const selectionLine = page.locator('#container1 .table-up-selection .table-up-selection__line');
+  await expect(selectionLine).toBeVisible();
+  const bounding = (await selectionLine.boundingBox())!;
+  expect(bounding).not.toBeNull();
+
+  await page.dispatchEvent('#editor1 .ql-editor .ql-table-cell', 'compositionstart');
+  await page.type('#editor1 .ql-editor .ql-table-cell', 'zhongwen');
+
+  const composingBounding = (await selectionLine.boundingBox())!;
+  expect(composingBounding).toEqual(bounding);
+});

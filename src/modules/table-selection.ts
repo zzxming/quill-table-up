@@ -93,7 +93,7 @@ export class TableSelection {
 
   quillSelectionChangeHandler = (range: TypeRange | null, _oldRange: TypeRange | null, source: EmitterSource) => {
     if (source === Quill.sources.API) return;
-    if (range && this.selectedTds.length > 0) {
+    if (range && !this.quill.composition.isComposing && this.selectedTds.length > 0) {
       const formats = this.quill.getFormat(range);
       const [line] = this.quill.getLine(range.index);
       const isInCell = !!formats[blotName.tableCellInner] && !!line;
