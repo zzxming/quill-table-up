@@ -181,11 +181,34 @@ export class TableResizeCommon {
     this.quill.emitter.emit(tableUpEvent.AFTER_TABLE_RESIZE);
   }
 
+  // fix browser compatibility, get column rect left/x inaccurate
+  getColumnRect(columnIndex: number) {
+    if (!this.tableMain) return null;
+    const cols = this.tableMain.getCols();
+    if (columnIndex >= cols.length) return null;
+
+    // calculate column position
+    let left = cols[0].domNode.getBoundingClientRect().left;
+    for (let i = 0; i < columnIndex; i++) {
+      const colRect = cols[i].domNode.getBoundingClientRect();
+      left += colRect.width;
+    }
+
+    const currentCol = cols[columnIndex];
+    const colWidth = currentCol.domNode.getBoundingClientRect().width;
+
+    return {
+      left,
+      right: left + colWidth,
+      width: colWidth,
+    };
+  }
+
   handleColMouseMove(e: MouseEvent): { left: number; width: number } | undefined {
     e.preventDefault();
     if (!this.dragColBreak || !this.tableMain || this.colIndex === -1) return;
     const cols = this.tableMain.getCols();
-    const changeColRect = cols[this.colIndex].domNode.getBoundingClientRect();
+    const changeColRect = this.getColumnRect(this.colIndex)!;
     const tableRect = this.tableMain.domNode.getBoundingClientRect();
     let resX = e.clientX;
 
@@ -196,9 +219,9 @@ export class TableResizeCommon {
       const minWidth = (tableUpSize.colMinWidthPre / 100) * tableRect.width;
       let maxRange = tableRect.right;
       if (resX > changeColRect.right && cols[this.colIndex + 1]) {
-        maxRange = Math.max(cols[this.colIndex + 1].domNode.getBoundingClientRect().right - minWidth, changeColRect.left + minWidth);
+        maxRange = Math.max(this.getColumnRect(this.colIndex + 1)!.right - minWidth, changeColRect.left + minWidth);
       }
-      const minRange = changeColRect.x + minWidth;
+      const minRange = changeColRect.left + minWidth;
       resX = Math.min(Math.max(resX, minRange), maxRange);
     }
     else {
@@ -209,13 +232,13 @@ export class TableResizeCommon {
         }
       }
       else {
-        if (resX - changeColRect.x < tableUpSize.colMinWidthPx) {
-          resX = changeColRect.x + tableUpSize.colMinWidthPx;
+        if (resX - changeColRect.left < tableUpSize.colMinWidthPx) {
+          resX = changeColRect.left + tableUpSize.colMinWidthPx;
         }
       }
     }
 
-    let width = resX - changeColRect.x;
+    let width = resX - changeColRect.left;
     if (isTableAlignRight(this.tableMain)) {
       width = changeColRect.right - resX;
     }
