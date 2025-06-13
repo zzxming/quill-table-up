@@ -1,7 +1,10 @@
+import Quill from 'quill';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { TableCellInnerFormat } from '../../formats';
 import { TableUp } from '../../table-up';
-import { createQuillWithTableModule, createTable, createTaleColHTML } from './utils';
+import { createQuillWithTableModule, createTable, createTaleColHTML, expectDelta } from './utils';
+
+const Delta = Quill.import('delta');
 
 beforeEach(() => {
   vi.useFakeTimers();
@@ -290,6 +293,78 @@ describe('merge and split cell', () => {
         <p><br></p>
       `,
       { ignoreAttrs: ['class', 'style', 'data-table-id', 'contenteditable'] },
+    );
+  });
+
+  it('split cell should copy style to split cells', async () => {
+    const quill = createQuillWithTableModule(`<p><br></p>`);
+    quill.setContents([
+      { insert: '\n' },
+      { insert: { 'table-up-col': { tableId: '8v36875pbr6', colId: '1vwhsx9zayhi', full: true, width: 20 } } },
+      { insert: { 'table-up-col': { tableId: '8v36875pbr6', colId: 'gpais2dyp87', full: true, width: 20 } } },
+      { insert: { 'table-up-col': { tableId: '8v36875pbr6', colId: 'xtfguzk629', full: true, width: 20 } } },
+      { insert: { 'table-up-col': { tableId: '8v36875pbr6', colId: '94w8b6fhy2p', full: true, width: 20 } } },
+      { insert: { 'table-up-col': { tableId: '8v36875pbr6', colId: 'y0epsy6odnm', full: true, width: 20 } } },
+      { insert: '1' },
+      { attributes: { 'table-up-cell-inner': { tableId: '8v36875pbr6', rowId: 'zjhlbpvwjo', colId: '1vwhsx9zayhi', rowspan: 4, colspan: 4, style: 'border-color: rgb(0, 153, 255);' } }, insert: '\n' },
+      { insert: '2' },
+      { attributes: { 'table-up-cell-inner': { tableId: '8v36875pbr6', rowId: 'zjhlbpvwjo', colId: '1vwhsx9zayhi', rowspan: 4, colspan: 4, style: 'border-color: rgb(0, 153, 255);' } }, insert: '\n' },
+      { insert: '3' },
+      { attributes: { 'table-up-cell-inner': { tableId: '8v36875pbr6', rowId: 'zjhlbpvwjo', colId: '1vwhsx9zayhi', rowspan: 4, colspan: 4, style: 'border-color: rgb(0, 153, 255);' } }, insert: '\n' },
+      { insert: '4' },
+      { attributes: { 'table-up-cell-inner': { tableId: '8v36875pbr6', rowId: 'zjhlbpvwjo', colId: '1vwhsx9zayhi', rowspan: 4, colspan: 4, style: 'border-color: rgb(0, 153, 255);' } }, insert: '\n' },
+      { insert: '6' },
+      { attributes: { 'table-up-cell-inner': { tableId: '8v36875pbr6', rowId: 'zjhlbpvwjo', colId: '1vwhsx9zayhi', rowspan: 4, colspan: 4, style: 'border-color: rgb(0, 153, 255);' } }, insert: '\n' },
+      { insert: '7' },
+      { attributes: { 'table-up-cell-inner': { tableId: '8v36875pbr6', rowId: 'zjhlbpvwjo', colId: '1vwhsx9zayhi', rowspan: 4, colspan: 4, style: 'border-color: rgb(0, 153, 255);' } }, insert: '\n' },
+      { insert: '8' },
+      { attributes: { 'table-up-cell-inner': { tableId: '8v36875pbr6', rowId: 'zjhlbpvwjo', colId: '1vwhsx9zayhi', rowspan: 4, colspan: 4, style: 'border-color: rgb(0, 153, 255);' } }, insert: '\n' },
+      { insert: '9' },
+      { attributes: { 'table-up-cell-inner': { tableId: '8v36875pbr6', rowId: 'zjhlbpvwjo', colId: '1vwhsx9zayhi', rowspan: 4, colspan: 4, style: 'border-color: rgb(0, 153, 255);' } }, insert: '\n' },
+      { insert: '11' },
+      { attributes: { 'table-up-cell-inner': { tableId: '8v36875pbr6', rowId: 'zjhlbpvwjo', colId: '1vwhsx9zayhi', rowspan: 4, colspan: 4, style: 'border-color: rgb(0, 153, 255);' } }, insert: '\n' },
+      { insert: '12' },
+      { attributes: { 'table-up-cell-inner': { tableId: '8v36875pbr6', rowId: 'zjhlbpvwjo', colId: '1vwhsx9zayhi', rowspan: 4, colspan: 4, style: 'border-color: rgb(0, 153, 255);' } }, insert: '\n' },
+      { insert: '13' },
+      { attributes: { 'table-up-cell-inner': { tableId: '8v36875pbr6', rowId: 'zjhlbpvwjo', colId: '1vwhsx9zayhi', rowspan: 4, colspan: 4, style: 'border-color: rgb(0, 153, 255);' } }, insert: '\n' },
+      { insert: '14' },
+      { attributes: { 'table-up-cell-inner': { tableId: '8v36875pbr6', rowId: 'zjhlbpvwjo', colId: '1vwhsx9zayhi', rowspan: 4, colspan: 4, style: 'border-color: rgb(0, 153, 255);' } }, insert: '\n' },
+      { insert: '16' },
+      { attributes: { 'table-up-cell-inner': { tableId: '8v36875pbr6', rowId: 'zjhlbpvwjo', colId: '1vwhsx9zayhi', rowspan: 4, colspan: 4, style: 'border-color: rgb(0, 153, 255);' } }, insert: '\n' },
+      { insert: '17' },
+      { attributes: { 'table-up-cell-inner': { tableId: '8v36875pbr6', rowId: 'zjhlbpvwjo', colId: '1vwhsx9zayhi', rowspan: 4, colspan: 4, style: 'border-color: rgb(0, 153, 255);' } }, insert: '\n' },
+      { insert: '18' },
+      { attributes: { 'table-up-cell-inner': { tableId: '8v36875pbr6', rowId: 'zjhlbpvwjo', colId: '1vwhsx9zayhi', rowspan: 4, colspan: 4, style: 'border-color: rgb(0, 153, 255);' } }, insert: '\n' },
+      { insert: '19' },
+      { attributes: { 'table-up-cell-inner': { tableId: '8v36875pbr6', rowId: 'zjhlbpvwjo', colId: '1vwhsx9zayhi', rowspan: 4, colspan: 4, style: 'border-color: rgb(0, 153, 255);' } }, insert: '\n' },
+      { insert: '5' },
+      { attributes: { 'table-up-cell-inner': { tableId: '8v36875pbr6', rowId: 'zjhlbpvwjo', colId: 'y0epsy6odnm', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '10' },
+      { attributes: { 'table-up-cell-inner': { tableId: '8v36875pbr6', rowId: 'ogznp2n7y8b', colId: 'y0epsy6odnm', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '15' },
+      { attributes: { 'table-up-cell-inner': { tableId: '8v36875pbr6', rowId: '9vw214waitk', colId: 'y0epsy6odnm', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '20' },
+      { attributes: { 'table-up-cell-inner': { tableId: '8v36875pbr6', rowId: 'j4uarvyr86d', colId: 'y0epsy6odnm', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '21' },
+      { attributes: { 'table-up-cell-inner': { tableId: '8v36875pbr6', rowId: 'fow0uajprzw', colId: '1vwhsx9zayhi', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '22' },
+      { attributes: { 'table-up-cell-inner': { tableId: '8v36875pbr6', rowId: 'fow0uajprzw', colId: 'gpais2dyp87', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '23' },
+      { attributes: { 'table-up-cell-inner': { tableId: '8v36875pbr6', rowId: 'fow0uajprzw', colId: 'xtfguzk629', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '24' },
+      { attributes: { 'table-up-cell-inner': { tableId: '8v36875pbr6', rowId: 'fow0uajprzw', colId: '94w8b6fhy2p', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '25' },
+      { attributes: { 'table-up-cell-inner': { tableId: '8v36875pbr6', rowId: 'fow0uajprzw', colId: 'y0epsy6odnm', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '\n' },
+    ]);
+    await vi.runAllTimersAsync();
+    const tableModule = quill.getModule(TableUp.moduleName) as TableUp;
+    const tds = quill.scroll.descendants(TableCellInnerFormat, 0);
+    tableModule.splitCell([tds[0]]);
+    await vi.runAllTimersAsync();
+    expectDelta(
+      new Delta([{ insert: '\n' }, { insert: { 'table-up-col': { tableId: '8v36875pbr6', colId: '1vwhsx9zayhi', full: true, width: 20 } } }, { insert: { 'table-up-col': { tableId: '8v36875pbr6', colId: 'gpais2dyp87', full: true, width: 20 } } }, { insert: { 'table-up-col': { tableId: '8v36875pbr6', colId: 'xtfguzk629', full: true, width: 20 } } }, { insert: { 'table-up-col': { tableId: '8v36875pbr6', colId: '94w8b6fhy2p', full: true, width: 20 } } }, { insert: { 'table-up-col': { tableId: '8v36875pbr6', colId: 'y0epsy6odnm', full: true, width: 20 } } }, { insert: '1' }, { attributes: { 'table-up-cell-inner': { tableId: '8v36875pbr6', rowId: 'zjhlbpvwjo', colId: '1vwhsx9zayhi', rowspan: 1, colspan: 1, style: 'border-color: rgb(0, 153, 255);' } }, insert: '\n' }, { insert: '2' }, { attributes: { 'table-up-cell-inner': { tableId: '8v36875pbr6', rowId: 'zjhlbpvwjo', colId: '1vwhsx9zayhi', rowspan: 1, colspan: 1, style: 'border-color: rgb(0, 153, 255);' } }, insert: '\n' }, { insert: '3' }, { attributes: { 'table-up-cell-inner': { tableId: '8v36875pbr6', rowId: 'zjhlbpvwjo', colId: '1vwhsx9zayhi', rowspan: 1, colspan: 1, style: 'border-color: rgb(0, 153, 255);' } }, insert: '\n' }, { insert: '4' }, { attributes: { 'table-up-cell-inner': { tableId: '8v36875pbr6', rowId: 'zjhlbpvwjo', colId: '1vwhsx9zayhi', rowspan: 1, colspan: 1, style: 'border-color: rgb(0, 153, 255);' } }, insert: '\n' }, { insert: '6' }, { attributes: { 'table-up-cell-inner': { tableId: '8v36875pbr6', rowId: 'zjhlbpvwjo', colId: '1vwhsx9zayhi', rowspan: 1, colspan: 1, style: 'border-color: rgb(0, 153, 255);' } }, insert: '\n' }, { insert: '7' }, { attributes: { 'table-up-cell-inner': { tableId: '8v36875pbr6', rowId: 'zjhlbpvwjo', colId: '1vwhsx9zayhi', rowspan: 1, colspan: 1, style: 'border-color: rgb(0, 153, 255);' } }, insert: '\n' }, { insert: '8' }, { attributes: { 'table-up-cell-inner': { tableId: '8v36875pbr6', rowId: 'zjhlbpvwjo', colId: '1vwhsx9zayhi', rowspan: 1, colspan: 1, style: 'border-color: rgb(0, 153, 255);' } }, insert: '\n' }, { insert: '9' }, { attributes: { 'table-up-cell-inner': { tableId: '8v36875pbr6', rowId: 'zjhlbpvwjo', colId: '1vwhsx9zayhi', rowspan: 1, colspan: 1, style: 'border-color: rgb(0, 153, 255);' } }, insert: '\n' }, { insert: '11' }, { attributes: { 'table-up-cell-inner': { tableId: '8v36875pbr6', rowId: 'zjhlbpvwjo', colId: '1vwhsx9zayhi', rowspan: 1, colspan: 1, style: 'border-color: rgb(0, 153, 255);' } }, insert: '\n' }, { insert: '12' }, { attributes: { 'table-up-cell-inner': { tableId: '8v36875pbr6', rowId: 'zjhlbpvwjo', colId: '1vwhsx9zayhi', rowspan: 1, colspan: 1, style: 'border-color: rgb(0, 153, 255);' } }, insert: '\n' }, { insert: '13' }, { attributes: { 'table-up-cell-inner': { tableId: '8v36875pbr6', rowId: 'zjhlbpvwjo', colId: '1vwhsx9zayhi', rowspan: 1, colspan: 1, style: 'border-color: rgb(0, 153, 255);' } }, insert: '\n' }, { insert: '14' }, { attributes: { 'table-up-cell-inner': { tableId: '8v36875pbr6', rowId: 'zjhlbpvwjo', colId: '1vwhsx9zayhi', rowspan: 1, colspan: 1, style: 'border-color: rgb(0, 153, 255);' } }, insert: '\n' }, { insert: '16' }, { attributes: { 'table-up-cell-inner': { tableId: '8v36875pbr6', rowId: 'zjhlbpvwjo', colId: '1vwhsx9zayhi', rowspan: 1, colspan: 1, style: 'border-color: rgb(0, 153, 255);' } }, insert: '\n' }, { insert: '17' }, { attributes: { 'table-up-cell-inner': { tableId: '8v36875pbr6', rowId: 'zjhlbpvwjo', colId: '1vwhsx9zayhi', rowspan: 1, colspan: 1, style: 'border-color: rgb(0, 153, 255);' } }, insert: '\n' }, { insert: '18' }, { attributes: { 'table-up-cell-inner': { tableId: '8v36875pbr6', rowId: 'zjhlbpvwjo', colId: '1vwhsx9zayhi', rowspan: 1, colspan: 1, style: 'border-color: rgb(0, 153, 255);' } }, insert: '\n' }, { insert: '19' }, { attributes: { 'table-up-cell-inner': { tableId: '8v36875pbr6', rowId: 'zjhlbpvwjo', colId: '1vwhsx9zayhi', rowspan: 1, colspan: 1, style: 'border-color: rgb(0, 153, 255);' } }, insert: '\n' }, { attributes: { 'table-up-cell-inner': { tableId: '8v36875pbr6', rowId: 'zjhlbpvwjo', colId: 'gpais2dyp87', rowspan: 1, colspan: 1, style: 'border-color: rgb(0, 153, 255);' } }, insert: '\n' }, { attributes: { 'table-up-cell-inner': { tableId: '8v36875pbr6', rowId: 'zjhlbpvwjo', colId: 'xtfguzk629', rowspan: 1, colspan: 1, style: 'border-color: rgb(0, 153, 255);' } }, insert: '\n' }, { attributes: { 'table-up-cell-inner': { tableId: '8v36875pbr6', rowId: 'zjhlbpvwjo', colId: '94w8b6fhy2p', rowspan: 1, colspan: 1, style: 'border-color: rgb(0, 153, 255);' } }, insert: '\n' }, { insert: '5' }, { attributes: { 'table-up-cell-inner': { tableId: '8v36875pbr6', rowId: 'zjhlbpvwjo', colId: 'y0epsy6odnm', rowspan: 1, colspan: 1 } }, insert: '\n' }, { attributes: { 'table-up-cell-inner': { tableId: '8v36875pbr6', rowId: 'ogznp2n7y8b', colId: '1vwhsx9zayhi', rowspan: 1, colspan: 1, style: 'border-color: rgb(0, 153, 255);' } }, insert: '\n' }, { attributes: { 'table-up-cell-inner': { tableId: '8v36875pbr6', rowId: 'ogznp2n7y8b', colId: 'gpais2dyp87', rowspan: 1, colspan: 1, style: 'border-color: rgb(0, 153, 255);' } }, insert: '\n' }, { attributes: { 'table-up-cell-inner': { tableId: '8v36875pbr6', rowId: 'ogznp2n7y8b', colId: 'xtfguzk629', rowspan: 1, colspan: 1, style: 'border-color: rgb(0, 153, 255);' } }, insert: '\n' }, { attributes: { 'table-up-cell-inner': { tableId: '8v36875pbr6', rowId: 'ogznp2n7y8b', colId: '94w8b6fhy2p', rowspan: 1, colspan: 1, style: 'border-color: rgb(0, 153, 255);' } }, insert: '\n' }, { insert: '10' }, { attributes: { 'table-up-cell-inner': { tableId: '8v36875pbr6', rowId: 'ogznp2n7y8b', colId: 'y0epsy6odnm', rowspan: 1, colspan: 1 } }, insert: '\n' }, { attributes: { 'table-up-cell-inner': { tableId: '8v36875pbr6', rowId: '9vw214waitk', colId: '1vwhsx9zayhi', rowspan: 1, colspan: 1, style: 'border-color: rgb(0, 153, 255);' } }, insert: '\n' }, { attributes: { 'table-up-cell-inner': { tableId: '8v36875pbr6', rowId: '9vw214waitk', colId: 'gpais2dyp87', rowspan: 1, colspan: 1, style: 'border-color: rgb(0, 153, 255);' } }, insert: '\n' }, { attributes: { 'table-up-cell-inner': { tableId: '8v36875pbr6', rowId: '9vw214waitk', colId: 'xtfguzk629', rowspan: 1, colspan: 1, style: 'border-color: rgb(0, 153, 255);' } }, insert: '\n' }, { attributes: { 'table-up-cell-inner': { tableId: '8v36875pbr6', rowId: '9vw214waitk', colId: '94w8b6fhy2p', rowspan: 1, colspan: 1, style: 'border-color: rgb(0, 153, 255);' } }, insert: '\n' }, { insert: '15' }, { attributes: { 'table-up-cell-inner': { tableId: '8v36875pbr6', rowId: '9vw214waitk', colId: 'y0epsy6odnm', rowspan: 1, colspan: 1 } }, insert: '\n' }, { attributes: { 'table-up-cell-inner': { tableId: '8v36875pbr6', rowId: 'j4uarvyr86d', colId: '1vwhsx9zayhi', rowspan: 1, colspan: 1, style: 'border-color: rgb(0, 153, 255);' } }, insert: '\n' }, { attributes: { 'table-up-cell-inner': { tableId: '8v36875pbr6', rowId: 'j4uarvyr86d', colId: 'gpais2dyp87', rowspan: 1, colspan: 1, style: 'border-color: rgb(0, 153, 255);' } }, insert: '\n' }, { attributes: { 'table-up-cell-inner': { tableId: '8v36875pbr6', rowId: 'j4uarvyr86d', colId: 'xtfguzk629', rowspan: 1, colspan: 1, style: 'border-color: rgb(0, 153, 255);' } }, insert: '\n' }, { attributes: { 'table-up-cell-inner': { tableId: '8v36875pbr6', rowId: 'j4uarvyr86d', colId: '94w8b6fhy2p', rowspan: 1, colspan: 1, style: 'border-color: rgb(0, 153, 255);' } }, insert: '\n' }, { insert: '20' }, { attributes: { 'table-up-cell-inner': { tableId: '8v36875pbr6', rowId: 'j4uarvyr86d', colId: 'y0epsy6odnm', rowspan: 1, colspan: 1 } }, insert: '\n' }, { insert: '21' }, { attributes: { 'table-up-cell-inner': { tableId: '8v36875pbr6', rowId: 'fow0uajprzw', colId: '1vwhsx9zayhi', rowspan: 1, colspan: 1 } }, insert: '\n' }, { insert: '22' }, { attributes: { 'table-up-cell-inner': { tableId: '8v36875pbr6', rowId: 'fow0uajprzw', colId: 'gpais2dyp87', rowspan: 1, colspan: 1 } }, insert: '\n' }, { insert: '23' }, { attributes: { 'table-up-cell-inner': { tableId: '8v36875pbr6', rowId: 'fow0uajprzw', colId: 'xtfguzk629', rowspan: 1, colspan: 1 } }, insert: '\n' }, { insert: '24' }, { attributes: { 'table-up-cell-inner': { tableId: '8v36875pbr6', rowId: 'fow0uajprzw', colId: '94w8b6fhy2p', rowspan: 1, colspan: 1 } }, insert: '\n' }, { insert: '25' }, { attributes: { 'table-up-cell-inner': { tableId: '8v36875pbr6', rowId: 'fow0uajprzw', colId: 'y0epsy6odnm', rowspan: 1, colspan: 1 } }, insert: '\n' }, { insert: '\n' }]),
+      quill.getContents(),
     );
   });
 });

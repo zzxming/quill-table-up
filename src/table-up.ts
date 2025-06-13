@@ -1274,6 +1274,7 @@ export class TableUp {
     const tableId = tableBlot.tableId;
     const colIndex = baseTd.getColumnIndex();
     const colIds = tableBlot.getColIds().slice(colIndex, colIndex + baseTd.colspan).reverse();
+    const baseTdStyle = (baseTd.formats()[blotName.tableCellInner] as TableCellValue).style;
 
     let curTr = baseTr;
     let rowspan = baseTd.rowspan;
@@ -1284,13 +1285,17 @@ export class TableUp {
       for (const id of colIds) {
         // keep baseTd. baseTr should insert at baseTd's column index + 1
         if (curTr === baseTr && id === baseTd.colId) continue;
-        curTr.insertCell(colIndex + (curTr === baseTr ? 1 : 0), {
+        const value: TableCellValue = {
           tableId,
           rowId: curTr.rowId,
           colId: id,
           rowspan: 1,
           colspan: 1,
-        });
+        };
+        if (baseTdStyle) {
+          value.style = baseTdStyle;
+        }
+        curTr.insertCell(colIndex + (curTr === baseTr ? 1 : 0), value);
       }
 
       rowspan -= 1;
