@@ -161,6 +161,35 @@ export class TableMainFormat extends ContainerFormat {
     super.optimize(context);
   }
 
+  checkEmptyRow(autoMerge: boolean) {
+    const rows = this.descendants(TableRowFormat);
+    const rowIds = new Set(rows.map(row => row.rowId));
+    for (const row of rows) {
+      console.log(autoMerge);
+      if (autoMerge) {
+        if (row.children.length === 0) {
+          row.remove();
+        }
+      }
+      else {
+        if (row.children.length === 0 && row.prev && row.prev.statics.blotName === blotName.tableRow) {
+          (row.prev as TableRowFormat).foreachCellInner((cell) => {
+            cell.emptyRow = Array.from(new Set([...cell.emptyRow, row.rowId]));
+          });
+        }
+        row.foreachCellInner((cell) => {
+          if (cell.emptyRow.length > 0) {
+            for (const emptyRow of cell.emptyRow) {
+              if (!rowIds.has(emptyRow)) {
+                row.parent.insertBefore(this.scroll.create(blotName.tableRow, { tableId: this.tableId, rowId: emptyRow }), row.next);
+              }
+            }
+          }
+        });
+      }
+    }
+  }
+
   sortMergeChildren() {
     // move same type children to the first child
     const childs: Record<string, ContainerFormat[]> = {
