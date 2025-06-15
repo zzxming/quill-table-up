@@ -173,19 +173,19 @@ for (const [i, options] of quillOptions.entries()) {
   const btn = document.getElementById(`btn${index}`);
   const output = document.getElementById(`output${index}`);
   btn.addEventListener('click', () => {
-    const content = quill[i].getContents();
+    const content = quillItem.getContents();
     console.log(content);
-    output[i].innerHTML = '';
+    output.innerHTML = '';
     // eslint-disable-next-line unicorn/no-array-for-each
     content.forEach((content) => {
       const item = document.createElement('li');
       item.textContent = `${JSON.stringify(content)},`;
-      output[i].appendChild(item);
+      output.appendChild(item);
     });
   });
   const writable = document.getElementById(`writable${index}`);
   writable.addEventListener('click', () => {
-    quill[i].enable(!quill[i].isEnabled());
+    quillItem.enable(!quillItem.isEnabled());
   });
   quill.push(quillItem);
 }
