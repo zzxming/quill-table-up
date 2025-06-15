@@ -71,6 +71,7 @@ export interface TableUpOptions {
   alignOptions: any;
   resizeScale?: Constructor<InternalModule, [TableUp, HTMLElement, Quill, Partial<TableResizeScaleOptions>]>;
   resizeScaleOptions: Partial<TableResizeScaleOptions>;
+  autoMergeCell: boolean;
 }
 export interface TableColValue {
   tableId: string;
@@ -86,6 +87,7 @@ export interface TableCellValue {
   rowspan: number;
   colspan: number;
   style?: string;
+  emptyRow?: string[];
 }
 export interface TableRowValue {
   tableId: string;

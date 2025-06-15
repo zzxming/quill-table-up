@@ -64,7 +64,7 @@ export class TableResizeLine extends TableResizeCommon {
   }
 
   findCurrentColIndex() {
-    return this.curColIndex;
+    return this.curColIndex + (this.tableCellBlot?.colspan || 1) - 1;
   }
 
   handleColMouseUpFunc = async function (this: TableResizeLine) {

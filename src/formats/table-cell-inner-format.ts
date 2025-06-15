@@ -37,6 +37,7 @@ export class TableCellInnerFormat extends ContainerFormat {
       rowspan,
       colspan,
       style,
+      emptyRow,
     } = value;
     const node = super.create() as HTMLElement;
     node.dataset.tableId = tableId;
@@ -45,11 +46,15 @@ export class TableCellInnerFormat extends ContainerFormat {
     node.dataset.rowspan = String(getValidCellspan(rowspan));
     node.dataset.colspan = String(getValidCellspan(colspan));
     style && (node.dataset.style = style);
+    try {
+      emptyRow && (node.dataset.emptyRow = JSON.stringify(emptyRow));
+    }
+    catch {}
     return node;
   }
 
   static formats(domNode: HTMLElement) {
-    const { tableId, rowId, colId, rowspan, colspan, style } = domNode.dataset;
+    const { tableId, rowId, colId, rowspan, colspan, style, emptyRow } = domNode.dataset;
     const value: Record<string, any> = {
       tableId: String(tableId),
       rowId: String(rowId),
@@ -58,6 +63,10 @@ export class TableCellInnerFormat extends ContainerFormat {
       colspan: Number(getValidCellspan(colspan)),
     };
     style && (value.style = style);
+    try {
+      emptyRow && (value.emptyRow = JSON.parse(emptyRow));
+    }
+    catch {}
     return value;
   }
 
@@ -127,6 +136,30 @@ export class TableCellInnerFormat extends ContainerFormat {
 
   set colspan(value: number) {
     this.setFormatValue('colspan', value);
+  }
+
+  get emptyRow() {
+    try {
+      return JSON.parse(this.domNode.dataset.emptyRow!);
+    }
+    catch {
+      return [];
+    }
+  }
+
+  set emptyRow(value: string[]) {
+    try {
+      console.log(value, this.domNode, 'wwwwwwwwwwwwwwwwwww');
+      if (value.length > 0) {
+        this.domNode.dataset.emptyRow = JSON.stringify(value);
+      }
+      else {
+        this.domNode.removeAttribute('data-empty-row');
+      }
+    }
+    catch {
+      this.domNode.removeAttribute('data-empty-row');
+    }
   }
 
   getColumnIndex() {
