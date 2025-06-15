@@ -1,4 +1,3 @@
-/* eslint-disable no-undef */
 const Quill = window.Quill;
 const {
   default: TableUp,
@@ -35,151 +34,144 @@ const toolbarConfig = [
   ['clean'],
 ];
 
-const quill1 = new Quill('#editor1', {
-  // debug: 'info',
-  theme: 'snow',
-  modules: {
-    toolbar: toolbarConfig,
-    [TableUp.moduleName]: {
-      full: false,
-      fullSwitch: true,
-      icon: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><!-- Icon from Tabler Icons by Paweł Kuna - https://github.com/tabler/tabler-icons/blob/master/LICENSE --><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2zm0 5h18M10 3v18"/></svg>',
-      scrollbar: TableVirtualScrollbar,
-      align: TableAlign,
-      resize: TableResizeLine,
-      resizeScale: TableResizeScale,
-      resizeScaleOptions: {
-        blockSize: 12,
-      },
-      customSelect: defaultCustomSelect,
-      customBtn: true,
-      selection: TableSelection,
-      selectionOptions: {
-        selectColor: '#00ff8b4d',
-        tableMenu: TableMenuContextmenu,
-        tableMenuOptions: {
-          localstorageKey: 'used-color',
-          tipText: true,
-          tools: [
-            tableMenuTools.InsertCaption,
-            tableMenuTools.InsertTop,
-            tableMenuTools.InsertRight,
-            tableMenuTools.InsertBottom,
-            tableMenuTools.InsertLeft,
-            tableMenuTools.Break,
-            tableMenuTools.MergeCell,
-            tableMenuTools.SplitCell,
-            tableMenuTools.Break,
-            tableMenuTools.DeleteRow,
-            tableMenuTools.DeleteColumn,
-            tableMenuTools.DeleteTable,
-            tableMenuTools.Break,
-            tableMenuTools.BackgroundColor,
-            tableMenuTools.BorderColor,
-            tableMenuTools.Break,
-            tableMenuTools.CopyCell,
-            tableMenuTools.CutCell,
-            tableMenuTools.Break,
-            tableMenuTools.SwitchWidth,
-          ],
-          defaultColorMap: [
-            [
-              'rgb(255, 255, 255)',
-              'rgb(0, 0, 0)',
-              'rgb(72, 83, 104)',
-              'rgb(41, 114, 244)',
-              'rgb(0, 163, 245)',
-              'rgb(49, 155, 98)',
-              'rgb(222, 60, 54)',
-              'rgb(248, 136, 37)',
-              'rgb(245, 196, 0)',
-              'rgb(153, 56, 215)',
+const quillOptions = [
+  {
+    // debug: 'info',
+    theme: 'snow',
+    modules: {
+      toolbar: toolbarConfig,
+      [TableUp.moduleName]: {
+        full: false,
+        fullSwitch: true,
+        icon: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><!-- Icon from Tabler Icons by Paweł Kuna - https://github.com/tabler/tabler-icons/blob/master/LICENSE --><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2zm0 5h18M10 3v18"/></svg>',
+        scrollbar: TableVirtualScrollbar,
+        align: TableAlign,
+        resize: TableResizeLine,
+        resizeScale: TableResizeScale,
+        resizeScaleOptions: {
+          blockSize: 12,
+        },
+        customSelect: defaultCustomSelect,
+        customBtn: true,
+        selection: TableSelection,
+        selectionOptions: {
+          selectColor: '#00ff8b4d',
+          tableMenu: TableMenuContextmenu,
+          tableMenuOptions: {
+            localstorageKey: 'used-color',
+            tipText: true,
+            tools: [
+              tableMenuTools.InsertCaption,
+              tableMenuTools.InsertTop,
+              tableMenuTools.InsertRight,
+              tableMenuTools.InsertBottom,
+              tableMenuTools.InsertLeft,
+              tableMenuTools.Break,
+              tableMenuTools.MergeCell,
+              tableMenuTools.SplitCell,
+              tableMenuTools.Break,
+              tableMenuTools.DeleteRow,
+              tableMenuTools.DeleteColumn,
+              tableMenuTools.DeleteTable,
+              tableMenuTools.Break,
+              tableMenuTools.BackgroundColor,
+              tableMenuTools.BorderColor,
+              tableMenuTools.Break,
+              tableMenuTools.CopyCell,
+              tableMenuTools.CutCell,
+              tableMenuTools.Break,
+              tableMenuTools.SwitchWidth,
             ],
-            [
+            defaultColorMap: [
+              [
+                'rgb(255, 255, 255)',
+                'rgb(0, 0, 0)',
+                'rgb(72, 83, 104)',
+                'rgb(41, 114, 244)',
+                'rgb(0, 163, 245)',
+                'rgb(49, 155, 98)',
+                'rgb(222, 60, 54)',
+                'rgb(248, 136, 37)',
+                'rgb(245, 196, 0)',
+                'rgb(153, 56, 215)',
+              ],
+              [
 
-              'rgb(242, 242, 242)',
-              'rgb(127, 127, 127)',
-              'rgb(243, 245, 247)',
-              'rgb(229, 239, 255)',
-              'rgb(229, 246, 255)',
-              'rgb(234, 250, 241)',
-              'rgb(254, 233, 232)',
-              'rgb(254, 243, 235)',
-              'rgb(254, 249, 227)',
-              'rgb(253, 235, 255)',
+                'rgb(242, 242, 242)',
+                'rgb(127, 127, 127)',
+                'rgb(243, 245, 247)',
+                'rgb(229, 239, 255)',
+                'rgb(229, 246, 255)',
+                'rgb(234, 250, 241)',
+                'rgb(254, 233, 232)',
+                'rgb(254, 243, 235)',
+                'rgb(254, 249, 227)',
+                'rgb(253, 235, 255)',
+              ],
             ],
-          ],
+          },
+        },
+        texts: {
+          fullCheckboxText: '插入满宽度表格',
+          customBtnText: '自定义行列数',
+          confirmText: '确认',
+          cancelText: '取消',
+          rowText: '行数',
+          colText: '列数',
+          notPositiveNumberError: '请输入正整数',
+          custom: '自定义',
+          clear: '清除',
+          transparent: '透明',
+          perWidthInsufficient: '百分比宽度不足, 如需完成操作需要转换表格为固定宽度，是否继续?',
+
+          CopyCell: '复制单元格',
+          CutCell: '剪切单元格',
+          InsertTop: '向上插入一行',
+          InsertRight: '向右插入一列',
+          InsertBottom: '向下插入一行',
+          InsertLeft: '向左插入一列',
+          MergeCell: '合并单元格',
+          SplitCell: '拆分单元格',
+          DeleteRow: '删除当前行',
+          DeleteColumn: '删除当前列',
+          DeleteTable: '删除当前表格',
+          BackgroundColor: '设置背景颜色',
+          BorderColor: '设置边框颜色',
+          SwitchWidth: '切换表格宽度',
+          InsertCaption: '插入表格标题',
         },
       },
-      texts: {
-        fullCheckboxText: '插入满宽度表格',
-        customBtnText: '自定义行列数',
-        confirmText: '确认',
-        cancelText: '取消',
-        rowText: '行数',
-        colText: '列数',
-        notPositiveNumberError: '请输入正整数',
-        custom: '自定义',
-        clear: '清除',
-        transparent: '透明',
-        perWidthInsufficient: '百分比宽度不足, 如需完成操作需要转换表格为固定宽度，是否继续?',
-
-        CopyCell: '复制单元格',
-        CutCell: '剪切单元格',
-        InsertTop: '向上插入一行',
-        InsertRight: '向右插入一列',
-        InsertBottom: '向下插入一行',
-        InsertLeft: '向左插入一列',
-        MergeCell: '合并单元格',
-        SplitCell: '拆分单元格',
-        DeleteRow: '删除当前行',
-        DeleteColumn: '删除当前列',
-        DeleteTable: '删除当前表格',
-        BackgroundColor: '设置背景颜色',
-        BorderColor: '设置边框颜色',
-        SwitchWidth: '切换表格宽度',
-        InsertCaption: '插入表格标题',
+    },
+  },
+  {
+    // debug: 'info',
+    theme: 'snow',
+    readOnly: true,
+    modules: {
+      toolbar: toolbarConfig,
+      [TableUp.moduleName]: {
+        full: true,
+        scrollbar: TableVirtualScrollbar,
+        align: TableAlign,
+        resize: TableResizeBox,
+        resizeScale: TableResizeScale,
+        customSelect: defaultCustomSelect,
+        selection: TableSelection,
+        selectionOptions: {
+          tableMenu: TableMenuSelect,
+        },
       },
     },
   },
-});
-
-const quill2 = new Quill('#editor2', {
-  // debug: 'info',
-  theme: 'snow',
-  readOnly: true,
-  modules: {
-    toolbar: toolbarConfig,
-    [TableUp.moduleName]: {
-      full: true,
-      scrollbar: TableVirtualScrollbar,
-      align: TableAlign,
-      resize: TableResizeBox,
-      resizeScale: TableResizeScale,
-      customSelect: defaultCustomSelect,
-      selection: TableSelection,
-      selectionOptions: {
-        tableMenu: TableMenuSelect,
-      },
-    },
-  },
-});
-
-const quill = [
-  quill1,
-  quill2,
-];
-window.quill = quill;
-
-const output = [
-  output1,
-  output2,
 ];
 
-for (const [i, btn] of [
-  btn1,
-  btn2,
-].entries()) {
+const quill = [];
+window.quills = quill;
+for (const [i, options] of quillOptions.entries()) {
+  const index = i + 1;
+  const quillItem = new Quill(`#editor${index}`, options);
+  const btn = document.getElementById(`btn${index}`);
+  const output = document.getElementById(`output${index}`);
   btn.addEventListener('click', () => {
     const content = quill[i].getContents();
     console.log(content);
@@ -191,18 +183,14 @@ for (const [i, btn] of [
       output[i].appendChild(item);
     });
   });
-}
-
-for (const [i, btn] of [
-  writable1,
-  writable2,
-].entries()) {
-  btn.addEventListener('click', () => {
+  const writable = document.getElementById(`writable${index}`);
+  writable.addEventListener('click', () => {
     quill[i].enable(!quill[i].isEnabled());
   });
+  quill.push(quillItem);
 }
 
-quill1.setContents([
+quill[0].setContents([
   // { insert: '\n' },
   // { insert: { 'table-up-col': { tableId: '1', colId: '1', width: 63 } } },
   // { insert: { 'table-up-col': { tableId: '1', colId: '2', width: 63 } } },
@@ -397,7 +385,7 @@ quill1.setContents([
   // { attributes: { 'table-up-cell-inner': { tableId: 'izqc1radnr', rowId: 'h7kh7qu6s', colId: 'dycqzdsuyyk', rowspan: 1, colspan: 1 } }, insert: '\n' },
   // { insert: '\n' },
 ]);
-quill2.setContents([
+quill[1].setContents([
   { insert: '\n' },
   { insert: { 'table-up-col': { tableId: '8v36875pbr6', colId: '1vwhsx9zayhi', full: true, width: 20 } } },
   { insert: { 'table-up-col': { tableId: '8v36875pbr6', colId: 'gpais2dyp87', full: true, width: 20 } } },
