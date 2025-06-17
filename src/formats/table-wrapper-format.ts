@@ -1,3 +1,4 @@
+import type { Parchment as TypeParchment } from 'quill';
 import Quill from 'quill';
 import { blotName } from '../utils';
 import { ContainerFormat } from './container-format';
@@ -68,11 +69,15 @@ export class TableWrapperFormat extends ContainerFormat {
     this.scroll.emitter.off(Quill.events.TEXT_CHANGE, this.insertLineAround);
   }
 
+  isBlockLine(blot: TypeParchment.Blot) {
+    return blot instanceof Parchment.BlockBlot || new Set(['list-container', 'code-block-container']).has(blot.statics.blotName);
+  }
+
   insertLineAround = () => {
-    if (!this.prev || !(this.prev instanceof Parchment.BlockBlot)) {
+    if (!this.prev || !this.isBlockLine(this.prev)) {
       this.parent.insertBefore(this.scroll.create('block'), this);
     }
-    if (!this.next || !(this.next instanceof Parchment.BlockBlot)) {
+    if (!this.next || !this.isBlockLine(this.next)) {
       this.parent.insertBefore(this.scroll.create('block'), this.next);
     }
   };
