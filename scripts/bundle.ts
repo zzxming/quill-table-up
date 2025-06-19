@@ -63,7 +63,10 @@ function buildStyle({ isDev = false } = {}) {
   return buildLess();
 }
 
-export async function buildTS({ isDev = false } = {}) {
+export async function buildTS({
+  isDev = false,
+  onSuccess = () => {},
+} = {}) {
   const options = {
     ...baseOptions,
     minify: !isDev,
@@ -121,6 +124,7 @@ export async function buildTS({ isDev = false } = {}) {
         onSuccess() {
           copyFileSync(resolve(distBundle, 'index.umd.js'), resolve(demoBundle, 'index.umd.js'));
           copyFileSync(resolve(distBundle, 'index.umd.js.map'), resolve(demoBundle, 'index.umd.js.map'));
+          onSuccess();
         },
       },
     ),

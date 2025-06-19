@@ -1,14 +1,28 @@
 #!/usr/bin/env node
+import { WebSocketServer } from 'ws';
 import { buildTS } from './bundle';
 import { startServer } from './server';
 
 async function main() {
   const args = process.argv.slice(2);
   const isDev = args[0] === 'watch';
-  await buildTS({ isDev });
+  let wss: WebSocketServer | undefined;
   if (isDev) {
+    wss = new WebSocketServer({ port: 8080 });
     startServer();
   }
+  await buildTS({
+    isDev,
+    onSuccess() {
+      if (wss && wss.clients) {
+        for (const client of wss.clients) {
+          if (client.readyState === 1) {
+            client.send(JSON.stringify({ type: 'reload' }));
+          }
+        }
+      }
+    },
+  });
 }
 
 main().catch((error) => {

@@ -96,6 +96,9 @@ importers:
       vitest:
         specifier: ^3.2.3
         version: 3.2.3(@types/node@24.0.1)(@vitest/ui@3.2.3)(jsdom@26.1.0)(less@4.2.0)(terser@5.31.2)
+      ws:
+        specifier: ^8.18.2
+        version: 8.18.2
 
 packages:
 
@@ -113,10 +116,6 @@ packages:
     resolution: {integrity: sha512-cjQ7ZlQ0Mv3b47hABuTevyTuYN4i+loJKGeV9flcCgIK37cCXRh+L1bd3iBHlynerhQ7BhCkn2BPbQUL+rGqFg==}
     engines: {node: '>=6.9.0'}
 
-  '@babel/compat-data@7.27.1':
-    resolution: {integrity: sha512-Q+E+rd/yBzNQhXkG+zQnF58e4zoZfBedaxwzPmicKsiK3nt8iJYrSrDbjwFFDGC4f+rPafqRaPH6TsDoSvMf7A==}
-    engines: {node: '>=6.9.0'}
-
   '@babel/compat-data@7.27.5':
     resolution: {integrity: sha512-KiRAp/VoJaWkkte84TvUd9qjdbZAdiqyvMxrGl1N6vzFogKmaLgoM3L1kgtLicp2HP5fBJS8JrZKLVIZGVJAVg==}
     engines: {node: '>=6.9.0'}
@@ -131,10 +130,6 @@ packages:
 
   '@babel/helper-annotate-as-pure@7.27.1':
     resolution: {integrity: sha512-WnuuDILl9oOBbKnb4L+DyODx7iC47XfzmNCpTttFsSp6hTG7XZxu60+4IO+2/hPfcGOoKbFiwoI/+zwARbNQow==}
-    engines: {node: '>=6.9.0'}
-
-  '@babel/helper-compilation-targets@7.27.1':
-    resolution: {integrity: sha512-2YaDd/Rd9E598B5+WIc8wJPmWETiiJXFYVE60oX8FDohv7rAUU3CQj+A1MgeEmcsk2+dQuEjIe/GDvig0SqL4g==}
     engines: {node: '>=6.9.0'}
 
   '@babel/helper-compilation-targets@7.27.2':
@@ -3632,8 +3627,8 @@ packages:
   wrappy@1.0.2:
     resolution: {integrity: sha512-l4Sp/DRseor9wL6EvV2+TuQn63dMkPjZ/sp9XkghTEbV9KlPS1xUsZ3u7/IQO4wxtcFB4bgpQPRcR3QCvezPcQ==}
 
-  ws@8.18.0:
-    resolution: {integrity: sha512-8VbfWfHLbbwu3+N6OKsOMpBdT4kXPDDB9cJk2bJ6mh9ucxdlnNvH1e+roYkKmN9Nxw2yjz7VzeO9oOz2zJ04Pw==}
+  ws@8.18.2:
+    resolution: {integrity: sha512-DMricUmwGZUVr++AEAe2uiVM7UoO9MAVZMDu05UQOaUII0lp+zOzLLU4Xqh/JvTqklB1T4uELaaPBKyjE1r4fQ==}
     engines: {node: '>=10.0.0'}
     peerDependencies:
       bufferutil: ^4.0.1
@@ -3705,8 +3700,6 @@ snapshots:
       js-tokens: 4.0.0
       picocolors: 1.1.1
 
-  '@babel/compat-data@7.27.1': {}
-
   '@babel/compat-data@7.27.5': {}
 
   '@babel/core@7.27.1':
@@ -3714,7 +3707,7 @@ snapshots:
       '@ampproject/remapping': 2.3.0
       '@babel/code-frame': 7.27.1
       '@babel/generator': 7.27.5
-      '@babel/helper-compilation-targets': 7.27.1
+      '@babel/helper-compilation-targets': 7.27.2
       '@babel/helper-module-transforms': 7.27.1(@babel/core@7.27.1)
       '@babel/helpers': 7.27.1
       '@babel/parser': 7.27.5
@@ -3740,14 +3733,6 @@ snapshots:
   '@babel/helper-annotate-as-pure@7.27.1':
     dependencies:
       '@babel/types': 7.27.6
-
-  '@babel/helper-compilation-targets@7.27.1':
-    dependencies:
-      '@babel/compat-data': 7.27.1
-      '@babel/helper-validator-option': 7.27.1
-      browserslist: 4.24.4
-      lru-cache: 5.1.1
-      semver: 6.3.1
 
   '@babel/helper-compilation-targets@7.27.2':
     dependencies:
@@ -6267,7 +6252,7 @@ snapshots:
       whatwg-encoding: 3.1.1
       whatwg-mimetype: 4.0.0
       whatwg-url: 14.2.0
-      ws: 8.18.0
+      ws: 8.18.2
       xml-name-validator: 5.0.0
     transitivePeerDependencies:
       - bufferutil
@@ -6968,7 +6953,7 @@ snapshots:
   terser@5.31.2:
     dependencies:
       '@jridgewell/source-map': 0.3.6
-      acorn: 8.14.0
+      acorn: 8.15.0
       commander: 2.20.3
       source-map-support: 0.5.21
     optional: true
@@ -7317,7 +7302,7 @@ snapshots:
 
   wrappy@1.0.2: {}
 
-  ws@8.18.0: {}
+  ws@8.18.2: {}
 
   xml-name-validator@5.0.0: {}
 

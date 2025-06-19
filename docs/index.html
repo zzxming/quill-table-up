@@ -42,6 +42,15 @@
         <div id="output2"></div>
       </div>
     </div>
+    <script>
+      const ws = new WebSocket('ws://localhost:8080');
+      ws.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+        if (data.type === 'reload') {
+          window.location.reload();
+        }
+      };
+    </script>
     <script type="module" src="./index.js"></script>
   </body>
 </html>
