@@ -814,10 +814,10 @@ export class TableUp {
 
     // insert delta data to create table
     const colWidth = !this.options.full ? `${Math.max(Math.floor(width / columns), tableUpSize.colMinWidthPx)}px` : `${Math.max((1 / columns) * 100, tableUpSize.colMinWidthPre)}%`;
-    const delta: Record<string, any>[] = [
-      { retain: range.index },
-      { insert: '\n' },
-    ];
+    const delta: Record<string, any>[] = [{ retain: range.index }];
+    const aroundContent = this.quill.getContents(range.index, 1);
+    const [, offset] = this.quill.getLine(range.index);
+    if (aroundContent.ops[0].insert !== '\n' && offset !== 0) delta.push({ insert: '\n' });
 
     for (let i = 0; i < columns; i++) {
       delta.push({
@@ -850,7 +850,7 @@ export class TableUp {
     }
 
     this.quill.updateContents(new Delta(delta), Quill.sources.USER);
-    this.quill.setSelection(range.index + columns + columns * rows + 1, Quill.sources.SILENT);
+    this.quill.setSelection(range.index + columns, Quill.sources.SILENT);
     this.quill.focus();
   }
 
