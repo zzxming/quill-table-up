@@ -124,6 +124,7 @@ export async function buildTS({
         onSuccess() {
           copyFileSync(resolve(distBundle, 'index.umd.js'), resolve(demoBundle, 'index.umd.js'));
           copyFileSync(resolve(distBundle, 'index.umd.js.map'), resolve(demoBundle, 'index.umd.js.map'));
+          console.log(`Copied index.umd.js to demo bundle`);
           onSuccess();
         },
       },

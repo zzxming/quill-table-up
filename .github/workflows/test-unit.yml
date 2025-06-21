@@ -1,4 +1,4 @@
-name: CI
+name: Test Unit
 
 on:
   push:
@@ -28,14 +28,8 @@ jobs:
       - name: Install
         run: pnpm i
 
-      - name: Install Playwright Browsers
-        run: npx playwright install --with-deps
-
       - name: Build
         run: pnpm build
 
       - name: Unit Tests
         run: pnpm test:unit
-
-      - name: Run Playwright tests
-        run: npx playwright test
