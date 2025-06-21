@@ -8,32 +8,33 @@ test.beforeEach(async ({ page }) => {
 
 extendTest('test menu color picker should work correctly', async ({ page }) => {
   await createTableBySelect(page, 'container1', 3, 3);
-  const container1Cell = page.locator('#editor1').getByRole('cell').nth(0);
+  const container1Cell = page.locator('#editor1 .ql-table-cell').nth(0);
   await container1Cell.click();
   await container1Cell.click({ button: 'right' });
 
   await page.locator('.table-up-menu.is-contextmenu .table-up-menu__item').filter({ hasText: 'Set background color' }).first().click();
-  await page.waitForTimeout(1000);
-
   await page.locator('.table-up-tooltip .table-up-color-map .table-up-color-map__item[style="background-color: rgb(255, 255, 255);"]').first().click();
   await expect(page.locator('.table-up-menu.is-contextmenu')).toBeVisible();
-  await expect(page.locator('#editor1').getByRole('cell').nth(0)).toHaveCSS('background-color', 'rgb(255, 255, 255)');
+  await expect(page.locator('#editor1 .ql-table-cell').nth(0)).toHaveCSS('background-color', 'rgb(255, 255, 255)');
+
+  await page.mouse.click(0, 0);
 
   await createTableBySelect(page, 'container2', 3, 3);
-  const container2Cell = page.locator('#editor2').getByRole('cell').nth(0);
-  await container2Cell.click();
+  await page.locator('#editor2 .ql-table-cell').nth(0).click();
+  await page.waitForTimeout(1000);
 
   await page.locator('#editor2 .table-up-menu .color-selector').nth(0).click();
   await page.waitForTimeout(1000);
 
   await page.locator('.table-up-tooltip .table-up-color-map .table-up-color-map__item[style="background-color: rgb(255, 255, 255);"]').first().click();
   await expect(page.locator('#editor2 .table-up-menu')).toBeVisible();
-  await expect(page.locator('#editor2').getByRole('cell').nth(0)).toHaveCSS('background-color', 'rgb(255, 255, 255)');
+  await expect(page.locator('#editor2 .ql-table-cell').nth(0)).toHaveCSS('background-color', 'rgb(255, 255, 255)');
 });
 
 extendTest('test menu color picker should not have two at the same time', async ({ page }) => {
   await createTableBySelect(page, 'container2', 3, 3);
-  await page.locator('#editor2').getByRole('cell').nth(0).click();
+  await page.locator('#editor2 .ql-table-cell').nth(0).click();
+  await page.waitForTimeout(1000);
 
   await page.locator('#editor2 .table-up-menu .color-selector').nth(0).click();
   await page.waitForTimeout(1000);
