@@ -138,7 +138,7 @@ export class TableCellInnerFormat extends ContainerFormat {
     this.setFormatValue('colspan', value);
   }
 
-  get emptyRow() {
+  get emptyRow(): string[] {
     try {
       return JSON.parse(this.domNode.dataset.emptyRow!);
     }
@@ -148,6 +148,9 @@ export class TableCellInnerFormat extends ContainerFormat {
   }
 
   set emptyRow(value: string[]) {
+    // if value same as currentEmptyRow, do nothing
+    if (this.emptyRow.toString() === value.toString()) return;
+
     try {
       if (value.length > 0) {
         this.setFormatValue('empty-row', JSON.stringify(value), false);

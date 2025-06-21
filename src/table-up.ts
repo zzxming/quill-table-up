@@ -986,7 +986,7 @@ export class TableUp {
     for (const tableBlot of this.quill.scroll.descendants(TableMainFormat)) {
       // TODO: 想一下如何区分 autoMerge 开关时, checkEmptyRow 的调用
       // 同时, 当关闭 autoMerge 时, 如何对 cell 数据的 emptyRow 处理
-      // tableBlot.checkEmptyRow(this.options.autoMergeCell);
+      tableBlot.checkEmptyRow(this.options.autoMergeCell);
       this.fixUnusuaDeletelTable(tableBlot);
     }
   }
@@ -1204,6 +1204,7 @@ export class TableUp {
         // only remove td. empty tr to calculate colspan and rowspan
         td.parent.remove();
       });
+      if (tr.length() === 0) tr.remove();
     }
 
     if (trs[nextTrIndex]) {
