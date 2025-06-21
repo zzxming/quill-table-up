@@ -128,7 +128,9 @@ export class TableMainFormat extends ContainerFormat {
   }
 
   getRows() {
-    return this.descendants(TableRowFormat);
+    return Array.from(this.domNode.querySelectorAll(`${TableRowFormat.tagName}`))
+      .map(el => this.scroll.find(el) as TableRowFormat)
+      .filter(Boolean);
   }
 
   getRowIds() {
@@ -159,21 +161,65 @@ export class TableMainFormat extends ContainerFormat {
     }
 
     super.optimize(context);
+    this.mergeRow();
+  }
+
+  // ensure row id unique in same table
+  mergeRow() {
+    if (!this.parent) return;
+    const rows = this.getRows();
+    const rowGroup: Record<string, TableRowFormat[]> = {};
+    for (const row of rows) {
+      if (!rowGroup[row.rowId]) rowGroup[row.rowId] = [];
+      rowGroup[row.rowId].push(row);
+    }
+
+    for (const rowList of Object.values(rowGroup)) {
+      for (let i = 1; i < rowList.length; i++) {
+        const row = rowList[i];
+        row.moveChildren(rowList[0]);
+        row.remove();
+      }
+    }
   }
 
   checkEmptyRow(autoMerge: boolean) {
-    const rows = this.descendants(TableRowFormat);
+    const rows = this.getRows();
     const rowIds = new Set(rows.map(row => row.rowId));
-    for (const row of rows) {
+    for (let i = rows.length - 1; i >= 0; i--) {
+      const row = rows[i];
       if (autoMerge) {
+        // reduce rowspan previou row
         if (row.children.length === 0) {
+          for (let gap = 1, j = i - 1; j >= 0; j--, gap++) {
+            const prev = rows[j];
+            prev.foreachCellInner((cell) => {
+              if (cell.rowspan > gap) {
+                cell.rowspan -= 1;
+                const emptyRow = new Set(cell.emptyRow);
+                emptyRow.delete(row.rowId);
+                cell.emptyRow = Array.from(emptyRow);
+              }
+            });
+          }
           row.remove();
         }
       }
       else {
-        if (row.children.length === 0 && row.prev && row.prev.statics.blotName === blotName.tableRow) {
-          (row.prev as TableRowFormat).foreachCellInner((cell) => {
-            cell.emptyRow = Array.from(new Set([...cell.emptyRow, row.rowId]));
+        // for (const row of rows) {
+        if (row.children.length === 0 && row.prev) {
+          // find the not empty row
+          let prev: TableRowFormat = row.prev as TableRowFormat;
+          while (prev && prev.children.length === 0) {
+            prev = prev.prev as TableRowFormat;
+          }
+          prev.foreachCellInner((cell) => {
+            const emptyRowIds = new Set(cell.emptyRow);
+            // prevent order change. like currnet emptyRow ['1', '2'] add rowId '2' will be ['2', '1']
+            if (!emptyRowIds.has(row.rowId)) {
+              // the loop is from back to front, and the rowId should be added to the head
+              cell.emptyRow = [row.rowId, ...emptyRowIds];
+            }
           });
         }
         row.foreachCellInner((cell) => {
