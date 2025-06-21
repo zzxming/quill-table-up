@@ -15,7 +15,7 @@ export class TableCellInnerFormat extends ContainerFormat {
   static blotName = blotName.tableCellInner;
   static tagName = 'div';
   static className = 'ql-table-cell-inner';
-  static allowDataAttrs: Set<string> = new Set(['table-id', 'row-id', 'col-id', 'rowspan', 'colspan']);
+  static allowDataAttrs: Set<string> = new Set(['table-id', 'row-id', 'col-id', 'rowspan', 'colspan', 'empty-row']);
   static defaultChild: TypeParchment.BlotConstructor = Block;
   declare parent: TableCellFormat;
   // keep `isAllowStyle` and `allowStyle` same with TableCellFormat
@@ -149,16 +149,15 @@ export class TableCellInnerFormat extends ContainerFormat {
 
   set emptyRow(value: string[]) {
     try {
-      console.log(value, this.domNode, 'wwwwwwwwwwwwwwwwwww');
       if (value.length > 0) {
-        this.domNode.dataset.emptyRow = JSON.stringify(value);
+        this.setFormatValue('empty-row', JSON.stringify(value), false);
       }
       else {
-        this.domNode.removeAttribute('data-empty-row');
+        this.setFormatValue('empty-row', null, false);
       }
     }
     catch {
-      this.domNode.removeAttribute('data-empty-row');
+      this.setFormatValue('empty-row', null, false);
     }
   }
 

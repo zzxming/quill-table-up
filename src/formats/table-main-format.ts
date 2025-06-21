@@ -165,7 +165,6 @@ export class TableMainFormat extends ContainerFormat {
     const rows = this.descendants(TableRowFormat);
     const rowIds = new Set(rows.map(row => row.rowId));
     for (const row of rows) {
-      console.log(autoMerge);
       if (autoMerge) {
         if (row.children.length === 0) {
           row.remove();
