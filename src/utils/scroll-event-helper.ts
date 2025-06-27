@@ -13,3 +13,10 @@ export function clearScrollEvent(this: ScrollHandle) {
   }
   this.scrollHandler = [];
 }
+
+export function getElementScroll(el: HTMLElement) {
+  return {
+    y: el.scrollTop,
+    x: el.scrollLeft,
+  };
+}
