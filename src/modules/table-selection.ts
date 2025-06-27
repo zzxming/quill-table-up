@@ -4,7 +4,7 @@ import type { TableUp } from '../table-up';
 import type { InternalTableMenuModule, RelactiveRect, TableSelectionOptions } from '../utils';
 import Quill from 'quill';
 import { getTableMainRect, TableBodyFormat, TableCellFormat, TableCellInnerFormat } from '../formats';
-import { addScrollEvent, blotName, clearScrollEvent, createBEM, createResizeObserver, findAllParentBlot, findParentBlot, getRelativeRect, isRectanglesIntersect, tableUpEvent } from '../utils';
+import { addScrollEvent, blotName, clearScrollEvent, createBEM, createResizeObserver, findAllParentBlot, findParentBlot, getElementScroll, getRelativeRect, isRectanglesIntersect, tableUpEvent } from '../utils';
 
 const ERROR_LIMIT = 0;
 
@@ -18,8 +18,8 @@ export interface SelectionData {
 export class TableSelection {
   options: TableSelectionOptions;
   boundary: RelactiveRect | null = null;
-  startScrollX: number = 0;
-  startScrollY: number = 0;
+  scrollRecordEls: HTMLElement[] = [];
+  startScrollRecordPosition: { x: number; y: number }[] = [];
   selectedTableScrollX: number = 0;
   selectedTableScrollY: number = 0;
   selectedEditorScrollX: number = 0;
@@ -43,6 +43,7 @@ export class TableSelection {
 
   constructor(public tableModule: TableUp, public quill: Quill, options: Partial<TableSelectionOptions> = {}) {
     this.options = this.resolveOptions(options);
+    this.scrollRecordEls = [this.quill.root, document.documentElement];
 
     this.cellSelectWrap = tableModule.addContainer(this.bem.b());
     this.cellSelect = this.helpLinesInitial();
@@ -310,17 +311,11 @@ export class TableSelection {
       }),
     );
 
-    const { x: tableScrollX, y: tableScrollY } = this.getTableViewScroll();
-    const { x: editorScrollX, y: editorScrollY } = this.getQuillViewScroll();
-    this.selectedTableScrollX = tableScrollX;
-    this.selectedTableScrollY = tableScrollY;
-    this.selectedEditorScrollX = editorScrollX;
-    this.selectedEditorScrollY = editorScrollY;
-
+    const scrollDiff = this.getScrollPositionDiff();
     // set boundary to initially mouse move rectangle
     const { rect: tableRect } = getTableMainRect(tableMainBlot);
-    const startPointX = startPoint.x - tableScrollX + this.startScrollX;
-    const startPointY = startPoint.y - tableScrollY + this.startScrollY;
+    const startPointX = startPoint.x + scrollDiff.x;
+    const startPointY = startPoint.y + scrollDiff.y;
     let boundary = {
       x: Math.max(tableRect.left, Math.min(endPoint.x, startPointX)),
       y: Math.max(tableRect.top, Math.min(endPoint.y, startPointY)),
@@ -379,15 +374,44 @@ export class TableSelection {
     });
   }
 
+  getScrollPositionDiff() {
+    const { x: tableScrollX, y: tableScrollY } = this.getTableViewScroll();
+    const { x: editorScrollX, y: editorScrollY } = getElementScroll(this.quill.root);
+    this.selectedTableScrollX = tableScrollX;
+    this.selectedTableScrollY = tableScrollY;
+    this.selectedEditorScrollX = editorScrollX;
+    this.selectedEditorScrollY = editorScrollY;
+
+    return this.startScrollRecordPosition.reduce((pre, { x, y }, i) => {
+      const { x: currentX, y: currentY } = getElementScroll(this.scrollRecordEls[i]);
+      pre.x += x - currentX;
+      pre.y += y - currentY;
+      return pre;
+    }, { x: 0, y: 0 });
+  }
+
+  recordScrollPosition() {
+    this.clearRecordScrollPosition();
+    for (const el of this.scrollRecordEls) {
+      this.startScrollRecordPosition.push(getElementScroll(el));
+    }
+  }
+
+  clearRecordScrollPosition() {
+    this.startScrollRecordPosition = [];
+  }
+
   mouseDownHandler = (mousedownEvent: MouseEvent) => {
     const { button, target, clientX, clientY } = mousedownEvent;
     const closestTable = (target as HTMLElement).closest<HTMLTableElement>('.ql-table');
-    const closestTableBody = (target as HTMLElement).closest<HTMLTableSectionElement>('tbody');
-    if (button !== 0 || !closestTable || !closestTableBody) return;
+    const closestTableCaption = (target as HTMLElement).closest('caption');
+    if (button !== 0 || !closestTable || closestTableCaption) return;
 
     this.setSelectionTable(closestTable);
     const startTableId = closestTable.dataset.tableId;
     const startPoint = { x: clientX, y: clientY };
+
+    this.recordScrollPosition();
     this.selectedTds = this.computeSelectedTds(startPoint, startPoint);
     this.dragging = true;
     this.show();
@@ -400,11 +424,12 @@ export class TableSelection {
         this.tableModule.tableResize.hide();
       }
       const { button, target, clientX, clientY } = mousemoveEvent;
-      const closestTableBody = (target as HTMLElement).closest<HTMLTableSectionElement>('tbody');
+      const closestTable = (target as HTMLElement).closest<HTMLTableElement>('.ql-table');
+      const closestTableCaption = (target as HTMLElement).closest('caption');
       if (
         button !== 0
-        || !closestTableBody
-        || closestTableBody.dataset.tableId !== startTableId
+        || closestTableCaption
+        || !closestTable || closestTable.dataset.tableId !== startTableId
       ) {
         return;
       }
@@ -420,6 +445,7 @@ export class TableSelection {
       document.body.removeEventListener('mousemove', mouseMoveHandler, false);
       document.body.removeEventListener('mouseup', mouseUpHandler, false);
       this.dragging = false;
+      this.clearRecordScrollPosition();
       if (this.tableMenu && this.selectedTds.length > 0) {
         this.tableMenu.show();
       }
@@ -451,14 +477,12 @@ export class TableSelection {
 
   update() {
     if (this.selectedTds.length === 0 || !this.boundary || !this.table) return;
-    const { x: editorScrollX, y: editorScrollY } = this.getQuillViewScroll();
+    const { x: editorScrollX, y: editorScrollY } = getElementScroll(this.quill.root);
     const { x: tableScrollX, y: tableScrollY } = this.getTableViewScroll();
     const tableWrapperRect = this.table.parentElement!.getBoundingClientRect();
     const rootRect = this.quill.root.getBoundingClientRect();
     const wrapLeft = tableWrapperRect.x - rootRect.x;
     const wrapTop = tableWrapperRect.y - rootRect.y;
-    this.startScrollX = tableScrollX;
-    this.startScrollY = tableScrollY;
 
     Object.assign(this.cellSelect.style, {
       left: `${this.selectedEditorScrollX * 2 - editorScrollX + this.boundary.x + this.selectedTableScrollX - tableScrollX - wrapLeft}px`,
@@ -477,13 +501,6 @@ export class TableSelection {
     }
   }
 
-  getQuillViewScroll() {
-    return {
-      x: this.quill.root.scrollLeft,
-      y: this.quill.root.scrollTop,
-    };
-  }
-
   getTableViewScroll() {
     if (!this.table) {
       return {
@@ -491,15 +508,18 @@ export class TableSelection {
         y: 0,
       };
     }
-    return {
-      x: this.table.parentElement!.scrollLeft,
-      y: this.table.parentElement!.scrollTop,
-    };
+    return getElementScroll(this.table.parentElement!);
   }
 
   setSelectionTable(table: HTMLTableElement | undefined) {
     if (this.table === table) return;
     this.table = table;
+    if (this.table) {
+      this.scrollRecordEls.push(this.table.parentElement!);
+    }
+    else {
+      this.scrollRecordEls.pop();
+    }
   }
 
   removeCell = (e: KeyboardEvent) => {
