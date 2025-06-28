@@ -70,8 +70,8 @@ export class Scrollbar {
   }
 
   setScrollbarPosition() {
-    const { rect: { width: tableWidth, height: tableHeight }, body: tableBodyBlot } = getTableMainRect(this.tableMainBlot);
-    if (!tableBodyBlot) return;
+    const { rect: tableRect, body: tableBodyBlot } = getTableMainRect(this.tableMainBlot);
+    if (!tableBodyBlot || !tableRect) return;
     const { scrollLeft: editorScrollX, scrollTop: editorScrollY, offsetLeft: rootOffsetLeft, offsetTop: rootOffsetTop } = this.quill.root;
     const { offsetLeft: containerOffsetLeft, offsetTop: containerOffsetTop } = this.container;
     const { offsetLeft: bodyOffsetLeft, offsetTop: bodyOffsetTop } = tableBodyBlot.domNode;
@@ -80,10 +80,10 @@ export class Scrollbar {
     let x = containerOffsetLeft + bodyOffsetLeft - rootOffsetLeft;
     let y = containerOffsetTop + bodyOffsetTop - rootOffsetTop;
     if (this.isVertical) {
-      x += Math.min(containerWidth, tableWidth);
+      x += Math.min(containerWidth, tableRect.width);
     }
     else {
-      y += Math.min(containerHeight, tableHeight);
+      y += Math.min(containerHeight, tableRect.height);
     }
 
     // table align right effect
@@ -92,7 +92,7 @@ export class Scrollbar {
     }
 
     Object.assign(this.scrollbar.style, {
-      [this.propertyMap.size]: `${this.isVertical ? Math.min(containerHeight, tableHeight) : containerWidth}px`,
+      [this.propertyMap.size]: `${this.isVertical ? Math.min(containerHeight, tableRect.height) : containerWidth}px`,
       transform: `translate(${x - editorScrollX}px, ${y - editorScrollY}px)`,
     });
     this.containerScrollHandler(this.container);

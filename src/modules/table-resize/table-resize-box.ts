@@ -187,7 +187,7 @@ export class TableResizeBox extends TableResizeCommon {
 
   update() {
     const { rect: tableRect, body: tableBodyBlot } = getTableMainRect(this.tableMain);
-    if (!tableBodyBlot) return;
+    if (!tableBodyBlot || !tableRect) return;
     const tableWrapperRect = this.tableWrapper.domNode.getBoundingClientRect();
     const rootRect = this.quill.root.getBoundingClientRect();
     Object.assign(this.root.style, {
@@ -238,7 +238,7 @@ export class TableResizeBox extends TableResizeCommon {
     this.tableRows = this.tableMain.getRows();
     this.root.innerHTML = '';
     const { rect: tableRect, body: tableBodyBlot } = getTableMainRect(this.tableMain);
-    if (!tableBodyBlot) return;
+    if (!tableBodyBlot || !tableRect) return;
     const tableWrapperRect = this.tableWrapper.domNode.getBoundingClientRect();
 
     if (this.tableCols.length > 0 && this.tableRows.length > 0) {

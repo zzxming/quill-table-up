@@ -116,7 +116,7 @@ export class TableResizeScale {
       return;
     }
     const { rect: tableRect, body: tableBodyBlot } = getTableMainRect(this.tableMainBlot);
-    if (!tableBodyBlot) return;
+    if (!tableBodyBlot || !tableRect) return;
     const tableWrapperRect = this.tableWrapperBlot.domNode.getBoundingClientRect();
     const editorRect = this.quill.root.getBoundingClientRect();
     const { scrollTop, scrollLeft } = this.tableWrapperBlot.domNode;

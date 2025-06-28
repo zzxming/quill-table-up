@@ -255,7 +255,7 @@ export class TableResizeCommon {
     e.preventDefault();
     if (!this.tableMain) return;
     const { rect: tableRect, body: tableBodyBlot } = getTableMainRect(this.tableMain);
-    if (!tableBodyBlot) return;
+    if (!tableBodyBlot || !tableRect) return;
     // set drag init width
     const cols = this.tableMain.getCols();
     this.colIndex = this.findCurrentColIndex(e);
