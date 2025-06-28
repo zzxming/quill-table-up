@@ -314,6 +314,7 @@ export class TableSelection {
     const scrollDiff = this.getScrollPositionDiff();
     // set boundary to initially mouse move rectangle
     const { rect: tableRect } = getTableMainRect(tableMainBlot);
+    if (!tableRect) return [];
     const startPointX = startPoint.x + scrollDiff.x;
     const startPointY = startPoint.y + scrollDiff.y;
     let boundary = {

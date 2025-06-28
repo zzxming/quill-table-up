@@ -217,16 +217,53 @@ describe('insert block embed blot', () => {
         <div>
           <table cellpadding="0" cellspacing="0" data-full="true">
             <colgroup data-full="true">
-            <col width="100%" data-full="true" />
+              <col width="100%" data-full="true" />
             </colgroup>
             <tbody>
               <tr>
                 <td rowspan="1" colspan="1">
                   <div>
                     <iframe src="https://quilljs.com/" frameborder="0" allowfullscreen="true"></iframe>
-                    <p><br></p>
                   </div>
                 </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p><br></p>
+      `,
+      { ignoreAttrs: ['class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
+    );
+  });
+
+  it('BlockEmbed should at correct position in cell', async () => {
+    const quill = createQuillWithTableModule(`<p><br></p>`);
+    quill.setContents([
+      { insert: '\n' },
+      { insert: { 'table-up-col': { tableId: '2l7117zsa6r', colId: 'd962746f4w8', full: false, width: 100 } } },
+      { insert: '1' },
+      { attributes: { 'table-up-cell-inner': { tableId: '2l7117zsa6r', rowId: 'a9r52q9z4l', colId: 'd962746f4w8', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: { video: 'http://localhost:5500/docs/index.html' } },
+      { insert: 'bbb' },
+      { attributes: { 'table-up-cell-inner': { tableId: '2l7117zsa6r', rowId: 'a9r52q9z4l', colId: 'd962746f4w8', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '\n' },
+    ]);
+    await vi.runAllTimersAsync();
+    expect(quill.root).toEqualHTML(
+      `
+        <p><br></p>
+        <div>
+          <table cellpadding="0" cellspacing="0">
+            ${createTaleColHTML(1, { full: false, width: 100 })}
+            <tbody>
+              <tr>
+                <td rowspan="1" colspan="1">
+                  <div>
+                    <p>1</p>
+                    <iframe frameborder="0" allowfullscreen="true" src="http://localhost:5500/docs/index.html"></iframe>
+                    <p>bbb</p>
+                  </div>
+                </td
               </tr>
             </tbody>
           </table>

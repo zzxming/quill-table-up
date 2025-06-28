@@ -1,17 +1,21 @@
 import type { EmitterSource, Op, Parchment as TypeParchment, Range as TypeRange } from 'quill';
+import type { BlockEmbed as TypeBlockEmbed } from 'quill/blots/block';
+import type TypeBlock from 'quill/blots/block';
 import type { Context } from 'quill/modules/keyboard';
 import type TypeKeyboard from 'quill/modules/keyboard';
 import type TypeToolbar from 'quill/modules/toolbar';
-import type { InternalModule, InternalTableSelectionModule, QuillTheme, QuillThemePicker, TableCellValue, TableConstantsData, TableTextOptions, TableUpOptions } from './utils';
+import type { Constructor, InternalModule, InternalTableSelectionModule, QuillTheme, QuillThemePicker, TableCellValue, TableConstantsData, TableTextOptions, TableUpOptions } from './utils';
 import Quill from 'quill';
-import { BlockOverride, ContainerFormat, ScrollOverride, TableBodyFormat, TableCaptionFormat, TableCellFormat, TableCellInnerFormat, TableColFormat, TableColgroupFormat, TableMainFormat, TableRowFormat, TableWrapperFormat } from './formats';
+import { BlockEmbedOverride, BlockOverride, ContainerFormat, ScrollOverride, TableBodyFormat, TableCaptionFormat, TableCellFormat, TableCellInnerFormat, TableColFormat, TableColgroupFormat, TableMainFormat, TableRowFormat, TableWrapperFormat } from './formats';
 import { TableClipboard } from './modules';
-import { blotName, createBEM, createSelectBox, cssTextToObject, debounce, findParentBlot, findParentBlots, isForbidInTable, isFunction, isNumber, isString, limitDomInViewPort, mixinClass, objectToCssText, randomId, tableCantInsert, tableUpEvent, tableUpInternal, tableUpSize, toCamelCase } from './utils';
+import { blotName, createBEM, createSelectBox, cssTextToObject, debounce, findParentBlot, findParentBlots, isForbidInTable, isFunction, isNumber, isString, isSubclassOf, limitDomInViewPort, mixinClass, objectToCssText, randomId, tableCantInsert, tableUpEvent, tableUpInternal, tableUpSize, toCamelCase } from './utils';
 
 const Parchment = Quill.import('parchment');
 const Delta = Quill.import('delta');
-const Break = Quill.import('blots/break') as TypeParchment.BlotConstructor;
 const icons = Quill.import('ui/icons') as Record<string, any>;
+const Break = Quill.import('blots/break') as TypeParchment.BlotConstructor;
+const Block = Quill.import('blots/block') as typeof TypeBlock;
+const BlockEmbed = Quill.import('blots/block/embed') as typeof TypeBlockEmbed;
 
 function createCell(scroll: TypeParchment.ScrollBlot, { tableId, rowId, colId }: { tableId: string; rowId: string; colId: string }) {
   const value = {
@@ -211,18 +215,26 @@ export class TableUp {
 
     TableCellInnerFormat.requiredContainer = TableCellFormat;
 
-    const overrides = ['header', 'list', 'blockquote', 'code-block'].reduce((formatMap, format) => {
-      const key = `formats/${format}`;
-      const blot = Quill.import(key) as any;
-      formatMap[key] = class extends mixinClass(blot, [BlockOverride]) {
-        static register(): void {}
-      };
-      return formatMap;
-    }, {} as Record<string, Function>);
+    // override Block and BlockEmbed
+    const excludeFormat = new Set(['table']);
+    const overrideFormats = Object.entries(Quill.imports as Record<string, Constructor>).filter(([name, blot]) => {
+      const blotName = name.split('formats/')[1];
+      return name.startsWith('formats/')
+        && !excludeFormat.has(blotName)
+        && !isSubclassOf(blot, Parchment.Attributor)
+        && (isSubclassOf(blot, Block) || isSubclassOf(blot, BlockEmbed));
+    },
+    );
+    const overrides = overrideFormats.reduce((pre, [name, blot]) => {
+      const extendsClass = isSubclassOf(blot, BlockEmbed) ? BlockEmbedOverride : BlockOverride;
+      pre[name] = class extends mixinClass(blot, [extendsClass]) {};
+      return pre;
+    }, {} as Record<string, Constructor>);
 
     Quill.register({
       'blots/scroll': ScrollOverride,
       'blots/block': BlockOverride,
+      'blots/block/embed': BlockEmbedOverride,
       ...overrides,
       [`blots/${blotName.container}`]: ContainerFormat,
       [`formats/${blotName.tableCell}`]: TableCellFormat,

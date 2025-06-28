@@ -16,6 +16,12 @@ export * from './table-wrapper-format';
 
 export function getTableMainRect(tableMainBlot: TableMainFormat) {
   const [tableBodyBlot] = findChildBlot(tableMainBlot, TableBodyFormat);
+  if (!tableBodyBlot) {
+    return {
+      body: null,
+      rect: null,
+    };
+  }
   return {
     body: tableBodyBlot,
     rect: tableBodyBlot.domNode.getBoundingClientRect(),
