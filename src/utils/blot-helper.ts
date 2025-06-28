@@ -75,12 +75,12 @@ export function findChildBlot<T extends TypeParchment.BlotConstructor>(parent: T
   return descendants;
 }
 
-function mixinProps<T = any, U = any>(target: T, source: U) {
+function mixinProps<T = any, U = any>(target: T, source: U, excludeReg?: RegExp) {
   for (const prop of Object.getOwnPropertyNames(source)) {
-    if (/^constructor$/.test(prop)) continue;
+    if (excludeReg && excludeReg.test(prop)) continue;
     Object.defineProperty(target, prop, Object.getOwnPropertyDescriptor(source, prop)!);
   }
-  return target as typeof target & Omit<typeof source, 'constructor'>;
+  return target;
 }
 export function mixinClass<
   T extends Constructor,
@@ -95,8 +95,11 @@ export function mixinClass<
     }
   };
   for (const source of mixins) {
-    mixinProps<typeof targetClass.prototype, typeof source.prototype>(targetClass.prototype, source.prototype);
+    mixinProps(targetClass.prototype, source.prototype, /^constructor$/);
   }
 
   return targetClass;
+}
+export function isSubclassOf(childClass: any, parentClass: any): boolean {
+  return childClass.prototype instanceof parentClass;
 }

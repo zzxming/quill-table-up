@@ -185,9 +185,12 @@ export class TableCellInnerFormat extends ContainerFormat {
     const blotValue = this.statics.formats(this.domNode);
     // handle BlockEmbed to insert tableCellInner when setContents
     if (this.prev && this.prev instanceof BlockEmbed) {
-      const afterBlock = this.scroll.create('block');
-      this.appendChild(this.prev);
-      this.appendChild(afterBlock);
+      const prev = this.prev;
+      this.insertBefore(prev, this.children.head);
+      if (this.length() <= 1) {
+        const afterBlock = this.scroll.create('block');
+        this.insertBefore(afterBlock, prev.next);
+      }
     }
     if (parent !== null && parent.statics.blotName !== blotName.tableCell) {
       this.wrap(blotName.tableCell, blotValue);
