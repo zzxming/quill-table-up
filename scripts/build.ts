@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { WebSocketServer } from 'ws';
-import { buildTS } from './bundle';
+import { buildStyle, buildTS } from './bundle';
 import { startServer } from './server';
 
 async function main() {
@@ -11,18 +11,22 @@ async function main() {
     wss = new WebSocketServer({ port: 8080 });
     startServer();
   }
-  await buildTS({
-    isDev,
-    onSuccess() {
-      if (wss && wss.clients) {
-        for (const client of wss.clients) {
-          if (client.readyState === 1) {
-            client.send(JSON.stringify({ type: 'reload' }));
+  await Promise.all([
+    buildStyle({ isDev }),
+    buildTS({
+      isDev,
+      onSuccess() {
+        console.log(`[${new Date().toLocaleString()}] Build completed successfully!`);
+        if (wss && wss.clients) {
+          for (const client of wss.clients) {
+            if (client.readyState === 1) {
+              client.send(JSON.stringify({ type: 'reload' }));
+            }
           }
         }
-      }
-    },
-  });
+      },
+    }),
+  ]);
 }
 
 main().catch((error) => {

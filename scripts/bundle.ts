@@ -31,7 +31,7 @@ const baseOptions = {
   watch: false,
 };
 
-function buildStyle({ isDev = false } = {}) {
+export function buildStyle({ isDev = false } = {}) {
   function buildLess() {
     return src(['./src/style/index.less', './src/style/table-creator.less'])
       .pipe(less())
@@ -70,11 +70,9 @@ export async function buildTS({
   const options = {
     ...baseOptions,
     minify: !isDev,
-    clean: !isDev,
     watch: isDev ? ['./src'] : false,
   };
   return Promise.all([
-    buildStyle({ isDev }),
     build({
       ...options,
       format: ['esm'],
