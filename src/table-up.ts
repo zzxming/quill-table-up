@@ -76,6 +76,26 @@ function generateTableArrowHandler(up: boolean) {
     collapsed: true,
     format: [blotName.tableCellInner],
     handler(this: { quill: Quill }, range: TypeRange, context: Context) {
+      const direction = up ? 'prev' : 'next';
+      const childDirection = up ? 'tail' : 'head';
+      if (context.line[direction]) return true;
+
+      // TODO: if there have a very long text in cell, the line will auto wrap
+      // there is no good way to find the correct index of the last `line`
+      const cursorRect = this.quill.selection.getBounds(range.index);
+      const lineRect = context.line.domNode.getBoundingClientRect();
+      if (!cursorRect || !lineRect) return true;
+      if (up) {
+        if (cursorRect.top - lineRect.top > 3) {
+          return true;
+        }
+      }
+      else {
+        if (lineRect.bottom - cursorRect.bottom > 3) {
+          return true;
+        }
+      }
+
       let tableBlot: TableWrapperFormat;
       let tableMain: TableMainFormat;
       let tableRow: TableRowFormat;
@@ -88,8 +108,6 @@ function generateTableArrowHandler(up: boolean) {
       }
 
       const colIds = tableMain.getColIds();
-      const direction = up ? 'prev' : 'next';
-      const childDirection = up ? 'tail' : 'head';
       const tableCaption = tableBlot.descendants(TableCaptionFormat, 0)[0];
 
       let aroundLine;
@@ -108,10 +126,8 @@ function generateTableArrowHandler(up: boolean) {
       else {
         aroundLine = tableBlot[direction];
       }
+      if (context.line[direction] || !aroundLine) return true;
 
-      if (context.line[direction] || !aroundLine) {
-        return true;
-      }
       const targetRow = tableRow[direction] as TableRowFormat;
       if (targetRow) {
         const cellIndex = colIds.indexOf(tableCell.colId);
