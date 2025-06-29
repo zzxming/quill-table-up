@@ -227,7 +227,9 @@ export class TableUp {
     );
     const overrides = overrideFormats.reduce((pre, [name, blot]) => {
       const extendsClass = isSubclassOf(blot, BlockEmbed) ? BlockEmbedOverride : BlockOverride;
-      pre[name] = class extends mixinClass(blot, [extendsClass]) {};
+      pre[name] = class extends mixinClass(blot, [extendsClass]) {
+        static register() {}
+      };
       return pre;
     }, {} as Record<string, Constructor>);
 
