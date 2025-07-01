@@ -206,7 +206,6 @@ export class TableMainFormat extends ContainerFormat {
         }
       }
       else {
-        // for (const row of rows) {
         if (row.children.length === 0 && row.prev) {
           // find the not empty row
           let prev: TableRowFormat = row.prev as TableRowFormat;
@@ -223,11 +222,9 @@ export class TableMainFormat extends ContainerFormat {
           });
         }
         row.foreachCellInner((cell) => {
-          if (cell.emptyRow.length > 0) {
-            for (const emptyRow of cell.emptyRow) {
-              if (!rowIds.has(emptyRow)) {
-                row.parent.insertBefore(this.scroll.create(blotName.tableRow, { tableId: this.tableId, rowId: emptyRow }), row.next);
-              }
+          for (const emptyRow of cell.emptyRow) {
+            if (!rowIds.has(emptyRow)) {
+              row.parent.insertBefore(this.scroll.create(blotName.tableRow, { tableId: this.tableId, rowId: emptyRow }), row.next);
             }
           }
         });
