@@ -2,6 +2,7 @@ import type TypeScroll from 'quill/blots/scroll';
 import type { TableValue } from '../utils';
 import { blotName, tableUpSize } from '../utils';
 import { ContainerFormat } from './container-format';
+import { TableCellInnerFormat } from './table-cell-inner-format';
 import { TableColFormat } from './table-col-format';
 import { TableRowFormat } from './table-row-format';
 
@@ -179,6 +180,25 @@ export class TableMainFormat extends ContainerFormat {
         const row = rowList[i];
         row.moveChildren(rowList[0]);
         row.remove();
+      }
+    }
+  }
+
+  checkEmptyCol(autoMerge: boolean) {
+    if (autoMerge) {
+      const rowCount = this.getRows().length;
+      const cols = this.getCols();
+      const cells = this.descendants(TableCellInnerFormat);
+      for (const cell of cells) {
+        if (cell.colspan > 1 && cell.rowspan >= rowCount) {
+          const index = cols.findIndex(col => col.colId === cell.colId);
+          const currentCol = cols[index];
+          for (let i = index + 1; i < index + cell.colspan; i++) {
+            cols[i].remove();
+            currentCol.width += cols[i].width;
+          }
+          cell.colspan = 1;
+        }
       }
     }
   }

@@ -180,6 +180,7 @@ export class TableClipboard extends Clipboard {
   }
 
   matchCol(node: Node, _delta: TypeDelta) {
+    // split col by span
     let span = Number((node as HTMLElement).getAttribute('span') || 1);
     if (Number.isNaN(span)) span = 1;
 
