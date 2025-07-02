@@ -106,7 +106,7 @@ interface TableCreatorOptions {
   tableId: string;
   editable: boolean | null;
 }
-type ColOptions = Omit<TableColValue, 'span' | 'width' | 'tableId' | 'colId'> & { width?: number; span?: number };
+type ColOptions = Omit<TableColValue, 'width' | 'tableId' | 'colId'> & { width?: number };
 interface TableCaptionCreatorOptions extends Omit<TableCaptionValue, 'tableId'> {
   text: string;
 }
@@ -114,7 +114,7 @@ export const datasetTableId = (id: string) => `data-table-id="${id}"`;
 export const datasetFull = (full: boolean) => full ? ' data-full="true"' : '';
 export const datasetAlign = (align: string) => align === 'left' ? '' : ` data-align="${align}"`;
 export const contenteditableString = (value: boolean | null) => value === null ? '' : ` contenteditable="${value}"`;
-export function getColWidthStyle(options: Required<Omit<ColOptions, 'span' | 'align' | 'tableId' | 'width'>> & { width?: number; colNum: number }) {
+export function getColWidthStyle(options: Required<Omit<ColOptions, 'align' | 'tableId' | 'width'>> & { width?: number; colNum: number }) {
   const { full, width, colNum } = options;
   let colWidth = `${width}px`;
   if (full) {
@@ -124,7 +124,7 @@ export function getColWidthStyle(options: Required<Omit<ColOptions, 'span' | 'al
 }
 export function createTableDeltaOps(row: number, col: number, colOptions?: ColOptions, captionOptions?: Partial<TableCaptionCreatorOptions>, options: Partial<TableCreatorOptions> = {}) {
   const { isEmpty = false, tableId = '1' } = options;
-  const { full = true, width = 100, align = 'left', span = 1 } = colOptions || {};
+  const { full = true, width = 100, align = 'left' } = colOptions || {};
   const { text = '', side = 'top' } = captionOptions || {};
   const table: Op[] = [{ insert: '\n' }];
   if (text) {
@@ -137,7 +137,7 @@ export function createTableDeltaOps(row: number, col: number, colOptions?: ColOp
     );
   }
   for (const [i, _] of new Array(col).fill(0).entries()) {
-    const value: TableColDeltaValue = { tableId, colId: `${i + 1}`, width: 1 / col * 100, span };
+    const value: TableColDeltaValue = { tableId, colId: `${i + 1}`, width: 1 / col * 100 };
     if (full) {
       value.full = 'true';
     }

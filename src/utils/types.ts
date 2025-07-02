@@ -77,7 +77,6 @@ export interface TableColValue {
   tableId: string;
   colId: string;
   width: number;
-  span?: number;
   full?: boolean;
   align?: string;
 }

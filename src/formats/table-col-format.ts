@@ -20,10 +20,9 @@ export class TableColFormat extends BlockEmbed {
   }
 
   static create(value: TableColValue) {
-    const { width, tableId, colId, full, align, span = 1 } = value;
+    const { width, tableId, colId, full, align } = value;
     const node = super.create() as HTMLElement;
     node.setAttribute('width', this.validWidth(width, !!full));
-    node.setAttribute('span', String(span));
     full && (node.dataset.full = String(full));
     if (align && align !== 'left') {
       node.dataset.align = align;
@@ -36,14 +35,12 @@ export class TableColFormat extends BlockEmbed {
   static value(domNode: HTMLElement) {
     const { tableId, colId } = domNode.dataset;
     const width = domNode.getAttribute('width') || String(tableUpSize.colDefaultWidth);
-    const span = domNode.getAttribute('span');
     const align = domNode.dataset.align;
     const full = Object.hasOwn(domNode.dataset, 'full');
     const value: Record<string, any> = {
       tableId: String(tableId),
       colId: String(colId),
       full,
-      span: Number.isNaN(Number(span)) ? 1 : Number(span),
       width: Number.parseFloat(width),
     };
     align && (value.align = align);
@@ -104,19 +101,6 @@ export class TableColFormat extends BlockEmbed {
     else {
       this.domNode.removeAttribute('data-align');
     }
-  }
-
-  get span() {
-    const span = this.domNode.getAttribute('span');
-    if (Number.isNaN(Number(span))) {
-      this.domNode.setAttribute('span', '1');
-      return 1;
-    }
-    return Number(span);
-  }
-
-  set span(value: number) {
-    this.domNode.setAttribute('span', String(value));
   }
 
   checkMerge(): boolean {
