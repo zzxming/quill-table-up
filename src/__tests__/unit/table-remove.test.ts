@@ -241,11 +241,13 @@ describe('unusual delete', () => {
         <div>
           <table cellpadding="0" cellspacing="0" data-full="true">
             <colgroup data-full="true">
-              ${new Array(5).fill(`<col width="20%" data-full="true" />`).join('\n')}
+              <col width="60%" data-full="true" />
+              <col width="20%" data-full="true" />
+              <col width="20%" data-full="true" />
             </colgroup>
             <tbody>
               <tr>
-               <td rowspan="3" colspan="3">
+                <td rowspan="3" colspan="1">
                   <div>
                     <p><br></p>
                     <p><br></p>
