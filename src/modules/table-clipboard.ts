@@ -73,7 +73,7 @@ export class TableClipboard extends Clipboard {
     for (let i = 0; i < delta.ops.length; i++) {
       const { attributes, insert } = delta.ops[i];
       // if attribute doesn't have tableCellInner, treat it as a blank line(emptyRow)
-      if (attributes && !attributes[blotName.tableCellInner]) {
+      if (!isObject(insert) && attributes && !attributes[blotName.tableCellInner] && !attributes[blotName.tableCaption]) {
         delta.ops.splice(i, 1);
         i -= 1;
         continue;
@@ -156,7 +156,7 @@ export class TableClipboard extends Clipboard {
           if ((op.attributes[blotName.tableCellInner] as TableCellValue).rowspan === 1) {
             emptyRows = [];
           }
-          else {
+          else if (emptyRows.length > 0) {
             if (!(op.attributes[blotName.tableCellInner] as TableCellValue).emptyRow) {
               (op.attributes[blotName.tableCellInner] as TableCellValue).emptyRow = [];
             }
