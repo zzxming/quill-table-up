@@ -358,12 +358,12 @@ describe('clipboard cell structure', () => {
             <tbody>
               <tr>
                 <td rowspan="1" colspan="1" style="border-color: transparent;">
-                  <div data-style="border-color: transparent">
+                  <div data-style="border-color: transparent;">
                     <p><strong>Col 1</strong></p>
                   </div>
                 </td>
                 <td rowspan="1" colspan="1" style="border-color: transparent;">
-                  <div data-style="border-color: transparent">
+                  <div data-style="border-color: transparent;">
                     <p class="ql-align-right"><strong>Data 1</strong></p>
                   </div>
                 </td>
@@ -394,12 +394,12 @@ describe('clipboard cell structure', () => {
             <tbody>
               <tr>
                 <td rowspan="1" colspan="1" style="border-color: transparent;">
-                  <div data-style="border-color: transparent">
+                  <div data-style="border-color: transparent;">
                     <p><br></p>
                   </div>
                 </td>
                 <td rowspan="1" colspan="1" style="border-bottom-color: transparent;">
-                  <div data-style="border-bottom-color: transparent">
+                  <div data-style="border-bottom-color: transparent;">
                     <p><br></p>
                   </div>
                 </td>
@@ -411,12 +411,12 @@ describe('clipboard cell structure', () => {
               </tr>
               </tr>
                 <td rowspan="1" colspan="1" style="border-right-color: transparent;">
-                  <div data-style="border-right-color: transparent">
+                  <div data-style="border-right-color: transparent;">
                     <p><br></p>
                   </div>
                 </td>
                 <td rowspan="1" colspan="1" style="border-color: transparent;">
-                  <div data-style="border-color: transparent">
+                  <div data-style="border-color: transparent;">
                     <p><br></p>
                   </div>
                 </td>
@@ -492,7 +492,7 @@ describe('clipboard cell structure', () => {
                   </div>
                 </td>
                 <td rowspan="1" colspan="1" style="background-color: transparent;">
-                  <div data-style="background-color: transparent">
+                  <div data-style="background-color: transparent;">
                     <p><br></p>
                   </div>
                 </td>
@@ -546,12 +546,12 @@ describe('clipboard cell structure', () => {
             <tbody>
               <tr>
                 <td rowspan="1" colspan="1" style="height: 73px;">
-                  <div data-style="height: 73px">
+                  <div data-style="height: 73px;">
                     <p><br></p>
                   </div>
                 </td>
                 <td rowspan="1" colspan="1" style="height: 73px;">
-                  <div data-style="height: 73px">
+                  <div data-style="height: 73px;">
                     <p><br></p>
                   </div>
                 </td>
@@ -811,7 +811,7 @@ describe('clipboard cell structure', () => {
             <tbody>
               <tr>
                 <td colspan="1" rowspan="1" style="background-color: rgb(41, 114, 244);">
-                  <div data-style="background-color: rgb(41, 114, 244)">
+                  <div data-style="background-color: rgb(41, 114, 244);">
                     <p><span style="background-color: rgb(230, 0, 0);">123</span>456<span style="background-color: rgb(0, 138, 0);">789</span></p>
                     <h1>h<span style="background-color: rgb(0, 0, 0);">ea</span>d</h1>
                   </div>
@@ -837,11 +837,11 @@ describe('clipboard cell structure', () => {
         { attributes: { background: '#e60000' }, insert: '123' },
         { insert: '456' },
         { attributes: { background: '#008a00' }, insert: '789' },
-        { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1, style: 'background-color: rgb(41, 114, 244)' } }, insert: '\n' },
+        { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1, style: 'background-color: rgb(41, 114, 244);' } }, insert: '\n' },
         { insert: 'h' },
         { attributes: { background: '#000000' }, insert: 'ea' },
         { insert: 'd' },
-        { attributes: { 'header': 1, 'table-up-cell-inner': { rowspan: 1, colspan: 1, style: 'background-color: rgb(41, 114, 244)' } }, insert: '\n' },
+        { attributes: { 'header': 1, 'table-up-cell-inner': { rowspan: 1, colspan: 1, style: 'background-color: rgb(41, 114, 244);' } }, insert: '\n' },
         { insert: '2' },
         { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1 } }, insert: '\n' },
         { insert: '\n' },
@@ -868,7 +868,7 @@ describe('clipboard cell structure', () => {
             <tbody>
               <tr>
                 <td colspan="1" rowspan="1" style="background-color: rgb(0, 102, 204);">
-                  <div data-style="background-color: rgb(0, 102, 204)">
+                  <div data-style="background-color: rgb(0, 102, 204);">
                     <p>123</p>
                   </div>
                 </td>
@@ -1395,14 +1395,14 @@ describe('clipboard content format', () => {
             <tbody>
               <tr>
                 <td rowspan="1" colspan="1" style="height: 90px; background-color: rgb(94, 255, 0);">
-                  <div data-style="height: 90px;background-color: rgb(94, 255, 0)">
+                  <div data-style="height: 90px; background-color: rgb(94, 255, 0);">
                     <p>
                       <span style="background-color: rgb(0, 102, 204); color: rgb(230, 0, 0);">qwf</span>
                     </p>
                   </div>
                 </td>
                 <td rowspan="2" colspan="1" style="height: 90px;">
-                  <div data-style="height: 90px">
+                  <div data-style="height: 90px;">
                     <blockquote><code style="color: rgb(230, 0, 0); background-color: rgb(0, 102, 204);">qwfqwfw</code></blockquote>
                     <ol>
                       <li data-list="bullet">
@@ -1413,7 +1413,7 @@ describe('clipboard content format', () => {
                   </div>
                 </td>
                 <td rowspan="1" colspan="1" style="height: 90px;">
-                  <div data-style="height: 90px">
+                  <div data-style="height: 90px;">
                     <p>
                       <span style="background-color: rgb(0, 102, 204);">qwg</span>
                     </p>
@@ -1451,7 +1451,9 @@ describe('clipboard content format', () => {
         </div>
         <p><br></p>
       `,
-      { ignoreAttrs: ['class', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
+      {
+        ignoreAttrs: ['class', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'],
+      },
     );
   });
 
@@ -1493,17 +1495,17 @@ describe('clipboard content format', () => {
             <tbody>
               <tr>
                 <td style="background-color: rgb(237, 238, 242);">
-                  <div data-style="background-color: #edeef2;">
+                  <div data-style="background-color: rgb(237, 238, 242);">
                     <p><span style="background-color: rgb(237, 238, 242);">1</span></p>
                   </div>
                 </td>
                 <td style="background-color: rgb(237, 238, 242);">
-                  <div data-style="background-color: #edeef2;">
+                  <div data-style="background-color: rgb(237, 238, 242);">
                     <p><span style="background-color: rgb(237, 238, 242);">2</span></p>
                   </div>
                 </td>
                 <td style="background-color: rgb(237, 238, 242);">
-                  <div data-style="background-color: #edeef2;">
+                  <div data-style="background-color: rgb(237, 238, 242);">
                     <p><span style="background-color: rgb(237, 238, 242);">3</span></p>
                   </div>
                 </td>
@@ -1527,17 +1529,17 @@ describe('clipboard content format', () => {
               </tr>
               <tr>
                 <td style="background-color: rgb(237, 238, 242);">
-                  <div data-style="background-color: #edeef2;">
+                  <div data-style="background-color: rgb(237, 238, 242);">
                     <p><span style="background-color: rgb(237, 238, 242);">7</span></p>
                   </div>
                 </td>
                 <td style="background-color: rgb(237, 238, 242);">
-                  <div data-style="background-color: #edeef2;">
+                  <div data-style="background-color: rgb(237, 238, 242);">
                     <p><span style="background-color: rgb(237, 238, 242);">8</span></p>
                   </div>
                 </td>
                 <td style="background-color: rgb(237, 238, 242);">
-                  <div data-style="background-color: #edeef2;">
+                  <div data-style="background-color: rgb(237, 238, 242);">
                     <p><span style="background-color: rgb(237, 238, 242);">9</span></p>
                   </div>
                 </td>
@@ -1556,11 +1558,11 @@ describe('clipboard content format', () => {
         { insert: { 'table-up-col': { full: false, width: 100 } } },
         { insert: { 'table-up-col': { full: false, width: 100 } } },
         { attributes: { background: '#edeef2' }, insert: '1' },
-        { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1, style: 'background-color: #edeef2;' } }, insert: '\n' },
+        { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1, style: 'background-color: rgb(237, 238, 242);' } }, insert: '\n' },
         { attributes: { background: '#edeef2' }, insert: '2' },
-        { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1, style: 'background-color: #edeef2;' } }, insert: '\n' },
+        { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1, style: 'background-color: rgb(237, 238, 242);' } }, insert: '\n' },
         { attributes: { background: '#edeef2' }, insert: '3' },
-        { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1, style: 'background-color: #edeef2;' } }, insert: '\n' },
+        { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1, style: 'background-color: rgb(237, 238, 242);' } }, insert: '\n' },
         { insert: '4' },
         { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1 } }, insert: '\n' },
         { insert: '5' },
@@ -1568,11 +1570,11 @@ describe('clipboard content format', () => {
         { insert: '6' },
         { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1 } }, insert: '\n' },
         { attributes: { background: '#edeef2' }, insert: '7' },
-        { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1, style: 'background-color: #edeef2;' } }, insert: '\n' },
+        { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1, style: 'background-color: rgb(237, 238, 242);' } }, insert: '\n' },
         { attributes: { background: '#edeef2' }, insert: '8' },
-        { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1, style: 'background-color: #edeef2;' } }, insert: '\n' },
+        { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1, style: 'background-color: rgb(237, 238, 242);' } }, insert: '\n' },
         { attributes: { background: '#edeef2' }, insert: '9' },
-        { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1, style: 'background-color: #edeef2;' } }, insert: '\n' },
+        { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1, style: 'background-color: rgb(237, 238, 242);' } }, insert: '\n' },
         { insert: '\n' },
       ]),
       quill.getContents(),

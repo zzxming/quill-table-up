@@ -1,14 +1,16 @@
 import type { Parchment as TypeParchment } from 'quill';
 import type TypeBlock from 'quill/blots/block';
+import type TypeContainer from 'quill/blots/container';
 import Quill from 'quill';
-import { blotName, findParentBlot } from '../../utils';
+import { blotName, findParentBlot, isString } from '../../utils';
 
 const Parchment = Quill.import('parchment');
 const Block = Quill.import('blots/block') as typeof TypeBlock;
+const Container = Quill.import('blots/container') as typeof TypeContainer;
 
 export class BlockOverride extends Block {
   replaceWith(name: string | TypeParchment.Blot, value?: any): TypeParchment.Blot {
-    const replacement = typeof name === 'string' ? this.scroll.create(name, value) : name;
+    const replacement = isString(name) ? this.scroll.create(name, value) : name;
     if (replacement instanceof Parchment.ParentBlot) {
       // replace block to TableCellInner length is 0 when setContents
       // that will set text direct in TableCellInner but not in block
@@ -45,7 +47,11 @@ export class BlockOverride extends Block {
           }
         }
         else {
-          if (selfParent != null) {
+          // `list` will wrap Container. tableCellInner should be insert outside it
+          if (selfParent instanceof Container) {
+            selfParent.parent.insertBefore(replacement, selfParent);
+          }
+          else if (selfParent != null) {
             selfParent.insertBefore(replacement, this.next);
           }
           replacement.appendChild(this);
@@ -57,7 +63,7 @@ export class BlockOverride extends Block {
       }
     }
     if (this.parent != null) {
-      this.parent.insertBefore(replacement, this.next || undefined);
+      this.parent.insertBefore(replacement, this.next);
       this.remove();
     }
     this.attributes.copy(replacement as TypeParchment.BlockBlot);
