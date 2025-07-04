@@ -46,9 +46,7 @@ function calculateCols(tableNode: HTMLElement, colNums: number): number[] {
 export class TableClipboard extends Clipboard {
   tableId = randomId();
   rowId = randomId();
-  rowIds: string[] = [];
   colIds: string[] = [];
-  emptyRowCount: number[] = [];
   rowspanCount: { rowspan: number; colspan: number }[] = [];
   cellCount = 0;
   colCount = 0;
@@ -69,16 +67,17 @@ export class TableClipboard extends Clipboard {
   matchTable(node: Node, delta: TypeDelta) {
     if (delta.ops.length === 0) return delta;
 
-    const preSumEmptyRowCount = this.emptyRowCount.reduce((acc, cur) => {
-      acc.push((acc[acc.length - 1] ?? 0) + cur);
-      return acc;
-    }, [] as number[]);
-
     const ops: Record<string, any>[] = [];
     const cols: Record<string, any>[] = [];
     let bodyStartIndex = -1;
     for (let i = 0; i < delta.ops.length; i++) {
       const { attributes, insert } = delta.ops[i];
+      // if attribute doesn't have tableCellInner, treat it as a blank line(emptyRow)
+      if (!isObject(insert) && attributes && !attributes[blotName.tableCellInner] && !attributes[blotName.tableCaption]) {
+        delta.ops.splice(i, 1);
+        i -= 1;
+        continue;
+      }
       // remove quill origin table format and tableCell format
       const { table, [blotName.tableCell]: tableCell, ...attrs } = attributes || {};
       const hasCol = isObject(insert) && insert[blotName.tableCol];
@@ -86,19 +85,7 @@ export class TableClipboard extends Clipboard {
         cols.push({ insert });
       }
       else {
-        if (attrs[blotName.tableCellInner]) {
-          const tableCellInner = attrs[blotName.tableCellInner] as TableCellValue;
-          const rowNum = this.rowIds.indexOf(tableCellInner.rowId);
-          // reduce cell rowspan by counting empty rows
-          if (rowNum !== -1) {
-            const rowspan = tableCellInner.rowspan;
-            tableCellInner.rowspan -= (preSumEmptyRowCount[rowNum + rowspan - 1] - preSumEmptyRowCount[rowNum]);
-          }
-          ops.push({ attributes: { ...attrs, [blotName.tableCellInner]: tableCellInner }, insert });
-        }
-        else {
-          ops.push({ attributes: attrs, insert });
-        }
+        ops.push({ attributes: attrs, insert });
       }
       // record col insert index
       if (
@@ -135,9 +122,7 @@ export class TableClipboard extends Clipboard {
 
     // reset variable to avoid conflict with other table
     this.tableId = randomId();
-    this.rowIds = [];
     this.colIds = [];
-    this.emptyRowCount = [];
     this.rowspanCount = [];
     this.cellCount = 0;
     this.colCount = 0;
@@ -158,6 +143,28 @@ export class TableClipboard extends Clipboard {
         }
       }
     }
+    // add `emptyRow`
+    let emptyRows = [];
+    for (let i = delta.ops.length - 1; i >= 0; i--) {
+      const op = delta.ops[i];
+      if (op.attributes) {
+        if (!op.attributes[blotName.tableCellInner]) {
+          emptyRows = [];
+          emptyRows.push(randomId());
+        }
+        else {
+          if ((op.attributes[blotName.tableCellInner] as TableCellValue).rowspan === 1) {
+            emptyRows = [];
+          }
+          else if (emptyRows.length > 0) {
+            if (!(op.attributes[blotName.tableCellInner] as TableCellValue).emptyRow) {
+              (op.attributes[blotName.tableCellInner] as TableCellValue).emptyRow = [];
+            }
+            (op.attributes[blotName.tableCellInner] as TableCellValue).emptyRow!.push(...emptyRows);
+          }
+        }
+      }
+    }
     return delta;
   }
 
@@ -173,6 +180,7 @@ export class TableClipboard extends Clipboard {
   }
 
   matchCol(node: Node, _delta: TypeDelta) {
+    // split col by span
     let span = Number((node as HTMLElement).getAttribute('span') || 1);
     if (Number.isNaN(span)) span = 1;
 
@@ -194,7 +202,6 @@ export class TableClipboard extends Clipboard {
   }
 
   matchTr(node: Node, delta: TypeDelta) {
-    this.rowIds.push(this.rowId);
     this.rowId = randomId();
     this.cellCount = 0;
     // minus rowspan
@@ -206,11 +213,9 @@ export class TableClipboard extends Clipboard {
         this.rowspanCount[i] = { rowspan: 0, colspan: 0 };
       }
     }
-    let hasTd = true;
     for (const op of delta.ops) {
       if (op.attributes) {
         const { background, [blotName.tableCellInner]: tableCellInner } = op.attributes;
-        if (!tableCellInner) hasTd = false;
         if (tableCellInner && background) {
           const { style = '' } = tableCellInner as TableCellValue;
           const styleObj = cssTextToObject(style);
@@ -218,17 +223,7 @@ export class TableClipboard extends Clipboard {
           (op.attributes![blotName.tableCellInner] as TableCellValue).style = objectToCssText(styleObj);
         }
       }
-      else {
-        hasTd = false;
-      }
     }
-    // record if row doesn't have any cell. It's happen in excel. https://github.com/zzxming/quill-table-up/issues/165
-    let rowspanCount = 0;
-    if (!hasTd) {
-      rowspanCount = 1;
-      delta = new Delta();
-    }
-    this.emptyRowCount.push(rowspanCount);
     return delta;
   }
 

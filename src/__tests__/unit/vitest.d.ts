@@ -2,7 +2,10 @@
 import type { Assertion, AsymmetricMatchersContaining } from 'vitest';
 
 interface CustomMatchers<R = unknown> {
-  toEqualHTML: (html: string, options?: { ignoreAttrs?: string[] }) => R;
+  toEqualHTML: (html: string, options?: {
+    ignoreAttrs?: string[];
+    replaceAttrs?: Record<string, (attrValue: string) => string>;
+  }) => R;
 }
 
 declare module 'vitest' {

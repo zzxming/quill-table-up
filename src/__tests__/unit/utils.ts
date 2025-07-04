@@ -53,16 +53,34 @@ export function createQuillWithTableModule(html: string, tableOptions: Partial<T
 }
 
 expect.extend({
-  toEqualHTML(received, expected, options = {}) {
-    const ignoreAttrs = options?.ignoreAttrs ?? [];
+  toEqualHTML(
+    received,
+    expected,
+    {
+      ignoreAttrs = [],
+      replaceAttrs = {},
+    }: {
+      ignoreAttrs?: string[];
+      replaceAttrs?: Record<string, (attrValue: string) => string>;
+    } = {},
+  ) {
     const receivedDOM = document.createElement('div');
     const expectedDOM = document.createElement('div');
     receivedDOM.innerHTML = normalizeHTML(
       typeof received === 'string' ? received : received.innerHTML,
     );
     expectedDOM.innerHTML = normalizeHTML(expected);
-    const doms = [receivedDOM, expectedDOM];
 
+    for (const [attr, handler] of Object.entries(replaceAttrs)) {
+      for (const node of Array.from(receivedDOM.querySelectorAll(`[${attr}]`))) {
+        const attrValue = node.getAttribute(attr);
+        if (attrValue) {
+          node.setAttribute(attr, handler(attrValue));
+        }
+      }
+    }
+
+    const doms = [receivedDOM, expectedDOM];
     for (const dom of doms) {
       for (const node of Array.from(dom.querySelectorAll('.ql-ui'))) {
         node.remove();
@@ -86,7 +104,7 @@ expect.extend({
         `HTMLs don't match.\n${this.utils.diff(
           this.utils.stringify(receivedDOM),
           this.utils.stringify(expectedDOM),
-        )}`,
+        )}\n`,
     };
   },
 });

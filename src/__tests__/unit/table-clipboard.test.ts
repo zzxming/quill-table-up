@@ -1016,7 +1016,7 @@ describe('clipboard cell structure', () => {
   });
 
   it('clipboard convert col with span attribute', async () => {
-    const quill = createQuillWithTableModule(`<p><br></p>`);
+    const quill = createQuillWithTableModule(`<p><br></p>`, { autoMergeCell: false });
     quill.setContents(
       quill.clipboard.convert({
         html: `
@@ -1060,29 +1060,45 @@ describe('clipboard cell structure', () => {
             ${createTaleColHTML(4, { full: false, width: 63 })}
             <tbody>
               <tr>
-                <td rowspan="3" colspan="2">
-                  <div><p>1</p></div>
+                <td rowspan="6" colspan="2" data-empty-row="length:1">
+                  <div data-empty-row="length:1"><p>1</p></div>
                 </td>
-                <td rowspan="1" colspan="2">
-                  <div><p>2</p></div>
+                <td rowspan="2" colspan="2" data-empty-row="length:1">
+                  <div data-empty-row="length:1"><p>2</p></div>
                 </td>
               </tr>
+              <tr></tr>
               <tr>
-                <td rowspan="1" colspan="2">
-                  <div><p>3</p></div>
+                <td rowspan="2" colspan="2" data-empty-row="length:1">
+                  <div data-empty-row="length:1"><p>3</p></div>
                 </td>
               </tr>
+              <tr></tr>
               <tr>
-                <td rowspan="1" colspan="2">
-                  <div><p>4</p></div>
+                <td rowspan="2" colspan="2" data-empty-row="length:1">
+                  <div data-empty-row="length:1"><p>4</p></div>
                 </td>
               </tr>
+              <tr></tr>
             </tbody>
           </table>
         </div>
         <p><br></p>
       `,
-      { ignoreAttrs: ['class', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'data-style', 'style', 'contenteditable'] },
+      {
+        ignoreAttrs: ['class', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'data-style', 'style', 'contenteditable'],
+        replaceAttrs: {
+          'data-empty-row': function (value: string) {
+            try {
+              const emptyRow = JSON.parse(value);
+              return `length:${emptyRow.length}`;
+            }
+            catch {
+              return value;
+            }
+          },
+        },
+      },
     );
     expectDelta(
       new Delta([
@@ -1092,13 +1108,13 @@ describe('clipboard cell structure', () => {
         { insert: { 'table-up-col': { full: false, width: 63 } } },
         { insert: { 'table-up-col': { full: false, width: 63 } } },
         { insert: '1' },
-        { attributes: { 'table-up-cell-inner': { rowspan: 3, colspan: 2 } }, insert: '\n' },
+        { attributes: { 'table-up-cell-inner': { rowspan: 6, colspan: 2 } }, insert: '\n' },
         { insert: '2' },
-        { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 2 } }, insert: '\n' },
+        { attributes: { 'table-up-cell-inner': { rowspan: 2, colspan: 2 } }, insert: '\n' },
         { insert: '3' },
-        { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 2 } }, insert: '\n' },
+        { attributes: { 'table-up-cell-inner': { rowspan: 2, colspan: 2 } }, insert: '\n' },
         { insert: '4' },
-        { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 2 } }, insert: '\n' },
+        { attributes: { 'table-up-cell-inner': { rowspan: 2, colspan: 2 } }, insert: '\n' },
         { insert: '\n' },
       ]),
       quill.getContents(),

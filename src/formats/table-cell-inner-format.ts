@@ -15,7 +15,7 @@ export class TableCellInnerFormat extends ContainerFormat {
   static blotName = blotName.tableCellInner;
   static tagName = 'div';
   static className = 'ql-table-cell-inner';
-  static allowDataAttrs: Set<string> = new Set(['table-id', 'row-id', 'col-id', 'rowspan', 'colspan']);
+  static allowDataAttrs: Set<string> = new Set(['table-id', 'row-id', 'col-id', 'rowspan', 'colspan', 'empty-row']);
   static defaultChild: TypeParchment.BlotConstructor = Block;
   declare parent: TableCellFormat;
   // keep `isAllowStyle` and `allowStyle` same with TableCellFormat
@@ -37,6 +37,7 @@ export class TableCellInnerFormat extends ContainerFormat {
       rowspan,
       colspan,
       style,
+      emptyRow,
     } = value;
     const node = super.create() as HTMLElement;
     node.dataset.tableId = tableId;
@@ -45,11 +46,15 @@ export class TableCellInnerFormat extends ContainerFormat {
     node.dataset.rowspan = String(getValidCellspan(rowspan));
     node.dataset.colspan = String(getValidCellspan(colspan));
     style && (node.dataset.style = style);
+    try {
+      emptyRow && (node.dataset.emptyRow = JSON.stringify(emptyRow));
+    }
+    catch {}
     return node;
   }
 
   static formats(domNode: HTMLElement) {
-    const { tableId, rowId, colId, rowspan, colspan, style } = domNode.dataset;
+    const { tableId, rowId, colId, rowspan, colspan, style, emptyRow } = domNode.dataset;
     const value: Record<string, any> = {
       tableId: String(tableId),
       rowId: String(rowId),
@@ -58,6 +63,10 @@ export class TableCellInnerFormat extends ContainerFormat {
       colspan: Number(getValidCellspan(colspan)),
     };
     style && (value.style = style);
+    try {
+      emptyRow && (value.emptyRow = JSON.parse(emptyRow));
+    }
+    catch {}
     return value;
   }
 
@@ -127,6 +136,32 @@ export class TableCellInnerFormat extends ContainerFormat {
 
   set colspan(value: number) {
     this.setFormatValue('colspan', value);
+  }
+
+  get emptyRow(): string[] {
+    try {
+      return JSON.parse(this.domNode.dataset.emptyRow!);
+    }
+    catch {
+      return [];
+    }
+  }
+
+  set emptyRow(value: string[]) {
+    // if value same as currentEmptyRow, do nothing
+    if (this.emptyRow.toString() === value.toString()) return;
+
+    try {
+      if (value.length > 0) {
+        this.setFormatValue('empty-row', JSON.stringify(value), false);
+      }
+      else {
+        this.setFormatValue('empty-row', null, false);
+      }
+    }
+    catch {
+      this.setFormatValue('empty-row', null, false);
+    }
   }
 
   getColumnIndex() {

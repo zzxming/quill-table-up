@@ -413,6 +413,7 @@ export class TableUp {
       scrollbarOptions: {},
       resizeOptions: {},
       resizeScaleOptions: {},
+      autoMergeCell: true,
     } as TableUpOptions, options);
   }
 
@@ -983,6 +984,10 @@ export class TableUp {
 
   balanceTables() {
     for (const tableBlot of this.quill.scroll.descendants(TableMainFormat)) {
+      // TODO: 想一下如何区分 autoMerge 开关时, checkEmptyRow 的调用
+      // 同时, 当关闭 autoMerge 时, 如何对 cell 数据的 emptyRow 处理
+      tableBlot.checkEmptyCol(this.options.autoMergeCell);
+      tableBlot.checkEmptyRow(this.options.autoMergeCell);
       this.fixUnusuaDeletelTable(tableBlot);
     }
   }
@@ -1094,6 +1099,7 @@ export class TableUp {
    * after insert or remove cell. handle cell colspan and rowspan merge
    */
   fixTableByRemove(tableBlot: TableMainFormat) {
+    if (!this.options.autoMergeCell) return;
     // calculate all cells
     // maybe will get empty tr
     const trBlots = tableBlot.getRows();
@@ -1180,13 +1186,11 @@ export class TableUp {
       }
     }
 
-    const patchTds: {
-      [key: string]: {
-        rowspan: number;
-        colspan: number;
-        colIndex: number;
-      };
-    } = {};
+    const patchTds: Record<string, {
+      rowspan: number;
+      colspan: number;
+      colIndex: number;
+    }> = {};
     for (let i = endTrIndex; i < Math.min(trs.length, nextTrIndex); i++) {
       const tr = trs[i];
       tr.foreachCellInner((td) => {
@@ -1201,6 +1205,7 @@ export class TableUp {
         // only remove td. empty tr to calculate colspan and rowspan
         td.parent.remove();
       });
+      if (tr.length() === 0) tr.remove();
     }
 
     if (trs[nextTrIndex]) {

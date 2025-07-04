@@ -9,7 +9,7 @@ export class TableCellFormat extends ContainerFormat {
   static blotName = blotName.tableCell;
   static tagName = 'td';
   static className = 'ql-table-cell';
-  static allowDataAttrs = new Set(['table-id', 'row-id', 'col-id']);
+  static allowDataAttrs = new Set(['table-id', 'row-id', 'col-id', 'empty-row']);
   static allowAttrs = new Set(['rowspan', 'colspan']);
 
   // keep `isAllowStyle` and `allowStyle` same with TableCellInnerFormat
@@ -31,6 +31,7 @@ export class TableCellFormat extends ContainerFormat {
       rowspan,
       colspan,
       style,
+      emptyRow,
     } = value;
     const node = super.create() as HTMLElement;
     node.dataset.tableId = tableId;
@@ -39,11 +40,15 @@ export class TableCellFormat extends ContainerFormat {
     node.setAttribute('rowspan', String(getValidCellspan(rowspan)));
     node.setAttribute('colspan', String(getValidCellspan(colspan)));
     style && (node.style.cssText = style);
+    try {
+      emptyRow && (node.dataset.emptyRow = JSON.stringify(emptyRow));
+    }
+    catch {}
     return node;
   }
 
   static formats(domNode: HTMLElement) {
-    const { tableId, rowId, colId } = domNode.dataset;
+    const { tableId, rowId, colId, emptyRow } = domNode.dataset;
     const rowspan = Number(domNode.getAttribute('rowspan'));
     const colspan = Number(domNode.getAttribute('colspan'));
     const value: Record<string, any> = {
@@ -66,6 +71,11 @@ export class TableCellFormat extends ContainerFormat {
     if (entries.length > 0) {
       value.style = entries.map(([key, value]) => `${key}: ${value}`).join(';');
     }
+
+    try {
+      emptyRow && (value.emptyRow = JSON.parse(emptyRow));
+    }
+    catch {}
 
     return value;
   }
@@ -193,6 +203,15 @@ export class TableCellFormat extends ContainerFormat {
     return Number(this.domNode.getAttribute('colspan'));
   }
 
+  get emptyRow(): string[] {
+    try {
+      return JSON.parse(this.domNode.dataset.emptyRow!);
+    }
+    catch {
+      return [];
+    }
+  }
+
   getColumnIndex() {
     const table = findParentBlot(this, blotName.tableMain);
     return table.getColIds().indexOf(this.colId);
@@ -220,6 +239,11 @@ export class TableCellFormat extends ContainerFormat {
     const { tableId, rowId } = this;
     if (parent !== null && parent.statics.blotName !== blotName.tableRow) {
       this.wrap(blotName.tableRow, { tableId, rowId });
+    }
+    if (this.emptyRow.length > 0) {
+      for (const rowId of this.emptyRow) {
+        this.parent.parent.insertBefore(this.scroll.create(blotName.tableRow, { tableId: this.tableId, rowId }), this.parent.next);
+      }
     }
 
     super.optimize(context);
