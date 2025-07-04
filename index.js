@@ -163,6 +163,27 @@ const quillOptions = [
       },
     },
   },
+  {
+    // debug: 'info',
+    theme: 'snow',
+    readOnly: false,
+    modules: {
+      toolbar: toolbarConfig,
+      [TableUp.moduleName]: {
+        full: false,
+        autoMergeCell: false,
+        scrollbar: TableVirtualScrollbar,
+        align: TableAlign,
+        resize: TableResizeLine,
+        resizeScale: TableResizeScale,
+        customSelect: defaultCustomSelect,
+        selection: TableSelection,
+        selectionOptions: {
+          tableMenu: TableMenuContextmenu,
+        },
+      },
+    },
+  },
 ];
 
 const quill = [];
@@ -184,9 +205,11 @@ for (const [i, options] of quillOptions.entries()) {
     });
   });
   const writable = document.getElementById(`writable${index}`);
-  writable.addEventListener('click', () => {
-    quillItem.enable(!quillItem.isEnabled());
-  });
+  if (writable) {
+    writable.addEventListener('click', () => {
+      quillItem.enable(!quillItem.isEnabled());
+    });
+  }
   quill.push(quillItem);
 }
 
