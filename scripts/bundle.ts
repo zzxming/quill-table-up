@@ -73,10 +73,12 @@ export async function buildTS({
     watch: isDev ? ['./src'] : false,
   };
   return Promise.all([
-    build({
-      ...options,
-      format: ['esm'],
-    }),
+    isDev
+      ? null
+      : build({
+          ...options,
+          format: ['esm'],
+        }),
     build(
       {
         ...options,
@@ -87,7 +89,8 @@ export async function buildTS({
           plugins: [
             ...options.plugins || [],
             ...isDev
-              ? [
+              ? []
+              : [
                   // use `plugin-typescript` make babel work
                   typescript({ tsconfig: './tsconfig.json', exclude: ['src/__tests__/**/*'] }),
                   babel({
@@ -106,8 +109,7 @@ export async function buildTS({
                     exclude: 'node_modules/**',
                     extensions: ['.js', '.ts'],
                   }),
-                ]
-              : [],
+                ],
           ],
         },
         outputOptions: {
