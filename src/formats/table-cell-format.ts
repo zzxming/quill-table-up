@@ -1,5 +1,5 @@
 import type { TableCellValue } from '../utils';
-import { blotName, findParentBlot } from '../utils';
+import { blotName, findParentBlot, toCamelCase } from '../utils';
 import { ContainerFormat } from './container-format';
 import { TableCellInnerFormat } from './table-cell-inner-format';
 import { TableRowFormat } from './table-row-format';
@@ -15,8 +15,10 @@ export class TableCellFormat extends ContainerFormat {
   // keep `isAllowStyle` and `allowStyle` same with TableCellInnerFormat
   static allowStyle = new Set(['background-color', 'border', 'height']);
   static isAllowStyle(str: string): boolean {
+    const cssAttrName = toCamelCase(str);
     for (const style of this.allowStyle) {
-      if (str.startsWith(style)) {
+      // cause `cssTextToObject` will transform css string to camel case style name
+      if (cssAttrName.startsWith(toCamelCase(style))) {
         return true;
       }
     }
@@ -102,8 +104,15 @@ export class TableCellFormat extends ContainerFormat {
       }
     }
 
-    if (this.children.head && this.children.head.statics.blotName === blotName.tableCellInner && this.domNode.style.cssText) {
-      (this.children.head.domNode as HTMLElement).dataset.style = this.domNode.style.cssText;
+    const headChild = this.children.head;
+    if (
+      this.domNode.style.cssText
+      && headChild
+      && headChild.statics.blotName === blotName.tableCellInner
+      // only update if data not match. avoid optimize circular updates
+      && this.domNode.style.cssText !== (headChild.domNode as HTMLElement).dataset.style
+    ) {
+      (headChild!.domNode as HTMLElement).dataset.style = this.domNode.style.cssText;
     }
   }
 

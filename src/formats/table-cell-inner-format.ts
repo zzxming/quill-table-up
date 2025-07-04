@@ -4,7 +4,7 @@ import type TypeScroll from 'quill/blots/scroll';
 import type { TableCellValue } from '../utils';
 import type { TableCellFormat } from './table-cell-format';
 import Quill from 'quill';
-import { blotName, cssTextToObject, findParentBlot, findParentBlots } from '../utils';
+import { blotName, cssTextToObject, findParentBlot, findParentBlots, toCamelCase } from '../utils';
 import { ContainerFormat } from './container-format';
 import { getValidCellspan } from './utils';
 
@@ -21,8 +21,10 @@ export class TableCellInnerFormat extends ContainerFormat {
   // keep `isAllowStyle` and `allowStyle` same with TableCellFormat
   static allowStyle = new Set(['background-color', 'border', 'height']);
   static isAllowStyle(str: string): boolean {
+    const cssAttrName = toCamelCase(str);
     for (const style of this.allowStyle) {
-      if (str.startsWith(style)) {
+      // cause `cssTextToObject` will transform css string to camel case style name
+      if (cssAttrName.startsWith(toCamelCase(style))) {
         return true;
       }
     }
@@ -169,6 +171,13 @@ export class TableCellInnerFormat extends ContainerFormat {
     return table.getColIds().indexOf(this.colId);
   }
 
+  setStyleByString(styleStr: string) {
+    const style = cssTextToObject(styleStr);
+    for (const [name, value] of Object.entries(style)) {
+      this.setFormatValue(name, value, true);
+    }
+  }
+
   formatAt(index: number, length: number, name: string, value: any) {
     if (this.children.length === 0) {
       this.appendChild(this.scroll.create(this.statics.defaultChild.blotName));
@@ -178,10 +187,7 @@ export class TableCellInnerFormat extends ContainerFormat {
     super.formatAt(index, length, name, value);
     // set style for `td`
     if (value && value.style) {
-      const style = cssTextToObject(value.style);
-      for (const [name, value] of Object.entries(style)) {
-        this.setFormatValue(name, value, true);
-      }
+      this.setStyleByString(value.style);
     }
   }
 
@@ -227,7 +233,8 @@ export class TableCellInnerFormat extends ContainerFormat {
         this.insertBefore(afterBlock, prev.next);
       }
     }
-    if (parent !== null && parent.statics.blotName !== blotName.tableCell) {
+    const parentIsTableCell = parent !== null && parent.statics.blotName !== blotName.tableCell;
+    if (parentIsTableCell) {
       this.wrap(blotName.tableCell, blotValue);
       // when insert delta like: [ { attributes: { 'table-up-cell-inner': { ... } }, insert: '\n' }, { attributes: { 'table-up-cell-inner': { ... } }, insert: '\n' }, ...]
       // that delta will create dom like: <td><div></div></td>... . that means TableCellInner will be an empty cell without 'block'
@@ -251,6 +258,16 @@ export class TableCellInnerFormat extends ContainerFormat {
       // if cellInner doesn't have child then remove it. not insert a block
       this.remove();
     }
+    else {
+      // update delta data
+      if (
+        this.domNode.dataset.style
+        && parentIsTableCell
+        && parent.domNode.style.cssText !== this.domNode.dataset.style
+      ) {
+        this.setStyleByString(this.domNode.dataset.style);
+      }
+    }
   }
 
   insertBefore(blot: TypeParchment.Blot, ref?: TypeParchment.Blot | null) {
@@ -258,7 +275,7 @@ export class TableCellInnerFormat extends ContainerFormat {
       const cellInnerBlot = blot as TableCellInnerFormat;
       const cellInnerBlotValue = this.statics.formats(cellInnerBlot.domNode);
       const selfValue = this.statics.formats(this.domNode);
-      const isSame = Object.entries(selfValue).every(([key, value]) => value === cellInnerBlotValue[key]);
+      const isSame = Object.entries(selfValue).every(([key, value]) => String(value) === String(cellInnerBlotValue[key]));
 
       if (!isSame) {
         const [selfRow, selfCell] = findParentBlots(this, [blotName.tableRow, blotName.tableCell] as const);
@@ -272,13 +289,6 @@ export class TableCellInnerFormat extends ContainerFormat {
               newCellInner.appendChild(block);
             });
             selfRow.insertBefore(newCellInner.wrap(blotName.tableCell, selfValue), selfCell.next);
-
-            if (this.children.length === 0) {
-              this.remove();
-              if (this.parent.children.length === 0) {
-                this.parent.remove();
-              }
-            }
           }
         }
         // different rowId. split current row. move lines which after ref to next row
@@ -303,7 +313,8 @@ export class TableCellInnerFormat extends ContainerFormat {
         );
       }
       else {
-        return this.parent.insertBefore(cellInnerBlot, this.next);
+        const next = this.split(ref ? ref.offset() : 0);
+        return this.parent.insertBefore(cellInnerBlot, next);
       }
     }
     else if (blot.statics.blotName === blotName.tableCol) {
