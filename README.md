@@ -85,6 +85,7 @@ const quill = new Quill('#editor', {
 | resizeScaleOptions | equal scale table cell handler options                                                                                                | `TableResizeScaleOptions`                                                       | -                   |
 | alignOptions       | table alignment handler options                                                                                                       | `any`                                                                           | -                   |
 | scrollbarOptions   | table virtual scrollbar handler options                                                                                               | `any`                                                                           | -                   |
+| autoMergeCell      | empty row or column will auto merge to one                                                                                            | `boolean`                                                                       | `true`              |
 
 > I'm not suggest to use `TableVirtualScrollbar` and `TableResizeLine` at same time, because it have a little conflict when user hover on it. Just like the first editor in [demo](https://zzxming.github.io/quill-table-up/)
 
