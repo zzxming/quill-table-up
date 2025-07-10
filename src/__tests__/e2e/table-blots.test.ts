@@ -88,3 +88,25 @@ extendTest('test table tools should hide after table removed', async ({ page, ed
   await expect(page.locator('#container2 .table-up-toolbox .table-up-resize-box')).not.toBeAttached();
   await expect(page.locator('#container2 .table-up-toolbox .table-up-scale')).not.toBeAttached();
 });
+
+extendTest('remove list in cell should work correctly', async ({ page, editorPage }) => {
+  editorPage.index = 0;
+  await editorPage.setContents([
+    { insert: '\n' },
+    { insert: { 'table-up-col': { tableId: 'dg216cyh1hh', colId: 'rbeybfr14n', full: false, width: 373 } } },
+    { insert: { 'table-up-col': { tableId: 'dg216cyh1hh', colId: '4yqh0essvp3', full: false, width: 373 } } },
+    { insert: '123' },
+    { attributes: { 'list': 'ordered', 'table-up-cell-inner': { tableId: 'dg216cyh1hh', rowId: '2lreudvqubb', colId: 'rbeybfr14n', rowspan: 1, colspan: 1 } }, insert: '\n' },
+    { insert: '123' },
+    { attributes: { 'list': 'ordered', 'table-up-cell-inner': { tableId: 'dg216cyh1hh', rowId: '2lreudvqubb', colId: 'rbeybfr14n', rowspan: 1, colspan: 1 } }, insert: '\n\n' },
+    { attributes: { 'table-up-cell-inner': { tableId: 'dg216cyh1hh', rowId: '2lreudvqubb', colId: '4yqh0essvp3', rowspan: 1, colspan: 1 } }, insert: '\n' },
+    { insert: '\n' },
+  ]);
+  await page.waitForTimeout(1000);
+  await editorPage.setSelection(11, 0);
+
+  await page.keyboard.press('Backspace');
+  await page.keyboard.press('Backspace');
+
+  expect(await page.locator('#editor1 .ql-editor .ql-table li').count()).toBe(2);
+});

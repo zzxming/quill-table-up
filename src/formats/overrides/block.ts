@@ -1,6 +1,7 @@
 import type { Parchment as TypeParchment } from 'quill';
 import type TypeBlock from 'quill/blots/block';
 import type TypeContainer from 'quill/blots/container';
+import type { TableCellInnerFormat } from '../table-cell-inner-format';
 import Quill from 'quill';
 import { blotName, findParentBlot, isString } from '../../utils';
 
@@ -18,6 +19,18 @@ export class BlockOverride extends Block {
       // wrap with TableCellInner.formatAt when length is 0 will create a new block
       // that can make sure TableCellInner struct correctly
       if (replacement.statics.blotName === blotName.tableCellInner) {
+        // skip if current block already in TableCellInner
+        try {
+          const cellInner = findParentBlot(this, blotName.tableCellInner);
+          const cellValue = cellInner.formats();
+          const replacementValue = (replacement as TableCellInnerFormat).formats();
+          const keys = Object.keys(cellValue);
+          if (keys.every(key => JSON.stringify(cellValue[key]) === JSON.stringify(replacementValue[key]))) {
+            return cellInner;
+          }
+        }
+        catch {}
+
         const selfParent = this.parent;
         if (selfParent.statics.blotName === blotName.tableCellInner) {
           if (selfParent != null) {
