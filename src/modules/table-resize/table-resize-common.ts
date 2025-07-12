@@ -269,8 +269,7 @@ export class TableResizeCommon {
     this.dragging = true;
 
     const divDom = document.createElement('div');
-    divDom.classList.add(this.dragBEM.b());
-    divDom.classList.add(this.dragBEM.is('col'));
+    divDom.classList.add(this.dragBEM.b(), this.dragBEM.is('col'));
     divDom.dataset.w = String(width);
 
     const styleValue = {
@@ -350,8 +349,7 @@ export class TableResizeCommon {
     const tableMainRect = this.tableMain.domNode.getBoundingClientRect();
 
     const divDom = document.createElement('div');
-    divDom.classList.add(this.dragBEM.b());
-    divDom.classList.add(this.dragBEM.is('row'));
+    divDom.classList.add(this.dragBEM.b(), this.dragBEM.is('row'));
     divDom.dataset.h = String(height);
 
     const styleValue = {
