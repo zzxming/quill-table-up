@@ -19,9 +19,9 @@ export class Scrollbar {
     X: number;
     Y: number;
   } = {
-      X: 0,
-      Y: 0,
-    };
+    X: 0,
+    Y: 0,
+  };
 
   ob: ResizeObserver;
   container: HTMLElement;
@@ -115,8 +115,7 @@ export class Scrollbar {
 
   createScrollbar() {
     const scrollbar = document.createElement('div');
-    scrollbar.classList.add(this.bem.b());
-    scrollbar.classList.add(this.isVertical ? this.bem.is('vertical') : this.bem.is('horizontal'), this.bem.is('transparent'));
+    scrollbar.classList.add(this.bem.b(), this.isVertical ? this.bem.is('vertical') : this.bem.is('horizontal'), this.bem.is('transparent'));
     Object.assign(scrollbar.style, {
       display: 'none',
     });

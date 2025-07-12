@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import process from 'node:process';
 import { WebSocketServer } from 'ws';
 import { buildStyle, buildTS } from './bundle';
 import { startServer } from './server';

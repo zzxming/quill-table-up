@@ -8,7 +8,6 @@
   "prettier.enable": false,
   "eslint.enable": true,
   "eslint.rules.customizations": [
-    { "rule": "format/*", "severity": "off" },
     { "rule": "*-indent", "severity": "off" },
     { "rule": "*-spacing", "severity": "off" },
     { "rule": "*-spaces", "severity": "off" },
