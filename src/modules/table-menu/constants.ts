@@ -176,7 +176,7 @@ export const tableMenuTools: Record<string, Tool> = {
     name: 'InsertCaption',
     icon: TableHead,
     tip: 'Insert table caption',
-    handle(tableModule) {
+    handle: (tableModule) => {
       if (!tableModule.table) return;
       const tableMainBlot = Quill.find(tableModule.table) as TableMainFormat;
       if (!tableMainBlot) return;
@@ -185,6 +185,16 @@ export const tableMenuTools: Record<string, Tool> = {
         tableId: tableMainBlot.tableId,
       });
       tableMainBlot.insertBefore(tableCaption, tableMainBlot.children.head);
+    },
+  },
+  ConvertCell: {
+    name: 'ConvertCell',
+    icon: TableHead,
+    tip: 'Convert cell',
+    handle: (tableModule, selectedTds) => {
+      for (const td of selectedTds) {
+        td.convertTableCell();
+      }
     },
   },
 };

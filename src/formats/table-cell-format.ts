@@ -233,6 +233,14 @@ export class TableCellFormat extends ContainerFormat {
     return this.children.head as TableCellInnerFormat;
   }
 
+  convertTableCell() {
+    const value = this.statics.formats(this.domNode);
+    this.replaceWith(blotName.tableCell, {
+      ...value,
+      tag: value.tag === 'td' ? 'th' : 'td',
+    });
+  }
+
   checkMerge(): boolean {
     const { colId, rowId, colspan, rowspan } = this;
     const next = this.next as TableCellFormat;
