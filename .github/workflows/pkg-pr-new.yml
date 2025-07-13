@@ -1,0 +1,31 @@
+name: Continuous Releases
+on:
+  push:
+    branches:
+      - master
+      - v**
+  pull_request:
+    types:
+      - opened
+      - synchronize
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+          cache: pnpm
+
+      - name: Install
+        run: pnpm i
+
+
+      - name: Build
+        run: pnpm build
+
+      - name: Publish packages
+        run: pnpx pkg-pr-new publish --compact --pnpm
