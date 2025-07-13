@@ -15,14 +15,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       
-      - uses: actions/setup-node@v4
+      - name: Set node
+        uses: actions/setup-node@v4
         with:
+          registry-url: https://registry.npmjs.org/
           node-version: lts/*
-          cache: pnpm
 
       - name: Install
         run: pnpm i
-
 
       - name: Build
         run: pnpm build
