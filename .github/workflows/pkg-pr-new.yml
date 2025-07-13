@@ -1,18 +1,16 @@
-name: Test E2E
-
+name: Continuous Releases
 on:
   push:
     branches:
       - master
-
+      - v**
   pull_request:
-    branches:
-      - master
-
-  merge_group: {}
+    types:
+      - opened
+      - synchronize
 
 jobs:
-  test-e2e:
+  publish:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -29,11 +27,8 @@ jobs:
       - name: Install
         run: pnpm i
 
-      - name: Install Playwright Browsers
-        run: npx playwright install --with-deps
-
       - name: Build
         run: pnpm build
 
-      - name: Run Playwright tests
-        run: pnpm test:e2e
+      - name: Publish packages
+        run: pnpx pkg-pr-new publish --compact --pnpm
