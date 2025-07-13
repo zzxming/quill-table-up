@@ -88,6 +88,7 @@ export interface TableCellValue {
   colspan: number;
   style?: string;
   emptyRow?: string[];
+  tag?: 'td' | 'th';
 }
 export interface TableRowValue {
   tableId: string;

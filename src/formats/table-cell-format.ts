@@ -1,5 +1,5 @@
 import type { TableCellValue } from '../utils';
-import { blotName, findParentBlot, toCamelCase } from '../utils';
+import { blotName, ensureArray, findParentBlot, toCamelCase } from '../utils';
 import { ContainerFormat } from './container-format';
 import { TableCellInnerFormat } from './table-cell-inner-format';
 import { TableRowFormat } from './table-row-format';
@@ -34,8 +34,10 @@ export class TableCellFormat extends ContainerFormat {
       colspan,
       style,
       emptyRow,
+      tag = 'td',
     } = value;
-    const node = super.create() as HTMLElement;
+    const node = document.createElement(tag);
+    node.classList.add(...ensureArray(this.className));
     node.dataset.tableId = tableId;
     node.dataset.rowId = rowId;
     node.dataset.colId = colId;
@@ -59,6 +61,7 @@ export class TableCellFormat extends ContainerFormat {
       colId,
       rowspan: getValidCellspan(rowspan),
       colspan: getValidCellspan(colspan),
+      tag: domNode.tagName.toLowerCase(),
     };
 
     const inlineStyles: Record<string, any> = {};
