@@ -980,6 +980,102 @@ describe('clipboard cell structure', () => {
       quill.getContents(),
     );
   });
+
+  it('clipboard convert th correctly', async () => {
+    const quill = createQuillWithTableModule(`<p><br></p>`);
+    quill.setContents(
+      quill.clipboard.convert({
+        html: `
+          <table class="ws-table-all" id="customers">
+            <tbody>
+              <tr>
+                <th>Company</th>
+                <th>Contact</th>
+                <th>Country</th>
+              </tr>
+              <tr>
+                <td>Alfreds Futterkiste</td>
+                <td>Maria Anders</td>
+                <td>Germany</td>
+              </tr>
+              <tr>
+                <td>Centro comercial Moctezuma</td>
+                <td>Francisco Chang</td>
+                <td>Mexico</td>
+              </tr>
+            </tbody>
+          </table>
+        `,
+      }),
+    );
+    await vi.runAllTimersAsync();
+
+    expect(quill.root).toEqualHTML(
+      `
+        <p><br></p>
+        <div>
+          <table cellpadding="0" cellspacing="0" style="margin-right: auto; width: 300px;">
+            ${createTaleColHTML(3, { full: false, width: 100 })}
+            <tbody>
+              <tr>
+                <th colspan="1" rowspan="1">
+                  <div data-tag="th">
+                    <p>Company</p>
+                  </div>
+                </th>
+                <th colspan="1" rowspan="1">
+                  <div data-tag="th">
+                    <p>Contact</p>
+                  </div>
+                </th>
+                <th colspan="1" rowspan="1">
+                  <div data-tag="th">
+                    <p>Country</p>
+                  </div>
+                </th>
+              </tr>
+              <tr>
+                <td colspan="1" rowspan="1">
+                  <div data-tag="td">
+                    <p>Alfreds Futterkiste</p>
+                  </div>
+                </td>
+                <td colspan="1" rowspan="1">
+                  <div data-tag="td">
+                    <p>Maria Anders</p>
+                  </div>
+                </td>
+                <td colspan="1" rowspan="1">
+                  <div data-tag="td">
+                    <p>Germany</p>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td colspan="1" rowspan="1">
+                  <div data-tag="td">
+                    <p>Centro comercial Moctezuma</p>
+                  </div>
+                </td>
+                <td colspan="1" rowspan="1">
+                  <div data-tag="td">
+                    <p>Francisco Chang</p>
+                  </div>
+                </td>
+                <td colspan="1" rowspan="1">
+                  <div data-tag="td">
+                    <p>Mexico</p>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p><br></p>
+      `,
+      { ignoreAttrs: ['class', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
+    );
+  });
 });
 
 describe('clipboard content format', () => {

@@ -736,6 +736,84 @@ describe('table undo', () => {
       { ignoreAttrs: ['data-tag', 'class', 'style', 'data-full', 'data-table-id', 'data-row-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
     );
   });
+
+  it('undo and redo cell convert', async () => {
+    const quill = await createTable(3, 3, { full: false }, {}, { isEmpty: false });
+    const originDelta = [
+      { insert: '\n' },
+      { insert: { 'table-up-col': { tableId: '1', colId: '1', full: false, width: 100 } } },
+      { insert: { 'table-up-col': { tableId: '1', colId: '2', full: false, width: 100 } } },
+      { insert: { 'table-up-col': { tableId: '1', colId: '3', full: false, width: 100 } } },
+      { insert: '1' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '1', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '2' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '2', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '3' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '3', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '4' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '1', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '5' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '2', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '6' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '3', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '7' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '3', colId: '1', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '8' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '3', colId: '2', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '9' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '3', colId: '3', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '\n' },
+    ];
+    const thDelta = [
+      { insert: '\n' },
+      { insert: { 'table-up-col': { tableId: '1', colId: '1', full: false, width: 100 } } },
+      { insert: { 'table-up-col': { tableId: '1', colId: '2', full: false, width: 100 } } },
+      { insert: { 'table-up-col': { tableId: '1', colId: '3', full: false, width: 100 } } },
+      { insert: '1' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '1', rowspan: 1, colspan: 1, tag: 'th' } }, insert: '\n' },
+      { insert: '2' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '2', rowspan: 1, colspan: 1, tag: 'th' } }, insert: '\n' },
+      { insert: '3' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '3', rowspan: 1, colspan: 1, tag: 'th' } }, insert: '\n' },
+      { insert: '4' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '1', rowspan: 1, colspan: 1, tag: 'th' } }, insert: '\n' },
+      { insert: '5' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '2', rowspan: 1, colspan: 1, tag: 'th' } }, insert: '\n' },
+      { insert: '6' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '3', rowspan: 1, colspan: 1, tag: 'th' } }, insert: '\n' },
+      { insert: '7' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '3', colId: '1', rowspan: 1, colspan: 1, tag: 'th' } }, insert: '\n' },
+      { insert: '8' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '3', colId: '2', rowspan: 1, colspan: 1, tag: 'th' } }, insert: '\n' },
+      { insert: '9' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '3', colId: '3', rowspan: 1, colspan: 1, tag: 'th' } }, insert: '\n' },
+      { insert: '\n' },
+    ];
+    quill.setContents(originDelta);
+    const tds = quill.scroll.descendants(TableCellInnerFormat, 0);
+    for (const td of tds) {
+      td.convertTableCell();
+    }
+    await vi.runAllTimersAsync();
+    expectDelta(
+      new Delta(thDelta),
+      quill.getContents(),
+    );
+
+    quill.history.undo();
+    await vi.runAllTimersAsync();
+    expectDelta(
+      new Delta(originDelta),
+      quill.getContents(),
+    );
+
+    quill.history.redo();
+    await vi.runAllTimersAsync();
+    expectDelta(
+      new Delta(thDelta),
+      quill.getContents(),
+    );
+  });
 });
 
 describe('undo cell attribute', () => {

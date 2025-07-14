@@ -110,3 +110,50 @@ extendTest('remove list in cell should work correctly', async ({ page, editorPag
 
   expect(await page.locator('#editor1 .ql-editor .ql-table li').count()).toBe(2);
 });
+
+extendTest.describe('convert table cell', () => {
+  extendTest('convert td to th', async ({ page, editorPage }) => {
+    editorPage.index = 0;
+    await createTableBySelect(page, 'container1', 3, 3);
+    await page.locator('#editor1 .ql-editor .ql-table td').nth(0).click();
+    await page.locator('#editor1 .ql-editor .ql-table td').nth(0).click({ button: 'right' });
+    await page.locator('.table-up-menu.is-contextmenu .table-up-menu__item').filter({ hasText: 'Convert cell' }).first().click();
+    expect(await page.locator('#editor1 .ql-editor .ql-table td').count()).toBe(8);
+    expect(await page.locator('#editor1 .ql-editor .ql-table th').count()).toBe(1);
+  });
+
+  extendTest('convert th to td', async ({ page, editorPage }) => {
+    editorPage.index = 0;
+    await editorPage.setContents([
+      { insert: '\n' },
+      { insert: { 'table-up-col': { tableId: '1', colId: '1', full: false, width: 100 } } },
+      { insert: { 'table-up-col': { tableId: '1', colId: '2', full: false, width: 100 } } },
+      { insert: { 'table-up-col': { tableId: '1', colId: '3', full: false, width: 100 } } },
+      { insert: '1' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '1', rowspan: 1, colspan: 1, tag: 'th' } }, insert: '\n' },
+      { insert: '2' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '2', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '3' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '3', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '4' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '1', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '5' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '2', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '6' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '3', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '7' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '3', colId: '1', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '8' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '3', colId: '2', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '9' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '3', colId: '3', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '\n' },
+    ]);
+    await page.waitForTimeout(1000);
+    await page.locator('#editor1 .ql-editor .ql-table th').nth(0).click();
+    await page.locator('#editor1 .ql-editor .ql-table th').nth(0).click({ button: 'right' });
+    await page.locator('.table-up-menu.is-contextmenu .table-up-menu__item').filter({ hasText: 'Convert cell' }).first().click();
+    expect(await page.locator('#editor1 .ql-editor .ql-table td').count()).toBe(9);
+    expect(await page.locator('#editor1 .ql-editor .ql-table th').count()).toBe(0);
+  });
+});
