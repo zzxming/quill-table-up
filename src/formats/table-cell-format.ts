@@ -85,6 +85,11 @@ export class TableCellFormat extends ContainerFormat {
     return value;
   }
 
+  isChildHeadTableCellInner() {
+    const headChild = this.children.head;
+    return headChild && headChild.statics.blotName === blotName.tableCellInner;
+  }
+
   setFormatValue(name: string, value?: any) {
     if (this.statics.allowAttrs.has(name) || this.statics.allowDataAttrs.has(name)) {
       let attrName = name;
@@ -107,15 +112,14 @@ export class TableCellFormat extends ContainerFormat {
       }
     }
 
-    const headChild = this.children.head;
+    const headChild = this.children.head!;
     if (
-      this.domNode.style.cssText
-      && headChild
-      && headChild.statics.blotName === blotName.tableCellInner
+      this.isChildHeadTableCellInner()
+      && this.domNode.style.cssText
       // only update if data not match. avoid optimize circular updates
       && this.domNode.style.cssText !== (headChild.domNode as HTMLElement).dataset.style
     ) {
-      (headChild!.domNode as HTMLElement).dataset.style = this.domNode.style.cssText;
+      (headChild.domNode as HTMLElement).dataset.style = this.domNode.style.cssText;
     }
   }
 
@@ -235,9 +239,20 @@ export class TableCellFormat extends ContainerFormat {
 
   convertTableCell() {
     const value = this.statics.formats(this.domNode);
+    const tag = value.tag === 'td' ? 'th' : 'td';
+
+    const headChild = this.children.head!;
+    if (
+      this.isChildHeadTableCellInner()
+      // only update if data not match. avoid optimize circular updates
+      && (headChild.domNode as HTMLElement).dataset.tag !== tag
+    ) {
+      (headChild.domNode as HTMLElement).dataset.tag = tag;
+    }
+
     this.replaceWith(blotName.tableCell, {
       ...value,
-      tag: value.tag === 'td' ? 'th' : 'td',
+      tag,
     });
   }
 

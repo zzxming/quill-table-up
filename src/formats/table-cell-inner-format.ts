@@ -110,6 +110,10 @@ export class TableCellInnerFormat extends ContainerFormat {
       }
     }
 
+    this.clearCache();
+  }
+
+  clearCache() {
     const blocks = this.descendants(Block, 0);
     for (const child of blocks) {
       (child as TypeBlock).cache = {};
@@ -193,6 +197,7 @@ export class TableCellInnerFormat extends ContainerFormat {
   convertTableCell() {
     if (this.parent.statics.blotName !== blotName.tableCell) return;
     this.parent.convertTableCell();
+    this.clearCache();
   }
 
   formatAt(index: number, length: number, name: string, value: any) {
