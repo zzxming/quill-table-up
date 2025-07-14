@@ -215,7 +215,7 @@ export function createTableBodyHTML(row: number, col: number, options?: Partial<
           <tr ${datasetTableId(tableId)} data-row-id="${i + 1}">
             ${
               new Array(col).fill(0).map((_, j) => `<td rowspan="1" colspan="1" ${datasetTableId(tableId)} data-row-id="${i + 1}" data-col-id="${j + 1}">
-                <div ${datasetTableId(tableId)} data-rowspan="1" data-colspan="1" data-row-id="${i + 1}" data-col-id="${j + 1}"${contenteditableString(editable)}>
+                <div data-tag="td" ${datasetTableId(tableId)} data-rowspan="1" data-colspan="1" data-row-id="${i + 1}" data-col-id="${j + 1}"${contenteditableString(editable)}>
                   <p>
                     ${isEmpty ? '<br>' : i * row + j + 1}
                   </p>

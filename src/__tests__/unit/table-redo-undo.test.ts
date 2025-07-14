@@ -160,7 +160,7 @@ describe('table undo', () => {
         </div>
         <p><br></p>
       `,
-      { ignoreAttrs: ['class', 'style', 'data-table-id', 'contenteditable'] },
+      { ignoreAttrs: ['data-tag', 'class', 'style', 'data-table-id', 'contenteditable'] },
     );
   });
 
@@ -234,7 +234,7 @@ describe('table undo', () => {
         </div>
         <p><br></p>
       `,
-      { ignoreAttrs: ['class', 'style', 'data-table-id', 'contenteditable'] },
+      { ignoreAttrs: ['data-tag', 'class', 'style', 'data-table-id', 'contenteditable'] },
     );
   });
 
@@ -374,7 +374,7 @@ describe('table undo', () => {
         </div>
         <p><br></p>
       `,
-      { ignoreAttrs: ['class', 'style', 'data-table-id', 'contenteditable'] },
+      { ignoreAttrs: ['data-tag', 'class', 'style', 'data-table-id', 'contenteditable'] },
     );
     quill.history.undo();
     await vi.runAllTimersAsync();
@@ -384,7 +384,7 @@ describe('table undo', () => {
         ${createTableHTML(4, 4)}
         <p><br></p>
       `,
-      { ignoreAttrs: ['class', 'style', 'data-table-id', 'contenteditable'] },
+      { ignoreAttrs: ['data-tag', 'class', 'style', 'data-table-id', 'contenteditable'] },
     );
   });
 
@@ -467,7 +467,7 @@ describe('table undo', () => {
         </div>
         <p><br></p>
       `,
-      { ignoreAttrs: ['class', 'style', 'data-table-id', 'contenteditable'] },
+      { ignoreAttrs: ['data-tag', 'class', 'style', 'data-table-id', 'contenteditable'] },
     );
     quill.history.undo();
     await vi.runAllTimersAsync();
@@ -477,7 +477,7 @@ describe('table undo', () => {
         ${createTableHTML(5, 5)}
         <p><br></p>
       `,
-      { ignoreAttrs: ['class', 'style', 'data-table-id', 'contenteditable'] },
+      { ignoreAttrs: ['data-tag', 'class', 'style', 'data-table-id', 'contenteditable'] },
     );
   });
 
@@ -564,7 +564,7 @@ describe('table undo', () => {
         </div>
         <p><br></p>
       `,
-      { ignoreAttrs: ['class', 'style', 'data-table-id', 'contenteditable'] },
+      { ignoreAttrs: ['data-tag', 'class', 'style', 'data-table-id', 'contenteditable'] },
     );
     quill.history.undo();
     await vi.runAllTimersAsync();
@@ -574,7 +574,7 @@ describe('table undo', () => {
         ${createTableHTML(5, 5)}
         <p><br></p>
       `,
-      { ignoreAttrs: ['class', 'style', 'data-table-id', 'contenteditable'] },
+      { ignoreAttrs: ['data-tag', 'class', 'style', 'data-table-id', 'contenteditable'] },
     );
   });
 
@@ -654,7 +654,7 @@ describe('table undo', () => {
         </div>
         <p><br></p>
       `,
-      { ignoreAttrs: ['class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'contenteditable'] },
+      { ignoreAttrs: ['data-tag', 'class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'contenteditable'] },
     );
     quill.history.undo();
     await vi.runAllTimersAsync();
@@ -664,7 +664,7 @@ describe('table undo', () => {
         ${createTableHTML(5, 5)}
         <p><br></p>
       `,
-      { ignoreAttrs: ['class', 'style', 'data-table-id', 'contenteditable'] },
+      { ignoreAttrs: ['data-tag', 'class', 'style', 'data-table-id', 'contenteditable'] },
     );
   });
 
@@ -717,7 +717,7 @@ describe('table undo', () => {
     `;
     expect(quill.root).toEqualHTML(
       afterColHtml,
-      { ignoreAttrs: ['class', 'style', 'data-full', 'data-table-id', 'data-row-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
+      { ignoreAttrs: ['data-tag', 'class', 'style', 'data-full', 'data-table-id', 'data-row-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
     );
     quill.history.undo();
     await vi.runAllTimersAsync();
@@ -733,7 +733,7 @@ describe('table undo', () => {
     await vi.runAllTimersAsync();
     expect(quill.root).toEqualHTML(
       afterColHtml,
-      { ignoreAttrs: ['class', 'style', 'data-full', 'data-table-id', 'data-row-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
+      { ignoreAttrs: ['data-tag', 'class', 'style', 'data-full', 'data-table-id', 'data-row-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
     );
   });
 });
@@ -799,7 +799,7 @@ describe('undo cell attribute', () => {
         </div>
         <p><br></p>
       `,
-      { ignoreAttrs: ['class', 'data-table-id', 'contenteditable'] },
+      { ignoreAttrs: ['data-tag', 'class', 'data-table-id', 'contenteditable'] },
     );
     quill.history.undo();
     await vi.runAllTimersAsync();
@@ -809,7 +809,7 @@ describe('undo cell attribute', () => {
         ${createTableHTML(2, 2)}
         <p><br></p>
       `,
-      { ignoreAttrs: ['class', 'data-table-id', 'contenteditable'] },
+      { ignoreAttrs: ['data-tag', 'class', 'data-table-id', 'contenteditable'] },
     );
   });
 
@@ -953,7 +953,7 @@ describe('undo cell attribute', () => {
         </div>
         <p><br></p>
       `,
-      { ignoreAttrs: ['class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
+      { ignoreAttrs: ['data-tag', 'class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
     );
 
     quill.history.undo();
@@ -996,7 +996,7 @@ describe('undo cell attribute', () => {
         </div>
         <p><br></p>
       `,
-      { ignoreAttrs: ['class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
+      { ignoreAttrs: ['data-tag', 'class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
     );
 
     quill.history.redo();
@@ -1037,7 +1037,7 @@ describe('undo cell attribute', () => {
         </div>
         <p><br></p>
       `,
-      { ignoreAttrs: ['class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
+      { ignoreAttrs: ['data-tag', 'class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
     );
   });
 
@@ -1101,7 +1101,7 @@ describe('undo cell attribute', () => {
         </div>
         <p><br></p>
       `,
-      { ignoreAttrs: ['class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
+      { ignoreAttrs: ['data-tag', 'class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
     );
 
     quill.history.undo();
@@ -1144,7 +1144,7 @@ describe('undo cell attribute', () => {
         </div>
         <p><br></p>
       `,
-      { ignoreAttrs: ['class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
+      { ignoreAttrs: ['data-tag', 'class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
     );
 
     quill.history.redo();
@@ -1185,7 +1185,7 @@ describe('undo cell attribute', () => {
         </div>
         <p><br></p>
       `,
-      { ignoreAttrs: ['class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
+      { ignoreAttrs: ['data-tag', 'class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
     );
   });
 

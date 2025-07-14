@@ -46,7 +46,7 @@ describe('insert embed blot', () => {
         </div>
         <p><br></p>
       `,
-      { ignoreAttrs: ['class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
+      { ignoreAttrs: ['data-tag', 'class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
     );
   });
 });
@@ -85,7 +85,7 @@ describe('insert block blot', () => {
         </div>
         <p><br></p>
       `,
-      { ignoreAttrs: ['class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
+      { ignoreAttrs: ['data-tag', 'class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
     );
   });
 
@@ -120,7 +120,7 @@ describe('insert block blot', () => {
         </div>
         <p><br></p>
       `,
-      { ignoreAttrs: ['class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
+      { ignoreAttrs: ['data-tag', 'class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
     );
   });
 
@@ -155,7 +155,7 @@ describe('insert block blot', () => {
         </div>
         <p><br></p>
       `,
-      { ignoreAttrs: ['class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
+      { ignoreAttrs: ['data-tag', 'class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
     );
   });
 
@@ -195,7 +195,7 @@ describe('insert block blot', () => {
         </div>
         <p><br></p>
       `,
-      { ignoreAttrs: ['class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
+      { ignoreAttrs: ['data-tag', 'class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
     );
   });
 });
@@ -232,7 +232,7 @@ describe('insert block embed blot', () => {
         </div>
         <p><br></p>
       `,
-      { ignoreAttrs: ['class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
+      { ignoreAttrs: ['data-tag', 'class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
     );
   });
 
@@ -270,7 +270,7 @@ describe('insert block embed blot', () => {
         </div>
         <p><br></p>
       `,
-      { ignoreAttrs: ['class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
+      { ignoreAttrs: ['data-tag', 'class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
     );
   });
 });
@@ -327,24 +327,27 @@ describe('set contents', () => {
     tableModule.setCellAttrs([tds[4], tds[5]], 'height', '50px', true);
     await vi.runAllTimersAsync();
     const delta = quill.getContents();
-    expect(delta.ops).toEqual([
-      { insert: '\n' },
-      { insert: { 'table-up-col': { tableId: '1', colId: '1', full: true, width: 50 } } },
-      { insert: { 'table-up-col': { tableId: '1', colId: '2', full: true, width: 50 } } },
-      { insert: '1' },
-      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '1', rowspan: 1, colspan: 1, style: 'background-color: red; border-bottom-color: red;' } }, insert: '\n' },
-      { insert: '2' },
-      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '2', rowspan: 1, colspan: 1, style: 'background-color: red; border-bottom-color: red;' } }, insert: '\n' },
-      { insert: '3' },
-      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '1', rowspan: 1, colspan: 1, style: 'border-color: red; border-right-color: red;' } }, insert: '\n' },
-      { insert: '4' },
-      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '2', rowspan: 1, colspan: 1, style: 'border-color: red;' } }, insert: '\n' },
-      { insert: '5' },
-      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '3', colId: '1', rowspan: 1, colspan: 1, style: 'height: 50px;' } }, insert: '\n' },
-      { insert: '6' },
-      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '3', colId: '2', rowspan: 1, colspan: 1, style: 'height: 50px;' } }, insert: '\n' },
-      { insert: '\n' },
-    ]);
+    expectDelta(
+      new Delta([
+        { insert: '\n' },
+        { insert: { 'table-up-col': { tableId: '1', colId: '1', full: true, width: 50 } } },
+        { insert: { 'table-up-col': { tableId: '1', colId: '2', full: true, width: 50 } } },
+        { insert: '1' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '1', rowspan: 1, colspan: 1, style: 'background-color: red; border-bottom-color: red;' } }, insert: '\n' },
+        { insert: '2' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '2', rowspan: 1, colspan: 1, style: 'background-color: red; border-bottom-color: red;' } }, insert: '\n' },
+        { insert: '3' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '1', rowspan: 1, colspan: 1, style: 'border-color: red; border-right-color: red;' } }, insert: '\n' },
+        { insert: '4' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '2', rowspan: 1, colspan: 1, style: 'border-color: red;' } }, insert: '\n' },
+        { insert: '5' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '3', colId: '1', rowspan: 1, colspan: 1, style: 'height: 50px;' } }, insert: '\n' },
+        { insert: '6' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '3', colId: '2', rowspan: 1, colspan: 1, style: 'height: 50px;' } }, insert: '\n' },
+        { insert: '\n' },
+      ]),
+      quill.getContents(),
+    );
     quill.setContents([{ insert: '\n' }]);
     quill.setContents(delta);
     await vi.runAllTimersAsync();
@@ -383,7 +386,7 @@ describe('set contents', () => {
         </div>
         <p><br></p>
       `,
-      { ignoreAttrs: ['class', 'style', 'rowspan', 'colspan', 'data-full', 'data-style', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
+      { ignoreAttrs: ['data-tag', 'class', 'style', 'rowspan', 'colspan', 'data-full', 'data-style', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
     );
   });
 });
@@ -428,7 +431,7 @@ describe('insert row into table', () => {
         </div>
         <p><br></p>
       `,
-      { ignoreAttrs: ['class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
+      { ignoreAttrs: ['data-tag', 'class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
     );
   });
 
@@ -491,7 +494,7 @@ describe('insert row into table', () => {
         </div>
         <p><br></p>
       `,
-      { ignoreAttrs: ['class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
+      { ignoreAttrs: ['data-tag', 'class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
     );
   });
 
@@ -525,7 +528,7 @@ describe('insert row into table', () => {
         </div>
         <p><br></p>
       `,
-      { ignoreAttrs: ['class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
+      { ignoreAttrs: ['data-tag', 'class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
     );
   });
 
@@ -576,7 +579,7 @@ describe('insert row into table', () => {
         </div>
         <p><br></p>
       `,
-      { ignoreAttrs: ['class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
+      { ignoreAttrs: ['data-tag', 'class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
     );
   });
 });
@@ -611,7 +614,7 @@ describe('set cell attribute', () => {
         </div>
         <p><br></p>
       `,
-      { ignoreAttrs: ['class', 'data-table-id', 'contenteditable'] },
+      { ignoreAttrs: ['data-tag', 'class', 'data-table-id', 'contenteditable'] },
     );
   });
 
@@ -657,7 +660,7 @@ describe('set cell attribute', () => {
         </div>
         <p><br></p>
       `,
-      { ignoreAttrs: ['class', 'data-table-id', 'contenteditable'] },
+      { ignoreAttrs: ['data-tag', 'class', 'data-table-id', 'contenteditable'] },
     );
     expectDelta(
       new Delta([
