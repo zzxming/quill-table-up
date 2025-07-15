@@ -69,13 +69,16 @@
         table-layout: fixed;
       }
       tr + tr {
-        td {
+        td,
+        th {
           border-top: none;
         }
       }
-      td {
+      td,
+      th {
         border: 1px solid #a1a1aa;
-        & + td {
+        & + td,
+        & + th {
           border-left: none;
         }
       }
