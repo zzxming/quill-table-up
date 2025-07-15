@@ -14,7 +14,7 @@ Enhancement of quill table module
 - [x] line break in cells
 - [x] redo and undo
 - [x] support whole table align left/center/right
-- [x] `<caption>` support
+- [x] `<caption>` `<th>` support
 
 ## Usage
 
@@ -121,6 +121,7 @@ const defaultTexts = {
   BorderColor: 'Set border color',
   SwitchWidth: 'Switch table width',
   InsertCaption: 'Insert table caption',
+  ToggleTdBetweenTh: 'Toggle td between th',
 };
 ```
 
@@ -263,6 +264,12 @@ const tableMenuTools: Record<string, Tool> = {
     icon: TableHead,
     tip: 'Insert table caption',
     handle: (tableModule) => {},
+  },
+  ToggleTdBetweenTh: {
+    name: 'ToggleTdBetweenTh',
+    icon: ConvertCell,
+    tip: 'Toggle td between th',
+    handle: (tableModule, selectedTds) => {},
   },
 };
 const defaultTools = [

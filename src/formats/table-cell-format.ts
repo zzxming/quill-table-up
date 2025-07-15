@@ -1,5 +1,5 @@
 import type { TableCellValue } from '../utils';
-import { blotName, findParentBlot, toCamelCase } from '../utils';
+import { blotName, ensureArray, findParentBlot, toCamelCase } from '../utils';
 import { ContainerFormat } from './container-format';
 import { TableCellInnerFormat } from './table-cell-inner-format';
 import { TableRowFormat } from './table-row-format';
@@ -34,8 +34,10 @@ export class TableCellFormat extends ContainerFormat {
       colspan,
       style,
       emptyRow,
+      tag = 'td',
     } = value;
-    const node = super.create() as HTMLElement;
+    const node = document.createElement(tag);
+    node.classList.add(...ensureArray(this.className));
     node.dataset.tableId = tableId;
     node.dataset.rowId = rowId;
     node.dataset.colId = colId;
@@ -59,6 +61,7 @@ export class TableCellFormat extends ContainerFormat {
       colId,
       rowspan: getValidCellspan(rowspan),
       colspan: getValidCellspan(colspan),
+      tag: domNode.tagName.toLowerCase(),
     };
 
     const inlineStyles: Record<string, any> = {};
@@ -80,6 +83,11 @@ export class TableCellFormat extends ContainerFormat {
     catch {}
 
     return value;
+  }
+
+  isChildHeadTableCellInner() {
+    const headChild = this.children.head;
+    return headChild && headChild.statics.blotName === blotName.tableCellInner;
   }
 
   setFormatValue(name: string, value?: any) {
@@ -104,15 +112,14 @@ export class TableCellFormat extends ContainerFormat {
       }
     }
 
-    const headChild = this.children.head;
+    const headChild = this.children.head!;
     if (
-      this.domNode.style.cssText
-      && headChild
-      && headChild.statics.blotName === blotName.tableCellInner
+      this.isChildHeadTableCellInner()
+      && this.domNode.style.cssText
       // only update if data not match. avoid optimize circular updates
       && this.domNode.style.cssText !== (headChild.domNode as HTMLElement).dataset.style
     ) {
-      (headChild!.domNode as HTMLElement).dataset.style = this.domNode.style.cssText;
+      (headChild.domNode as HTMLElement).dataset.style = this.domNode.style.cssText;
     }
   }
 
@@ -228,6 +235,25 @@ export class TableCellFormat extends ContainerFormat {
 
   getCellInner() {
     return this.children.head as TableCellInnerFormat;
+  }
+
+  convertTableCell() {
+    const value = this.statics.formats(this.domNode);
+    const tag = value.tag === 'td' ? 'th' : 'td';
+
+    const headChild = this.children.head!;
+    if (
+      this.isChildHeadTableCellInner()
+      // only update if data not match. avoid optimize circular updates
+      && (headChild.domNode as HTMLElement).dataset.tag !== tag
+    ) {
+      (headChild.domNode as HTMLElement).dataset.tag = tag;
+    }
+
+    this.replaceWith(blotName.tableCell, {
+      ...value,
+      tag,
+    });
   }
 
   checkMerge(): boolean {

@@ -29,7 +29,7 @@ describe('clipboard cell structure', () => {
         ${createTableHTML(3, 3, { width: 100, full: false }, undefined, { isEmpty: false })}
         <p><br></p>
       `,
-      { ignoreAttrs: ['class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'contenteditable'] },
+      { ignoreAttrs: ['data-tag', 'class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'contenteditable'] },
     );
   });
 
@@ -87,7 +87,7 @@ describe('clipboard cell structure', () => {
         </div>
         <p><br></p>
       `,
-      { ignoreAttrs: ['class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'contenteditable'] },
+      { ignoreAttrs: ['data-tag', 'class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'contenteditable'] },
     );
   });
 
@@ -177,7 +177,7 @@ describe('clipboard cell structure', () => {
         </div>
         <p><br></p>
       `,
-      { ignoreAttrs: ['class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'contenteditable'] },
+      { ignoreAttrs: ['data-tag', 'class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'contenteditable'] },
     );
   });
 
@@ -240,7 +240,7 @@ describe('clipboard cell structure', () => {
         </div>
         <p><br></p>
       `,
-      { ignoreAttrs: ['class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'contenteditable'] },
+      { ignoreAttrs: ['data-tag', 'class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'contenteditable'] },
     );
   });
 
@@ -294,7 +294,7 @@ describe('clipboard cell structure', () => {
         </div>
         <p><br></p>
       `,
-      { ignoreAttrs: ['class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'contenteditable'] },
+      { ignoreAttrs: ['data-tag', 'class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'contenteditable'] },
     );
   });
 
@@ -312,7 +312,7 @@ describe('clipboard cell structure', () => {
         ${createTableHTML(3, 3, { width: 100, full: false }, undefined, { isEmpty: false })}
         <p>123</p>
       `,
-      { ignoreAttrs: ['class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'contenteditable'] },
+      { ignoreAttrs: ['data-tag', 'class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'contenteditable'] },
     );
   });
 
@@ -373,7 +373,7 @@ describe('clipboard cell structure', () => {
         </div>
         <p><br></p>
       `,
-      { ignoreAttrs: ['class', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
+      { ignoreAttrs: ['data-tag', 'class', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
     );
   });
 
@@ -448,7 +448,7 @@ describe('clipboard cell structure', () => {
         </div>
         <p><br></p>
       `,
-      { ignoreAttrs: ['class', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
+      { ignoreAttrs: ['data-tag', 'class', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
     );
   });
 
@@ -524,7 +524,7 @@ describe('clipboard cell structure', () => {
         </div>
         <p><br></p>
       `,
-      { ignoreAttrs: ['class', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
+      { ignoreAttrs: ['data-tag', 'class', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
     );
   });
 
@@ -573,7 +573,7 @@ describe('clipboard cell structure', () => {
         </div>
         <p><br></p>
       `,
-      { ignoreAttrs: ['class', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
+      { ignoreAttrs: ['data-tag', 'class', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
     );
   });
 
@@ -587,58 +587,59 @@ describe('clipboard cell structure', () => {
     await vi.runAllTimersAsync();
 
     expect(quill.root).toEqualHTML(
-      `<p><br></p>
-       <div>
+      `
+        <p><br></p>
+        <div>
           <table cellpadding="0" cellspacing="0" style="margin-right: auto; width: 300px;">
             ${createTaleColHTML(3, { full: false, width: 100 })}
             <tbody>
               <tr>
-                <td rowspan="1" colspan="1">
-                  <div>
+                <th rowspan="1" colspan="1">
+                  <div data-tag="th">
                     <p>q</p>
                   </div>
-                </td>
-                <td rowspan="1" colspan="1">
-                  <div>
+                </th>
+                <th rowspan="1" colspan="1">
+                  <div data-tag="th">
                     <p>w</p>
                   </div>
-                </td>
-                <td rowspan="1" colspan="1">
-                  <div>
+                </th>
+                <th rowspan="1" colspan="1">
+                  <div data-tag="th">
                     <p>e</p>
                   </div>
-                </td>
+                </th>
               </tr>
               <tr>
-                <td rowspan="1" colspan="1">
-                  <div>
+                <th rowspan="1" colspan="1">
+                  <div data-tag="th">
                     <p><br></p>
                   </div>
-                </td>
+                </th>
                 <td rowspan="1" colspan="1">
-                  <div>
+                  <div data-tag="td">
                     <p>2</p>
                   </div>
                 </td>
                 <td rowspan="1" colspan="1">
-                  <div>
+                  <div data-tag="td">
                     <p>3</p>
                   </div>
                 </td>
               </tr>
               <tr>
-                <td rowspan="1" colspan="1">
-                  <div>
+                <th rowspan="1" colspan="1">
+                  <div data-tag="th">
                     <p><br></p>
                   </div>
-                </td>
+                </th>
                 <td rowspan="1" colspan="1">
-                  <div>
+                  <div data-tag="td">
                     <p>4</p>
                   </div>
                 </td>
                 <td rowspan="1" colspan="1">
-                  <div>
+                  <div data-tag="td">
                     <p>5</p>
                   </div>
                 </td>
@@ -646,149 +647,8 @@ describe('clipboard cell structure', () => {
             </tbody>
           </table>
         </div>
-        <p><br></p>`,
-      { ignoreAttrs: ['class', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
-    );
-  });
-
-  it('clipboard convert th as td', async () => {
-    const quill = createQuillWithTableModule(`<p><br></p>`);
-    quill.setContents(
-      quill.clipboard.convert({
-        html: `<table class="ws-table-all" id="customers"><tbody><tr><th>Company</th><th>Contact</th><th>Country</th></tr><tr><td>Alfreds Futterkiste</td><td>Maria Anders</td><td>Germany</td></tr><tr><td>Centro comercial Moctezuma</td><td>Francisco Chang</td><td>Mexico</td></tr><tr><td>Ernst Handel</td><td>Roland Mendel</td><td>Austria</td></tr><tr><td>Island Trading</td><td>Helen Bennett</td><td>UK</td></tr><tr><td>Laughing Bacchus Winecellars</td><td>Yoshi Tannamuri</td><td>Canada</td></tr><tr><td>Magazzini Alimentari Riuniti</td><td>Giovanni Rovelli</td><td>Italy</td></tr></tbody></table>`,
-      }),
-    );
-    await vi.runAllTimersAsync();
-
-    expect(quill.root).toEqualHTML(
-      `<p><br></p>
-       <div>
-          <table cellpadding="0" cellspacing="0" style="margin-right: auto; width: 300px;">
-            ${createTaleColHTML(3, { full: false, width: 100 })}
-            <tbody>
-              <tr>
-                <td colspan="1" rowspan="1">
-                  <div>
-                    <p>Company</p>
-                  </div>
-                </td>
-                <td colspan="1" rowspan="1">
-                  <div>
-                    <p>Contact</p>
-                  </div>
-                </td>
-                <td colspan="1" rowspan="1">
-                  <div>
-                    <p>Country</p>
-                  </div>
-                </td>
-              </tr>
-              <tr>
-                <td colspan="1" rowspan="1">
-                  <div>
-                    <p>Alfreds Futterkiste</p>
-                  </div>
-                </td>
-                <td colspan="1" rowspan="1">
-                  <div>
-                    <p>Maria Anders</p>
-                  </div>
-                </td>
-                <td colspan="1" rowspan="1">
-                  <div>
-                    <p>Germany</p>
-                  </div>
-                </td>
-              </tr>
-              <tr>
-                <td colspan="1" rowspan="1">
-                  <div>
-                    <p>Centro comercial Moctezuma</p>
-                  </div>
-                </td>
-                <td colspan="1" rowspan="1">
-                  <div>
-                    <p>Francisco Chang</p>
-                  </div>
-                </td>
-                <td colspan="1" rowspan="1">
-                  <div>
-                    <p>Mexico</p>
-                  </div>
-                </td>
-              </tr>
-              <tr>
-                <td colspan="1" rowspan="1">
-                  <div>
-                    <p>Ernst Handel</p>
-                  </div>
-                </td>
-                <td colspan="1" rowspan="1">
-                  <div>
-                    <p>Roland Mendel</p>
-                  </div>
-                </td>
-                <td colspan="1" rowspan="1">
-                  <div>
-                    <p>Austria</p>
-                  </div>
-                </td>
-              </tr>
-              <tr>
-                <td colspan="1" rowspan="1">
-                  <div>
-                    <p>Island Trading</p>
-                  </div>
-                </td>
-                <td colspan="1" rowspan="1">
-                  <div>
-                    <p>Helen Bennett</p>
-                  </div>
-                </td>
-                <td colspan="1" rowspan="1">
-                  <div>
-                    <p>UK</p>
-                  </div>
-                </td>
-              </tr>
-              <tr>
-                <td colspan="1" rowspan="1">
-                  <div>
-                    <p>Laughing Bacchus Winecellars</p>
-                  </div>
-                </td>
-                <td colspan="1" rowspan="1">
-                  <div>
-                    <p>Yoshi Tannamuri</p>
-                  </div>
-                </td>
-                <td colspan="1" rowspan="1">
-                  <div>
-                    <p>Canada</p>
-                  </div>
-                </td>
-              </tr>
-              <tr>
-                <td colspan="1" rowspan="1">
-                  <div>
-                    <p>Magazzini Alimentari Riuniti</p>
-                  </div>
-                </td>
-                <td colspan="1" rowspan="1">
-                  <div>
-                    <p>Giovanni Rovelli</p>
-                  </div>
-                </td>
-                <td colspan="1" rowspan="1">
-                  <div>
-                    <p>Italy</p>
-                  </div>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-        <p><br></p>`,
+        <p><br></p>
+      `,
       { ignoreAttrs: ['class', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
     );
   });
@@ -827,7 +687,7 @@ describe('clipboard cell structure', () => {
         </div>
         <p><br></p>
       `,
-      { ignoreAttrs: ['class', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
+      { ignoreAttrs: ['data-tag', 'class', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
     );
     expectDelta(
       new Delta([
@@ -878,7 +738,7 @@ describe('clipboard cell structure', () => {
         </div>
         <p><br></p>
       `,
-      { ignoreAttrs: ['class', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
+      { ignoreAttrs: ['data-tag', 'class', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
     );
   });
 
@@ -903,7 +763,7 @@ describe('clipboard cell structure', () => {
         </div>
         <p><br></p>
       `,
-      { ignoreAttrs: ['class', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
+      { ignoreAttrs: ['data-tag', 'class', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
     );
     expectDelta(
       new Delta([
@@ -994,7 +854,7 @@ describe('clipboard cell structure', () => {
         </div>
         <p><br></p>
       `,
-      { ignoreAttrs: ['class', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'data-style', 'style', 'contenteditable'] },
+      { ignoreAttrs: ['data-tag', 'class', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'data-style', 'style', 'contenteditable'] },
     );
     expectDelta(
       new Delta([
@@ -1086,7 +946,7 @@ describe('clipboard cell structure', () => {
         <p><br></p>
       `,
       {
-        ignoreAttrs: ['class', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'data-style', 'style', 'contenteditable'],
+        ignoreAttrs: ['data-tag', 'class', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'data-style', 'style', 'contenteditable'],
         replaceAttrs: {
           'data-empty-row': function (value: string) {
             try {
@@ -1118,6 +978,102 @@ describe('clipboard cell structure', () => {
         { insert: '\n' },
       ]),
       quill.getContents(),
+    );
+  });
+
+  it('clipboard convert th correctly', async () => {
+    const quill = createQuillWithTableModule(`<p><br></p>`);
+    quill.setContents(
+      quill.clipboard.convert({
+        html: `
+          <table class="ws-table-all" id="customers">
+            <tbody>
+              <tr>
+                <th>Company</th>
+                <th>Contact</th>
+                <th>Country</th>
+              </tr>
+              <tr>
+                <td>Alfreds Futterkiste</td>
+                <td>Maria Anders</td>
+                <td>Germany</td>
+              </tr>
+              <tr>
+                <td>Centro comercial Moctezuma</td>
+                <td>Francisco Chang</td>
+                <td>Mexico</td>
+              </tr>
+            </tbody>
+          </table>
+        `,
+      }),
+    );
+    await vi.runAllTimersAsync();
+
+    expect(quill.root).toEqualHTML(
+      `
+        <p><br></p>
+        <div>
+          <table cellpadding="0" cellspacing="0" style="margin-right: auto; width: 300px;">
+            ${createTaleColHTML(3, { full: false, width: 100 })}
+            <tbody>
+              <tr>
+                <th colspan="1" rowspan="1">
+                  <div data-tag="th">
+                    <p>Company</p>
+                  </div>
+                </th>
+                <th colspan="1" rowspan="1">
+                  <div data-tag="th">
+                    <p>Contact</p>
+                  </div>
+                </th>
+                <th colspan="1" rowspan="1">
+                  <div data-tag="th">
+                    <p>Country</p>
+                  </div>
+                </th>
+              </tr>
+              <tr>
+                <td colspan="1" rowspan="1">
+                  <div data-tag="td">
+                    <p>Alfreds Futterkiste</p>
+                  </div>
+                </td>
+                <td colspan="1" rowspan="1">
+                  <div data-tag="td">
+                    <p>Maria Anders</p>
+                  </div>
+                </td>
+                <td colspan="1" rowspan="1">
+                  <div data-tag="td">
+                    <p>Germany</p>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td colspan="1" rowspan="1">
+                  <div data-tag="td">
+                    <p>Centro comercial Moctezuma</p>
+                  </div>
+                </td>
+                <td colspan="1" rowspan="1">
+                  <div data-tag="td">
+                    <p>Francisco Chang</p>
+                  </div>
+                </td>
+                <td colspan="1" rowspan="1">
+                  <div data-tag="td">
+                    <p>Mexico</p>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p><br></p>
+      `,
+      { ignoreAttrs: ['class', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
     );
   });
 });
@@ -1373,7 +1329,7 @@ describe('clipboard content format', () => {
         </div>
         <p><br></p>
       `,
-      { ignoreAttrs: ['class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'contenteditable'] },
+      { ignoreAttrs: ['data-tag', 'class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'contenteditable'] },
     );
   });
 
@@ -1452,7 +1408,7 @@ describe('clipboard content format', () => {
         <p><br></p>
       `,
       {
-        ignoreAttrs: ['class', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'],
+        ignoreAttrs: ['data-tag', 'class', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'],
       },
     );
   });
@@ -1549,7 +1505,7 @@ describe('clipboard content format', () => {
         </div>
         <p><br></p>
       `,
-      { ignoreAttrs: ['class', 'colspan', 'rowspan', 'data-colspan', 'data-rowspan', 'data-table-id', 'data-row-id', 'data-col-id', 'contenteditable'] },
+      { ignoreAttrs: ['data-tag', 'class', 'colspan', 'rowspan', 'data-colspan', 'data-rowspan', 'data-table-id', 'data-row-id', 'data-col-id', 'contenteditable'] },
     );
     expectDelta(
       new Delta([

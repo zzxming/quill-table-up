@@ -40,6 +40,7 @@ export class TableCellInnerFormat extends ContainerFormat {
       colspan,
       style,
       emptyRow,
+      tag = 'td',
     } = value;
     const node = super.create() as HTMLElement;
     node.dataset.tableId = tableId;
@@ -47,6 +48,7 @@ export class TableCellInnerFormat extends ContainerFormat {
     node.dataset.colId = colId;
     node.dataset.rowspan = String(getValidCellspan(rowspan));
     node.dataset.colspan = String(getValidCellspan(colspan));
+    node.dataset.tag = tag;
     style && (node.dataset.style = style);
     try {
       emptyRow && (node.dataset.emptyRow = JSON.stringify(emptyRow));
@@ -56,13 +58,23 @@ export class TableCellInnerFormat extends ContainerFormat {
   }
 
   static formats(domNode: HTMLElement) {
-    const { tableId, rowId, colId, rowspan, colspan, style, emptyRow } = domNode.dataset;
+    const {
+      tableId,
+      rowId,
+      colId,
+      rowspan,
+      colspan,
+      style,
+      emptyRow,
+      tag = 'td',
+    } = domNode.dataset;
     const value: Record<string, any> = {
       tableId: String(tableId),
       rowId: String(rowId),
       colId: String(colId),
       rowspan: Number(getValidCellspan(rowspan)),
       colspan: Number(getValidCellspan(colspan)),
+      tag,
     };
     style && (value.style = style);
     try {
@@ -98,6 +110,10 @@ export class TableCellInnerFormat extends ContainerFormat {
       }
     }
 
+    this.clearCache();
+  }
+
+  clearCache() {
     const blocks = this.descendants(Block, 0);
     for (const child of blocks) {
       (child as TypeBlock).cache = {};
@@ -176,6 +192,12 @@ export class TableCellInnerFormat extends ContainerFormat {
     for (const [name, value] of Object.entries(style)) {
       this.setFormatValue(name, value, true);
     }
+  }
+
+  convertTableCell() {
+    if (this.parent.statics.blotName !== blotName.tableCell) return;
+    this.parent.convertTableCell();
+    this.clearCache();
   }
 
   formatAt(index: number, length: number, name: string, value: any) {

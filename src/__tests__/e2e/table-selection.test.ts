@@ -412,7 +412,7 @@ extendTest('should handle delete table cell text when selected tds', async ({ pa
   await expect(page.locator('#editor1 .ql-table .ql-table-cell').nth(7)).toHaveText('');
 });
 
-extendTest('should delete tablewhen selected all cells and press delete', async ({ page, editorPage, browserName }) => {
+extendTest('should delete table when selected all cells and press delete', async ({ page, editorPage, browserName }) => {
   editorPage.index = 0;
   await editorPage.setContents([
     { insert: '\n' },

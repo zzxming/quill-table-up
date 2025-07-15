@@ -283,7 +283,7 @@ describe('test override format', () => {
         ${createTableHTML(2, 2)}
         <p><br></p>
       `,
-      { ignoreAttrs: ['class', 'style', 'data-table-id', 'contenteditable'] },
+      { ignoreAttrs: ['data-tag', 'class', 'style', 'data-table-id', 'contenteditable'] },
     );
     const tableModule = quill.getModule(TableUp.moduleName) as TableUp;
     const tds = quill.scroll.descendants(TableCellInnerFormat, 0);
@@ -391,7 +391,7 @@ describe('test override format', () => {
         </div>
         <p><br></p>
       `,
-      { ignoreAttrs: ['class', 'style', 'data-table-id', 'contenteditable'] },
+      { ignoreAttrs: ['data-tag', 'class', 'style', 'data-table-id', 'contenteditable'] },
     );
   });
 
@@ -544,7 +544,7 @@ describe('test override format', () => {
         </div>
         <p><br></p>
       `,
-      { ignoreAttrs: ['class', 'style', 'data-table-id', 'contenteditable'] },
+      { ignoreAttrs: ['data-tag', 'class', 'style', 'data-table-id', 'contenteditable'] },
     );
   });
 
@@ -705,7 +705,7 @@ describe('test override format', () => {
         </div>
         <p><br></p>
       `,
-      { ignoreAttrs: ['class', 'style', 'data-table-id', 'contenteditable'] },
+      { ignoreAttrs: ['data-tag', 'class', 'style', 'data-table-id', 'contenteditable'] },
     );
   });
 });

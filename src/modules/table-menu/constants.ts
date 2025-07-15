@@ -4,6 +4,7 @@ import Quill from 'quill';
 import AutoFull from '../../svg/auto-full.svg';
 import Background from '../../svg/background.svg';
 import Border from '../../svg/border.svg';
+import ConvertCell from '../../svg/convert-cell.svg';
 import Copy from '../../svg/copy.svg';
 import Cut from '../../svg/cut.svg';
 import InsertBottom from '../../svg/insert-bottom.svg';
@@ -176,7 +177,7 @@ export const tableMenuTools: Record<string, Tool> = {
     name: 'InsertCaption',
     icon: TableHead,
     tip: 'Insert table caption',
-    handle(tableModule) {
+    handle: (tableModule) => {
       if (!tableModule.table) return;
       const tableMainBlot = Quill.find(tableModule.table) as TableMainFormat;
       if (!tableMainBlot) return;
@@ -185,6 +186,16 @@ export const tableMenuTools: Record<string, Tool> = {
         tableId: tableMainBlot.tableId,
       });
       tableMainBlot.insertBefore(tableCaption, tableMainBlot.children.head);
+    },
+  },
+  ToggleTdBetweenTh: {
+    name: 'ToggleTdBetweenTh',
+    icon: ConvertCell,
+    tip: 'Toggle td between th',
+    handle: (tableModule, selectedTds) => {
+      for (const td of selectedTds) {
+        td.convertTableCell();
+      }
     },
   },
 };
