@@ -4,6 +4,7 @@ import Quill from 'quill';
 import AutoFull from '../../svg/auto-full.svg';
 import Background from '../../svg/background.svg';
 import Border from '../../svg/border.svg';
+import ConvertCell from '../../svg/convert-cell.svg';
 import Copy from '../../svg/copy.svg';
 import Cut from '../../svg/cut.svg';
 import InsertBottom from '../../svg/insert-bottom.svg';
@@ -187,10 +188,10 @@ export const tableMenuTools: Record<string, Tool> = {
       tableMainBlot.insertBefore(tableCaption, tableMainBlot.children.head);
     },
   },
-  ConvertCell: {
-    name: 'ConvertCell',
-    icon: TableHead,
-    tip: 'Convert cell',
+  ToggleTdBetweenTh: {
+    name: 'ToggleTdBetweenTh',
+    icon: ConvertCell,
+    tip: 'Toggle td between th',
     handle: (tableModule, selectedTds) => {
       for (const td of selectedTds) {
         td.convertTableCell();

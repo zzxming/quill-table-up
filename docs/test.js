@@ -34,7 +34,7 @@ const toolbarConfig = [
   ['clean'],
 ];
 const menuTools = [
-  tableMenuTools.ConvertCell,
+  tableMenuTools.ToggleTdBetweenTh,
   tableMenuTools.Break,
   tableMenuTools.InsertCaption,
   tableMenuTools.InsertTop,

@@ -117,7 +117,7 @@ extendTest.describe('convert table cell', () => {
     await createTableBySelect(page, 'container1', 3, 3);
     await page.locator('#editor1 .ql-editor .ql-table td').nth(0).click();
     await page.locator('#editor1 .ql-editor .ql-table td').nth(0).click({ button: 'right' });
-    await page.locator('.table-up-menu.is-contextmenu .table-up-menu__item').filter({ hasText: 'Convert cell' }).first().click();
+    await page.locator('.table-up-menu.is-contextmenu .table-up-menu__item').filter({ hasText: 'Toggle td between th' }).first().click();
     expect(await page.locator('#editor1 .ql-editor .ql-table td').count()).toBe(8);
     expect(await page.locator('#editor1 .ql-editor .ql-table th').count()).toBe(1);
   });
@@ -152,7 +152,7 @@ extendTest.describe('convert table cell', () => {
     await page.waitForTimeout(1000);
     await page.locator('#editor1 .ql-editor .ql-table th').nth(0).click();
     await page.locator('#editor1 .ql-editor .ql-table th').nth(0).click({ button: 'right' });
-    await page.locator('.table-up-menu.is-contextmenu .table-up-menu__item').filter({ hasText: 'Convert cell' }).first().click();
+    await page.locator('.table-up-menu.is-contextmenu .table-up-menu__item').filter({ hasText: 'Toggle td between th' }).first().click();
     expect(await page.locator('#editor1 .ql-editor .ql-table td').count()).toBe(9);
     expect(await page.locator('#editor1 .ql-editor .ql-table th').count()).toBe(0);
   });
