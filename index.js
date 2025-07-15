@@ -81,6 +81,8 @@ const quillOptions = [
               tableMenuTools.CutCell,
               tableMenuTools.Break,
               tableMenuTools.SwitchWidth,
+              tableMenuTools.Break,
+              tableMenuTools.ToggleTdBetweenTh,
             ],
             defaultColorMap: [
               [
@@ -139,6 +141,7 @@ const quillOptions = [
           BorderColor: '设置边框颜色',
           SwitchWidth: '切换表格宽度',
           InsertCaption: '插入表格标题',
+          ToggleTdBetweenTh: '切换表头单元格',
         },
       },
     },
