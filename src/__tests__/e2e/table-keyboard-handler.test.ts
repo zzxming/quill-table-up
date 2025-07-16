@@ -216,3 +216,32 @@ extendTest.describe('table cell keyboard handler ArrowUp and ArrowDown', () => {
     await expect(page.locator('.table-up-menu.is-contextmenu')).toBeVisible();
   });
 });
+
+extendTest.describe('TableSelection keyboard handler', () => {
+  extendTest('backspace should not remove cell content when focus element not in editor', async ({ page, editorPage }) => {
+    editorPage.index = 0;
+    await editorPage.setContents([
+      { insert: '\n' },
+      { insert: { 'table-up-col': { tableId: '1', colId: '1', full: false, width: 121 } } },
+      { insert: { 'table-up-col': { tableId: '1', colId: '2', full: false, width: 121 } } },
+      { attributes: { link: 'www.any.link' }, insert: 'some text' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '1', rowspan: 1, colspan: 1, tag: 'td' } }, insert: '\n' },
+      { insert: '2' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '2', rowspan: 1, colspan: 1, tag: 'td' } }, insert: '\n' },
+      { insert: '4' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '1', rowspan: 1, colspan: 1, tag: 'td' } }, insert: '\n' },
+      { insert: '5' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '2', rowspan: 1, colspan: 1, tag: 'td' } }, insert: '\n' },
+      { insert: '\n' },
+    ]);
+    await page.waitForTimeout(1000);
+
+    await page.locator('#editor1 .ql-table-wrapper .ql-table-cell-inner p').nth(0).click();
+    await page.locator('#editor1 .ql-tooltip .ql-action').click();
+    await page.locator('#editor1 .ql-tooltip input').nth(0).click();
+    await page.keyboard.press('Backspace');
+
+    expect(await page.locator('#editor1 .ql-tooltip input').nth(0).inputValue()).toBe('www.any.lin');
+    expect(await page.locator('#editor1 .ql-table-wrapper .ql-table-cell-inner p').nth(0).textContent()).toBe('some text');
+  });
+});
