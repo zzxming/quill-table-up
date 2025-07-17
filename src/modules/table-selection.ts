@@ -525,17 +525,19 @@ export class TableSelection {
 
   removeCell = (e: KeyboardEvent) => {
     const range = this.quill.getSelection();
-    if (range || (e.key !== 'Backspace' && e.key !== 'Delete')) return;
+    const activeElement = document.activeElement;
+    if (range || (e.key !== 'Backspace' && e.key !== 'Delete') || !this.quill.root.contains(activeElement)) return;
 
-    for (const td of this.selectedTds) {
-      td.deleteAt(0, td.length() - 1);
-    }
     if (this.table) {
       const tableMain = Quill.find(this.table) as TableMainFormat;
       const cells = tableMain.descendants(TableCellInnerFormat);
       if (this.selectedTds.length === cells.length) {
         tableMain.remove();
+        return;
       }
+    }
+    for (const td of this.selectedTds) {
+      td.deleteAt(0, td.length() - 1);
     }
   };
 
