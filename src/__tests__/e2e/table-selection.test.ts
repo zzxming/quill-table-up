@@ -347,7 +347,7 @@ extendTest('table resize should update TableSelection', async ({ page, editorPag
   expect(newThirdCellSelectionBound).toEqual(newCellBound);
 });
 
-extendTest('should handle delete table cell text when selected tds', async ({ page, editorPage, browserName }) => {
+extendTest('should handle delete table cell text when selected tds', async ({ page, editorPage }) => {
   editorPage.index = 0;
   await editorPage.setContents([
     { insert: '\n' },
@@ -387,12 +387,16 @@ extendTest('should handle delete table cell text when selected tds', async ({ pa
 
   await page.mouse.down();
   await page.mouse.move(cell1Bounding.x + cell1Bounding.width * 1.5, cell1Bounding.y + cell1Bounding.height / 2);
-  // click make sure quill doesn't focus(getSelection have range)
-  // page.keyboard.press will auto focus
-  if (browserName === 'chromium') {
-    await page.mouse.click(0, 0);
-  }
-  await page.keyboard.press('Delete');
+  await page.mouse.up();
+  await editorPage.blur();
+  await page.dispatchEvent('body', 'keydown', {
+    key: 'Backspace',
+    code: 'Backspace',
+    keyCode: 13,
+    which: 13,
+    bubbles: true,
+    cancelable: true,
+  });
 
   await expect(page.locator('#editor1 .ql-table .ql-table-cell').nth(0)).toHaveText('');
   await expect(page.locator('#editor1 .ql-table .ql-table-cell').nth(1)).toHaveText('');
@@ -403,16 +407,22 @@ extendTest('should handle delete table cell text when selected tds', async ({ pa
   await cell8.click();
   await page.mouse.down();
   await page.mouse.move(cell8Bounding.x - cell8Bounding.width * 0.5, cell8Bounding.y + cell8Bounding.height / 2);
-  if (browserName === 'chromium') {
-    await page.mouse.click(0, 0);
-  }
-  await page.keyboard.press('Backspace');
+  await page.mouse.up();
+  await editorPage.blur();
+  await page.dispatchEvent('body', 'keydown', {
+    key: 'Backspace',
+    code: 'Backspace',
+    keyCode: 13,
+    which: 13,
+    bubbles: true,
+    cancelable: true,
+  });
 
   await expect(page.locator('#editor1 .ql-table .ql-table-cell').nth(8)).toHaveText('');
   await expect(page.locator('#editor1 .ql-table .ql-table-cell').nth(7)).toHaveText('');
 });
 
-extendTest('should delete table when selected all cells and press delete', async ({ page, editorPage, browserName }) => {
+extendTest('should delete table when selected all cells and press delete', async ({ page, editorPage }) => {
   editorPage.index = 0;
   await editorPage.setContents([
     { insert: '\n' },
@@ -448,10 +458,16 @@ extendTest('should delete table when selected all cells and press delete', async
 
   await page.mouse.down();
   await page.mouse.move(cell1Bounding.x + cell1Bounding.width * 2.5, cell1Bounding.y + cell1Bounding.height * 2.5);
-  if (browserName === 'chromium') {
-    await page.mouse.click(0, 0);
-  }
-  await page.keyboard.down('Backspace');
+  await page.mouse.up();
+  await editorPage.blur();
+  await page.dispatchEvent('body', 'keydown', {
+    key: 'Backspace',
+    code: 'Backspace',
+    keyCode: 13,
+    which: 13,
+    bubbles: true,
+    cancelable: true,
+  });
 
   expect(await page.locator('#editor1 .ql-table').count()).toBe(0);
 });

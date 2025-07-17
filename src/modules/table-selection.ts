@@ -526,8 +526,6 @@ export class TableSelection {
   removeCell = (e: KeyboardEvent) => {
     const range = this.quill.getSelection();
     const activeElement = document.activeElement;
-    console.log(range?.index, range?.length);
-    console.log(!!range, e.key, !this.quill.root.contains(activeElement));
     if (range || (e.key !== 'Backspace' && e.key !== 'Delete') || !this.quill.root.contains(activeElement)) return;
 
     if (this.table) {

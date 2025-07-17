@@ -236,7 +236,8 @@ extendTest.describe('TableSelection keyboard handler', () => {
     ]);
     await page.waitForTimeout(1000);
 
-    await page.locator('#editor1 .ql-table-wrapper .ql-table-cell-inner p').nth(0).click();
+    const bounding = (await page.locator('#editor1 .ql-table-wrapper .ql-table-cell-inner p').nth(0).boundingBox())!;
+    await page.mouse.click(bounding.x, bounding.y + bounding.height * 0.5);
     await page.locator('#editor1 .ql-tooltip .ql-action').click();
     await page.locator('#editor1 .ql-tooltip input').nth(0).click();
     await page.keyboard.press('Backspace');
