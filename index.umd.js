@@ -49,11 +49,12 @@ In order to be iterable, non-array objects must have a [Symbol.iterator]() metho
 </svg>
 `,Hr=`<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24">\r
   <!-- Icon from Material Symbols by Google - https://github.com/google/material-design-icons/blob/master/LICENSE -->\r
-  <path \r
+  <path\r
     fill="currentColor"\r
     d="M11 21V9H3V5q0-.825.588-1.412T5 3h14q.825 0 1.413.588T21 5v14q0 .825-.587 1.413T19 21zm2-2h6v-4h-6zm0-6h6V9h-6zM5 7h14V5H5zM3 22v-2h2.55q-1.2-.575-1.937-1.7t-.738-2.55q0-1.975 1.388-3.363T7.625 11v2q-1.125 0-1.937.8t-.813 1.95q0 .975.6 1.725t1.525.95V16h2v6z"\r
   />\r
-</svg>`,Ur=`<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 256 256">
+</svg>\r
+`,Ur=`<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 256 256">
   <g fill="currentColor">
     <path d="M216 40v128h-48V88H88V40Z" opacity=".2" />
     <path
