@@ -245,4 +245,129 @@ extendTest.describe('TableSelection keyboard handler', () => {
     expect(await page.locator('#editor1 .ql-tooltip input').nth(0).inputValue()).toBe('www.any.lin');
     expect(await page.locator('#editor1 .ql-table-wrapper .ql-table-cell-inner p').nth(0).textContent()).toBe('some text');
   });
+
+  extendTest('should handle delete table cell text when selected tds', async ({ page, editorPage }) => {
+    editorPage.index = 0;
+    await editorPage.setContents([
+      { insert: '\n' },
+      { insert: { 'table-up-col': { tableId: '1', colId: '1', full: false, width: 121 } } },
+      { insert: { 'table-up-col': { tableId: '1', colId: '2', full: false, width: 121 } } },
+      { insert: { 'table-up-col': { tableId: '1', colId: '3', full: false, width: 121 } } },
+      { insert: '1' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '1', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '2' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '2', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '3' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '3', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '4' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '1', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '5' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '2', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '6' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '3', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '7' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '3', colId: '1', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '8' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '3', colId: '2', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '9' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '3', colId: '3', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '\n' },
+    ]);
+
+    await expect(page.locator('#editor1 .ql-table .ql-table-cell').nth(0)).toHaveText('1');
+    await expect(page.locator('#editor1 .ql-table .ql-table-cell').nth(1)).toHaveText('2');
+
+    const cell1 = page.locator('#editor1 .ql-editor .ql-table td').nth(0);
+    const cell1Bounding = (await cell1.boundingBox())!;
+    expect(cell1Bounding).not.toBeNull();
+    await cell1.click();
+    const selectionLine = page.locator('#container1 .table-up-selection .table-up-selection__line');
+    await expect(selectionLine).toBeVisible();
+
+    await page.mouse.down();
+    await page.mouse.move(cell1Bounding.x + cell1Bounding.width * 1.5, cell1Bounding.y + cell1Bounding.height / 2);
+    await page.mouse.up();
+    await editorPage.blur();
+    await page.dispatchEvent('body', 'keydown', {
+      key: 'Backspace',
+      code: 'Backspace',
+      keyCode: 13,
+      which: 13,
+      bubbles: true,
+      cancelable: true,
+    });
+
+    await expect(page.locator('#editor1 .ql-table .ql-table-cell').nth(0)).toHaveText('');
+    await expect(page.locator('#editor1 .ql-table .ql-table-cell').nth(1)).toHaveText('');
+
+    const cell8 = page.locator('#editor1 .ql-editor .ql-table td').nth(8);
+    const cell8Bounding = (await cell8.boundingBox())!;
+    expect(cell8Bounding).not.toBeNull();
+    await cell8.click();
+    await page.mouse.down();
+    await page.mouse.move(cell8Bounding.x - cell8Bounding.width * 0.5, cell8Bounding.y + cell8Bounding.height / 2);
+    await page.mouse.up();
+    await editorPage.blur();
+    await page.dispatchEvent('body', 'keydown', {
+      key: 'Backspace',
+      code: 'Backspace',
+      keyCode: 13,
+      which: 13,
+      bubbles: true,
+      cancelable: true,
+    });
+
+    await expect(page.locator('#editor1 .ql-table .ql-table-cell').nth(8)).toHaveText('');
+    await expect(page.locator('#editor1 .ql-table .ql-table-cell').nth(7)).toHaveText('');
+  });
+
+  extendTest('should delete table when selected all cells and press delete', async ({ page, editorPage }) => {
+    editorPage.index = 0;
+    await editorPage.setContents([
+      { insert: '\n' },
+      { insert: { 'table-up-col': { tableId: '1', colId: '1', full: false, width: 121 } } },
+      { insert: { 'table-up-col': { tableId: '1', colId: '2', full: false, width: 121 } } },
+      { insert: { 'table-up-col': { tableId: '1', colId: '3', full: false, width: 121 } } },
+      { insert: '1' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '1', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '2' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '2', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '3' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '3', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '4' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '1', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '5' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '2', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '6' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '3', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '7' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '3', colId: '1', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '8' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '3', colId: '2', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '9' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '3', colId: '3', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '\n' },
+    ]);
+    const cell1 = page.locator('#editor1 .ql-editor .ql-table td').nth(0);
+    const cell1Bounding = (await cell1.boundingBox())!;
+    expect(cell1Bounding).not.toBeNull();
+    await cell1.click();
+    const selectionLine = page.locator('#container1 .table-up-selection .table-up-selection__line');
+    await expect(selectionLine).toBeVisible();
+
+    await page.mouse.down();
+    await page.mouse.move(cell1Bounding.x + cell1Bounding.width * 2.5, cell1Bounding.y + cell1Bounding.height * 2.5);
+    await page.mouse.up();
+    await editorPage.blur();
+    await page.dispatchEvent('body', 'keydown', {
+      key: 'Backspace',
+      code: 'Backspace',
+      keyCode: 13,
+      which: 13,
+      bubbles: true,
+      cancelable: true,
+    });
+
+    expect(await page.locator('#editor1 .ql-table').count()).toBe(0);
+  });
 });
