@@ -1,7 +1,7 @@
 {
   "name": "quill-table-up",
   "type": "module",
-  "version": "2.4.1",
+  "version": "2.4.2",
   "packageManager": "pnpm@10.12.1",
   "description": "A table module for quill2.x",
   "author": "zzxming",
