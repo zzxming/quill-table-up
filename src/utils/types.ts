@@ -55,12 +55,11 @@ export interface TableTextOptions extends TableCreatorTextOptions, TableMenuText
   perWidthInsufficient: string;
 }
 export interface TableUpOptions {
-  customSelect?: (tableModule: TableUp, picker: QuillThemePicker) => Promise<HTMLElement> | HTMLElement;
+  customSelect?: (tableModule: TableUp, wrapper: HTMLElement) => Promise<HTMLElement> | HTMLElement;
   full: boolean;
   fullSwitch: boolean;
   customBtn: boolean;
   texts: TableTextOptions;
-  icon: string;
   selection?: Constructor<InternalTableSelectionModule, [TableUp, Quill, Partial<TableSelectionOptions>]>;
   selectionOptions: Partial<TableSelectionOptions>;
   resize?: Constructor<InternalModule, [TableUp, HTMLElement, Quill, any]>;

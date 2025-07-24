@@ -4,7 +4,7 @@ import type TypeBlock from 'quill/blots/block';
 import type { Context } from 'quill/modules/keyboard';
 import type TypeKeyboard from 'quill/modules/keyboard';
 import type TypeToolbar from 'quill/modules/toolbar';
-import type { Constructor, InternalModule, InternalTableSelectionModule, QuillTheme, QuillThemePicker, TableCellValue, TableConstantsData, TableTextOptions, TableUpOptions } from './utils';
+import type { Constructor, InternalModule, InternalTableSelectionModule, QuillTheme, TableCellValue, TableConstantsData, TableTextOptions, TableUpOptions } from './utils';
 import Quill from 'quill';
 import { BlockEmbedOverride, BlockOverride, ContainerFormat, ScrollOverride, TableBodyFormat, TableCaptionFormat, TableCellFormat, TableCellInnerFormat, TableColFormat, TableColgroupFormat, TableMainFormat, TableRowFormat, TableWrapperFormat } from './formats';
 import { TableClipboard } from './modules';
@@ -12,7 +12,6 @@ import { blotName, createBEM, createSelectBox, cssTextToObject, debounce, findPa
 
 const Parchment = Quill.import('parchment');
 const Delta = Quill.import('delta');
-const icons = Quill.import('ui/icons') as Record<string, any>;
 const Break = Quill.import('blots/break') as TypeParchment.BlotConstructor;
 const Block = Quill.import('blots/block') as typeof TypeBlock;
 const BlockEmbed = Quill.import('blots/block/embed') as typeof TypeBlockEmbed;
@@ -56,13 +55,11 @@ export function updateTableConstants(data: Partial<TableConstantsData>) {
 
   tableCantInsert.add(blotName.tableCellInner);
 }
-export function defaultCustomSelect(tableModule: TableUp, picker: QuillThemePicker) {
+export function defaultCustomSelect(tableModule: TableUp, wrapper: HTMLElement): HTMLElement | Promise<HTMLElement> {
   return createSelectBox({
     onSelect: (row: number, col: number) => {
       tableModule.insertTable(row, col);
-      if (picker) {
-        picker.close();
-      }
+      wrapper.classList.remove('ql-active');
     },
     customBtn: tableModule.options.customBtn,
     texts: tableModule.options.texts,
@@ -210,6 +207,9 @@ export class TableUp {
   };
 
   static register() {
+    const icons = Quill.import('ui/icons') as Record<string, any>;
+    icons[this.toolName] = icons.table;
+
     TableWrapperFormat.allowedChildren = [TableMainFormat];
 
     TableMainFormat.allowedChildren = [TableBodyFormat, TableColgroupFormat, TableCaptionFormat];
@@ -281,8 +281,8 @@ export class TableUp {
   tableResizeScale?: InternalModule;
   resizeOb!: ResizeObserver;
 
-  get statics(): any {
-    return this.constructor;
+  get statics(): typeof TableUp {
+    return this.constructor as typeof TableUp;
   }
 
   constructor(quill: Quill, options: Partial<TableUpOptions>) {
@@ -299,29 +299,7 @@ export class TableUp {
       this.tableSelection = new this.options.selection(this, this.quill, this.options.selectionOptions);
     }
 
-    const toolbar = this.quill.getModule('toolbar') as TypeToolbar;
-    if (toolbar && (this.quill.theme as QuillTheme).pickers) {
-      const [, select] = (toolbar.controls as [string, HTMLElement][] || []).find(([name]) => name === this.statics.toolName) || [];
-      if (select && select.tagName.toLocaleLowerCase() === 'select') {
-        const picker = (this.quill.theme as QuillTheme).pickers.find(picker => picker.select === select);
-        if (picker) {
-          picker.label.innerHTML = this.options.icon;
-          this.buildCustomSelect(this.options.customSelect, picker);
-          picker.label.addEventListener('mousedown', () => {
-            if (!this.selector || !picker) return;
-            const selectRect = this.selector.getBoundingClientRect();
-            const { leftLimited } = limitDomInViewPort(selectRect);
-            if (leftLimited) {
-              const labelRect = picker.label.getBoundingClientRect();
-              Object.assign(picker.options.style, { transform: `translateX(calc(-100% + ${labelRect.width}px))` });
-            }
-            else {
-              Object.assign(picker.options.style, { transform: undefined });
-            }
-          });
-        }
-      }
-    }
+    this.handleToolbarSelect();
 
     const keyboard = this.quill.getModule('keyboard') as TypeKeyboard;
     for (const handle of Object.values(TableUp.keyboradHandler)) {
@@ -334,10 +312,11 @@ export class TableUp {
       }
     }
 
-    this.quill.root.addEventListener(
+    this.quill.emitter.listenDOM(
       'click',
-      (evt: MouseEvent) => {
-        const path = evt.composedPath() as HTMLElement[];
+      this.quill.root,
+      (e: Event) => {
+        const path = e.composedPath() as HTMLElement[];
         if (!path || path.length <= 0) return;
 
         const tableNode = path.find(node => node.tagName && node.tagName.toUpperCase() === 'TABLE' && node.classList.contains('ql-table'));
@@ -356,7 +335,6 @@ export class TableUp {
           this.hideTableTools();
         }
       },
-      false,
     );
     this.quill.on(Quill.events.EDITOR_CHANGE, (type: typeof Quill.events.TEXT_CHANGE | typeof Quill.events.SELECTION_CHANGE) => {
       if (type === Quill.events.TEXT_CHANGE && (!this.table || !this.quill.root.contains(this.table))) {
@@ -403,11 +381,10 @@ export class TableUp {
 
   resolveOptions(options: Partial<TableUpOptions>): TableUpOptions {
     return Object.assign({
-      customBtn: false,
+      customBtn: true,
       texts: this.resolveTexts(options.texts || {}),
       full: false,
       fullSwitch: true,
-      icon: icons.table,
       selectionOptions: {},
       alignOptions: {},
       scrollbarOptions: {},
@@ -678,11 +655,60 @@ export class TableUp {
     this.table = undefined;
   }
 
-  async buildCustomSelect(customSelect: ((module: TableUp, picker: QuillThemePicker) => HTMLElement | Promise<HTMLElement>) | undefined, picker: QuillThemePicker) {
+  handleToolbarSelect() {
+    const toolbar = this.quill.getModule('toolbar') as TypeToolbar;
+    if (toolbar && (this.quill.theme as QuillTheme).pickers) {
+      const [, button] = (toolbar.controls as [string, HTMLElement][] || []).find(([name]) => name === this.statics.toolName) || [];
+      if (!button) return;
+      this.buildCustomSelect(this.options.customSelect, button);
+      this.quill.emitter.listenDOM('click', document, (e) => {
+        if (!e.target || (!button.contains(e.target as HTMLElement) || this.selector!.contains(e.target as HTMLElement))) {
+          button.classList.remove('active');
+        }
+      });
+      toolbar.addHandler(this.statics.toolName, () => {
+        if (!this.selector || button.classList.contains('active')) return;
+        button.classList.add('active');
+        const options = button.querySelector('.table-up-custom-select') as HTMLElement;
+        if (!options) return;
+        const selectRect = this.selector.getBoundingClientRect();
+        const { leftLimited } = limitDomInViewPort(selectRect);
+        if (leftLimited) {
+          const labelRect = button.getBoundingClientRect();
+          Object.assign(options.style, { transform: `translateX(calc(-100% + ${labelRect.width}px))` });
+        }
+        else {
+          Object.assign(options.style, { transform: undefined });
+        }
+      });
+      // const [, select] = (toolbar.controls as [string, HTMLElement][] || []).find(([name]) => name === this.statics.toolName) || [];
+      // if (select && select.tagName.toLocaleLowerCase() === 'select') {
+      //   const picker = (this.quill.theme as QuillTheme).pickers.find(picker => picker.select === select);
+      //   if (picker) {
+      //     picker.label.innerHTML = this.options.icon;
+      //     this.buildCustomSelect(this.options.customSelect, picker);
+      //     // picker.label.addEventListener('mousedown', () => {
+      //     //   if (!this.selector || !picker) return;
+      //     //   const selectRect = this.selector.getBoundingClientRect();
+      //     //   const { leftLimited } = limitDomInViewPort(selectRect);
+      //     //   if (leftLimited) {
+      //     //     const labelRect = picker.label.getBoundingClientRect();
+      //     //     Object.assign(picker.options.style, { transform: `translateX(calc(-100% + ${labelRect.width}px))` });
+      //     //   }
+      //     //   else {
+      //     //     Object.assign(picker.options.style, { transform: undefined });
+      //     //   }
+      //     // });
+      //   }
+      // }
+    }
+  }
+
+  async buildCustomSelect(customSelect: ((tableModule: TableUp, wrapper: HTMLElement) => Promise<HTMLElement> | HTMLElement) | undefined, wrapper: HTMLElement) {
     if (!customSelect || !isFunction(customSelect)) return;
     const dom = document.createElement('div');
-    dom.classList.add('ql-custom-select');
-    this.selector = await customSelect(this, picker);
+    dom.classList.add('table-up-custom-select');
+    this.selector = await customSelect(this, wrapper);
     dom.appendChild(this.selector);
     if (this.options.fullSwitch) {
       const bem = createBEM('creator');
@@ -694,14 +720,14 @@ export class TableUp {
       isFullCheckbox.addEventListener('change', () => {
         this.options.full = isFullCheckbox.checked;
       });
+      isFulllLabel.addEventListener('click', e => e.stopPropagation());
       const isFullCheckboxText = document.createElement('span');
       isFullCheckboxText.textContent = this.options.texts.fullCheckboxText;
       isFulllLabel.appendChild(isFullCheckbox);
       isFulllLabel.appendChild(isFullCheckboxText);
       dom.appendChild(isFulllLabel);
     }
-    picker.options.innerHTML = '';
-    picker.options.appendChild(dom);
+    wrapper.appendChild(dom);
   }
 
   setCellAttrs(selectedTds: TableCellInnerFormat[], attr: string, value?: any, isStyle: boolean = false) {
