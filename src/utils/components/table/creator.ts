@@ -82,5 +82,8 @@ export async function showTableCreator(options: Partial<TableCreatorOptions> = {
     });
     document.addEventListener('keydown', keyboardClose);
     cancelBtn.addEventListener('click', close);
-  });
+  })
+    .finally(() => {
+      document.removeEventListener('keydown', keyboardClose);
+    });
 }
