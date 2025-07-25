@@ -51,8 +51,8 @@ export class TableSelection {
     this.resizeObserver = createResizeObserver(() => this.updateAfterEvent(), { ignoreFirstBind: true });
     this.resizeObserver.observe(this.quill.root);
 
-    this.quill.root.addEventListener('mousedown', this.mouseDownHandler, { passive: false });
-    document.addEventListener('selectionchange', this.selectionChangeHandler, { passive: false });
+    this.quill.emitter.listenDOM('mousedown', this.quill.root, this.mouseDownHandler.bind(this));
+    this.quill.emitter.listenDOM('selectionchange', document, this.selectionChangeHandler.bind(this));
     this.quill.on(tableUpEvent.AFTER_TABLE_RESIZE, this.updateAfterEvent);
     this.quill.on(Quill.events.SELECTION_CHANGE, this.quillSelectionChangeHandler);
     this.quill.on(Quill.events.TEXT_CHANGE, this.updateAfterEvent);
@@ -207,7 +207,7 @@ export class TableSelection {
     } as TableSelectionOptions, options);
   }
 
-  selectionChangeHandler = () => {
+  selectionChangeHandler() {
     const selection = window.getSelection();
     if (!selection) return;
     const { anchorNode, focusNode, anchorOffset, focusOffset } = selection;
@@ -281,7 +281,7 @@ export class TableSelection {
       focusNode,
       focusOffset,
     };
-  };
+  }
 
   helpLinesInitial() {
     this.cellSelectWrap.style.setProperty('--select-color', this.options.selectColor);
@@ -402,8 +402,8 @@ export class TableSelection {
     this.startScrollRecordPosition = [];
   }
 
-  mouseDownHandler = (mousedownEvent: MouseEvent) => {
-    const { button, target, clientX, clientY } = mousedownEvent;
+  mouseDownHandler(mousedownEvent: Event) {
+    const { button, target, clientX, clientY } = mousedownEvent as MouseEvent;
     const closestTable = (target as HTMLElement).closest<HTMLTableElement>('.ql-table');
     const closestTableCaption = (target as HTMLElement).closest('caption');
     if (button !== 0 || !closestTable || closestTableCaption) return;
@@ -454,7 +454,7 @@ export class TableSelection {
 
     document.body.addEventListener('mousemove', mouseMoveHandler, false);
     document.body.addEventListener('mouseup', mouseUpHandler, false);
-  };
+  }
 
   updateWithSelectedTds() {
     if (this.selectedTds.length <= 0) return;
@@ -593,9 +593,8 @@ export class TableSelection {
     clearScrollEvent.call(this);
 
     this.quill.root.removeEventListener('mousedown', this.mouseDownHandler);
-    document.removeEventListener('selectionchange', this.selectionChangeHandler);
     this.quill.off(Quill.events.SELECTION_CHANGE, this.quillSelectionChangeHandler);
     this.quill.off(Quill.events.TEXT_CHANGE, this.updateAfterEvent);
-    this.quill.on(tableUpEvent.AFTER_TABLE_RESIZE, this.updateAfterEvent);
+    this.quill.off(tableUpEvent.AFTER_TABLE_RESIZE, this.updateAfterEvent);
   }
 }
