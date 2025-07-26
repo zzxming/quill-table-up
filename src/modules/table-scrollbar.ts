@@ -234,7 +234,6 @@ export class TableVirtualScrollbar extends TableDomSelector {
 
   updateWhenTextChange = (eventName: string) => {
     if (eventName === Quill.events.TEXT_CHANGE) {
-      console.log(this.table && !this.quill.root.contains(this.table));
       if (this.table && !this.quill.root.contains(this.table)) {
         this.setSelectionTable(undefined);
       }
@@ -245,7 +244,6 @@ export class TableVirtualScrollbar extends TableDomSelector {
   };
 
   hide() {
-    console.log ('hide,', this.scrollbar);
     for (const scrollbar of this.scrollbar) {
       scrollbar.destroy();
     }
