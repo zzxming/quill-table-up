@@ -439,9 +439,6 @@ export class TableSelection extends TableDomSelector {
       if (this.tableMenu) {
         this.tableMenu.hide();
       }
-      if (this.tableModule.tableResize) {
-        this.tableModule.tableResize.hide();
-      }
       const { button, target, clientX, clientY } = mousemoveEvent;
       const closestTable = (target as HTMLElement).closest<HTMLTableElement>('.ql-table');
       const closestTableCaption = (target as HTMLElement).closest('caption');

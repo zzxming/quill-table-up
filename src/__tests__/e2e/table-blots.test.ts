@@ -68,8 +68,8 @@ extendTest('test table tools should hide after table removed', async ({ page, ed
   await expect(page.locator('#container1 .table-up-toolbox .table-up-scrollbar__container')).not.toBeVisible();
   await expect(page.locator('#container1 .table-up-toolbox .table-up-scrollbar__container .table-up-scrollbar.is-vertical')).not.toBeAttached();
   await expect(page.locator('#container1 .table-up-toolbox .table-up-scrollbar__container .table-up-scrollbar.is-horizontal')).not.toBeAttached();
-  await expect(page.locator('#container1 .table-up-toolbox .table-up-resize-line__col')).not.toBeAttached();
-  await expect(page.locator('#container1 .table-up-toolbox .table-up-resize-line__row')).not.toBeAttached();
+  await expect(page.locator('#container1 .table-up-toolbox .table-up-resize-line__col')).not.toBeVisible();
+  await expect(page.locator('#container1 .table-up-toolbox .table-up-resize-line__row')).not.toBeVisible();
   await expect(page.locator('#container1 .table-up-toolbox .table-up-scale')).not.toBeVisible();
 
   editorPage.index = 1;
@@ -89,7 +89,7 @@ extendTest('test table tools should hide after table removed', async ({ page, ed
   await expect(page.locator('#container2 .table-up-toolbox .table-up-scrollbar__container')).not.toBeVisible();
   await expect(page.locator('#container1 .table-up-toolbox .table-up-scrollbar__container .table-up-scrollbar.is-vertical')).not.toBeAttached();
   await expect(page.locator('#container1 .table-up-toolbox .table-up-scrollbar__container .table-up-scrollbar.is-horizontal')).not.toBeAttached();
-  await expect(page.locator('#container2 .table-up-toolbox .table-up-resize-box')).not.toBeAttached();
+  await expect(page.locator('#container2 .table-up-toolbox .table-up-resize-box')).not.toBeVisible();
   await expect(page.locator('#container2 .table-up-toolbox .table-up-scale')).not.toBeVisible();
 });
 

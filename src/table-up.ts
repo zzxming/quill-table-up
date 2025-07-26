@@ -273,7 +273,6 @@ export class TableUp {
   toolBox: HTMLDivElement;
   fixTableByLisenter = debounce(this.balanceTables, 100);
   selector?: HTMLElement;
-  table?: HTMLElement;
   tableSelection?: InternalTableSelectionModule;
   tableResize?: InternalModule;
   tableScrollbar?: InternalModule;
@@ -306,6 +305,9 @@ export class TableUp {
     }
     if (this.options.resizeScale) {
       this.tableResizeScale = new this.options.resizeScale(this, this.quill, this.options.resizeScaleOptions);
+    }
+    if (this.options.resize) {
+      this.tableResize = new this.options.resize(this, this.quill, this.options.resizeOptions);
     }
 
     const toolbar = this.quill.getModule('toolbar') as TypeToolbar;
@@ -342,33 +344,6 @@ export class TableUp {
         keyboard.addBinding(handle.key, handle);
       }
     }
-
-    this.quill.root.addEventListener(
-      'click',
-      (evt: MouseEvent) => {
-        const path = evt.composedPath() as HTMLElement[];
-        if (!path || path.length <= 0) return;
-
-        const tableNode = path.find(node => node.tagName && node.tagName.toUpperCase() === 'TABLE' && node.classList.contains('ql-table'));
-        if (tableNode) {
-          if (this.table === tableNode) {
-            this.tableResize && this.tableResize.update();
-            return;
-          }
-          if (this.table) this.hideTableTools();
-          this.showTableTools(tableNode);
-        }
-        else if (this.table) {
-          this.hideTableTools();
-        }
-      },
-      false,
-    );
-    this.quill.on(Quill.events.EDITOR_CHANGE, (type: typeof Quill.events.TEXT_CHANGE | typeof Quill.events.SELECTION_CHANGE) => {
-      if (type === Quill.events.TEXT_CHANGE && (!this.table || !this.quill.root.contains(this.table))) {
-        this.hideTableTools();
-      }
-    });
 
     this.quillHack();
     this.listenBalanceCells();
@@ -643,23 +618,6 @@ export class TableUp {
         };
       }
     }
-  }
-
-  showTableTools(table: HTMLElement) {
-    if (table) {
-      this.table = table;
-      if (this.options.resize) {
-        this.tableResize = new this.options.resize(this, table, this.quill, this.options.resizeOptions);
-      }
-    }
-  }
-
-  hideTableTools() {
-    if (this.tableResize) {
-      this.tableResize.destroy();
-      this.tableResize = undefined;
-    }
-    this.table = undefined;
   }
 
   async buildCustomSelect(customSelect: ((module: TableUp, picker: QuillThemePicker) => HTMLElement | Promise<HTMLElement>) | undefined, picker: QuillThemePicker) {
@@ -1005,7 +963,6 @@ export class TableUp {
     if (selectedTds.length === 0) return;
     const tableBlot = findParentBlot(selectedTds[0], blotName.tableMain);
     tableBlot && tableBlot.remove();
-    this.hideTableTools();
   }
 
   appendRow(selectedTds: TableCellInnerFormat[], isDown: boolean) {
