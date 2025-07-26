@@ -298,6 +298,9 @@ export class TableUp {
     if (this.options.selection) {
       this.tableSelection = new this.options.selection(this, this.quill, this.options.selectionOptions);
     }
+    if (this.options.align) {
+      this.tableAlign = new this.options.align(this, this.quill, this.options.alignOptions);
+    }
 
     const toolbar = this.quill.getModule('toolbar') as TypeToolbar;
     if (toolbar && (this.quill.theme as QuillTheme).pickers) {
@@ -343,7 +346,6 @@ export class TableUp {
         const tableNode = path.find(node => node.tagName && node.tagName.toUpperCase() === 'TABLE' && node.classList.contains('ql-table'));
         if (tableNode) {
           if (this.table === tableNode) {
-            this.tableAlign && this.tableAlign.update();
             this.tableResize && this.tableResize.update();
             this.tableScrollbar && this.tableScrollbar.update();
             return;
@@ -641,9 +643,6 @@ export class TableUp {
   showTableTools(table: HTMLElement) {
     if (table) {
       this.table = table;
-      if (this.options.align) {
-        this.tableAlign = new this.options.align(this, table, this.quill, this.options.alignOptions);
-      }
       if (this.options.scrollbar) {
         this.tableScrollbar = new this.options.scrollbar(this, table, this.quill, this.options.scrollbarOptions);
       }
@@ -660,10 +659,6 @@ export class TableUp {
     if (this.tableScrollbar) {
       this.tableScrollbar.destroy();
       this.tableScrollbar = undefined;
-    }
-    if (this.tableAlign) {
-      this.tableAlign.destroy();
-      this.tableAlign = undefined;
     }
     if (this.tableResize) {
       this.tableResize.destroy();

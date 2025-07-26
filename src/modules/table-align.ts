@@ -3,24 +3,18 @@ import type { TableUp } from '../table-up';
 import { autoUpdate, computePosition, flip, limitShift, offset, shift } from '@floating-ui/dom';
 import Quill from 'quill';
 import { createBEM, createResizeObserver } from '../utils';
+import { TableDomSelector } from './table-dom-selector';
 
-export class TableAlign {
-  tableBlot: TableMainFormat;
-  tableWrapperBlot: TableWrapperFormat;
+export class TableAlign extends TableDomSelector {
+  tableBlot?: TableMainFormat;
+  tableWrapperBlot?: TableWrapperFormat;
   alignBox?: HTMLElement;
   cleanup?: () => void;
   bem = createBEM('align');
-  resizeObserver = createResizeObserver(() => this.update(), { ignoreFirstBind: true });
+  resizeObserver?: ResizeObserver;
 
-  constructor(public tableModule: TableUp, public table: HTMLElement, public quill: Quill) {
-    this.tableBlot = Quill.find(table)! as TableMainFormat;
-    this.tableWrapperBlot = this.tableBlot.parent as TableWrapperFormat;
-
-    this.alignBox = this.buildTool();
-    this.resizeObserver.observe(this.table);
-    this.quill.on(Quill.events.TEXT_CHANGE, this.updateWhenTextChange);
-
-    this.show();
+  constructor(public tableModule: TableUp, public quill: Quill, _options: any) {
+    super(tableModule, quill);
   }
 
   updateWhenTextChange = () => {
@@ -28,6 +22,7 @@ export class TableAlign {
   };
 
   buildTool() {
+    if (!this.tableBlot || !this.tableWrapperBlot) return;
     const alignBox = this.tableModule.addContainer(this.bem.b());
     const icons = Quill.import('ui/icons') as Record<string, any>;
     const alignIcons = {
@@ -42,23 +37,23 @@ export class TableAlign {
       item.innerHTML = `<i class="icon">${iconStr}</i>`;
       item.addEventListener('click', () => {
         const value = item.dataset.align;
-        if (value) {
+        if (value && this.tableBlot) {
           this.setTableAlign(this.tableBlot, value);
 
-          this.quill.once(Quill.events.SCROLL_OPTIMIZE, () => {
-            if (this.tableModule.tableSelection) {
-              this.tableModule.tableSelection.hide();
-            }
-            if (this.tableModule.tableResize) {
-              this.tableModule.tableResize.update();
-            }
-            if (this.tableModule.tableResizeScale) {
-              this.tableModule.tableResizeScale.update();
-            }
-            if (this.tableModule.tableScrollbar) {
-              this.tableModule.tableScrollbar.update();
-            }
-          });
+          // this.quill.once(Quill.events.SCROLL_OPTIMIZE, () => {
+          //   if (this.tableModule.tableSelection) {
+          //     this.tableModule.tableSelection.hide();
+          //   }
+          //   if (this.tableModule.tableResize) {
+          //     this.tableModule.tableResize.update();
+          //   }
+          //   if (this.tableModule.tableResizeScale) {
+          //     this.tableModule.tableResizeScale.update();
+          //   }
+          //   if (this.tableModule.tableScrollbar) {
+          //     this.tableModule.tableScrollbar.update();
+          //   }
+          // });
         }
       });
       alignBox.appendChild(item);
@@ -80,15 +75,34 @@ export class TableAlign {
     }
   }
 
-  show() {
-    if (!this.alignBox) return;
-    this.alignBox.classList.add(this.bem.bm('active'));
+  setSelectionTable(table: HTMLTableElement | undefined) {
+    if (this.table === table) return;
+    this.hide();
+    this.table = table;
+    if (this.table) {
+      this.show();
+    }
     this.update();
   }
 
+  show() {
+    if (!this.table) return;
+    this.tableBlot = Quill.find(this.table) as TableMainFormat;
+    this.tableWrapperBlot = this.tableBlot.parent as TableWrapperFormat;
+    if (!this.alignBox) {
+      this.alignBox = this.buildTool()!;
+    }
+    this.alignBox.classList.add(this.bem.bm('active'));
+    this.resizeObserver = createResizeObserver(() => this.update(), { ignoreFirstBind: true });
+    this.resizeObserver.observe(this.table);
+    this.quill.on(Quill.events.TEXT_CHANGE, this.updateWhenTextChange);
+  }
+
   hide() {
-    if (!this.alignBox) return;
-    this.alignBox.classList.remove(this.bem.bm('active'));
+    this.quill.off(Quill.events.TEXT_CHANGE, this.updateWhenTextChange);
+    if (this.alignBox) {
+      this.alignBox.classList.remove(this.bem.bm('active'));
+    }
     if (this.cleanup) {
       this.cleanup();
       this.cleanup = undefined;
@@ -96,7 +110,7 @@ export class TableAlign {
   }
 
   update() {
-    if (!this.alignBox) return;
+    if (!this.alignBox || !this.tableBlot || !this.tableWrapperBlot) return;
     if (this.tableBlot.full || this.tableBlot.domNode.offsetWidth >= this.quill.root.offsetWidth) {
       this.hide();
       return;
@@ -115,7 +129,10 @@ export class TableAlign {
 
   destroy() {
     this.hide();
-    this.resizeObserver.disconnect();
+    if (this.resizeObserver) {
+      this.resizeObserver.disconnect();
+      this.resizeObserver = undefined;
+    }
     this.quill.off(Quill.events.TEXT_CHANGE, this.updateWhenTextChange);
     if (this.alignBox) {
       this.alignBox.remove();
