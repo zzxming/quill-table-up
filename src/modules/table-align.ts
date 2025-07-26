@@ -17,10 +17,18 @@ export class TableAlign extends TableDomSelector {
     super(tableModule, quill);
 
     this.alignBox = this.buildTool();
+    this.quill.on(Quill.events.EDITOR_CHANGE, this.updateWhenTextChange);
   }
 
-  updateWhenTextChange = () => {
-    this.update();
+  updateWhenTextChange = (eventName: string) => {
+    if (eventName === Quill.events.TEXT_CHANGE) {
+      if (this.table) {
+        this.setSelectionTable(undefined);
+      }
+      else {
+        this.update();
+      }
+    }
   };
 
   buildTool() {
@@ -75,7 +83,6 @@ export class TableAlign extends TableDomSelector {
     this.alignBox.classList.add(this.bem.bm('active'));
     this.resizeObserver = createResizeObserver(() => this.update(), { ignoreFirstBind: true });
     this.resizeObserver.observe(this.table);
-    this.quill.on(Quill.events.TEXT_CHANGE, this.updateWhenTextChange);
     if (this.cleanup) {
       this.cleanup();
     }
@@ -87,7 +94,6 @@ export class TableAlign extends TableDomSelector {
   }
 
   hide() {
-    this.quill.off(Quill.events.TEXT_CHANGE, this.updateWhenTextChange);
     this.tableBlot = undefined;
     this.tableWrapperBlot = undefined;
     if (this.alignBox) {

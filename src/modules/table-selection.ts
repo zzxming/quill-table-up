@@ -56,18 +56,11 @@ export class TableSelection extends TableDomSelector {
     this.quill.on(tableUpEvent.AFTER_TABLE_RESIZE, this.updateAfterEvent);
     this.quill.on(Quill.events.TEXT_CHANGE, this.updateAfterEvent);
     this.quill.on(Quill.events.SELECTION_CHANGE, this.quillSelectionChangeHandler);
-    this.quill.on(Quill.events.EDITOR_CHANGE, this.hideWhenTextChange);
     if (this.options.tableMenu) {
       this.tableMenu = new this.options.tableMenu(tableModule, quill, this.options.tableMenuOptions);
     }
     this.hide();
   }
-
-  hideWhenTextChange = (type: typeof Quill.events.TEXT_CHANGE | typeof Quill.events.SELECTION_CHANGE) => {
-    if (type === Quill.events.TEXT_CHANGE && (!this.table || !this.quill.root.contains(this.table))) {
-      this.hide();
-    }
-  };
 
   updateAfterEvent = () => {
     this.updateWithSelectedTds();
@@ -502,7 +495,11 @@ export class TableSelection extends TableDomSelector {
   }
 
   update() {
-    if (this.selectedTds.length === 0 || !this.boundary || !this.table) return;
+    if (!this.table) {
+      this.hide();
+      return;
+    }
+    if (this.selectedTds.length === 0 || !this.boundary) return;
     const { x: editorScrollX, y: editorScrollY } = getElementScroll(this.quill.root);
     const { x: tableScrollX, y: tableScrollY } = this.getTableViewScroll();
     const tableWrapperRect = this.table.parentElement!.getBoundingClientRect();
@@ -603,6 +600,5 @@ export class TableSelection extends TableDomSelector {
     this.quill.off(tableUpEvent.AFTER_TABLE_RESIZE, this.updateAfterEvent);
     this.quill.off(Quill.events.TEXT_CHANGE, this.updateAfterEvent);
     this.quill.off(Quill.events.SELECTION_CHANGE, this.quillSelectionChangeHandler);
-    this.quill.off(Quill.events.EDITOR_CHANGE, this.hideWhenTextChange);
   }
 }
