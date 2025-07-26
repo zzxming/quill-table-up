@@ -420,7 +420,7 @@ export class TableSelection extends TableDomSelector {
     this.startScrollRecordPosition = [];
   }
 
-  mouseDownHandler(mousedownEvent: MouseEvent) {
+  mousedownSelectHandler(mousedownEvent: MouseEvent) {
     const { button, target, clientX, clientY } = mousedownEvent;
     const closestTable = (target as HTMLElement).closest<HTMLTableElement>('table');
     const closestTableCaption = (target as HTMLElement).closest('caption');
@@ -596,7 +596,7 @@ export class TableSelection extends TableDomSelector {
     }
     clearScrollEvent.call(this);
 
-    this.quill.root.removeEventListener('mousedown', this.mouseDownHandler);
+    this.quill.root.removeEventListener('mousedown', this.mousedownSelectHandler);
     this.quill.off(tableUpEvent.AFTER_TABLE_RESIZE, this.updateAfterEvent);
     this.quill.off(Quill.events.TEXT_CHANGE, this.updateAfterEvent);
     this.quill.off(Quill.events.SELECTION_CHANGE, this.quillSelectionChangeHandler);
