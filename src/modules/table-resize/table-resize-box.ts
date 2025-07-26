@@ -224,11 +224,13 @@ export class TableResizeBox extends TableResizeCommon {
     if (this.rowHeadWrapper) {
       Object.assign(this.rowHeadWrapper.style, {
         transform: `translateX(${rowHeadWrapperTranslateX}px)`,
+        maxHeight: `${tableWrapperRect.height}px`,
       });
     }
     if (this.colHeadWrapper) {
       Object.assign(this.colHeadWrapper.style, {
         top: `${tableCaptionIsTop ? 0 : tableRect.height + this.size}px`,
+        maxWidth: `${tableWrapperRect.width}px`,
       });
     }
   }
@@ -270,18 +272,12 @@ export class TableResizeBox extends TableResizeCommon {
       }
       const colHeadWrapper = document.createElement('div');
       colHeadWrapper.classList.add(this.bem.be('col'));
-      const colHead = document.createElement('div');
-      colHead.classList.add(this.bem.be('col-wrapper'));
       Object.assign(colHeadWrapper.style, {
         transform: `translateY(-${this.size}px)`,
         maxWidth: `${tableWrapperRect.width}px`,
         height: `${this.size}px`,
       });
-      Object.assign(colHead.style, {
-        width: `${tableRect.width}px`,
-      });
-      colHead.innerHTML = colHeadStr;
-      colHeadWrapper.appendChild(colHead);
+      colHeadWrapper.innerHTML = colHeadStr;
       this.root.appendChild(colHeadWrapper);
       colHeadWrapper.scrollLeft = this.tableWrapper.domNode.scrollLeft;
       this.colHeadWrapper = colHeadWrapper;
@@ -298,19 +294,12 @@ export class TableResizeBox extends TableResizeCommon {
       }
       const rowHeadWrapper = document.createElement('div');
       rowHeadWrapper.classList.add(this.bem.be('row'));
-      const rowHead = document.createElement('div');
-      rowHead.classList.add(this.bem.be('row-wrapper'));
-
       Object.assign(rowHeadWrapper.style, {
         transform: `translateX(-${this.size}px)`,
         width: `${this.size}px`,
         maxHeight: `${tableWrapperRect.height}px`,
       });
-      Object.assign(rowHead.style, {
-        height: `${tableRect.height}px`,
-      });
-      rowHead.innerHTML = rowHeadStr;
-      rowHeadWrapper.appendChild(rowHead);
+      rowHeadWrapper.innerHTML = rowHeadStr;
       this.root.appendChild(rowHeadWrapper);
       rowHeadWrapper.scrollTop = this.tableWrapper.domNode.scrollTop;
       this.rowHeadWrapper = rowHeadWrapper;

@@ -170,7 +170,7 @@ export class TableResizeCommon {
         this.colWidthChange(
           index,
           {
-            px: Math.round(width / 100 * tableWidth),
+            px: isFull ? Math.round(width / 100 * tableWidth) : Math.round(width),
             pre: Math.round(width),
           },
           isFull,
