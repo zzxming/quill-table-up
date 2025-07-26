@@ -22,7 +22,7 @@ export class TableAlign extends TableDomSelector {
 
   updateWhenTextChange = (eventName: string) => {
     if (eventName === Quill.events.TEXT_CHANGE) {
-      if (this.table) {
+      if (this.table && !this.quill.root.contains(this.table)) {
         this.setSelectionTable(undefined);
       }
       else {
