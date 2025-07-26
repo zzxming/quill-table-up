@@ -63,13 +63,13 @@ export interface TableUpOptions {
   icon: string;
   selection?: Constructor<InternalTableSelectionModule, [TableUp, Quill, Partial<TableSelectionOptions>]>;
   selectionOptions: Partial<TableSelectionOptions>;
-  resize?: Constructor<InternalModule, [TableUp, HTMLElement, Quill, any]>;
+  resize?: Constructor<InternalModule, [TableUp, Quill, any]>;
   resizeOptions: any;
-  scrollbar?: Constructor<InternalModule, [TableUp, HTMLElement, Quill, any]>;
+  scrollbar?: Constructor<InternalModule, [TableUp, Quill, any]>;
   scrollbarOptions: any;
-  align?: Constructor<InternalModule, [TableUp, HTMLElement, Quill, any]>;
+  align?: Constructor<InternalModule, [TableUp, Quill, any]>;
   alignOptions: any;
-  resizeScale?: Constructor<InternalModule, [TableUp, HTMLElement, Quill, Partial<TableResizeScaleOptions>]>;
+  resizeScale?: Constructor<InternalModule, [TableUp, Quill, Partial<TableResizeScaleOptions>]>;
   resizeScaleOptions: Partial<TableResizeScaleOptions>;
   autoMergeCell: boolean;
 }

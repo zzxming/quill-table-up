@@ -3,6 +3,7 @@ import type { TableUp } from '../table-up';
 import Quill from 'quill';
 import { getTableMainRect } from '../formats';
 import { addScrollEvent, clearScrollEvent, createBEM, debounce } from '../utils';
+import { TableDomSelector } from './table-dom-selector';
 
 export class Scrollbar {
   minSize: number = 20;
@@ -31,7 +32,12 @@ export class Scrollbar {
   propertyMap: { readonly size: 'height'; readonly offset: 'offsetHeight'; readonly scrollDirection: 'scrollTop'; readonly scrollSize: 'scrollHeight'; readonly axis: 'Y'; readonly direction: 'top'; readonly client: 'clientY' } | { readonly size: 'width'; readonly offset: 'offsetWidth'; readonly scrollDirection: 'scrollLeft'; readonly scrollSize: 'scrollWidth'; readonly axis: 'X'; readonly direction: 'left'; readonly client: 'clientX' };
   bem = createBEM('scrollbar');
   tableMainBlot: TableMainFormat;
-  constructor(public quill: Quill, public isVertical: boolean, public table: HTMLElement, public scrollbarContainer: HTMLElement) {
+
+  get isVertical() {
+    return this.options.isVertical;
+  }
+
+  constructor(public quill: Quill, public table: HTMLElement, public options: { isVertical: boolean }) {
     this.tableMainBlot = Quill.find(this.table) as TableMainFormat;
     this.container = table.parentElement!;
     this.propertyMap = this.isVertical
@@ -54,9 +60,7 @@ export class Scrollbar {
           client: 'clientX',
         } as const;
     this.calculateSize();
-    this.ob = new ResizeObserver(() => {
-      this.update();
-    });
+    this.ob = new ResizeObserver(() => this.update());
     this.ob.observe(table);
     this.scrollbar = this.createScrollbar();
     this.setScrollbarPosition();
@@ -216,51 +220,67 @@ export class Scrollbar {
     this.table.removeEventListener('mouseleave', this.hideScrollbar);
   }
 }
-export class TableVirtualScrollbar {
-  scrollbarContainer: HTMLElement;
-  scrollbar: Scrollbar[];
-  bem = createBEM('scrollbar');
-  constructor(public tableModule: TableUp, public table: HTMLElement, public quill: Quill) {
-    this.scrollbarContainer = this.tableModule.addContainer(this.bem.be('container'));
 
-    this.scrollbar = [
-      new Scrollbar(quill, true, table, this.scrollbarContainer),
-      new Scrollbar(quill, false, table, this.scrollbarContainer),
-    ];
-    for (const item of this.scrollbar) {
-      this.scrollbarContainer.appendChild(item.scrollbar);
-    }
-    this.quill.on(Quill.events.TEXT_CHANGE, this.updateWhenTextChange);
+export class TableVirtualScrollbar extends TableDomSelector {
+  scrollbarContainer: HTMLElement;
+  scrollbar: Scrollbar[] = [];
+  bem = createBEM('scrollbar');
+  constructor(public tableModule: TableUp, public quill: Quill, _options: any) {
+    super(tableModule, quill);
+
+    this.scrollbarContainer = this.tableModule.addContainer(this.bem.be('container'));
+    this.quill.on(Quill.events.EDITOR_CHANGE, this.updateWhenTextChange);
   }
 
-  updateWhenTextChange = () => {
-    this.update();
+  updateWhenTextChange = (eventName: string) => {
+    if (eventName === Quill.events.TEXT_CHANGE) {
+      if (this.table && !this.quill.root.contains(this.table)) {
+        this.setSelectionTable(undefined);
+      }
+      else {
+        this.update();
+      }
+    }
   };
 
   hide() {
     for (const scrollbar of this.scrollbar) {
-      scrollbar.hideScrollbar();
+      scrollbar.destroy();
     }
+    this.scrollbar = [];
+    this.scrollbarContainer.innerHTML = '';
   }
 
   show() {
-    for (const scrollbar of this.scrollbar) {
-      scrollbar.showScrollbar();
+    if (!this.table) return;
+    this.scrollbar = [
+      new Scrollbar(this.quill, this.table, { isVertical: true }),
+      new Scrollbar(this.quill, this.table, { isVertical: false }),
+    ];
+    for (const item of this.scrollbar) {
+      this.scrollbarContainer.appendChild(item.scrollbar);
+      item.showScrollbar();
     }
   }
 
   update() {
-    for (const scrollbar of this.scrollbar) {
-      scrollbar.calculateSize();
-      scrollbar.setScrollbarPosition();
+    if (this.table) {
+      if (this.scrollbar.length <= 0) {
+        this.show();
+      }
+      for (const scrollbar of this.scrollbar) {
+        scrollbar.calculateSize();
+        scrollbar.setScrollbarPosition();
+      }
+    }
+    else if (this.scrollbar.length > 0) {
+      this.hide();
     }
   }
 
   destroy() {
+    this.hide();
     this.scrollbarContainer.remove();
     this.quill.off(Quill.events.TEXT_CHANGE, this.updateWhenTextChange);
-    for (const scrollbar of this.scrollbar) {
-      scrollbar.destroy();
-    }
   }
 }

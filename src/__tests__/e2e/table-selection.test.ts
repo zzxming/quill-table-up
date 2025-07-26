@@ -102,7 +102,7 @@ test('test TableSelection set indent format', async ({ page }) => {
   expect(cellBounding).not.toBeNull();
   await cell.click();
   await page.mouse.down();
-  await page.mouse.move(cellBounding.x + cellBounding.width * 2 - 10, cellBounding.y + cellBounding.height * 2 - 10);
+  await page.mouse.move(cellBounding.x + cellBounding.width * 1.5, cellBounding.y + cellBounding.height * 1.5);
   await page.mouse.up();
 
   const plus = page.locator('.ql-toolbar .ql-indent[value="+1"]').nth(0);
