@@ -343,7 +343,6 @@ export class TableUp {
         const tableNode = path.find(node => node.tagName && node.tagName.toUpperCase() === 'TABLE' && node.classList.contains('ql-table'));
         if (tableNode) {
           if (this.table === tableNode) {
-            this.tableSelection && this.tableSelection.show();
             this.tableAlign && this.tableAlign.update();
             this.tableResize && this.tableResize.update();
             this.tableScrollbar && this.tableScrollbar.update();
@@ -642,7 +641,6 @@ export class TableUp {
   showTableTools(table: HTMLElement) {
     if (table) {
       this.table = table;
-      this.tableSelection?.show();
       if (this.options.align) {
         this.tableAlign = new this.options.align(this, table, this.quill, this.options.alignOptions);
       }
@@ -659,7 +657,6 @@ export class TableUp {
   }
 
   hideTableTools() {
-    this.tableSelection?.hide();
     if (this.tableScrollbar) {
       this.tableScrollbar.destroy();
       this.tableScrollbar = undefined;

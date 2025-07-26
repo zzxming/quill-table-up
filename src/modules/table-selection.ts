@@ -5,6 +5,7 @@ import type { InternalTableMenuModule, RelactiveRect, TableSelectionOptions } fr
 import Quill from 'quill';
 import { getTableMainRect, TableBodyFormat, TableCellFormat, TableCellInnerFormat } from '../formats';
 import { addScrollEvent, blotName, clearScrollEvent, createBEM, createResizeObserver, findAllParentBlot, findParentBlot, getElementScroll, getRelativeRect, isRectanglesIntersect, tableUpEvent } from '../utils';
+import { TableDomSelector } from './table-dom-selector';
 
 const ERROR_LIMIT = 0;
 
@@ -15,7 +16,7 @@ export interface SelectionData {
   focusOffset: number;
 }
 
-export class TableSelection {
+export class TableSelection extends TableDomSelector {
   options: TableSelectionOptions;
   boundary: RelactiveRect | null = null;
   scrollRecordEls: HTMLElement[] = [];
@@ -31,7 +32,6 @@ export class TableSelection {
   scrollHandler: [HTMLElement, (...args: any[]) => void][] = [];
   tableMenu?: InternalTableMenuModule;
   resizeObserver: ResizeObserver;
-  table?: HTMLTableElement;
   isDisplaySelection = false;
   bem = createBEM('selection');
   lastSelection: SelectionData = {
@@ -42,6 +42,7 @@ export class TableSelection {
   };
 
   constructor(public tableModule: TableUp, public quill: Quill, options: Partial<TableSelectionOptions> = {}) {
+    super(tableModule, quill);
     this.options = this.resolveOptions(options);
     this.scrollRecordEls = [this.quill.root, document.documentElement];
 
@@ -51,19 +52,43 @@ export class TableSelection {
     this.resizeObserver = createResizeObserver(() => this.updateAfterEvent(), { ignoreFirstBind: true });
     this.resizeObserver.observe(this.quill.root);
 
-    this.quill.emitter.listenDOM('mousedown', this.quill.root, this.mouseDownHandler.bind(this));
     this.quill.emitter.listenDOM('selectionchange', document, this.selectionChangeHandler.bind(this));
     this.quill.on(tableUpEvent.AFTER_TABLE_RESIZE, this.updateAfterEvent);
-    this.quill.on(Quill.events.SELECTION_CHANGE, this.quillSelectionChangeHandler);
     this.quill.on(Quill.events.TEXT_CHANGE, this.updateAfterEvent);
+    this.quill.on(Quill.events.SELECTION_CHANGE, this.quillSelectionChangeHandler);
+    this.quill.on(Quill.events.EDITOR_CHANGE, this.hideWhenTextChange);
     if (this.options.tableMenu) {
       this.tableMenu = new this.options.tableMenu(tableModule, quill, this.options.tableMenuOptions);
     }
     this.hide();
   }
 
+  hideWhenTextChange = (type: typeof Quill.events.TEXT_CHANGE | typeof Quill.events.SELECTION_CHANGE) => {
+    if (type === Quill.events.TEXT_CHANGE && (!this.table || !this.quill.root.contains(this.table))) {
+      this.hide();
+    }
+  };
+
   updateAfterEvent = () => {
     this.updateWithSelectedTds();
+  };
+
+  removeCell = (e: KeyboardEvent) => {
+    const range = this.quill.getSelection();
+    const activeElement = document.activeElement;
+    if (range || (e.key !== 'Backspace' && e.key !== 'Delete') || !this.quill.root.contains(activeElement)) return;
+
+    if (this.table) {
+      const tableMain = Quill.find(this.table) as TableMainFormat;
+      const cells = tableMain.descendants(TableCellInnerFormat);
+      if (this.selectedTds.length === cells.length) {
+        tableMain.remove();
+        return;
+      }
+    }
+    for (const td of this.selectedTds) {
+      td.deleteAt(0, td.length() - 1);
+    }
   };
 
   getFirstTextNode(dom: HTMLElement | Node): Node {
@@ -402,9 +427,9 @@ export class TableSelection {
     this.startScrollRecordPosition = [];
   }
 
-  mouseDownHandler(mousedownEvent: Event) {
-    const { button, target, clientX, clientY } = mousedownEvent as MouseEvent;
-    const closestTable = (target as HTMLElement).closest<HTMLTableElement>('.ql-table');
+  mouseDownHandler(mousedownEvent: MouseEvent) {
+    const { button, target, clientX, clientY } = mousedownEvent;
+    const closestTable = (target as HTMLElement).closest<HTMLTableElement>('table');
     const closestTableCaption = (target as HTMLElement).closest('caption');
     if (button !== 0 || !closestTable || closestTableCaption) return;
 
@@ -523,24 +548,6 @@ export class TableSelection {
     }
   }
 
-  removeCell = (e: KeyboardEvent) => {
-    const range = this.quill.getSelection();
-    const activeElement = document.activeElement;
-    if (range || (e.key !== 'Backspace' && e.key !== 'Delete') || !this.quill.root.contains(activeElement)) return;
-
-    if (this.table) {
-      const tableMain = Quill.find(this.table) as TableMainFormat;
-      const cells = tableMain.descendants(TableCellInnerFormat);
-      if (this.selectedTds.length === cells.length) {
-        tableMain.remove();
-        return;
-      }
-    }
-    for (const td of this.selectedTds) {
-      td.deleteAt(0, td.length() - 1);
-    }
-  };
-
   showDisplay() {
     Object.assign(this.cellSelectWrap.style, { display: 'block' });
     this.isDisplaySelection = true;
@@ -554,7 +561,7 @@ export class TableSelection {
 
     this.update();
     this.showDisplay();
-    document.addEventListener('keydown', this.removeCell);
+    this.quill.root.addEventListener('keydown', this.removeCell);
     addScrollEvent.call(this, this.quill.root, () => {
       this.update();
     });
@@ -572,7 +579,7 @@ export class TableSelection {
 
   hide() {
     clearScrollEvent.call(this);
-    document.removeEventListener('keydown', this.removeCell);
+    this.quill.root.removeEventListener('keydown', this.removeCell);
     this.hideDisplay();
     this.boundary = null;
     this.selectedTds = [];
@@ -593,8 +600,9 @@ export class TableSelection {
     clearScrollEvent.call(this);
 
     this.quill.root.removeEventListener('mousedown', this.mouseDownHandler);
-    this.quill.off(Quill.events.SELECTION_CHANGE, this.quillSelectionChangeHandler);
-    this.quill.off(Quill.events.TEXT_CHANGE, this.updateAfterEvent);
     this.quill.off(tableUpEvent.AFTER_TABLE_RESIZE, this.updateAfterEvent);
+    this.quill.off(Quill.events.TEXT_CHANGE, this.updateAfterEvent);
+    this.quill.off(Quill.events.SELECTION_CHANGE, this.quillSelectionChangeHandler);
+    this.quill.off(Quill.events.EDITOR_CHANGE, this.hideWhenTextChange);
   }
 }
