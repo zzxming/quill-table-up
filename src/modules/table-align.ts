@@ -66,16 +66,6 @@ export class TableAlign extends TableDomSelector {
     }
   }
 
-  setSelectionTable(table: HTMLTableElement | undefined) {
-    if (this.table === table) return;
-    this.hide();
-    this.table = table;
-    if (this.table) {
-      this.show();
-    }
-    this.update();
-  }
-
   show() {
     if (!this.table || !this.alignBox) return;
     this.tableBlot = Quill.find(this.table) as TableMainFormat;

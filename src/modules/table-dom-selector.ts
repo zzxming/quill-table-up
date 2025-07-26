@@ -17,9 +17,17 @@ export class TableDomSelector {
 
   setSelectionTable(table: HTMLTableElement | undefined) {
     if (this.table === table) return;
+    this.hide();
     this.table = table;
+    if (this.table) {
+      this.show();
+    }
     this.update();
   }
+
+  hide() {}
+
+  show() {}
 
   update() {}
 }
