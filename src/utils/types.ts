@@ -65,7 +65,7 @@ export interface TableUpOptions {
   selectionOptions: Partial<TableSelectionOptions>;
   resize?: Constructor<InternalModule, [TableUp, HTMLElement, Quill, any]>;
   resizeOptions: any;
-  scrollbar?: Constructor<InternalModule, [TableUp, HTMLElement, Quill, any]>;
+  scrollbar?: Constructor<InternalModule, [TableUp, Quill, any]>;
   scrollbarOptions: any;
   align?: Constructor<InternalModule, [TableUp, Quill, any]>;
   alignOptions: any;

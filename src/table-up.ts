@@ -301,6 +301,9 @@ export class TableUp {
     if (this.options.align) {
       this.tableAlign = new this.options.align(this, this.quill, this.options.alignOptions);
     }
+    if (this.options.scrollbar) {
+      this.tableScrollbar = new this.options.scrollbar(this, this.quill, this.options.scrollbarOptions);
+    }
 
     const toolbar = this.quill.getModule('toolbar') as TypeToolbar;
     if (toolbar && (this.quill.theme as QuillTheme).pickers) {
@@ -347,7 +350,6 @@ export class TableUp {
         if (tableNode) {
           if (this.table === tableNode) {
             this.tableResize && this.tableResize.update();
-            this.tableScrollbar && this.tableScrollbar.update();
             return;
           }
           if (this.table) this.hideTableTools();
@@ -643,9 +645,6 @@ export class TableUp {
   showTableTools(table: HTMLElement) {
     if (table) {
       this.table = table;
-      if (this.options.scrollbar) {
-        this.tableScrollbar = new this.options.scrollbar(this, table, this.quill, this.options.scrollbarOptions);
-      }
       if (this.options.resize) {
         this.tableResize = new this.options.resize(this, table, this.quill, this.options.resizeOptions);
       }
@@ -656,10 +655,6 @@ export class TableUp {
   }
 
   hideTableTools() {
-    if (this.tableScrollbar) {
-      this.tableScrollbar.destroy();
-      this.tableScrollbar = undefined;
-    }
     if (this.tableResize) {
       this.tableResize.destroy();
       this.tableResize = undefined;
