@@ -1,0 +1,26 @@
+import type Quill from 'quill';
+import type { TableUp } from '../table-up';
+
+export class TableDomSelector {
+  table?: HTMLTableElement;
+
+  constructor(public tableModule: TableUp, public quill: Quill) {
+    this.quill.root.addEventListener('mousedown', this.mouseDownHandler.bind(this));
+  }
+
+  mouseDownHandler(event: MouseEvent) {
+    const path = event.composedPath() as HTMLElement[];
+    if (event.button !== 0 || !path || path.length <= 0) return;
+    const tableNode = path.find(node => node.tagName && node.tagName.toUpperCase() === 'TABLE');
+    this.setSelectionTable(tableNode as HTMLTableElement);
+    console.log(tableNode);
+  }
+
+  setSelectionTable(table: HTMLTableElement | undefined) {
+    if (this.table === table) return;
+    this.table = table;
+    this.update();
+  }
+
+  update() {}
+}
