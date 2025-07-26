@@ -1,11 +1,16 @@
-import type Quill from 'quill';
 import type { TableUp } from '../table-up';
+import Quill from 'quill';
 
 export class TableDomSelector {
   table?: HTMLTableElement;
 
   constructor(public tableModule: TableUp, public quill: Quill) {
     this.quill.root.addEventListener('mousedown', this.mouseDownHandler.bind(this));
+    this.quill.on(Quill.events.EDITOR_CHANGE, (eventName: string) => {
+      if (eventName === Quill.events.TEXT_CHANGE && this.table) {
+        this.setSelectionTable(undefined);
+      }
+    });
   }
 
   mouseDownHandler(event: MouseEvent) {
@@ -13,7 +18,6 @@ export class TableDomSelector {
     if (event.button !== 0 || !path || path.length <= 0) return;
     const tableNode = path.find(node => node.tagName && node.tagName.toUpperCase() === 'TABLE');
     this.setSelectionTable(tableNode as HTMLTableElement);
-    console.log(tableNode);
   }
 
   setSelectionTable(table: HTMLTableElement | undefined) {
