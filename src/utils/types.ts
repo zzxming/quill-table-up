@@ -69,7 +69,7 @@ export interface TableUpOptions {
   scrollbarOptions: any;
   align?: Constructor<InternalModule, [TableUp, Quill, any]>;
   alignOptions: any;
-  resizeScale?: Constructor<InternalModule, [TableUp, HTMLElement, Quill, Partial<TableResizeScaleOptions>]>;
+  resizeScale?: Constructor<InternalModule, [TableUp, Quill, Partial<TableResizeScaleOptions>]>;
   resizeScaleOptions: Partial<TableResizeScaleOptions>;
   autoMergeCell: boolean;
 }

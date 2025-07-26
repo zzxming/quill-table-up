@@ -304,6 +304,9 @@ export class TableUp {
     if (this.options.scrollbar) {
       this.tableScrollbar = new this.options.scrollbar(this, this.quill, this.options.scrollbarOptions);
     }
+    if (this.options.resizeScale) {
+      this.tableResizeScale = new this.options.resizeScale(this, this.quill, this.options.resizeScaleOptions);
+    }
 
     const toolbar = this.quill.getModule('toolbar') as TypeToolbar;
     if (toolbar && (this.quill.theme as QuillTheme).pickers) {
@@ -648,9 +651,6 @@ export class TableUp {
       if (this.options.resize) {
         this.tableResize = new this.options.resize(this, table, this.quill, this.options.resizeOptions);
       }
-      if (this.options.resizeScale) {
-        this.tableResizeScale = new this.options.resizeScale(this, table, this.quill, this.options.resizeScaleOptions);
-      }
     }
   }
 
@@ -658,9 +658,6 @@ export class TableUp {
     if (this.tableResize) {
       this.tableResize.destroy();
       this.tableResize = undefined;
-    }
-    if (this.tableResizeScale) {
-      this.tableResizeScale.destroy();
     }
     this.table = undefined;
   }

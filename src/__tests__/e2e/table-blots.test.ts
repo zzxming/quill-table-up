@@ -70,7 +70,7 @@ extendTest('test table tools should hide after table removed', async ({ page, ed
   await expect(page.locator('#container1 .table-up-toolbox .table-up-scrollbar__container .table-up-scrollbar.is-horizontal')).not.toBeAttached();
   await expect(page.locator('#container1 .table-up-toolbox .table-up-resize-line__col')).not.toBeAttached();
   await expect(page.locator('#container1 .table-up-toolbox .table-up-resize-line__row')).not.toBeAttached();
-  await expect(page.locator('#container1 .table-up-toolbox .table-up-scale')).not.toBeAttached();
+  await expect(page.locator('#container1 .table-up-toolbox .table-up-scale')).not.toBeVisible();
 
   editorPage.index = 1;
   await createTableBySelect(page, 'container2', 3, 3);
@@ -90,7 +90,7 @@ extendTest('test table tools should hide after table removed', async ({ page, ed
   await expect(page.locator('#container1 .table-up-toolbox .table-up-scrollbar__container .table-up-scrollbar.is-vertical')).not.toBeAttached();
   await expect(page.locator('#container1 .table-up-toolbox .table-up-scrollbar__container .table-up-scrollbar.is-horizontal')).not.toBeAttached();
   await expect(page.locator('#container2 .table-up-toolbox .table-up-resize-box')).not.toBeAttached();
-  await expect(page.locator('#container2 .table-up-toolbox .table-up-scale')).not.toBeAttached();
+  await expect(page.locator('#container2 .table-up-toolbox .table-up-scale')).not.toBeVisible();
 });
 
 extendTest('remove list in cell should work correctly', async ({ page, editorPage }) => {
