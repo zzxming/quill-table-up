@@ -489,7 +489,7 @@ extendTest.describe('TableSelection should work correct when wrapper scroll', ()
     await page.mouse.move(bounding.x + bounding.width / 2, bounding.y + bounding.height / 2);
 
     const selectedTds = await page.evaluate(() => {
-      return (window.quills[0].getModule('table-up') as any).tableSelection!.selectedTds;
+      return (window.quills[0].getModule('table-up') as any).getModule('table-selection')!.selectedTds;
     });
     expect(selectedTds.length).toBe(9);
   });
@@ -556,7 +556,7 @@ extendTest.describe('TableSelection should work correct when wrapper scroll', ()
     await page.mouse.move(bounding.x + bounding.width / 2, bounding.y + bounding.height / 2);
 
     const selectedTds = await page.evaluate(() => {
-      return (window.quills[4].getModule('table-up') as any).tableSelection!.selectedTds;
+      return (window.quills[4].getModule('table-up') as any).getModule('table-selection')!.selectedTds;
     });
     expect(selectedTds.length).toBe(9);
   });
