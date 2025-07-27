@@ -1,6 +1,7 @@
 import type Quill from 'quill';
 import type { TableUp } from '../../table-up';
 import type { InternalTableSelectionModule, TableMenuOptions, ToolTipOptions } from '../../utils';
+import type { TableSelection } from '../table-selection';
 import { limitDomInViewPort, tableUpEvent } from '../../utils';
 import { menuColorSelectClassName } from './constants';
 import { TableMenuCommon } from './table-menu-common';
@@ -33,7 +34,8 @@ export class TableMenuContextmenu extends TableMenuCommon {
 
     const tableNode = path.find(node => node.tagName && node.tagName.toUpperCase() === 'TABLE' && node.classList.contains('ql-table'));
 
-    if (tableNode && this.tableModule.tableSelection?.selectedTds?.length) {
+    const tableSelection = this.tableModule.getModule<TableSelection>('table-selection');
+    if (tableNode && tableSelection?.selectedTds?.length) {
       if (!this.menu) {
         this.menu = this.buildTools();
       }
@@ -72,7 +74,8 @@ export class TableMenuContextmenu extends TableMenuCommon {
   show() {}
 
   update(position?: { x: number; y: number }) {
-    if (!this.isMenuDisplay || !this.menu || !this.tableModule.tableSelection || !this.tableModule.tableSelection.isDisplaySelection) return;
+    const tableSelection = this.tableModule.getModule<TableSelection>('table-selection');
+    if (!this.isMenuDisplay || !this.menu || !tableSelection?.isDisplaySelection) return;
     if (!position) {
       return;
     }

@@ -11,6 +11,8 @@ export interface sizeChangeValue {
   pre: number;
 }
 export class TableResizeCommon extends TableDomSelector {
+  static moduleName = 'table-resize';
+
   colIndex: number = -1;
   tableBlot?: TableMainFormat;
   dragging = false;

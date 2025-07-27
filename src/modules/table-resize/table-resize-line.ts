@@ -1,4 +1,5 @@
 import type { TableUp } from '../../table-up';
+import type { TableSelection } from '../table-selection';
 import Quill from 'quill';
 import { type TableCellFormat, TableRowFormat } from '../../formats';
 import { blotName, createBEM, findParentBlot, findParentBlots } from '../../utils';
@@ -37,7 +38,8 @@ export class TableResizeLine extends TableResizeCommon {
   mousemoveHandler = (e: MouseEvent) => {
     if (this.dragging) return;
     // when mousedown to select mutiple line. if move on resizer will get wrong selection
-    if (this.tableModule.tableSelection && this.tableModule.tableSelection.dragging) return;
+    const tableSelection = this.tableModule.getModule<TableSelection>('table-selection');
+    if (tableSelection?.dragging) return;
     const tableCell = this.findTableCell(e);
     if (!tableCell) {
       return this.hide();

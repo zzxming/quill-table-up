@@ -4,7 +4,8 @@ import type TypeBlock from 'quill/blots/block';
 import type { Context } from 'quill/modules/keyboard';
 import type TypeKeyboard from 'quill/modules/keyboard';
 import type TypeToolbar from 'quill/modules/toolbar';
-import type { Constructor, InternalModule, InternalTableMenuModule, InternalTableSelectionModule, QuillTheme, QuillThemePicker, TableCellValue, TableConstantsData, TableTextOptions, TableUpOptions } from './utils';
+import type { TableSelection } from './modules';
+import type { Constructor, QuillTheme, QuillThemePicker, TableCellValue, TableConstantsData, TableTextOptions, TableUpOptions } from './utils';
 import Quill from 'quill';
 import { BlockEmbedOverride, BlockOverride, ContainerFormat, ScrollOverride, TableBodyFormat, TableCaptionFormat, TableCellFormat, TableCellInnerFormat, TableColFormat, TableColgroupFormat, TableMainFormat, TableRowFormat, TableWrapperFormat } from './formats';
 import { TableClipboard } from './modules';
@@ -273,13 +274,8 @@ export class TableUp {
   toolBox: HTMLDivElement;
   fixTableByLisenter = debounce(this.balanceTables, 100);
   selector?: HTMLElement;
-  tableSelection?: InternalTableSelectionModule;
-  tableResize?: InternalModule;
-  tableScrollbar?: InternalModule;
-  tableAlign?: InternalModule;
-  tableMenu?: InternalTableMenuModule;
-  tableResizeScale?: InternalModule;
   resizeOb!: ResizeObserver;
+  modules: Record<string, Constructor> = {};
 
   get statics(): any {
     return this.constructor;
@@ -289,30 +285,6 @@ export class TableUp {
     this.quill = quill;
     this.options = this.resolveOptions(options || {});
     this.toolBox = this.initialContainer();
-
-    if (!this.options.scrollbar) {
-      const scrollbarBEM = createBEM('scrollbar');
-      this.quill.container.classList.add(scrollbarBEM.bm('origin'));
-    }
-
-    if (this.options.selection) {
-      this.tableSelection = new this.options.selection(this, this.quill, this.options.selectionOptions);
-    }
-    if (this.options.align) {
-      this.tableAlign = new this.options.align(this, this.quill, this.options.alignOptions);
-    }
-    if (this.options.scrollbar) {
-      this.tableScrollbar = new this.options.scrollbar(this, this.quill, this.options.scrollbarOptions);
-    }
-    if (this.options.resizeScale) {
-      this.tableResizeScale = new this.options.resizeScale(this, this.quill, this.options.resizeScaleOptions);
-    }
-    if (this.options.resize) {
-      this.tableResize = new this.options.resize(this, this.quill, this.options.resizeOptions);
-    }
-    if (this.options.tableMenu) {
-      this.tableMenu = new this.options.tableMenu(this, quill, this.options.tableMenuOptions);
-    }
 
     const toolbar = this.quill.getModule('toolbar') as TypeToolbar;
     if (toolbar && (this.quill.theme as QuillTheme).pickers) {
@@ -349,6 +321,7 @@ export class TableUp {
       }
     }
 
+    this.initModules();
     this.quillHack();
     this.listenBalanceCells();
   }
@@ -393,13 +366,8 @@ export class TableUp {
       full: false,
       fullSwitch: true,
       icon: icons.table,
-      selectionOptions: {},
-      alignOptions: {},
-      scrollbarOptions: {},
-      resizeOptions: {},
-      resizeScaleOptions: {},
       autoMergeCell: true,
-      tableMenuOptions: {},
+      modules: [],
     } as TableUpOptions, options);
   }
 
@@ -432,6 +400,16 @@ export class TableUp {
     }, options);
   }
 
+  initModules() {
+    for (const item of this.options.modules) {
+      this.modules[item.module.moduleName] = new item.module(this, this.quill, item.options);
+    }
+  }
+
+  getModule<T>(name: string) {
+    return this.modules[name] as T | undefined;
+  }
+
   quillHack() {
     const originGetSemanticHTML = this.quill.getSemanticHTML;
     this.quill.getSemanticHTML = ((index: number = 0, length?: number) => {
@@ -457,12 +435,14 @@ export class TableUp {
         const range = this.getSelection(true);
         const formats = this.getFormat(range);
         // only when selection in cell and selectedTds > 1 can format all cells
-        if (!formats[blotName.tableCellInner] || range.length > 0 || (tableUpModule && tableUpModule.tableSelection && tableUpModule.tableSelection.selectedTds.length <= 1)) {
+        const tableSelection = tableUpModule.getModule<TableSelection>('table-selection');
+        console.log(tableSelection?.selectedTds);
+        if (!formats[blotName.tableCellInner] || range.length > 0 || (tableUpModule && tableSelection && tableSelection.selectedTds.length <= 1)) {
           return originFormat.call(this, name, value, source);
         }
         // format in selected cells
-        if (tableUpModule && tableUpModule.tableSelection && tableUpModule.tableSelection.selectedTds.length > 0) {
-          const selectedTds = tableUpModule.tableSelection.selectedTds;
+        if (tableUpModule && tableSelection && tableSelection.selectedTds.length > 0) {
+          const selectedTds = tableSelection.selectedTds;
           // calculate the format value. the format should be canceled when this value exists in all selected cells
           let setOrigin = false;
           const tdRanges = [];
@@ -557,13 +537,14 @@ export class TableUp {
           }
           // if selection range is not in table, but use the TableSelection selected cells
           // clean all other formats in cell
-          if (tableUpModule && tableUpModule.tableSelection && tableUpModule.tableSelection.selectedTds.length > 0 && tableUpModule.tableSelection.table) {
-            const tableMain = Quill.find(tableUpModule.tableSelection.table) as TableMainFormat;
+          const tableSelection = tableUpModule.getModule<TableSelection>('table-selection');
+          if (tableUpModule && tableSelection && tableSelection.selectedTds.length > 0 && tableSelection.table) {
+            const tableMain = Quill.find(tableSelection.table) as TableMainFormat;
             if (!tableMain) {
               console.warn('TableMainFormat not found');
               return;
             }
-            const selectedTds = tableUpModule.tableSelection.selectedTds;
+            const selectedTds = tableSelection.selectedTds;
 
             // get all need clean style cells. include border-right/border-bottom effect cells
             const editTds = new Set<TableCellFormat>();

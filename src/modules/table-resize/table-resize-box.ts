@@ -1,5 +1,6 @@
 import type { TableColFormat, TableMainFormat, TableRowFormat, TableWrapperFormat } from '../../formats';
 import type { TableUp } from '../../table-up';
+import type { TableSelection } from '../table-selection';
 import type { sizeChangeValue } from './table-resize-common';
 import Quill from 'quill';
 import { getTableMainRect, TableCaptionFormat, TableCellInnerFormat } from '../../formats';
@@ -62,55 +63,55 @@ export class TableResizeBox extends TableResizeCommon {
     if (!this.table) return;
     const { clientX, clientY } = e;
     const tableRect = this.table.getBoundingClientRect();
-    if (this.tableModule.tableSelection) {
-      const tableSelection = this.tableModule.tableSelection;
-      if (!e.shiftKey) {
-        this.lastHeaderSelect = null;
-      }
-      const currentBoundary: [Point, Point] = [
-        { x: isX ? tableRect.left : clientX, y: isX ? clientY : tableRect.top },
-        { x: isX ? tableRect.right : clientX, y: isX ? clientY : tableRect.bottom },
-      ];
-      if (this.lastHeaderSelect) {
-        // find last click head
-        let lastX: number;
-        let lastY: number;
-        if (this.lastHeaderSelect.isX) {
-          const tableRowHeads = Array.from(this.root.getElementsByClassName(this.bem.be('row-header'))) as HTMLElement[];
-          const rect = tableRowHeads[this.lastHeaderSelect.index].getBoundingClientRect();
-          lastX = Math.min(rect.left, tableRect.left);
-          lastY = rect.top + rect.height / 2;
-        }
-        else {
-          const tableColHeads = Array.from(this.root.getElementsByClassName(this.bem.be('col-header'))) as HTMLElement[];
-          const rect = tableColHeads[this.lastHeaderSelect.index].getBoundingClientRect();
-          lastX = rect.left + rect.width / 2;
-          lastY = Math.min(rect.top, tableRect.top);
-        }
-
-        if (this.lastHeaderSelect.isX !== isX) {
-          currentBoundary[1] = {
-            x: Math.max(currentBoundary[0].x, lastX),
-            y: Math.max(currentBoundary[0].y, lastY),
-          };
-          currentBoundary[0] = {
-            x: Math.min(currentBoundary[0].x, lastX),
-            y: Math.min(currentBoundary[0].y, lastY),
-          };
-        }
-        else if (isX) {
-          currentBoundary[0].y = Math.min(currentBoundary[0].y, lastY);
-          currentBoundary[1].y = Math.max(currentBoundary[1].y, lastY);
-        }
-        else {
-          currentBoundary[0].x = Math.min(currentBoundary[0].x, lastX);
-          currentBoundary[1].x = Math.max(currentBoundary[1].x, lastX);
-        }
+    if (!e.shiftKey) {
+      this.lastHeaderSelect = null;
+    }
+    const currentBoundary: [Point, Point] = [
+      { x: isX ? tableRect.left : clientX, y: isX ? clientY : tableRect.top },
+      { x: isX ? tableRect.right : clientX, y: isX ? clientY : tableRect.bottom },
+    ];
+    if (this.lastHeaderSelect) {
+      // find last click head
+      let lastX: number;
+      let lastY: number;
+      if (this.lastHeaderSelect.isX) {
+        const tableRowHeads = Array.from(this.root.getElementsByClassName(this.bem.be('row-header'))) as HTMLElement[];
+        const rect = tableRowHeads[this.lastHeaderSelect.index].getBoundingClientRect();
+        lastX = Math.min(rect.left, tableRect.left);
+        lastY = rect.top + rect.height / 2;
       }
       else {
-        this.lastHeaderSelect = { isX, index };
+        const tableColHeads = Array.from(this.root.getElementsByClassName(this.bem.be('col-header'))) as HTMLElement[];
+        const rect = tableColHeads[this.lastHeaderSelect.index].getBoundingClientRect();
+        lastX = rect.left + rect.width / 2;
+        lastY = Math.min(rect.top, tableRect.top);
       }
 
+      if (this.lastHeaderSelect.isX !== isX) {
+        currentBoundary[1] = {
+          x: Math.max(currentBoundary[0].x, lastX),
+          y: Math.max(currentBoundary[0].y, lastY),
+        };
+        currentBoundary[0] = {
+          x: Math.min(currentBoundary[0].x, lastX),
+          y: Math.min(currentBoundary[0].y, lastY),
+        };
+      }
+      else if (isX) {
+        currentBoundary[0].y = Math.min(currentBoundary[0].y, lastY);
+        currentBoundary[1].y = Math.max(currentBoundary[1].y, lastY);
+      }
+      else {
+        currentBoundary[0].x = Math.min(currentBoundary[0].x, lastX);
+        currentBoundary[1].x = Math.max(currentBoundary[1].x, lastX);
+      }
+    }
+    else {
+      this.lastHeaderSelect = { isX, index };
+    }
+
+    const tableSelection = this.tableModule.getModule<TableSelection>('table-selection');
+    if (tableSelection) {
       tableSelection.table = this.table;
       tableSelection.setSelectedTds(tableSelection.computeSelectedTds(...currentBoundary));
       tableSelection.show();
@@ -221,8 +222,8 @@ export class TableResizeBox extends TableResizeCommon {
         height: `${this.size}px`,
       });
       this.corner.addEventListener('click', () => {
-        if (this.tableModule.tableSelection && this.tableBlot) {
-          const tableSelection = this.tableModule.tableSelection;
+        const tableSelection = this.tableModule.getModule<TableSelection>('table-selection');
+        if (tableSelection && this.tableBlot) {
           tableSelection.setSelectedTds(this.tableBlot.descendants(TableCellInnerFormat));
           tableSelection.show();
           tableSelection.updateWithSelectedTds();
