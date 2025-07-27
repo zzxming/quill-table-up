@@ -34,7 +34,7 @@ export class TableMenuContextmenu extends TableMenuCommon {
 
     const tableNode = path.find(node => node.tagName && node.tagName.toUpperCase() === 'TABLE' && node.classList.contains('ql-table'));
 
-    const tableSelection = this.tableModule.getModules<TableSelection>('table-selection');
+    const tableSelection = this.tableModule.getModule<TableSelection>('table-selection');
     if (tableNode && tableSelection?.selectedTds?.length) {
       if (!this.menu) {
         this.menu = this.buildTools();
@@ -74,7 +74,7 @@ export class TableMenuContextmenu extends TableMenuCommon {
   show() {}
 
   update(position?: { x: number; y: number }) {
-    const tableSelection = this.tableModule.getModules<TableSelection>('table-selection');
+    const tableSelection = this.tableModule.getModule<TableSelection>('table-selection');
     if (!this.isMenuDisplay || !this.menu || !tableSelection?.isDisplaySelection) return;
     if (!position) {
       return;

@@ -240,7 +240,7 @@ export class TableMenuCommon extends TableDomSelector {
       type: 'click',
       content: colorSelectWrapper,
       onOpen: () => {
-        const tableSelection = this.tableModule.getModules<TableSelection>('table-selection');
+        const tableSelection = this.tableModule.getModule<TableSelection>('table-selection');
         if (this.isMenuDisplay && tableSelection) {
           tableSelection.hideDisplay();
         }
@@ -248,7 +248,7 @@ export class TableMenuCommon extends TableDomSelector {
         return false;
       },
       onClose: () => {
-        const tableSelection = this.tableModule.getModules<TableSelection>('table-selection');
+        const tableSelection = this.tableModule.getModule<TableSelection>('table-selection');
         if (this.isMenuDisplay && tableSelection) {
           tableSelection.updateWithSelectedTds();
           tableSelection.showDisplay();
@@ -282,7 +282,7 @@ export class TableMenuCommon extends TableDomSelector {
   }
 
   getSelectedTds() {
-    const tableSelection = this.tableModule.getModules<TableSelection>('table-selection');
+    const tableSelection = this.tableModule.getModule<TableSelection>('table-selection');
     return tableSelection?.selectedTds || [];
   }
 

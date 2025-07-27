@@ -411,7 +411,7 @@ export class TableUp {
     }
   }
 
-  getModules<T>(name: string) {
+  getModule<T>(name: string) {
     return this.modules[name] as T | undefined;
   }
 

@@ -68,7 +68,7 @@ export class TableMenuSelect extends TableMenuCommon {
     this.menu.classList.remove(this.bem.is('hidden'));
     super.update();
 
-    const tableSelection = this.tableModule.getModules<TableSelection>('table-selection');
+    const tableSelection = this.tableModule.getModule<TableSelection>('table-selection');
     if (tableSelection?.isDisplaySelection) {
       computePosition(tableSelection.cellSelect, this.menu, {
         placement: 'bottom',

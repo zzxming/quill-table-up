@@ -110,7 +110,7 @@ export class TableResizeBox extends TableResizeCommon {
       this.lastHeaderSelect = { isX, index };
     }
 
-    const tableSelection = this.tableModule.getModules<TableSelection>('table-selection');
+    const tableSelection = this.tableModule.getModule<TableSelection>('table-selection');
     if (tableSelection) {
       tableSelection.table = this.table;
       tableSelection.setSelectedTds(tableSelection.computeSelectedTds(...currentBoundary));
@@ -222,7 +222,7 @@ export class TableResizeBox extends TableResizeCommon {
         height: `${this.size}px`,
       });
       this.corner.addEventListener('click', () => {
-        const tableSelection = this.tableModule.getModules<TableSelection>('table-selection');
+        const tableSelection = this.tableModule.getModule<TableSelection>('table-selection');
         if (tableSelection && this.tableBlot) {
           tableSelection.setSelectedTds(this.tableBlot.descendants(TableCellInnerFormat));
           tableSelection.show();
