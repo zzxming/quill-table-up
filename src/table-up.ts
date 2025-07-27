@@ -5,7 +5,7 @@ import type { Context } from 'quill/modules/keyboard';
 import type TypeKeyboard from 'quill/modules/keyboard';
 import type TypeToolbar from 'quill/modules/toolbar';
 import type { TableSelection } from './modules';
-import type { Constructor, InternalModule, InternalTableMenuModule, InternalTableSelectionModule, QuillTheme, QuillThemePicker, TableCellValue, TableConstantsData, TableTextOptions, TableUpOptions } from './utils';
+import type { Constructor, QuillTheme, QuillThemePicker, TableCellValue, TableConstantsData, TableTextOptions, TableUpOptions } from './utils';
 import Quill from 'quill';
 import { BlockEmbedOverride, BlockOverride, ContainerFormat, ScrollOverride, TableBodyFormat, TableCaptionFormat, TableCellFormat, TableCellInnerFormat, TableColFormat, TableColgroupFormat, TableMainFormat, TableRowFormat, TableWrapperFormat } from './formats';
 import { TableClipboard } from './modules';
@@ -274,12 +274,6 @@ export class TableUp {
   toolBox: HTMLDivElement;
   fixTableByLisenter = debounce(this.balanceTables, 100);
   selector?: HTMLElement;
-  tableSelection?: InternalTableSelectionModule;
-  tableResize?: InternalModule;
-  tableScrollbar?: InternalModule;
-  tableAlign?: InternalModule;
-  tableMenu?: InternalTableMenuModule;
-  tableResizeScale?: InternalModule;
   resizeOb!: ResizeObserver;
   modules: Record<string, Constructor> = {};
 
