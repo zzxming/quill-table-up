@@ -80,7 +80,7 @@ export class TableResizeLine extends TableResizeCommon {
   updateColResizer() {
     if (!this.tableBlot || !this.tableCellBlot || !this.colResizer) return;
     const tableCellBlot = this.tableCellBlot;
-    this.tableModule.toolBox.removeChild(this.colResizer);
+    this.colResizer.remove();
     this.colResizer = this.tableModule.addContainer(this.bem.be('col'));
 
     const [tableBodyBlot] = findParentBlots(tableCellBlot, [blotName.tableBody] as const);
@@ -118,7 +118,7 @@ export class TableResizeLine extends TableResizeCommon {
   updateRowResizer() {
     if (!this.tableBlot || !this.tableCellBlot || !this.rowResizer) return;
     const tableCellBlot = this.tableCellBlot;
-    this.tableModule.toolBox.removeChild(this.rowResizer);
+    this.rowResizer.remove();
     this.rowResizer = this.tableModule.addContainer(this.bem.be('row'));
     const currentRow = tableCellBlot.parent;
     if (!(currentRow instanceof TableRowFormat)) {
