@@ -420,7 +420,7 @@ export class TableSelection extends TableDomSelector {
     this.startScrollRecordPosition = [];
   }
 
-  mousedownSelectHandler(mousedownEvent: MouseEvent) {
+  tableSelectHandler(mousedownEvent: MouseEvent) {
     const { button, target, clientX, clientY } = mousedownEvent;
     const closestTable = (target as HTMLElement).closest<HTMLTableElement>('table');
     const closestTableCaption = (target as HTMLElement).closest('caption');

@@ -5,10 +5,10 @@ export class TableDomSelector {
   table?: HTMLTableElement;
 
   constructor(public tableModule: TableUp, public quill: Quill) {
-    this.quill.root.addEventListener('mousedown', this.mousedownSelectHandler.bind(this));
+    this.quill.root.addEventListener('mousedown', this.tableSelectHandler.bind(this));
   }
 
-  mousedownSelectHandler(event: MouseEvent) {
+  tableSelectHandler(event: MouseEvent) {
     const path = event.composedPath() as HTMLElement[];
     if (event.button !== 0 || !path || path.length <= 0) return;
     const tableNode = path.find(node => node.tagName && node.tagName.toUpperCase() === 'TABLE');
