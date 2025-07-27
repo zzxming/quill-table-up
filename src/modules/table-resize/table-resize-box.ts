@@ -43,6 +43,21 @@ export class TableResizeBox extends TableResizeCommon {
     }
   };
 
+  setSelectionTable(table: HTMLTableElement | undefined) {
+    if (this.table === table) return;
+    this.hide();
+    this.table = table;
+    if (this.table) {
+      const newTableBlot = Quill.find(this.table) as TableMainFormat;
+      if (newTableBlot) {
+        this.tableBlot = newTableBlot;
+        this.tableWrapperBlot = this.tableBlot.parent as TableWrapperFormat;
+      }
+      this.show();
+    }
+    this.update();
+  }
+
   handleResizerHeader(isX: boolean, index: number, e: MouseEvent) {
     if (!this.table) return;
     const { clientX, clientY } = e;
@@ -186,69 +201,17 @@ export class TableResizeBox extends TableResizeCommon {
     if (!this.tableBlot || !this.tableWrapperBlot) return;
     const { rect: tableRect, body: tableBodyBlot } = getTableMainRect(this.tableBlot);
     if (!tableBodyBlot || !tableRect) return;
+
+    this.root.innerHTML = '';
+
+    this.tableCols = this.tableBlot.getCols();
+    this.tableRows = this.tableBlot.getRows();
     const tableWrapperRect = this.tableWrapperBlot.domNode.getBoundingClientRect();
     const rootRect = this.quill.root.getBoundingClientRect();
     Object.assign(this.root.style, {
       top: `${Math.max(tableRect.y, tableWrapperRect.y) - rootRect.y}px`,
       left: `${Math.max(tableRect.x, tableWrapperRect.x) - rootRect.x}px`,
     });
-
-    let cornerTranslateX = -1 * this.size;
-    let rowHeadWrapperTranslateX = -1 * this.size;
-    if (isTableAlignRight(this.tableBlot)) {
-      this.root.classList.add(this.bem.is('align-right'));
-      cornerTranslateX = Math.min(tableWrapperRect.width, tableRect.width);
-      rowHeadWrapperTranslateX = Math.min(tableWrapperRect.width, tableRect.width);
-    }
-    else {
-      this.root.classList.remove(this.bem.is('align-right'));
-    }
-
-    const [tableCaptionBlot] = findChildBlot(this.tableBlot, TableCaptionFormat);
-    const tableCaptionIsTop = !tableCaptionBlot || !(tableCaptionBlot && tableCaptionBlot.side === 'top');
-    if (tableCaptionIsTop) {
-      this.root.classList.remove(this.bem.is('caption-bottom'));
-    }
-    else {
-      this.root.classList.add(this.bem.is('caption-bottom'));
-    }
-
-    if (this.corner) {
-      Object.assign(this.corner.style, {
-        transform: `translateY(${-1 * this.size}px) translateX(${cornerTranslateX}px)`,
-        top: `${tableCaptionIsTop ? 0 : tableRect.height + this.size}px`,
-      });
-    }
-    if (this.rowHeadWrapper) {
-      Object.assign(this.rowHeadWrapper.style, {
-        transform: `translateX(${rowHeadWrapperTranslateX}px)`,
-        maxHeight: `${tableWrapperRect.height}px`,
-      });
-    }
-    if (this.colHeadWrapper) {
-      Object.assign(this.colHeadWrapper.style, {
-        top: `${tableCaptionIsTop ? 0 : tableRect.height + this.size}px`,
-        maxWidth: `${tableWrapperRect.width}px`,
-      });
-    }
-  }
-
-  show() {
-    if (!this.table) return;
-    this.tableBlot = Quill.find(this.table) as TableMainFormat;
-    this.tableWrapperBlot = this.tableBlot.parent as TableWrapperFormat;
-
-    this.tableCols = this.tableBlot.getCols();
-    this.tableRows = this.tableBlot.getRows();
-    const { rect: tableRect, body: tableBodyBlot } = getTableMainRect(this.tableBlot);
-    if (!tableBodyBlot || !tableRect) return;
-
-    this.root.innerHTML = '';
-    this.root.classList.remove(this.bem.is('hidden'));
-    this.resizeObserver = createResizeObserver(() => this.update(), { ignoreFirstBind: true });
-    this.resizeObserver.observe(this.table);
-
-    const tableWrapperRect = this.tableWrapperBlot.domNode.getBoundingClientRect();
 
     if (this.tableCols.length > 0 && this.tableRows.length > 0) {
       this.corner = document.createElement('div');
@@ -311,6 +274,52 @@ export class TableResizeBox extends TableResizeCommon {
       this.rowHeadWrapper = rowHeadWrapper;
       this.bindRowEvents();
     }
+
+    // computed about `caption`
+    const [tableCaptionBlot] = findChildBlot(this.tableBlot, TableCaptionFormat);
+    const tableCaptionIsTop = !tableCaptionBlot || !(tableCaptionBlot && tableCaptionBlot.side === 'top');
+    if (tableCaptionIsTop) {
+      this.root.classList.remove(this.bem.is('caption-bottom'));
+    }
+    else {
+      this.root.classList.add(this.bem.is('caption-bottom'));
+    }
+    let cornerTranslateX = -1 * this.size;
+    let rowHeadWrapperTranslateX = -1 * this.size;
+    if (isTableAlignRight(this.tableBlot)) {
+      this.root.classList.add(this.bem.is('align-right'));
+      cornerTranslateX = Math.min(tableWrapperRect.width, tableRect.width);
+      rowHeadWrapperTranslateX = Math.min(tableWrapperRect.width, tableRect.width);
+    }
+    else {
+      this.root.classList.remove(this.bem.is('align-right'));
+    }
+    if (this.corner) {
+      Object.assign(this.corner.style, {
+        transform: `translateY(${-1 * this.size}px) translateX(${cornerTranslateX}px)`,
+        top: `${tableCaptionIsTop ? 0 : tableRect.height + this.size}px`,
+      });
+    }
+    if (this.rowHeadWrapper) {
+      Object.assign(this.rowHeadWrapper.style, {
+        transform: `translateX(${rowHeadWrapperTranslateX}px)`,
+        maxHeight: `${tableWrapperRect.height}px`,
+      });
+    }
+    if (this.colHeadWrapper) {
+      Object.assign(this.colHeadWrapper.style, {
+        top: `${tableCaptionIsTop ? 0 : tableRect.height + this.size}px`,
+        maxWidth: `${tableWrapperRect.width}px`,
+      });
+    }
+  }
+
+  show() {
+    if (!this.table || !this.tableBlot || !this.tableWrapperBlot) return;
+
+    this.root.classList.remove(this.bem.is('hidden'));
+    this.resizeObserver = createResizeObserver(() => this.update(), { ignoreFirstBind: true });
+    this.resizeObserver.observe(this.table);
 
     this.update();
     addScrollEvent.call(this, this.quill.root, () => {

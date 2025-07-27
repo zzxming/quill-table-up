@@ -10,7 +10,6 @@ export class TableResizeLine extends TableResizeCommon {
   rowResizer?: HTMLElement;
   currentTableCell?: HTMLElement;
   dragging = false;
-
   curColIndex: number = -1;
   curRowIndex: number = -1;
   tableCellBlot?: TableCellFormat;
