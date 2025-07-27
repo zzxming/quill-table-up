@@ -29,11 +29,18 @@ export class TableResizeBox extends TableResizeCommon {
     super(tableModule, quill);
 
     this.root = this.tableModule.addContainer(this.bem.b());
-    this.quill.on(Quill.events.TEXT_CHANGE, this.updateWhenTextChange);
+    this.quill.on(Quill.events.EDITOR_CHANGE, this.updateWhenTextChange);
   }
 
-  updateWhenTextChange = () => {
-    this.update();
+  updateWhenTextChange = (eventName: string) => {
+    if (eventName === Quill.events.TEXT_CHANGE) {
+      if (this.table && !this.quill.root.contains(this.table)) {
+        this.setSelectionTable(undefined);
+      }
+      else {
+        this.update();
+      }
+    }
   };
 
   handleResizerHeader(isX: boolean, index: number, e: MouseEvent) {
@@ -90,7 +97,7 @@ export class TableResizeBox extends TableResizeCommon {
       }
 
       tableSelection.table = this.table;
-      tableSelection.selectedTds = tableSelection.computeSelectedTds(...currentBoundary);
+      tableSelection.setSelectedTds(tableSelection.computeSelectedTds(...currentBoundary));
       tableSelection.show();
     }
   }
@@ -252,9 +259,8 @@ export class TableResizeBox extends TableResizeCommon {
       });
       this.corner.addEventListener('click', () => {
         if (this.tableModule.tableSelection && this.tableBlot) {
-          const cellInners = this.tableBlot.descendants(TableCellInnerFormat);
           const tableSelection = this.tableModule.tableSelection;
-          tableSelection.selectedTds = cellInners;
+          tableSelection.setSelectedTds(this.tableBlot.descendants(TableCellInnerFormat));
           tableSelection.show();
           tableSelection.updateWithSelectedTds();
         }
@@ -323,7 +329,7 @@ export class TableResizeBox extends TableResizeCommon {
   destroy() {
     this.hide();
     clearScrollEvent.call(this);
-    this.quill.off(Quill.events.TEXT_CHANGE, this.updateWhenTextChange);
+    this.quill.off(Quill.events.EDITOR_CHANGE, this.updateWhenTextChange);
     for (const [dom, handle] of this.scrollHandler) {
       dom.removeEventListener('scroll', handle);
     }
