@@ -16,7 +16,8 @@ export class TableAlign extends TableDomSelector {
   constructor(public tableModule: TableUp, public quill: Quill, _options: any) {
     super(tableModule, quill);
 
-    this.alignBox = this.buildTool();
+    this.alignBox = this.buildTools();
+    this.hide();
     this.quill.on(Quill.events.EDITOR_CHANGE, this.updateWhenTextChange);
   }
 
@@ -31,7 +32,7 @@ export class TableAlign extends TableDomSelector {
     }
   };
 
-  buildTool() {
+  buildTools() {
     const alignBox = this.tableModule.addContainer(this.bem.b());
     const icons = Quill.import('ui/icons') as Record<string, any>;
     const alignIcons = {
@@ -70,7 +71,7 @@ export class TableAlign extends TableDomSelector {
     if (!this.table || !this.alignBox) return;
     this.tableBlot = Quill.find(this.table) as TableMainFormat;
     this.tableWrapperBlot = this.tableBlot.parent as TableWrapperFormat;
-    this.alignBox.classList.add(this.bem.bm('active'));
+    this.alignBox.classList.remove(this.bem.is('hidden'));
     this.resizeObserver = createResizeObserver(() => this.update(), { ignoreFirstBind: true });
     this.resizeObserver.observe(this.table);
     if (this.cleanup) {
@@ -87,7 +88,7 @@ export class TableAlign extends TableDomSelector {
     this.tableBlot = undefined;
     this.tableWrapperBlot = undefined;
     if (this.alignBox) {
-      this.alignBox.classList.remove(this.bem.bm('active'));
+      this.alignBox.classList.add(this.bem.is('hidden'));
     }
     if (this.cleanup) {
       this.cleanup();
