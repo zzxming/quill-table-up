@@ -1,7 +1,7 @@
 import type { EmitterSource, Parchment as TypeParchment, Range as TypeRange } from 'quill';
 import type { TableMainFormat, TableWrapperFormat } from '../formats';
 import type { TableUp } from '../table-up';
-import type { InternalTableMenuModule, RelactiveRect, TableSelectionOptions } from '../utils';
+import type { RelactiveRect, TableSelectionOptions } from '../utils';
 import Quill from 'quill';
 import { getTableMainRect, TableBodyFormat, TableCellFormat, TableCellInnerFormat } from '../formats';
 import { addScrollEvent, blotName, clearScrollEvent, createBEM, createResizeObserver, findAllParentBlot, findParentBlot, getElementScroll, getRelativeRect, isRectanglesIntersect, tableUpEvent } from '../utils';
@@ -28,7 +28,6 @@ export class TableSelection extends TableDomSelector {
   selectedTds: TableCellInnerFormat[] = [];
   cellSelectWrap: HTMLElement;
   cellSelect: HTMLElement;
-  dragging: boolean = false;
   scrollHandler: [HTMLElement, (...args: any[]) => void][] = [];
   tableMenu?: InternalTableMenuModule;
   resizeObserver: ResizeObserver;
@@ -40,6 +39,17 @@ export class TableSelection extends TableDomSelector {
     focusNode: null,
     focusOffset: 0,
   };
+
+  _dragging: boolean = false;
+  set dragging(val: boolean) {
+    if (this._dragging === val) return;
+    this._dragging = val;
+    this.quill.emitter.emit(val ? tableUpEvent.TABLE_SELECTION_DRAG_START : tableUpEvent.TABLE_SELECTION_DRAG_END, this);
+  }
+
+  get dragging() {
+    return this._dragging;
+  }
 
   constructor(public tableModule: TableUp, public quill: Quill, options: Partial<TableSelectionOptions> = {}) {
     super(tableModule, quill);
@@ -84,6 +94,16 @@ export class TableSelection extends TableDomSelector {
     }
   };
 
+  setSelectedTds(tds: TableCellInnerFormat[]) {
+    const currentSelectedTds = new Set(this.selectedTds);
+    const isSame = this.selectedTds.length === tds.length && tds.every(td => currentSelectedTds.has(td));
+
+    this.selectedTds = tds;
+    if (!isSame) {
+      this.quill.emitter.emit(tableUpEvent.TABLE_SELECTION_CHANGE, this, this.selectedTds);
+    }
+  }
+
   getFirstTextNode(dom: HTMLElement | Node): Node {
     for (const node of Array.from(dom.childNodes)) {
       if (node.nodeType === Node.TEXT_NODE) {
@@ -121,7 +141,7 @@ export class TableSelection extends TableDomSelector {
       if (isInCell && !containsLine) {
         try {
           const cellInner = findParentBlot(line!, blotName.tableCellInner) as TableCellInnerFormat;
-          this.selectedTds = [cellInner];
+          this.setSelectedTds([cellInner]);
           this.updateWithSelectedTds();
         }
         catch {
@@ -431,14 +451,11 @@ export class TableSelection extends TableDomSelector {
     const startPoint = { x: clientX, y: clientY };
 
     this.recordScrollPosition();
-    this.selectedTds = this.computeSelectedTds(startPoint, startPoint);
-    this.dragging = true;
+    this.setSelectedTds(this.computeSelectedTds(startPoint, startPoint));
     this.show();
 
     const mouseMoveHandler = (mousemoveEvent: MouseEvent) => {
-      if (this.tableMenu) {
-        this.tableMenu.hide();
-      }
+      this.dragging = true;
       const { button, target, clientX, clientY } = mousemoveEvent;
       const closestTable = (target as HTMLElement).closest<HTMLTableElement>('.ql-table');
       const closestTableCaption = (target as HTMLElement).closest('caption');
@@ -451,7 +468,7 @@ export class TableSelection extends TableDomSelector {
       }
 
       const movePoint = { x: clientX, y: clientY };
-      this.selectedTds = this.computeSelectedTds(startPoint, movePoint);
+      this.setSelectedTds(this.computeSelectedTds(startPoint, movePoint));
       if (this.selectedTds.length > 1) {
         this.quill.blur();
       }
@@ -482,7 +499,7 @@ export class TableSelection extends TableDomSelector {
       endPoint.x = Math.max(endPoint.x, rect.right);
       endPoint.y = Math.max(endPoint.y, rect.bottom);
     }
-    this.selectedTds = this.computeSelectedTds(startPoint, endPoint);
+    this.setSelectedTds(this.computeSelectedTds(startPoint, endPoint));
     if (this.selectedTds.length > 0) {
       this.update();
     }
@@ -516,9 +533,7 @@ export class TableSelection extends TableDomSelector {
       width: `${tableWrapperRect.width}px`,
       height: `${tableWrapperRect.height}px`,
     });
-    if (!this.dragging && this.tableMenu) {
-      this.tableMenu.update();
-    }
+    this.quill.emitter.emit(tableUpEvent.TABLE_SELECTION_DISPLAY_CHANGE, this);
   }
 
   getTableViewScroll() {
@@ -576,7 +591,7 @@ export class TableSelection extends TableDomSelector {
     this.quill.root.removeEventListener('keydown', this.removeCell);
     this.hideDisplay();
     this.boundary = null;
-    this.selectedTds = [];
+    this.setSelectedTds([]);
     this.setSelectionTable(undefined);
     if (this.tableMenu) {
       this.tableMenu.hide();
@@ -593,7 +608,7 @@ export class TableSelection extends TableDomSelector {
     }
     clearScrollEvent.call(this);
 
-    this.quill.root.removeEventListener('mousedown', this.mousedownSelectHandler);
+    this.quill.root.removeEventListener('mousedown', this.tableSelectHandler);
     this.quill.off(tableUpEvent.AFTER_TABLE_RESIZE, this.updateAfterEvent);
     this.quill.off(Quill.events.TEXT_CHANGE, this.updateAfterEvent);
     this.quill.off(Quill.events.SELECTION_CHANGE, this.quillSelectionChangeHandler);
