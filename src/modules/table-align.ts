@@ -6,6 +6,8 @@ import { createBEM, createResizeObserver } from '../utils';
 import { TableDomSelector } from './table-dom-selector';
 
 export class TableAlign extends TableDomSelector {
+  static moduleName: string = 'table-align';
+
   tableBlot?: TableMainFormat;
   tableWrapperBlot?: TableWrapperFormat;
   alignBox: HTMLElement | null;

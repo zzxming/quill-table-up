@@ -17,6 +17,8 @@ export interface SelectionData {
 }
 
 export class TableSelection extends TableDomSelector {
+  static moduleName: string = 'table-selection';
+
   options: TableSelectionOptions;
   boundary: RelactiveRect | null = null;
   scrollRecordEls: HTMLElement[] = [];

@@ -280,6 +280,7 @@ export class TableUp {
   tableMenu?: InternalTableMenuModule;
   tableResizeScale?: InternalModule;
   resizeOb!: ResizeObserver;
+  modules: Record<string, Constructor> = {};
 
   get statics(): any {
     return this.constructor;
@@ -289,30 +290,6 @@ export class TableUp {
     this.quill = quill;
     this.options = this.resolveOptions(options || {});
     this.toolBox = this.initialContainer();
-
-    if (!this.options.scrollbar) {
-      const scrollbarBEM = createBEM('scrollbar');
-      this.quill.container.classList.add(scrollbarBEM.bm('origin'));
-    }
-
-    if (this.options.selection) {
-      this.tableSelection = new this.options.selection(this, this.quill, this.options.selectionOptions);
-    }
-    if (this.options.align) {
-      this.tableAlign = new this.options.align(this, this.quill, this.options.alignOptions);
-    }
-    if (this.options.scrollbar) {
-      this.tableScrollbar = new this.options.scrollbar(this, this.quill, this.options.scrollbarOptions);
-    }
-    if (this.options.resizeScale) {
-      this.tableResizeScale = new this.options.resizeScale(this, this.quill, this.options.resizeScaleOptions);
-    }
-    if (this.options.resize) {
-      this.tableResize = new this.options.resize(this, this.quill, this.options.resizeOptions);
-    }
-    if (this.options.tableMenu) {
-      this.tableMenu = new this.options.tableMenu(this, quill, this.options.tableMenuOptions);
-    }
 
     const toolbar = this.quill.getModule('toolbar') as TypeToolbar;
     if (toolbar && (this.quill.theme as QuillTheme).pickers) {
@@ -349,6 +326,7 @@ export class TableUp {
       }
     }
 
+    this.initModules();
     this.quillHack();
     this.listenBalanceCells();
   }
@@ -393,13 +371,8 @@ export class TableUp {
       full: false,
       fullSwitch: true,
       icon: icons.table,
-      selectionOptions: {},
-      alignOptions: {},
-      scrollbarOptions: {},
-      resizeOptions: {},
-      resizeScaleOptions: {},
       autoMergeCell: true,
-      tableMenuOptions: {},
+      modules: [],
     } as TableUpOptions, options);
   }
 
@@ -430,6 +403,16 @@ export class TableUp {
       BackgroundColor: 'Set background color',
       BorderColor: 'Set border color',
     }, options);
+  }
+
+  initModules() {
+    for (const item of this.options.modules) {
+      this.modules[item.module.moduleName] = new item.module(this, this.quill, item.options);
+    }
+  }
+
+  getModules<T>(name: string) {
+    return this.modules[name] as T | undefined;
   }
 
   quillHack() {

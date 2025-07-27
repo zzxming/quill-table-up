@@ -52,6 +52,13 @@ export interface TableTextOptions extends TableCreatorTextOptions, TableMenuText
   transparent: string;
   perWidthInsufficient: string;
 }
+export interface TableUpExtraModule extends Constructor<any, [TableUp, Quill, any]> {
+  moduleName: string;
+}
+export interface TableUpModule {
+  module: TableUpExtraModule;
+  options?: any;
+}
 export interface TableUpOptions {
   customSelect?: (tableModule: TableUp, picker: QuillThemePicker) => Promise<HTMLElement> | HTMLElement;
   full: boolean;
@@ -59,19 +66,8 @@ export interface TableUpOptions {
   customBtn: boolean;
   texts: TableTextOptions;
   icon: string;
-  selection?: Constructor<InternalTableSelectionModule, [TableUp, Quill, Partial<TableSelectionOptions>]>;
-  selectionOptions: Partial<TableSelectionOptions>;
-  resize?: Constructor<InternalModule, [TableUp, Quill, any]>;
-  resizeOptions: any;
-  scrollbar?: Constructor<InternalModule, [TableUp, Quill, any]>;
-  scrollbarOptions: any;
-  align?: Constructor<InternalModule, [TableUp, Quill, any]>;
-  alignOptions: any;
-  resizeScale?: Constructor<InternalModule, [TableUp, Quill, Partial<TableResizeScaleOptions>]>;
-  resizeScaleOptions: Partial<TableResizeScaleOptions>;
-  tableMenu?: Constructor<InternalTableMenuModule, [TableUp, Quill, Partial<TableMenuOptions>]>;
-  tableMenuOptions: Partial<TableMenuOptions>;
   autoMergeCell: boolean;
+  modules: TableUpModule[];
 }
 export interface TableColValue {
   tableId: string;

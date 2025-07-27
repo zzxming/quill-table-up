@@ -1,5 +1,6 @@
 import type { TableUp } from '../../table-up';
 import type { TableMenuOptions, ToolOption, TooltipInstance, ToolTipOptions } from '../../utils';
+import type { TableSelection } from '../table-selection';
 import Quill from 'quill';
 import { createBEM, createColorPicker, createTooltip, debounce, defaultColorMap, isArray, isFunction, randomId, tableUpEvent } from '../../utils';
 import { TableDomSelector } from '../table-dom-selector';
@@ -10,6 +11,8 @@ export interface MenuTooltipInstance extends TooltipInstance {
   isColorPick?: boolean;
 }
 export class TableMenuCommon extends TableDomSelector {
+  static moduleName = 'table-menu';
+
   usedColors = new Set<string>();
   options: TableMenuOptions;
   menu: HTMLElement | null = null;
@@ -237,16 +240,18 @@ export class TableMenuCommon extends TableDomSelector {
       type: 'click',
       content: colorSelectWrapper,
       onOpen: () => {
-        if (this.isMenuDisplay && this.tableModule.tableSelection) {
-          this.tableModule.tableSelection.hideDisplay();
+        const tableSelection = this.tableModule.getModules<TableSelection>('table-selection');
+        if (this.isMenuDisplay && tableSelection) {
+          tableSelection.hideDisplay();
         }
         this.setActiveTooltip(tooltip);
         return false;
       },
       onClose: () => {
-        if (this.isMenuDisplay && this.tableModule.tableSelection) {
-          this.tableModule.tableSelection.updateWithSelectedTds();
-          this.tableModule.tableSelection.showDisplay();
+        const tableSelection = this.tableModule.getModules<TableSelection>('table-selection');
+        if (this.isMenuDisplay && tableSelection) {
+          tableSelection.updateWithSelectedTds();
+          tableSelection.showDisplay();
         }
         const isChild = colorSelectWrapper.contains(colorPicker);
         if (isChild) {
@@ -277,7 +282,8 @@ export class TableMenuCommon extends TableDomSelector {
   }
 
   getSelectedTds() {
-    return this.tableModule.tableSelection?.selectedTds || [];
+    const tableSelection = this.tableModule.getModules<TableSelection>('table-selection');
+    return tableSelection?.selectedTds || [];
   }
 
   createTipText(item: HTMLElement, text: string) {

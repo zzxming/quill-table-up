@@ -2,6 +2,7 @@ import type Quill from 'quill';
 import type { TableCellInnerFormat } from '../../formats';
 import type { TableUp } from '../../table-up';
 import type { InternalTableSelectionModule } from '../../utils';
+import type { TableSelection } from '../table-selection';
 import type { TableMenuOptionsInput } from './table-menu-common';
 import { computePosition, flip, limitShift, offset, shift } from '@floating-ui/dom';
 import { tableUpEvent } from '../../utils';
@@ -67,8 +68,9 @@ export class TableMenuSelect extends TableMenuCommon {
     this.menu.classList.remove(this.bem.is('hidden'));
     super.update();
 
-    if (this.tableModule.tableSelection && this.tableModule.tableSelection.isDisplaySelection) {
-      computePosition(this.tableModule.tableSelection.cellSelect, this.menu, {
+    const tableSelection = this.tableModule.getModules<TableSelection>('table-selection');
+    if (tableSelection?.isDisplaySelection) {
+      computePosition(tableSelection.cellSelect, this.menu, {
         placement: 'bottom',
         middleware: [flip(), shift({ limiter: limitShift() }), offset(20)],
       }).then(({ x, y }) => {

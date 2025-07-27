@@ -222,11 +222,16 @@ export class Scrollbar {
 }
 
 export class TableVirtualScrollbar extends TableDomSelector {
+  static moduleName: string = 'table-scrollbar';
+
   scrollbarContainer: HTMLElement;
   scrollbar: Scrollbar[] = [];
   bem = createBEM('scrollbar');
   constructor(public tableModule: TableUp, public quill: Quill, _options: any) {
     super(tableModule, quill);
+
+    const scrollbarBEM = createBEM('scrollbar');
+    this.quill.container.classList.add(scrollbarBEM.bm('origin'));
 
     this.scrollbarContainer = this.tableModule.addContainer(this.bem.be('container'));
     this.quill.on(Quill.events.EDITOR_CHANGE, this.updateWhenTextChange);
