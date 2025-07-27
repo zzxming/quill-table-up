@@ -1,10 +1,9 @@
-import type { Delta as TypeDelta, Range as TypeRange } from 'quill';
+import type Quill from 'quill';
 import type { TableCellInnerFormat } from '../../formats';
 import type { TableUp } from '../../table-up';
 import type { InternalTableSelectionModule } from '../../utils';
 import type { TableMenuOptionsInput } from './table-menu-common';
 import { computePosition, flip, limitShift, offset, shift } from '@floating-ui/dom';
-import Quill from 'quill';
 import { tableUpEvent } from '../../utils';
 import { TableMenuCommon } from './table-menu-common';
 
@@ -43,11 +42,6 @@ export class TableMenuSelect extends TableMenuCommon {
   buildTools(): HTMLElement {
     const menu = super.buildTools();
     this.tableModule.addContainer(menu);
-    this.quill.on(Quill.events.EDITOR_CHANGE, (eventName: string, range: TypeDelta | TypeRange | null) => {
-      if (eventName === Quill.events.SELECTION_CHANGE && range) {
-        this.update();
-      }
-    });
     return menu;
   }
 
