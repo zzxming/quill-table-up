@@ -4,6 +4,7 @@ import type TypeBlock from 'quill/blots/block';
 import type { Context } from 'quill/modules/keyboard';
 import type TypeKeyboard from 'quill/modules/keyboard';
 import type TypeToolbar from 'quill/modules/toolbar';
+import type { TableSelection } from './modules';
 import type { Constructor, InternalModule, InternalTableMenuModule, InternalTableSelectionModule, QuillTheme, QuillThemePicker, TableCellValue, TableConstantsData, TableTextOptions, TableUpOptions } from './utils';
 import Quill from 'quill';
 import { BlockEmbedOverride, BlockOverride, ContainerFormat, ScrollOverride, TableBodyFormat, TableCaptionFormat, TableCellFormat, TableCellInnerFormat, TableColFormat, TableColgroupFormat, TableMainFormat, TableRowFormat, TableWrapperFormat } from './formats';
@@ -440,12 +441,14 @@ export class TableUp {
         const range = this.getSelection(true);
         const formats = this.getFormat(range);
         // only when selection in cell and selectedTds > 1 can format all cells
-        if (!formats[blotName.tableCellInner] || range.length > 0 || (tableUpModule && tableUpModule.tableSelection && tableUpModule.tableSelection.selectedTds.length <= 1)) {
+        const tableSelection = tableUpModule.getModule<TableSelection>('table-selection');
+        console.log(tableSelection?.selectedTds);
+        if (!formats[blotName.tableCellInner] || range.length > 0 || (tableUpModule && tableSelection && tableSelection.selectedTds.length <= 1)) {
           return originFormat.call(this, name, value, source);
         }
         // format in selected cells
-        if (tableUpModule && tableUpModule.tableSelection && tableUpModule.tableSelection.selectedTds.length > 0) {
-          const selectedTds = tableUpModule.tableSelection.selectedTds;
+        if (tableUpModule && tableSelection && tableSelection.selectedTds.length > 0) {
+          const selectedTds = tableSelection.selectedTds;
           // calculate the format value. the format should be canceled when this value exists in all selected cells
           let setOrigin = false;
           const tdRanges = [];
@@ -540,13 +543,14 @@ export class TableUp {
           }
           // if selection range is not in table, but use the TableSelection selected cells
           // clean all other formats in cell
-          if (tableUpModule && tableUpModule.tableSelection && tableUpModule.tableSelection.selectedTds.length > 0 && tableUpModule.tableSelection.table) {
-            const tableMain = Quill.find(tableUpModule.tableSelection.table) as TableMainFormat;
+          const tableSelection = tableUpModule.getModule<TableSelection>('table-selection');
+          if (tableUpModule && tableSelection && tableSelection.selectedTds.length > 0 && tableSelection.table) {
+            const tableMain = Quill.find(tableSelection.table) as TableMainFormat;
             if (!tableMain) {
               console.warn('TableMainFormat not found');
               return;
             }
-            const selectedTds = tableUpModule.tableSelection.selectedTds;
+            const selectedTds = tableSelection.selectedTds;
 
             // get all need clean style cells. include border-right/border-bottom effect cells
             const editTds = new Set<TableCellFormat>();
