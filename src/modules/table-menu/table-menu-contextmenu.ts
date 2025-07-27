@@ -1,7 +1,7 @@
 import type Quill from 'quill';
 import type { TableUp } from '../../table-up';
-import type { TableMenuOptions, ToolTipOptions } from '../../utils';
-import { limitDomInViewPort } from '../../utils';
+import type { InternalTableSelectionModule, TableMenuOptions, ToolTipOptions } from '../../utils';
+import { limitDomInViewPort, tableUpEvent } from '../../utils';
 import { menuColorSelectClassName } from './constants';
 import { TableMenuCommon } from './table-menu-common';
 
@@ -15,7 +15,15 @@ export class TableMenuContextmenu extends TableMenuCommon {
     super(tableModule, quill, options);
 
     this.quill.root.addEventListener('contextmenu', this.listenContextmenu);
+    this.quill.on(tableUpEvent.TABLE_SELECTION_CHANGE, this.tableSelectioChange);
+    this.quill.on(tableUpEvent.TABLE_SELECTION_DISPLAY_CHANGE, this.tableSelectioChange);
   }
+
+  tableSelectioChange = (tableSelection: InternalTableSelectionModule) => {
+    if (tableSelection.selectedTds.length <= 0) {
+      this.hide();
+    }
+  };
 
   listenContextmenu = (e: MouseEvent) => {
     e.preventDefault();
@@ -98,5 +106,7 @@ export class TableMenuContextmenu extends TableMenuCommon {
   destroy() {
     this.quill.root.removeEventListener('contextmenu', this.listenContextmenu);
     super.destroy();
+    this.quill.off(tableUpEvent.TABLE_SELECTION_CHANGE, this.tableSelectioChange);
+    this.quill.off(tableUpEvent.TABLE_SELECTION_DISPLAY_CHANGE, this.tableSelectioChange);
   }
 }

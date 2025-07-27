@@ -21,8 +21,7 @@ describe('test tableCaption', () => {
     const tableModule = quill.getModule(TableUp.moduleName) as TableUp;
     await vi.runAllTimersAsync();
     const table = quill.root.querySelector('table')!;
-    tableModule.table = table;
-    (tableMenuTools.InsertCaption as ToolOption).handle(tableModule, [], null);
+    (tableMenuTools.InsertCaption as ToolOption).handle.call({ quill, table } as any, tableModule, [], null);
     await vi.runAllTimersAsync();
 
     expectDelta(
@@ -69,8 +68,7 @@ describe('test tableCaption', () => {
     const tableModule = quill.getModule(TableUp.moduleName) as TableUp;
     await vi.runAllTimersAsync();
     const table = quill.root.querySelector('table')!;
-    tableModule.table = table;
-    (tableMenuTools.InsertCaption as ToolOption).handle(tableModule, [], null);
+    (tableMenuTools.InsertCaption as ToolOption).handle.call({ quill, table } as any, tableModule, [], null);
     await vi.runAllTimersAsync();
 
     const tableCaption = Quill.find(table.querySelector('caption')!)! as TableCaptionFormat;
@@ -149,8 +147,7 @@ describe('test tableCaption', () => {
 
     const table = quill.root.querySelector('table')!;
     const tableModule = quill.getModule(TableUp.moduleName) as TableUp;
-    tableModule.table = table;
-    (tableMenuTools.InsertCaption as ToolOption).handle(tableModule, [], null);
+    (tableMenuTools.InsertCaption as ToolOption).handle.call({ quill, table } as any, tableModule, [], null);
     await vi.runAllTimersAsync();
     expectDelta(
       new Delta([
