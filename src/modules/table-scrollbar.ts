@@ -231,7 +231,7 @@ export class TableVirtualScrollbar extends TableDomSelector {
     super(tableModule, quill);
 
     const scrollbarBEM = createBEM('scrollbar');
-    this.quill.container.classList.add(scrollbarBEM.bm('origin'));
+    this.quill.container.classList.add(scrollbarBEM.bm('virtual'));
 
     this.scrollbarContainer = this.tableModule.addContainer(this.bem.be('container'));
     this.quill.on(Quill.events.EDITOR_CHANGE, this.updateWhenTextChange);
