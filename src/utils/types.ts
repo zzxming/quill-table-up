@@ -114,6 +114,7 @@ export interface RelactiveRect {
 }
 
 export interface InternalModule {
+  table?: HTMLElement;
   show: () => void;
   hide: () => void;
   update: () => void;
@@ -121,7 +122,6 @@ export interface InternalModule {
 }
 export type Constructor<T = any, U extends Array<any> = any[]> = new (...args: U) => T;
 export interface InternalTableSelectionModule extends InternalModule {
-  table?: HTMLElement;
   dragging: boolean;
   boundary: RelactiveRect | null;
   selectedTds: TableCellInnerFormat[];
