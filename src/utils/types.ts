@@ -2,7 +2,7 @@ import type Quill from 'quill';
 import type BaseTheme from 'quill/themes/base';
 import type Picker from 'quill/ui/picker';
 import type { TableCellInnerFormat } from '../formats';
-import type { MenuTooltipInstance } from '../modules';
+import type { MenuTooltipInstance, TableMenuCommon } from '../modules';
 import type { TableUp } from '../table-up';
 import type { blotName, tableUpEvent, tableUpInternal, tableUpSize } from './constants';
 
@@ -16,7 +16,7 @@ export interface ToolOption {
   tip?: string;
   isColorChoose?: boolean;
   key?: string;
-  handle: (tableModule: TableUp, selectedTds: TableCellInnerFormat[], e: Event | string | null) => void;
+  handle: (this: TableMenuCommon, tableModule: TableUp, selectedTds: TableCellInnerFormat[], e: Event | string | null) => void;
 }
 export interface ToolOptionBreak {
   name: 'break';
@@ -31,8 +31,6 @@ export interface TableMenuOptions {
 }
 export interface TableSelectionOptions {
   selectColor: string;
-  tableMenu?: Constructor<InternalTableMenuModule, [TableUp, Quill, Partial<TableMenuOptions>]>;
-  tableMenuOptions: TableMenuOptions;
 }
 export interface TableResizeScaleOptions {
   blockSize: number;
@@ -71,6 +69,8 @@ export interface TableUpOptions {
   alignOptions: any;
   resizeScale?: Constructor<InternalModule, [TableUp, Quill, Partial<TableResizeScaleOptions>]>;
   resizeScaleOptions: Partial<TableResizeScaleOptions>;
+  tableMenu?: Constructor<InternalTableMenuModule, [TableUp, Quill, Partial<TableMenuOptions>]>;
+  tableMenuOptions: Partial<TableMenuOptions>;
   autoMergeCell: boolean;
 }
 export interface TableColValue {
@@ -138,6 +138,7 @@ export interface InternalTableSelectionModule extends InternalModule {
       y: number;
     }
   ) => TableCellInnerFormat[];
+  setSelectedTds: (tds: TableCellInnerFormat[]) => void;
   updateWithSelectedTds: () => void;
   showDisplay: () => void;
   hideDisplay: () => void;

@@ -29,7 +29,6 @@ export class TableSelection extends TableDomSelector {
   cellSelectWrap: HTMLElement;
   cellSelect: HTMLElement;
   scrollHandler: [HTMLElement, (...args: any[]) => void][] = [];
-  tableMenu?: InternalTableMenuModule;
   resizeObserver: ResizeObserver;
   isDisplaySelection = false;
   bem = createBEM('selection');
@@ -66,9 +65,6 @@ export class TableSelection extends TableDomSelector {
     this.quill.on(tableUpEvent.AFTER_TABLE_RESIZE, this.updateAfterEvent);
     this.quill.on(Quill.events.TEXT_CHANGE, this.updateAfterEvent);
     this.quill.on(Quill.events.SELECTION_CHANGE, this.quillSelectionChangeHandler);
-    if (this.options.tableMenu) {
-      this.tableMenu = new this.options.tableMenu(tableModule, quill, this.options.tableMenuOptions);
-    }
     this.hide();
   }
 
@@ -241,7 +237,6 @@ export class TableSelection extends TableDomSelector {
   resolveOptions(options: Partial<TableSelectionOptions>): TableSelectionOptions {
     return Object.assign({
       selectColor: '#0589f340',
-      tableMenuOptions: {},
     } as TableSelectionOptions, options);
   }
 
@@ -479,9 +474,6 @@ export class TableSelection extends TableDomSelector {
       document.body.removeEventListener('mouseup', mouseUpHandler, false);
       this.dragging = false;
       this.clearRecordScrollPosition();
-      if (this.tableMenu && this.selectedTds.length > 0) {
-        this.tableMenu.show();
-      }
     };
 
     document.body.addEventListener('mousemove', mouseMoveHandler, false);
@@ -593,9 +585,6 @@ export class TableSelection extends TableDomSelector {
     this.boundary = null;
     this.setSelectedTds([]);
     this.setSelectionTable(undefined);
-    if (this.tableMenu) {
-      this.tableMenu.hide();
-    }
   }
 
   destroy() {
@@ -603,9 +592,6 @@ export class TableSelection extends TableDomSelector {
 
     this.hide();
     this.cellSelectWrap.remove();
-    if (this.tableMenu) {
-      this.tableMenu.destroy();
-    }
     clearScrollEvent.call(this);
 
     this.quill.root.removeEventListener('mousedown', this.tableSelectHandler);

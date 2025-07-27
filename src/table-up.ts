@@ -4,7 +4,7 @@ import type TypeBlock from 'quill/blots/block';
 import type { Context } from 'quill/modules/keyboard';
 import type TypeKeyboard from 'quill/modules/keyboard';
 import type TypeToolbar from 'quill/modules/toolbar';
-import type { Constructor, InternalModule, InternalTableSelectionModule, QuillTheme, QuillThemePicker, TableCellValue, TableConstantsData, TableTextOptions, TableUpOptions } from './utils';
+import type { Constructor, InternalModule, InternalTableMenuModule, InternalTableSelectionModule, QuillTheme, QuillThemePicker, TableCellValue, TableConstantsData, TableTextOptions, TableUpOptions } from './utils';
 import Quill from 'quill';
 import { BlockEmbedOverride, BlockOverride, ContainerFormat, ScrollOverride, TableBodyFormat, TableCaptionFormat, TableCellFormat, TableCellInnerFormat, TableColFormat, TableColgroupFormat, TableMainFormat, TableRowFormat, TableWrapperFormat } from './formats';
 import { TableClipboard } from './modules';
@@ -277,6 +277,7 @@ export class TableUp {
   tableResize?: InternalModule;
   tableScrollbar?: InternalModule;
   tableAlign?: InternalModule;
+  tableMenu?: InternalTableMenuModule;
   tableResizeScale?: InternalModule;
   resizeOb!: ResizeObserver;
 
@@ -308,6 +309,9 @@ export class TableUp {
     }
     if (this.options.resize) {
       this.tableResize = new this.options.resize(this, this.quill, this.options.resizeOptions);
+    }
+    if (this.options.tableMenu) {
+      this.tableMenu = new this.options.tableMenu(this, quill, this.options.tableMenuOptions);
     }
 
     const toolbar = this.quill.getModule('toolbar') as TypeToolbar;
@@ -395,6 +399,7 @@ export class TableUp {
       resizeOptions: {},
       resizeScaleOptions: {},
       autoMergeCell: true,
+      tableMenuOptions: {},
     } as TableUpOptions, options);
   }
 
