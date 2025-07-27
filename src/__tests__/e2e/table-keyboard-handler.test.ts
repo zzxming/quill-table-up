@@ -287,7 +287,7 @@ extendTest.describe('TableSelection keyboard handler', () => {
     await page.mouse.move(cell1Bounding.x + cell1Bounding.width * 1.5, cell1Bounding.y + cell1Bounding.height / 2);
     await page.mouse.up();
     await editorPage.blur();
-    await page.dispatchEvent('body', 'keydown', {
+    await page.dispatchEvent('#editor1 .ql-editor', 'keydown', {
       key: 'Backspace',
       code: 'Backspace',
       keyCode: 13,
@@ -307,7 +307,7 @@ extendTest.describe('TableSelection keyboard handler', () => {
     await page.mouse.move(cell8Bounding.x - cell8Bounding.width * 0.5, cell8Bounding.y + cell8Bounding.height / 2);
     await page.mouse.up();
     await editorPage.blur();
-    await page.dispatchEvent('body', 'keydown', {
+    await page.dispatchEvent('#editor1 .ql-editor', 'keydown', {
       key: 'Backspace',
       code: 'Backspace',
       keyCode: 13,
@@ -358,7 +358,7 @@ extendTest.describe('TableSelection keyboard handler', () => {
     await page.mouse.move(cell1Bounding.x + cell1Bounding.width * 2.5, cell1Bounding.y + cell1Bounding.height * 2.5);
     await page.mouse.up();
     await editorPage.blur();
-    await page.dispatchEvent('body', 'keydown', {
+    await page.dispatchEvent('#editor1 .ql-editor', 'keydown', {
       key: 'Backspace',
       code: 'Backspace',
       keyCode: 13,

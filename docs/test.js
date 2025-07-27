@@ -67,11 +67,10 @@ const quills = [
     customSelect: defaultCustomSelect,
     customBtn: true,
     selection: TableSelection,
-    selectionOptions: {
-      tableMenu: TableMenuContextmenu,
-      tableMenuOptions: {
-        tools: menuTools,
-      },
+    selectionOptions: {},
+    tableMenu: TableMenuContextmenu,
+    tableMenuOptions: {
+      tools: menuTools,
     },
   },
   {
@@ -83,11 +82,10 @@ const quills = [
     customSelect: defaultCustomSelect,
     customBtn: true,
     selection: TableSelection,
-    selectionOptions: {
-      tableMenu: TableMenuSelect,
-      tableMenuOptions: {
-        tools: menuTools,
-      },
+    selectionOptions: {},
+    tableMenu: TableMenuSelect,
+    tableMenuOptions: {
+      tools: menuTools,
     },
   },
   {
@@ -99,11 +97,10 @@ const quills = [
     customSelect: defaultCustomSelect,
     customBtn: true,
     selection: TableSelection,
-    selectionOptions: {
-      tableMenu: TableMenuSelect,
-      tableMenuOptions: {
-        tools: menuTools,
-      },
+    selectionOptions: {},
+    tableMenu: TableMenuSelect,
+    tableMenuOptions: {
+      tools: menuTools,
     },
   },
   {
@@ -115,11 +112,10 @@ const quills = [
     customSelect: defaultCustomSelect,
     customBtn: true,
     selection: TableSelection,
-    selectionOptions: {
-      tableMenu: TableMenuContextmenu,
-      tableMenuOptions: {
-        tools: menuTools,
-      },
+    selectionOptions: {},
+    tableMenu: TableMenuContextmenu,
+    tableMenuOptions: {
+      tools: menuTools,
     },
   },
   {
@@ -131,11 +127,10 @@ const quills = [
     customSelect: defaultCustomSelect,
     customBtn: true,
     selection: TableSelection,
-    selectionOptions: {
-      tableMenu: TableMenuContextmenu,
-      tableMenuOptions: {
-        tools: menuTools,
-      },
+    selectionOptions: {},
+    tableMenu: TableMenuContextmenu,
+    tableMenuOptions: {
+      tools: menuTools,
     },
   },
 ].map((ops, i) => {

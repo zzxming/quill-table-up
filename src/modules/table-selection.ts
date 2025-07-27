@@ -1,10 +1,11 @@
 import type { EmitterSource, Parchment as TypeParchment, Range as TypeRange } from 'quill';
 import type { TableMainFormat, TableWrapperFormat } from '../formats';
 import type { TableUp } from '../table-up';
-import type { InternalTableMenuModule, RelactiveRect, TableSelectionOptions } from '../utils';
+import type { RelactiveRect, TableSelectionOptions } from '../utils';
 import Quill from 'quill';
 import { getTableMainRect, TableBodyFormat, TableCellFormat, TableCellInnerFormat } from '../formats';
 import { addScrollEvent, blotName, clearScrollEvent, createBEM, createResizeObserver, findAllParentBlot, findParentBlot, getElementScroll, getRelativeRect, isRectanglesIntersect, tableUpEvent } from '../utils';
+import { TableDomSelector } from './table-dom-selector';
 
 const ERROR_LIMIT = 0;
 
@@ -15,7 +16,7 @@ export interface SelectionData {
   focusOffset: number;
 }
 
-export class TableSelection {
+export class TableSelection extends TableDomSelector {
   options: TableSelectionOptions;
   boundary: RelactiveRect | null = null;
   scrollRecordEls: HTMLElement[] = [];
@@ -27,11 +28,8 @@ export class TableSelection {
   selectedTds: TableCellInnerFormat[] = [];
   cellSelectWrap: HTMLElement;
   cellSelect: HTMLElement;
-  dragging: boolean = false;
   scrollHandler: [HTMLElement, (...args: any[]) => void][] = [];
-  tableMenu?: InternalTableMenuModule;
   resizeObserver: ResizeObserver;
-  table?: HTMLTableElement;
   isDisplaySelection = false;
   bem = createBEM('selection');
   lastSelection: SelectionData = {
@@ -41,7 +39,19 @@ export class TableSelection {
     focusOffset: 0,
   };
 
+  _dragging: boolean = false;
+  set dragging(val: boolean) {
+    if (this._dragging === val) return;
+    this._dragging = val;
+    this.quill.emitter.emit(val ? tableUpEvent.TABLE_SELECTION_DRAG_START : tableUpEvent.TABLE_SELECTION_DRAG_END, this);
+  }
+
+  get dragging() {
+    return this._dragging;
+  }
+
   constructor(public tableModule: TableUp, public quill: Quill, options: Partial<TableSelectionOptions> = {}) {
+    super(tableModule, quill);
     this.options = this.resolveOptions(options);
     this.scrollRecordEls = [this.quill.root, document.documentElement];
 
@@ -51,20 +61,44 @@ export class TableSelection {
     this.resizeObserver = createResizeObserver(() => this.updateAfterEvent(), { ignoreFirstBind: true });
     this.resizeObserver.observe(this.quill.root);
 
-    this.quill.emitter.listenDOM('mousedown', this.quill.root, this.mouseDownHandler.bind(this));
     this.quill.emitter.listenDOM('selectionchange', document, this.selectionChangeHandler.bind(this));
     this.quill.on(tableUpEvent.AFTER_TABLE_RESIZE, this.updateAfterEvent);
-    this.quill.on(Quill.events.SELECTION_CHANGE, this.quillSelectionChangeHandler);
     this.quill.on(Quill.events.TEXT_CHANGE, this.updateAfterEvent);
-    if (this.options.tableMenu) {
-      this.tableMenu = new this.options.tableMenu(tableModule, quill, this.options.tableMenuOptions);
-    }
+    this.quill.on(Quill.events.SELECTION_CHANGE, this.quillSelectionChangeHandler);
     this.hide();
   }
 
   updateAfterEvent = () => {
     this.updateWithSelectedTds();
   };
+
+  removeCell = (e: KeyboardEvent) => {
+    const range = this.quill.getSelection();
+    const activeElement = document.activeElement;
+    if (range || (e.key !== 'Backspace' && e.key !== 'Delete') || !this.quill.root.contains(activeElement)) return;
+
+    if (this.table) {
+      const tableMain = Quill.find(this.table) as TableMainFormat;
+      const cells = tableMain.descendants(TableCellInnerFormat);
+      if (this.selectedTds.length === cells.length) {
+        tableMain.remove();
+        return;
+      }
+    }
+    for (const td of this.selectedTds) {
+      td.deleteAt(0, td.length() - 1);
+    }
+  };
+
+  setSelectedTds(tds: TableCellInnerFormat[]) {
+    const currentSelectedTds = new Set(this.selectedTds);
+    const isSame = this.selectedTds.length === tds.length && tds.every(td => currentSelectedTds.has(td));
+
+    this.selectedTds = tds;
+    if (!isSame) {
+      this.quill.emitter.emit(tableUpEvent.TABLE_SELECTION_CHANGE, this, this.selectedTds);
+    }
+  }
 
   getFirstTextNode(dom: HTMLElement | Node): Node {
     for (const node of Array.from(dom.childNodes)) {
@@ -103,7 +137,7 @@ export class TableSelection {
       if (isInCell && !containsLine) {
         try {
           const cellInner = findParentBlot(line!, blotName.tableCellInner) as TableCellInnerFormat;
-          this.selectedTds = [cellInner];
+          this.setSelectedTds([cellInner]);
           this.updateWithSelectedTds();
         }
         catch {
@@ -203,7 +237,6 @@ export class TableSelection {
   resolveOptions(options: Partial<TableSelectionOptions>): TableSelectionOptions {
     return Object.assign({
       selectColor: '#0589f340',
-      tableMenuOptions: {},
     } as TableSelectionOptions, options);
   }
 
@@ -402,9 +435,9 @@ export class TableSelection {
     this.startScrollRecordPosition = [];
   }
 
-  mouseDownHandler(mousedownEvent: Event) {
-    const { button, target, clientX, clientY } = mousedownEvent as MouseEvent;
-    const closestTable = (target as HTMLElement).closest<HTMLTableElement>('.ql-table');
+  tableSelectHandler(mousedownEvent: MouseEvent) {
+    const { button, target, clientX, clientY } = mousedownEvent;
+    const closestTable = (target as HTMLElement).closest<HTMLTableElement>('table');
     const closestTableCaption = (target as HTMLElement).closest('caption');
     if (button !== 0 || !closestTable || closestTableCaption) return;
 
@@ -413,17 +446,11 @@ export class TableSelection {
     const startPoint = { x: clientX, y: clientY };
 
     this.recordScrollPosition();
-    this.selectedTds = this.computeSelectedTds(startPoint, startPoint);
-    this.dragging = true;
+    this.setSelectedTds(this.computeSelectedTds(startPoint, startPoint));
     this.show();
 
     const mouseMoveHandler = (mousemoveEvent: MouseEvent) => {
-      if (this.tableMenu) {
-        this.tableMenu.hide();
-      }
-      if (this.tableModule.tableResize) {
-        this.tableModule.tableResize.hide();
-      }
+      this.dragging = true;
       const { button, target, clientX, clientY } = mousemoveEvent;
       const closestTable = (target as HTMLElement).closest<HTMLTableElement>('.ql-table');
       const closestTableCaption = (target as HTMLElement).closest('caption');
@@ -436,7 +463,7 @@ export class TableSelection {
       }
 
       const movePoint = { x: clientX, y: clientY };
-      this.selectedTds = this.computeSelectedTds(startPoint, movePoint);
+      this.setSelectedTds(this.computeSelectedTds(startPoint, movePoint));
       if (this.selectedTds.length > 1) {
         this.quill.blur();
       }
@@ -447,9 +474,6 @@ export class TableSelection {
       document.body.removeEventListener('mouseup', mouseUpHandler, false);
       this.dragging = false;
       this.clearRecordScrollPosition();
-      if (this.tableMenu && this.selectedTds.length > 0) {
-        this.tableMenu.show();
-      }
     };
 
     document.body.addEventListener('mousemove', mouseMoveHandler, false);
@@ -467,7 +491,7 @@ export class TableSelection {
       endPoint.x = Math.max(endPoint.x, rect.right);
       endPoint.y = Math.max(endPoint.y, rect.bottom);
     }
-    this.selectedTds = this.computeSelectedTds(startPoint, endPoint);
+    this.setSelectedTds(this.computeSelectedTds(startPoint, endPoint));
     if (this.selectedTds.length > 0) {
       this.update();
     }
@@ -477,7 +501,11 @@ export class TableSelection {
   }
 
   update() {
-    if (this.selectedTds.length === 0 || !this.boundary || !this.table) return;
+    if (!this.table) {
+      this.hide();
+      return;
+    }
+    if (this.selectedTds.length === 0 || !this.boundary) return;
     const { x: editorScrollX, y: editorScrollY } = getElementScroll(this.quill.root);
     const { x: tableScrollX, y: tableScrollY } = this.getTableViewScroll();
     const tableWrapperRect = this.table.parentElement!.getBoundingClientRect();
@@ -497,9 +525,7 @@ export class TableSelection {
       width: `${tableWrapperRect.width}px`,
       height: `${tableWrapperRect.height}px`,
     });
-    if (!this.dragging && this.tableMenu) {
-      this.tableMenu.update();
-    }
+    this.quill.emitter.emit(tableUpEvent.TABLE_SELECTION_DISPLAY_CHANGE, this);
   }
 
   getTableViewScroll() {
@@ -523,24 +549,6 @@ export class TableSelection {
     }
   }
 
-  removeCell = (e: KeyboardEvent) => {
-    const range = this.quill.getSelection();
-    const activeElement = document.activeElement;
-    if (range || (e.key !== 'Backspace' && e.key !== 'Delete') || !this.quill.root.contains(activeElement)) return;
-
-    if (this.table) {
-      const tableMain = Quill.find(this.table) as TableMainFormat;
-      const cells = tableMain.descendants(TableCellInnerFormat);
-      if (this.selectedTds.length === cells.length) {
-        tableMain.remove();
-        return;
-      }
-    }
-    for (const td of this.selectedTds) {
-      td.deleteAt(0, td.length() - 1);
-    }
-  };
-
   showDisplay() {
     Object.assign(this.cellSelectWrap.style, { display: 'block' });
     this.isDisplaySelection = true;
@@ -554,7 +562,7 @@ export class TableSelection {
 
     this.update();
     this.showDisplay();
-    document.addEventListener('keydown', this.removeCell);
+    this.quill.root.addEventListener('keydown', this.removeCell);
     addScrollEvent.call(this, this.quill.root, () => {
       this.update();
     });
@@ -572,14 +580,11 @@ export class TableSelection {
 
   hide() {
     clearScrollEvent.call(this);
-    document.removeEventListener('keydown', this.removeCell);
+    this.quill.root.removeEventListener('keydown', this.removeCell);
     this.hideDisplay();
     this.boundary = null;
-    this.selectedTds = [];
+    this.setSelectedTds([]);
     this.setSelectionTable(undefined);
-    if (this.tableMenu) {
-      this.tableMenu.hide();
-    }
   }
 
   destroy() {
@@ -587,14 +592,11 @@ export class TableSelection {
 
     this.hide();
     this.cellSelectWrap.remove();
-    if (this.tableMenu) {
-      this.tableMenu.destroy();
-    }
     clearScrollEvent.call(this);
 
-    this.quill.root.removeEventListener('mousedown', this.mouseDownHandler);
-    this.quill.off(Quill.events.SELECTION_CHANGE, this.quillSelectionChangeHandler);
-    this.quill.off(Quill.events.TEXT_CHANGE, this.updateAfterEvent);
+    this.quill.root.removeEventListener('mousedown', this.tableSelectHandler);
     this.quill.off(tableUpEvent.AFTER_TABLE_RESIZE, this.updateAfterEvent);
+    this.quill.off(Quill.events.TEXT_CHANGE, this.updateAfterEvent);
+    this.quill.off(Quill.events.SELECTION_CHANGE, this.quillSelectionChangeHandler);
   }
 }

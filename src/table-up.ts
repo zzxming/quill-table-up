@@ -4,7 +4,7 @@ import type TypeBlock from 'quill/blots/block';
 import type { Context } from 'quill/modules/keyboard';
 import type TypeKeyboard from 'quill/modules/keyboard';
 import type TypeToolbar from 'quill/modules/toolbar';
-import type { Constructor, InternalModule, InternalTableSelectionModule, QuillTheme, QuillThemePicker, TableCellValue, TableConstantsData, TableTextOptions, TableUpOptions } from './utils';
+import type { Constructor, InternalModule, InternalTableMenuModule, InternalTableSelectionModule, QuillTheme, QuillThemePicker, TableCellValue, TableConstantsData, TableTextOptions, TableUpOptions } from './utils';
 import Quill from 'quill';
 import { BlockEmbedOverride, BlockOverride, ContainerFormat, ScrollOverride, TableBodyFormat, TableCaptionFormat, TableCellFormat, TableCellInnerFormat, TableColFormat, TableColgroupFormat, TableMainFormat, TableRowFormat, TableWrapperFormat } from './formats';
 import { TableClipboard } from './modules';
@@ -273,11 +273,11 @@ export class TableUp {
   toolBox: HTMLDivElement;
   fixTableByLisenter = debounce(this.balanceTables, 100);
   selector?: HTMLElement;
-  table?: HTMLElement;
   tableSelection?: InternalTableSelectionModule;
   tableResize?: InternalModule;
   tableScrollbar?: InternalModule;
   tableAlign?: InternalModule;
+  tableMenu?: InternalTableMenuModule;
   tableResizeScale?: InternalModule;
   resizeOb!: ResizeObserver;
 
@@ -297,6 +297,21 @@ export class TableUp {
 
     if (this.options.selection) {
       this.tableSelection = new this.options.selection(this, this.quill, this.options.selectionOptions);
+    }
+    if (this.options.align) {
+      this.tableAlign = new this.options.align(this, this.quill, this.options.alignOptions);
+    }
+    if (this.options.scrollbar) {
+      this.tableScrollbar = new this.options.scrollbar(this, this.quill, this.options.scrollbarOptions);
+    }
+    if (this.options.resizeScale) {
+      this.tableResizeScale = new this.options.resizeScale(this, this.quill, this.options.resizeScaleOptions);
+    }
+    if (this.options.resize) {
+      this.tableResize = new this.options.resize(this, this.quill, this.options.resizeOptions);
+    }
+    if (this.options.tableMenu) {
+      this.tableMenu = new this.options.tableMenu(this, quill, this.options.tableMenuOptions);
     }
 
     const toolbar = this.quill.getModule('toolbar') as TypeToolbar;
@@ -333,36 +348,6 @@ export class TableUp {
         keyboard.addBinding(handle.key, handle);
       }
     }
-
-    this.quill.root.addEventListener(
-      'click',
-      (evt: MouseEvent) => {
-        const path = evt.composedPath() as HTMLElement[];
-        if (!path || path.length <= 0) return;
-
-        const tableNode = path.find(node => node.tagName && node.tagName.toUpperCase() === 'TABLE' && node.classList.contains('ql-table'));
-        if (tableNode) {
-          if (this.table === tableNode) {
-            this.tableSelection && this.tableSelection.show();
-            this.tableAlign && this.tableAlign.update();
-            this.tableResize && this.tableResize.update();
-            this.tableScrollbar && this.tableScrollbar.update();
-            return;
-          }
-          if (this.table) this.hideTableTools();
-          this.showTableTools(tableNode);
-        }
-        else if (this.table) {
-          this.hideTableTools();
-        }
-      },
-      false,
-    );
-    this.quill.on(Quill.events.EDITOR_CHANGE, (type: typeof Quill.events.TEXT_CHANGE | typeof Quill.events.SELECTION_CHANGE) => {
-      if (type === Quill.events.TEXT_CHANGE && (!this.table || !this.quill.root.contains(this.table))) {
-        this.hideTableTools();
-      }
-    });
 
     this.quillHack();
     this.listenBalanceCells();
@@ -414,6 +399,7 @@ export class TableUp {
       resizeOptions: {},
       resizeScaleOptions: {},
       autoMergeCell: true,
+      tableMenuOptions: {},
     } as TableUpOptions, options);
   }
 
@@ -637,45 +623,6 @@ export class TableUp {
         };
       }
     }
-  }
-
-  showTableTools(table: HTMLElement) {
-    if (table) {
-      this.table = table;
-      this.tableSelection?.show();
-      if (this.options.align) {
-        this.tableAlign = new this.options.align(this, table, this.quill, this.options.alignOptions);
-      }
-      if (this.options.scrollbar) {
-        this.tableScrollbar = new this.options.scrollbar(this, table, this.quill, this.options.scrollbarOptions);
-      }
-      if (this.options.resize) {
-        this.tableResize = new this.options.resize(this, table, this.quill, this.options.resizeOptions);
-      }
-      if (this.options.resizeScale) {
-        this.tableResizeScale = new this.options.resizeScale(this, table, this.quill, this.options.resizeScaleOptions);
-      }
-    }
-  }
-
-  hideTableTools() {
-    this.tableSelection?.hide();
-    if (this.tableScrollbar) {
-      this.tableScrollbar.destroy();
-      this.tableScrollbar = undefined;
-    }
-    if (this.tableAlign) {
-      this.tableAlign.destroy();
-      this.tableAlign = undefined;
-    }
-    if (this.tableResize) {
-      this.tableResize.destroy();
-      this.tableResize = undefined;
-    }
-    if (this.tableResizeScale) {
-      this.tableResizeScale.destroy();
-    }
-    this.table = undefined;
   }
 
   async buildCustomSelect(customSelect: ((module: TableUp, picker: QuillThemePicker) => HTMLElement | Promise<HTMLElement>) | undefined, picker: QuillThemePicker) {
@@ -1021,7 +968,6 @@ export class TableUp {
     if (selectedTds.length === 0) return;
     const tableBlot = findParentBlot(selectedTds[0], blotName.tableMain);
     tableBlot && tableBlot.remove();
-    this.hideTableTools();
   }
 
   appendRow(selectedTds: TableCellInnerFormat[], isDown: boolean) {

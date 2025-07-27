@@ -6,24 +6,33 @@ import { TableResizeCommon } from './table-resize-common';
 import { isTableAlignRight } from './utils';
 
 export class TableResizeLine extends TableResizeCommon {
-  colResizer: HTMLElement;
-  rowResizer: HTMLElement;
+  colResizer?: HTMLElement;
+  rowResizer?: HTMLElement;
   currentTableCell?: HTMLElement;
   dragging = false;
-
   curColIndex: number = -1;
   curRowIndex: number = -1;
   tableCellBlot?: TableCellFormat;
 
   bem = createBEM('resize-line');
-  constructor(public tableModule: TableUp, public table: HTMLElement, quill: Quill) {
+  constructor(public tableModule: TableUp, public quill: Quill, _options: any) {
     super(tableModule, quill);
     this.colResizer = this.tableModule.addContainer(this.bem.be('col'));
     this.rowResizer = this.tableModule.addContainer(this.bem.be('row'));
 
-    this.table.addEventListener('mousemove', this.mousemoveHandler);
-    this.quill.on(Quill.events.TEXT_CHANGE, this.hideWhenTextChange);
+    this.quill.on(Quill.events.EDITOR_CHANGE, this.updateWhenTextChange);
   }
+
+  updateWhenTextChange = (eventName: string) => {
+    if (eventName === Quill.events.TEXT_CHANGE) {
+      if (this.table && !this.quill.root.contains(this.table)) {
+        this.setSelectionTable(undefined);
+      }
+      else {
+        this.update();
+      }
+    }
+  };
 
   mousemoveHandler = (e: MouseEvent) => {
     if (this.dragging) return;
@@ -39,16 +48,12 @@ export class TableResizeLine extends TableResizeCommon {
       this.show();
       this.currentTableCell = tableCell;
       this.tableCellBlot = tableCellBlot;
-      this.tableMain = findParentBlot(tableCellBlot, blotName.tableMain);
-      if (this.tableMain.getCols().length > 0) {
+      this.tableBlot = findParentBlot(tableCellBlot, blotName.tableMain);
+      if (this.tableBlot.getCols().length > 0) {
         this.updateColResizer();
       }
       this.updateRowResizer();
     }
-  };
-
-  hideWhenTextChange = () => {
-    this.hide();
   };
 
   findTableCell(e: MouseEvent) {
@@ -73,9 +78,9 @@ export class TableResizeLine extends TableResizeCommon {
   }.bind(this);
 
   updateColResizer() {
-    if (!this.tableMain || !this.tableCellBlot) return;
+    if (!this.tableBlot || !this.tableCellBlot || !this.colResizer) return;
     const tableCellBlot = this.tableCellBlot;
-    this.tableModule.toolBox.removeChild(this.colResizer);
+    this.colResizer.remove();
     this.colResizer = this.tableModule.addContainer(this.bem.be('col'));
 
     const [tableBodyBlot] = findParentBlots(tableCellBlot, [blotName.tableBody] as const);
@@ -83,7 +88,7 @@ export class TableResizeLine extends TableResizeCommon {
     const tableCellRect = tableCellBlot.domNode.getBoundingClientRect();
     const rootRect = this.quill.root.getBoundingClientRect();
     let left = tableCellRect.right - rootRect.x;
-    if (isTableAlignRight(this.tableMain)) {
+    if (isTableAlignRight(this.tableBlot)) {
       left = tableCellRect.left - rootRect.x;
     }
     Object.assign(this.colResizer.style, {
@@ -92,7 +97,7 @@ export class TableResizeLine extends TableResizeCommon {
       height: `${tableBodyect.height}px`,
     });
 
-    const cols = this.tableMain.getCols();
+    const cols = this.tableBlot.getCols();
     this.curColIndex = cols.findIndex(col => col.colId === tableCellBlot.colId);
 
     this.colResizer.addEventListener('mousedown', this.handleColMouseDownFunc);
@@ -111,9 +116,9 @@ export class TableResizeLine extends TableResizeCommon {
   }.bind(this);
 
   updateRowResizer() {
-    if (!this.tableMain || !this.tableCellBlot) return;
+    if (!this.tableBlot || !this.tableCellBlot || !this.rowResizer) return;
     const tableCellBlot = this.tableCellBlot;
-    this.tableModule.toolBox.removeChild(this.rowResizer);
+    this.rowResizer.remove();
     this.rowResizer = this.tableModule.addContainer(this.bem.be('row'));
     const currentRow = tableCellBlot.parent;
     if (!(currentRow instanceof TableRowFormat)) {
@@ -130,7 +135,7 @@ export class TableResizeLine extends TableResizeCommon {
       width: `${tableBodynRect.width}px`,
     });
 
-    const rows = this.tableMain.getRows();
+    const rows = this.tableBlot.getRows();
     this.curRowIndex = rows.indexOf(currentRow);
 
     this.rowResizer.addEventListener('mousedown', this.handleRowMouseDownFunc);
@@ -140,14 +145,19 @@ export class TableResizeLine extends TableResizeCommon {
   }
 
   show() {
+    if (!this.table || !this.rowResizer || !this.colResizer) return;
     this.rowResizer.classList.remove(this.bem.is('hidden'));
     this.colResizer.classList.remove(this.bem.is('hidden'));
+    this.table.addEventListener('mousemove', this.mousemoveHandler);
   }
 
   hide() {
     this.currentTableCell = undefined;
+    if (!this.rowResizer || !this.colResizer) return;
     this.rowResizer.classList.add(this.bem.is('hidden'));
     this.colResizer.classList.add(this.bem.is('hidden'));
+    if (!this.table) return;
+    this.table.removeEventListener('mousemove', this.mousemoveHandler);
   }
 
   update() {
@@ -156,10 +166,15 @@ export class TableResizeLine extends TableResizeCommon {
   }
 
   destroy(): void {
-    this.colResizer.remove();
-    this.rowResizer.remove();
+    if (this.colResizer) {
+      this.colResizer.remove();
+      this.colResizer = undefined;
+    }
+    if (this.rowResizer) {
+      this.rowResizer.remove();
+      this.rowResizer = undefined;
+    }
 
-    this.table.removeEventListener('mousemove', this.mousemoveHandler);
-    this.quill.off(Quill.events.TEXT_CHANGE, this.hideWhenTextChange);
+    this.quill.off(Quill.events.EDITOR_CHANGE, this.updateWhenTextChange);
   }
 }
