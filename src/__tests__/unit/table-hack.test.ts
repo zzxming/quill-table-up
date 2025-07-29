@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { TableCellInnerFormat } from '../../formats';
 import { TableSelection } from '../../modules';
 import { TableUp } from '../../table-up';
-import { createQuillWithTableModule, createTable, createTableBodyHTML, createTableCaptionHTML, createTableDeltaOps, createTaleColHTML, expectDelta } from './utils';
+import { createQuillWithTableModule, createTable, createTableCaptionHTML, createTableDeltaOps, createTaleColHTML, expectDelta } from './utils';
 
 const Delta = Quill.import('delta');
 if (!Range.prototype.getBoundingClientRect) {
@@ -39,11 +39,11 @@ describe('hack html convert', () => {
       { insert: { 'table-up-col': { tableId: '1', colId: '2', full: false, width: 100, align: 'right' } } },
       { insert: { 'table-up-col': { tableId: '1', colId: '3', full: false, width: 100, align: 'right' } } },
       { insert: '1' },
-      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '1', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '1', rowspan: 1, colspan: 1, tag: 'th' } }, insert: '\n' },
       { insert: '2' },
-      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '2', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '2', rowspan: 1, colspan: 1, tag: 'th' } }, insert: '\n' },
       { insert: '3' },
-      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '3', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '3', rowspan: 1, colspan: 1, tag: 'th' } }, insert: '\n' },
       { insert: '4' },
       { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '1', rowspan: 1, colspan: 1 } }, insert: '\n' },
       { insert: '5' },
@@ -69,12 +69,64 @@ describe('hack html convert', () => {
           <table cellpadding="0" cellspacing="0" style="width: 300px; margin-left: auto;" data-align="right">
             ${createTableCaptionHTML({ text: 'Table&nbsp;Caption', side: 'bottom' }, { editable: null })}
             ${createTaleColHTML(3, { full: false, width: 100, align: 'right' })}
-            ${createTableBodyHTML(3, 3, { isEmpty: false, editable: null })}
+            <tbody>
+              <tr data-row-id="1">
+                <th colspan="1" data-col-id="1" data-row-id="1" rowspan="1">
+                  <div data-col-id="1" data-colspan="1" data-row-id="1" data-rowspan="1">
+                    <p>1</p>
+                  </div>
+                </th>
+                <th colspan="1" data-col-id="2" data-row-id="1" rowspan="1">
+                  <div data-col-id="2" data-colspan="1" data-row-id="1" data-rowspan="1">
+                    <p>2</p>
+                  </div>
+                </th>
+                <th colspan="1" data-col-id="3" data-row-id="1" rowspan="1">
+                  <div data-col-id="3" data-colspan="1" data-row-id="1" data-rowspan="1">
+                    <p>3</p>
+                  </div>
+                </th>
+              </tr>
+              <tr data-row-id="2">
+                <td colspan="1" data-col-id="1" data-row-id="2" rowspan="1">
+                  <div data-col-id="1" data-colspan="1" data-row-id="2" data-rowspan="1">
+                    <p>4</p>
+                  </div>
+                </td>
+                <td colspan="1" data-col-id="2" data-row-id="2" rowspan="1">
+                  <div data-col-id="2" data-colspan="1" data-row-id="2" data-rowspan="1">
+                    <p>5</p>
+                  </div>
+                </td>
+                <td colspan="1" data-col-id="3" data-row-id="2" rowspan="1">
+                  <div data-col-id="3" data-colspan="1" data-row-id="2" data-rowspan="1">
+                    <p>6</p>
+                  </div>
+                </td>
+              </tr>
+              <tr data-row-id="3">
+                <td colspan="1" data-col-id="1" data-row-id="3" rowspan="1">
+                  <div data-col-id="1" data-colspan="1" data-row-id="3" data-rowspan="1">
+                    <p>7</p>
+                  </div>
+                </td>
+                <td colspan="1" data-col-id="2" data-row-id="3" rowspan="1">
+                  <div data-col-id="2" data-colspan="1" data-row-id="3" data-rowspan="1">
+                    <p>8</p>
+                  </div>
+                </td>
+                <td colspan="1" data-col-id="3" data-row-id="3" rowspan="1">
+                  <div data-col-id="3" data-colspan="1" data-row-id="3" data-rowspan="1">
+                    <p>9</p>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
           </table>
         </div>
         <p></p>
       `,
-      { ignoreAttrs: ['class', 'data-table-id'] },
+      { ignoreAttrs: ['class', 'data-table-id', 'data-tag'] },
     );
   });
 
@@ -87,11 +139,11 @@ describe('hack html convert', () => {
       { insert: { 'table-up-col': { tableId: '1', colId: '2', full: false, width: 100, align: 'right' } } },
       { insert: { 'table-up-col': { tableId: '1', colId: '3', full: false, width: 100, align: 'right' } } },
       { insert: '1' },
-      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '1', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '1', rowspan: 1, colspan: 1, tag: 'th' } }, insert: '\n' },
       { insert: '2' },
-      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '2', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '2', rowspan: 1, colspan: 1, tag: 'th' } }, insert: '\n' },
       { insert: '3' },
-      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '3', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '3', rowspan: 1, colspan: 1, tag: 'th' } }, insert: '\n' },
       { insert: '4' },
       { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '1', rowspan: 1, colspan: 1 } }, insert: '\n' },
       { insert: '5' },
@@ -122,16 +174,16 @@ describe('hack html convert', () => {
             </colgroup>
             <tbody>
               <tr data-row-id="1">
-                <td colspan="1" data-col-id="1" data-row-id="1" rowspan="1">
+                <th colspan="1" data-col-id="1" data-row-id="1" rowspan="1">
                   <div data-col-id="1" data-colspan="1" data-row-id="1" data-rowspan="1">
                     <p>1</p>
                   </div>
-                </td>
-                <td colspan="1" data-col-id="2" data-row-id="1" rowspan="1">
+                </th>
+                <th colspan="1" data-col-id="2" data-row-id="1" rowspan="1">
                   <div data-col-id="2" data-colspan="1" data-row-id="1" data-rowspan="1">
                     <p>2</p>
                   </div>
-                </td>
+                </th>
               </tr>
               <tr data-row-id="2">
                 <td colspan="1" data-col-id="1" data-row-id="2" rowspan="1">
@@ -149,7 +201,7 @@ describe('hack html convert', () => {
           </table>
         </div>
       `,
-      { ignoreAttrs: ['data-tag', 'class', 'data-table-id'] },
+      { ignoreAttrs: ['data-tag', 'class', 'data-table-id', 'data-tag'] },
     );
   });
 });

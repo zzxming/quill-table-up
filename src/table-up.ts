@@ -454,7 +454,7 @@ export class TableUp {
       const tableWrapperFormat = Quill.import(`formats/${blotName.tableWrapper}`) as typeof TableWrapperFormat;
       const parser = new DOMParser();
       const doc = parser.parseFromString(html, 'text/html');
-      for (const node of Array.from(doc.querySelectorAll(`.${tableWrapperFormat.className} caption[contenteditable], .${tableWrapperFormat.className} td > [contenteditable]`))) {
+      for (const node of Array.from(doc.querySelectorAll(`.${tableWrapperFormat.className} caption[contenteditable], .${tableWrapperFormat.className} .${TableCellFormat.className} > [contenteditable]`))) {
         node.removeAttribute('contenteditable');
       }
 
@@ -771,7 +771,7 @@ export class TableUp {
     // filter td
     let rowCount = 0;
     let lastRowId: string | null = null;
-    for (const td of Array.from(doc.querySelectorAll('td'))) {
+    for (const td of Array.from(doc.querySelectorAll('td, th')) as HTMLElement[]) {
       if (!cellIds.has(`${td.dataset.rowId}-${td.dataset.colId}`)) {
         const parent = td.parentElement;
         td.remove();
