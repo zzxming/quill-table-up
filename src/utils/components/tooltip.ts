@@ -46,7 +46,6 @@ export function createTooltip(target: HTMLElement, options: ToolTipOptions = {})
   if (msg || content) {
     if (!tooltipContainer) {
       tooltipContainer = document.createElement('div');
-      document.body.appendChild(tooltipContainer);
     }
     const appendTo = container || tooltipContainer;
     const tooltip = document.createElement('div');
@@ -76,6 +75,9 @@ export function createTooltip(target: HTMLElement, options: ToolTipOptions = {})
       tooltip.classList.add('hidden');
       if (appendTo.contains(tooltip)) {
         appendTo.removeChild(tooltip);
+        if (appendTo === tooltipContainer && !tooltipContainer.hasChildNodes()) {
+          document.body.removeChild(tooltipContainer);
+        }
       }
       if (cleanup) cleanup();
       if (closed) closed();
@@ -88,6 +90,9 @@ export function createTooltip(target: HTMLElement, options: ToolTipOptions = {})
         if (onOpen) {
           const allow = onOpen(force);
           if (!force && allow) return;
+        }
+        if (appendTo === tooltipContainer && !tooltipContainer.parentElement) {
+          document.body.appendChild(tooltipContainer);
         }
         appendTo.appendChild(tooltip);
         tooltip.removeEventListener('transitionend', transitionendHandler);
