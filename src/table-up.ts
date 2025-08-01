@@ -60,7 +60,7 @@ export function updateTableConstants(data: Partial<TableConstantsData>) {
 export function defaultCustomSelect(tableModule: TableUp, picker: QuillThemePicker) {
   return createSelectBox({
     onSelect: (row: number, col: number) => {
-      tableModule.insertTable(row, col);
+      tableModule.insertTable(row, col, Quill.sources.USER);
       if (picker) {
         picker.close();
       }
@@ -748,7 +748,7 @@ export class TableUp {
     return doc.body.innerHTML;
   }
 
-  insertTable(rows: number, columns: number) {
+  insertTable(rows: number, columns: number, source: EmitterSource = Quill.sources.API) {
     if (rows >= 30 || columns >= 30) {
       throw new Error('Both rows and columns must be less than 30.');
     }
@@ -808,7 +808,7 @@ export class TableUp {
       }
     }
 
-    this.quill.updateContents(new Delta(delta), Quill.sources.USER);
+    this.quill.updateContents(new Delta(delta), source);
     this.quill.setSelection(range.index + columns, Quill.sources.SILENT);
     this.quill.focus();
   }
