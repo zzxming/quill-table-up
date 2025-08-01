@@ -9,7 +9,7 @@ import type { Constructor, QuillTheme, QuillThemePicker, TableCellValue, TableCo
 import Quill from 'quill';
 import { BlockEmbedOverride, BlockOverride, ContainerFormat, ScrollOverride, TableBodyFormat, TableCaptionFormat, TableCellFormat, TableCellInnerFormat, TableColFormat, TableColgroupFormat, TableMainFormat, TableRowFormat, TableWrapperFormat } from './formats';
 import { TableClipboard } from './modules';
-import { blotName, createBEM, createSelectBox, cssTextToObject, debounce, findParentBlot, findParentBlots, isForbidInTable, isFunction, isNumber, isString, isSubclassOf, limitDomInViewPort, mixinClass, objectToCssText, randomId, tableCantInsert, tableUpEvent, tableUpInternal, tableUpSize, toCamelCase } from './utils';
+import { blotName, createBEM, createSelectBox, cssTextToObject, debounce, findParentBlot, findParentBlots, getScrollBarWidth, isForbidInTable, isFunction, isNumber, isString, isSubclassOf, limitDomInViewPort, mixinClass, objectToCssText, randomId, tableCantInsert, tableUpEvent, tableUpInternal, tableUpSize, toCamelCase } from './utils';
 
 const Parchment = Quill.import('parchment');
 const Delta = Quill.import('delta');
@@ -762,14 +762,15 @@ export class TableUp {
       throw new Error(`Not supported ${currentBlot.statics.blotName} insert into table.`);
     }
 
+    const tableId = randomId();
+    const colIds = new Array(columns).fill(0).map(() => randomId());
+
     const borderWidth = this.calculateTableCellBorderWidth();
     const rootStyle = getComputedStyle(this.quill.root);
     const paddingLeft = Number.parseInt(rootStyle.paddingLeft);
     const paddingRight = Number.parseInt(rootStyle.paddingRight);
-    const width = Number.parseInt(rootStyle.width) - paddingLeft - paddingRight - borderWidth;
-
-    const tableId = randomId();
-    const colIds = new Array(columns).fill(0).map(() => randomId());
+    const scrollBarWidth = this.quill.root.scrollHeight > this.quill.root.clientHeight ? getScrollBarWidth({ target: this.quill.root }) : 0;
+    const width = Number.parseInt(rootStyle.width) - paddingLeft - paddingRight - borderWidth - scrollBarWidth;
 
     // insert delta data to create table
     const colWidth = !this.options.full ? `${Math.max(Math.floor(width / columns), tableUpSize.colMinWidthPx)}px` : `${Math.max((1 / columns) * 100, tableUpSize.colMinWidthPre)}%`;
