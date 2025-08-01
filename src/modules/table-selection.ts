@@ -4,7 +4,7 @@ import type { TableUp } from '../table-up';
 import type { RelactiveRect, TableSelectionOptions } from '../utils';
 import Quill from 'quill';
 import { getTableMainRect, TableBodyFormat, TableCellFormat, TableCellInnerFormat } from '../formats';
-import { addScrollEvent, blotName, clearScrollEvent, createBEM, createResizeObserver, findAllParentBlot, findParentBlot, getElementScroll, getRelativeRect, isRectanglesIntersect, tableUpEvent } from '../utils';
+import { addScrollEvent, blotName, clearScrollEvent, createBEM, createResizeObserver, findAllParentBlot, findParentBlot, getElementScrollPosition, getRelativeRect, isRectanglesIntersect, tableUpEvent } from '../utils';
 import { TableDomSelector } from './table-dom-selector';
 
 const ERROR_LIMIT = 0;
@@ -412,14 +412,14 @@ export class TableSelection extends TableDomSelector {
 
   getScrollPositionDiff() {
     const { x: tableScrollX, y: tableScrollY } = this.getTableViewScroll();
-    const { x: editorScrollX, y: editorScrollY } = getElementScroll(this.quill.root);
+    const { x: editorScrollX, y: editorScrollY } = getElementScrollPosition(this.quill.root);
     this.selectedTableScrollX = tableScrollX;
     this.selectedTableScrollY = tableScrollY;
     this.selectedEditorScrollX = editorScrollX;
     this.selectedEditorScrollY = editorScrollY;
 
     return this.startScrollRecordPosition.reduce((pre, { x, y }, i) => {
-      const { x: currentX, y: currentY } = getElementScroll(this.scrollRecordEls[i]);
+      const { x: currentX, y: currentY } = getElementScrollPosition(this.scrollRecordEls[i]);
       pre.x += x - currentX;
       pre.y += y - currentY;
       return pre;
@@ -429,7 +429,7 @@ export class TableSelection extends TableDomSelector {
   recordScrollPosition() {
     this.clearRecordScrollPosition();
     for (const el of this.scrollRecordEls) {
-      this.startScrollRecordPosition.push(getElementScroll(el));
+      this.startScrollRecordPosition.push(getElementScrollPosition(el));
     }
   }
 
@@ -508,7 +508,7 @@ export class TableSelection extends TableDomSelector {
       return;
     }
     if (this.selectedTds.length === 0 || !this.boundary) return;
-    const { x: editorScrollX, y: editorScrollY } = getElementScroll(this.quill.root);
+    const { x: editorScrollX, y: editorScrollY } = getElementScrollPosition(this.quill.root);
     const { x: tableScrollX, y: tableScrollY } = this.getTableViewScroll();
     const tableWrapperRect = this.table.parentElement!.getBoundingClientRect();
     const rootRect = this.quill.root.getBoundingClientRect();
@@ -537,7 +537,7 @@ export class TableSelection extends TableDomSelector {
         y: 0,
       };
     }
-    return getElementScroll(this.table.parentElement!);
+    return getElementScrollPosition(this.table.parentElement!);
   }
 
   setSelectionTable(table: HTMLTableElement | undefined) {

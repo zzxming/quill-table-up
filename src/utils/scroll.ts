@@ -1,4 +1,4 @@
-interface ScrollHandle {
+export interface ScrollHandle {
   scrollHandler: [HTMLElement, (e: Event) => void][];
 }
 export function addScrollEvent(this: ScrollHandle, dom: HTMLElement, handle: (e: Event) => void) {
@@ -14,7 +14,7 @@ export function clearScrollEvent(this: ScrollHandle) {
   this.scrollHandler = [];
 }
 
-export function getElementScroll(el: HTMLElement) {
+export function getElementScrollPosition(el: HTMLElement) {
   return {
     y: el.scrollTop,
     x: el.scrollLeft,
