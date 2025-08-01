@@ -373,7 +373,7 @@ describe('hack format cell', () => {
   });
 
   it('selection not in cell and selectedTds not empty should format all text in cell', async () => {
-    const quill = createQuillWithTableModule('<p></p>', { selection: TableSelection });
+    const quill = createQuillWithTableModule('<p></p>', { modules: [{ module: TableSelection }] });
     quill.setContents(createTableDeltaOps(2, 2, { full: false }));
     quill.updateContents(
       new Delta()
@@ -390,10 +390,11 @@ describe('hack format cell', () => {
     quill.focus();
     const tableUp = quill.getModule(TableUp.moduleName) as TableUp;
     const tds = quill.scroll.descendants(TableCellInnerFormat, 0);
-    tableUp.tableSelection!.selectedTds = [tds[0], tds[2]];
+    const tableSelection = tableUp.getModule<TableSelection>('table-selection');
+    tableSelection!.setSelectedTds([tds[0], tds[2]]);
     quill.format('bold', true);
     // simulate `getBoundingClientRect` will effect selectedTd computed position. need manual set
-    tableUp.tableSelection!.selectedTds = [tds[0], tds[2]];
+    tableSelection!.setSelectedTds([tds[0], tds[2]]);
     quill.format('list', 'bullet');
     expectDelta(
       quill.getContents(),
@@ -419,7 +420,7 @@ describe('hack format cell', () => {
   });
 
   it('selection can get format tableCellInner. should format like origin', async () => {
-    const quill = createQuillWithTableModule('<p></p>', { selection: TableSelection });
+    const quill = createQuillWithTableModule('<p></p>', { modules: [{ module: TableSelection }] });
     quill.setContents([
       { insert: '12345\n' },
       { insert: { 'table-up-col': { tableId: '1', colId: '1', full: false, width: 100 } } },
@@ -565,7 +566,7 @@ describe('hack toolbar clean handler', () => {
   });
 
   it('clean handler should clean all format in selectedTds', async () => {
-    const quill = createQuillWithTableModule('<p></p>', { selection: TableSelection });
+    const quill = createQuillWithTableModule('<p></p>', { modules: [{ module: TableSelection }] });
     quill.setContents([
       { insert: '\n' },
       { insert: { 'table-up-col': { tableId: '1', colId: '1', full: false, width: 100 } } },
@@ -583,9 +584,10 @@ describe('hack toolbar clean handler', () => {
       { insert: '\n' },
     ]);
     const tableUp = quill.getModule(TableUp.moduleName) as TableUp;
-    tableUp.tableSelection!.table = quill.root.querySelector('table')!;
     const tds = quill.scroll.descendants(TableCellInnerFormat, 0);
-    tableUp.tableSelection!.selectedTds = tds;
+    const tableSelection = tableUp.getModule<TableSelection>('table-selection');
+    tableSelection!.table = quill.root.querySelector('table')!;
+    tableSelection!.setSelectedTds(tds);
 
     quill.theme.modules.toolbar!.handlers!.clean.call(quill.theme.modules.toolbar as any, true);
     expectDelta(
@@ -611,7 +613,7 @@ describe('hack toolbar clean handler', () => {
   });
 
   it('selection not in cell but have selectedTds. should clean all text in selected cell', async () => {
-    const quill = createQuillWithTableModule('<p></p>', { selection: TableSelection });
+    const quill = createQuillWithTableModule('<p></p>', { modules: [{ module: TableSelection }] });
     quill.setContents([
       { insert: '12345', attributes: { bold: true } },
       { insert: '\n' },
@@ -629,8 +631,9 @@ describe('hack toolbar clean handler', () => {
     ]);
     const tableUp = quill.getModule(TableUp.moduleName) as TableUp;
     const tds = quill.scroll.descendants(TableCellInnerFormat, 0);
-    tableUp.tableSelection!.table = quill.root.querySelector('table')!;
-    tableUp.tableSelection!.selectedTds = tds;
+    const tableSelection = tableUp.getModule<TableSelection>('table-selection');
+    tableSelection!.table = quill.root.querySelector('table')!;
+    tableSelection!.setSelectedTds(tds);
     quill.setSelection(1, 3, Quill.sources.SILENT);
 
     quill.theme.modules.toolbar!.handlers!.clean.call(quill.theme.modules.toolbar as any, true);
@@ -701,7 +704,7 @@ describe('hack toolbar clean handler', () => {
   });
 
   it('clean handler should clean embed correct', async () => {
-    const quill = createQuillWithTableModule('<p></p>', { selection: TableSelection });
+    const quill = createQuillWithTableModule('<p></p>', { modules: [{ module: TableSelection }] });
     quill.setContents([
       { insert: '\n' },
       { insert: { 'table-up-col': { tableId: '1', colId: '1', full: false, width: 100 } } },
@@ -736,8 +739,9 @@ describe('hack toolbar clean handler', () => {
     await vi.runAllTimersAsync();
     const tableUp = quill.getModule(TableUp.moduleName) as TableUp;
     const tds = quill.scroll.descendants(TableCellInnerFormat, 0);
-    tableUp.tableSelection!.table = quill.root.querySelector('table')!;
-    tableUp.tableSelection!.selectedTds = [tds[1]];
+    const tableSelection = tableUp.getModule<TableSelection>('table-selection');
+    tableSelection!.table = quill.root.querySelector('table')!;
+    tableSelection!.setSelectedTds([tds[1]]);
     quill.theme.modules.toolbar!.handlers!.clean.call(quill.theme.modules.toolbar as any, true);
     expectDelta(
       quill.getContents(),
@@ -755,7 +759,7 @@ describe('hack toolbar clean handler', () => {
   });
 
   it('clean handler trigger source should be USER', async () => {
-    const quill = createQuillWithTableModule('<p></p>', { selection: TableSelection });
+    const quill = createQuillWithTableModule('<p></p>', { modules: [{ module: TableSelection }] });
     quill.setContents([
       { insert: '\n' },
       { insert: { 'table-up-col': { tableId: '1', colId: '1', full: false, width: 100 } } },
@@ -776,7 +780,7 @@ describe('hack toolbar clean handler', () => {
   });
 
   it('clean handler should not clean cell style when selection in cell', async () => {
-    const quill = createQuillWithTableModule('<p></p>', { selection: TableSelection });
+    const quill = createQuillWithTableModule('<p></p>', { modules: [{ module: TableSelection }] });
     quill.setContents([
       { insert: '\n' },
       { insert: { 'table-up-col': { tableId: 'jb784n9k6x', colId: '22nxu0uo4pa', full: false, width: 121 } } },
@@ -859,7 +863,7 @@ describe('hack toolbar clean handler', () => {
   });
 
   it('clean handler should clean cell style when have selectedTds cleaning', async () => {
-    const quill = createQuillWithTableModule('<p></p>', { selection: TableSelection });
+    const quill = createQuillWithTableModule('<p></p>', { modules: [{ module: TableSelection }] });
     quill.setContents([
       { insert: '\n' },
       { insert: { 'table-up-col': { tableId: 'jb784n9k6x', colId: '22nxu0uo4pa', full: false, width: 121 } } },
@@ -879,8 +883,9 @@ describe('hack toolbar clean handler', () => {
 
     const tableUp = quill.getModule(TableUp.moduleName) as TableUp;
     const tds = quill.scroll.descendants(TableCellInnerFormat, 0);
-    tableUp.tableSelection!.table = quill.root.querySelector('table')!;
-    tableUp.tableSelection!.selectedTds = tds;
+    const tableSelection = tableUp.getModule<TableSelection>('table-selection');
+    tableSelection!.table = quill.root.querySelector('table')!;
+    tableSelection!.setSelectedTds(tds);
     quill.theme.modules.toolbar!.handlers!.clean.call(quill.theme.modules.toolbar as any, true);
 
     expectDelta(
@@ -943,7 +948,7 @@ describe('hack toolbar clean handler', () => {
   });
 
   it('clean handler should clean cell selectedTds style', async () => {
-    const quill = createQuillWithTableModule('<p></p>', { selection: TableSelection });
+    const quill = createQuillWithTableModule('<p></p>', { modules: [{ module: TableSelection }] });
     quill.setContents([
       { insert: '\n' },
       { insert: { 'table-up-col': { tableId: '1', colId: '1', full: false, width: 100 } } },
@@ -972,8 +977,9 @@ describe('hack toolbar clean handler', () => {
 
     const tableUp = quill.getModule(TableUp.moduleName) as TableUp;
     const tds = quill.scroll.descendants(TableCellInnerFormat, 0);
-    tableUp.tableSelection!.table = quill.root.querySelector('table')!;
-    tableUp.tableSelection!.selectedTds = [tds[4]];
+    const tableSelection = tableUp.getModule<TableSelection>('table-selection');
+    tableSelection!.table = quill.root.querySelector('table')!;
+    tableSelection!.setSelectedTds([tds[4]]);
     quill.theme.modules.toolbar!.handlers!.clean.call(quill.theme.modules.toolbar as any, true);
 
     expectDelta(

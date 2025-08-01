@@ -20,7 +20,7 @@ extendTest('test TableAlign should functional', async ({ page }) => {
   await page.mouse.move(colBoundingBox.x + colBoundingBox.width / 2 - 200, colBoundingBox.y + colBoundingBox.height / 2);
   await page.mouse.up();
 
-  expect(await page.locator('#editor1 .table-up-align.table-up-align--active').isVisible()).toBeTruthy();
+  expect(await page.locator('#editor1 .table-up-align').isVisible()).toBeTruthy();
 
   const table = page.locator('#editor1 .ql-editor .ql-table');
   await page.locator('#editor1 .table-up-align .table-up-align__item[data-align="center"]').click();
@@ -43,7 +43,6 @@ extendTest('test TableAlign should update after resize', async ({ page }) => {
   const cellBounding = (await centerCell.boundingBox())!;
   expect(cellBounding).not.toBeNull();
   const alignToolbar = page.locator('#editor1 .table-up-align');
-  expect(alignToolbar).toHaveClass(/(^|\s)table-up-align--active(\s|$)/);
   expect(await alignToolbar.isVisible()).toBeTruthy();
   const alignToolbarBoundingBox = (await alignToolbar.boundingBox())!;
   expect(alignToolbarBoundingBox).not.toBeNull();

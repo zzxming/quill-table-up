@@ -28,7 +28,7 @@ export const tableMenuTools: Record<string, Tool> = {
     name: 'CopyCell',
     tip: 'Copy cell',
     icon: Copy,
-    handle: (tableModule, selectedTds) => {
+    handle(tableModule, selectedTds) {
       const text = tableModule.getTextByCell(selectedTds);
       const html = tableModule.getHTMLByCell(selectedTds);
 
@@ -37,14 +37,13 @@ export const tableMenuTools: Record<string, Tool> = {
         'text/html': new Blob([html], { type: 'text/html' }),
       });
       navigator.clipboard.write([clipboardItem]);
-      tableModule.hideTableTools();
     },
   },
   CutCell: {
     name: 'CutCell',
     tip: 'Cut cell',
     icon: Cut,
-    handle: (tableModule, selectedTds) => {
+    handle(tableModule, selectedTds) {
       const text = tableModule.getTextByCell(selectedTds);
       const html = tableModule.getHTMLByCell(selectedTds, true);
 
@@ -53,86 +52,77 @@ export const tableMenuTools: Record<string, Tool> = {
         'text/html': new Blob([html], { type: 'text/html' }),
       });
       navigator.clipboard.write([clipboardItem]);
-      tableModule.hideTableTools();
     },
   },
   InsertTop: {
     name: 'InsertTop',
     icon: InsertTop,
     tip: 'Insert row above',
-    handle: (tableModule, selectedTds) => {
+    handle(tableModule, selectedTds) {
       tableModule.appendRow(selectedTds, false);
-      tableModule.hideTableTools();
     },
   },
   InsertRight: {
     name: 'InsertRight',
     icon: InsertRight,
     tip: 'Insert column right',
-    handle: (tableModule, selectedTds) => {
+    handle(tableModule, selectedTds) {
       tableModule.appendCol(selectedTds, true);
-      tableModule.hideTableTools();
     },
   },
   InsertBottom: {
     name: 'InsertBottom',
     icon: InsertBottom,
     tip: 'Insert row below',
-    handle: (tableModule, selectedTds) => {
+    handle(tableModule, selectedTds) {
       tableModule.appendRow(selectedTds, true);
-      tableModule.hideTableTools();
     },
   },
   InsertLeft: {
     name: 'InsertLeft',
     icon: InsertLeft,
     tip: 'Insert column Left',
-    handle: (tableModule, selectedTds) => {
+    handle(tableModule, selectedTds) {
       tableModule.appendCol(selectedTds, false);
-      tableModule.hideTableTools();
     },
   },
   MergeCell: {
     name: 'MergeCell',
     icon: MergeCell,
     tip: 'Merge Cell',
-    handle: (tableModule, selectedTds) => {
+    handle(tableModule, selectedTds) {
       tableModule.mergeCells(selectedTds);
-      tableModule.hideTableTools();
     },
   },
   SplitCell: {
     name: 'SplitCell',
     icon: SplitCell,
     tip: 'Split Cell',
-    handle: (tableModule, selectedTds) => {
+    handle(tableModule, selectedTds) {
       tableModule.splitCell(selectedTds);
-      tableModule.hideTableTools();
     },
   },
   DeleteRow: {
     name: 'DeleteRow',
     icon: RemoveRow,
     tip: 'Delete Row',
-    handle: (tableModule, selectedTds) => {
+    handle(tableModule, selectedTds) {
       tableModule.removeRow(selectedTds);
-      tableModule.hideTableTools();
     },
   },
   DeleteColumn: {
     name: 'DeleteColumn',
     icon: RemoveColumn,
     tip: 'Delete Column',
-    handle: (tableModule, selectedTds) => {
+    handle(tableModule, selectedTds) {
       tableModule.removeCol(selectedTds);
-      tableModule.hideTableTools();
     },
   },
   DeleteTable: {
     name: 'DeleteTable',
     icon: RemoveTable,
     tip: 'Delete table',
-    handle: (tableModule, selectedTds) => {
+    handle(tableModule, selectedTds) {
       tableModule.deleteTable(selectedTds);
     },
   },
@@ -142,7 +132,7 @@ export const tableMenuTools: Record<string, Tool> = {
     isColorChoose: true,
     tip: 'Set background color',
     key: 'background-color',
-    handle: (tableModule, selectedTds, color) => {
+    handle(tableModule, selectedTds, color) {
       tableModule.setCellAttrs(selectedTds, 'background-color', color, true);
     },
   },
@@ -152,7 +142,7 @@ export const tableMenuTools: Record<string, Tool> = {
     isColorChoose: true,
     tip: 'Set border color',
     key: 'border-color',
-    handle: (tableModule, selectedTds, color) => {
+    handle(tableModule, selectedTds, color) {
       tableModule.setCellAttrs(selectedTds, 'border-color', color, true);
     },
   },
@@ -160,9 +150,9 @@ export const tableMenuTools: Record<string, Tool> = {
     name: 'SwitchWidth',
     icon: AutoFull,
     tip: 'Switch table width',
-    handle: (tableModule) => {
-      if (!tableModule.table) return;
-      const tableMainBlot = Quill.find(tableModule.table) as TableMainFormat;
+    handle() {
+      if (!this.table) return;
+      const tableMainBlot = Quill.find(this.table) as TableMainFormat;
       if (!tableMainBlot) return;
 
       if (tableMainBlot.full) {
@@ -177,12 +167,12 @@ export const tableMenuTools: Record<string, Tool> = {
     name: 'InsertCaption',
     icon: TableHead,
     tip: 'Insert table caption',
-    handle: (tableModule) => {
-      if (!tableModule.table) return;
-      const tableMainBlot = Quill.find(tableModule.table) as TableMainFormat;
+    handle() {
+      if (!this.table) return;
+      const tableMainBlot = Quill.find(this.table) as TableMainFormat;
       if (!tableMainBlot) return;
 
-      const tableCaption = tableModule.quill.scroll.create('text', 'Table Caption').wrap(blotName.tableCaption, {
+      const tableCaption = this.quill.scroll.create('text', 'Table Caption').wrap(blotName.tableCaption, {
         tableId: tableMainBlot.tableId,
       });
       tableMainBlot.insertBefore(tableCaption, tableMainBlot.children.head);
@@ -192,7 +182,7 @@ export const tableMenuTools: Record<string, Tool> = {
     name: 'ToggleTdBetweenTh',
     icon: ConvertCell,
     tip: 'Toggle td between th',
-    handle: (tableModule, selectedTds) => {
+    handle(tableModule, selectedTds) {
       for (const td of selectedTds) {
         td.convertTableCell();
       }

@@ -975,7 +975,7 @@ describe('undo cell attribute', () => {
   });
 
   it('undo and redo table style and format clean by selection', async () => {
-    const quill = createQuillWithTableModule('<p></p>', { selection: TableSelection });
+    const quill = createQuillWithTableModule('<p></p>');
     quill.setContents([
       { insert: '\n' },
       { insert: { 'table-up-col': { tableId: 'jb784n9k6x', colId: '22nxu0uo4pa', full: false, width: 121 } } },
@@ -1120,7 +1120,7 @@ describe('undo cell attribute', () => {
   });
 
   it('undo and redo table style and format clean by TableSelection', async () => {
-    const quill = createQuillWithTableModule('<p></p>', { selection: TableSelection });
+    const quill = createQuillWithTableModule('<p></p>', { modules: [{ module: TableSelection }] });
     quill.setContents([
       { insert: '\n' },
       { insert: { 'table-up-col': { tableId: 'jb784n9k6x', colId: '22nxu0uo4pa', full: false, width: 121 } } },
@@ -1140,8 +1140,9 @@ describe('undo cell attribute', () => {
 
     const tableUp = quill.getModule(TableUp.moduleName) as TableUp;
     const tds = quill.scroll.descendants(TableCellInnerFormat, 0);
-    tableUp.tableSelection!.table = quill.root.querySelector('table')!;
-    tableUp.tableSelection!.selectedTds = tds;
+    const tableSelection = tableUp.getModule<TableSelection>('table-selection');
+    tableSelection!.table = quill.root.querySelector('table')!;
+    tableSelection!.setSelectedTds(tds);
     quill.theme.modules.toolbar!.handlers!.clean.call(quill.theme.modules.toolbar as any, true);
     expect(quill.root).toEqualHTML(
       `
@@ -1343,8 +1344,7 @@ describe('table caption', () => {
     const tableModule = quill.getModule(TableUp.moduleName) as TableUp;
     await vi.runAllTimersAsync();
     const table = quill.root.querySelector('table')!;
-    tableModule.table = table;
-    (tableMenuTools.InsertCaption as ToolOption).handle(tableModule, [], null);
+    (tableMenuTools.InsertCaption as ToolOption).handle.call({ quill, table } as any, tableModule, [], null);
     await vi.runAllTimersAsync();
     const tableCaptionDelta = new Delta([
       { insert: '\nTable Caption' },
@@ -1421,8 +1421,7 @@ describe('table caption', () => {
     const tableModule = quill.getModule(TableUp.moduleName) as TableUp;
     await vi.runAllTimersAsync();
     const table = quill.root.querySelector('table')!;
-    tableModule.table = table;
-    (tableMenuTools.InsertCaption as ToolOption).handle(tableModule, [], null);
+    (tableMenuTools.InsertCaption as ToolOption).handle.call({ quill, table } as any, tableModule, [], null);
     await vi.runAllTimersAsync();
     quill.deleteText({ index: 2, length: 4 });
     await vi.runAllTimersAsync();
@@ -1502,8 +1501,7 @@ describe('table caption', () => {
     const tableModule = quill.getModule(TableUp.moduleName) as TableUp;
     await vi.runAllTimersAsync();
     const table = quill.root.querySelector('table')!;
-    tableModule.table = table;
-    (tableMenuTools.InsertCaption as ToolOption).handle(tableModule, [], null);
+    (tableMenuTools.InsertCaption as ToolOption).handle.call({ quill, table } as any, tableModule, [], null);
     await vi.runAllTimersAsync();
 
     const tableCaption = Quill.find(table.querySelector('caption')!)! as TableCaptionFormat;

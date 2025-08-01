@@ -60,83 +60,93 @@ const menuTools = [
 const quills = [
   {
     full: false,
-    scrollbar: TableVirtualScrollbar,
-    align: TableAlign,
-    resize: TableResizeLine,
-    resizeScale: TableResizeScale,
     customSelect: defaultCustomSelect,
     customBtn: true,
-    selection: TableSelection,
-    selectionOptions: {
-      tableMenu: TableMenuContextmenu,
-      tableMenuOptions: {
-        tools: menuTools,
+    modules: [
+      { module: TableVirtualScrollbar },
+      { module: TableAlign },
+      { module: TableResizeLine },
+      { module: TableResizeScale },
+      { module: TableSelection },
+      {
+        module: TableMenuContextmenu,
+        options: {
+          tools: menuTools,
+        },
       },
-    },
+    ],
   },
   {
     full: false,
-    scrollbar: TableVirtualScrollbar,
-    align: TableAlign,
-    resize: TableResizeBox,
-    resizeScale: TableResizeScale,
     customSelect: defaultCustomSelect,
     customBtn: true,
-    selection: TableSelection,
-    selectionOptions: {
-      tableMenu: TableMenuSelect,
-      tableMenuOptions: {
-        tools: menuTools,
+    modules: [
+      { module: TableVirtualScrollbar },
+      { module: TableAlign },
+      { module: TableResizeBox },
+      { module: TableResizeScale },
+      { module: TableSelection },
+      {
+        module: TableMenuSelect,
+        options: {
+          tools: menuTools,
+        },
       },
-    },
+    ],
   },
   {
     full: true,
-    scrollbar: TableVirtualScrollbar,
-    align: TableAlign,
-    resize: TableResizeLine,
-    resizeScale: TableResizeScale,
     customSelect: defaultCustomSelect,
     customBtn: true,
-    selection: TableSelection,
-    selectionOptions: {
-      tableMenu: TableMenuSelect,
-      tableMenuOptions: {
-        tools: menuTools,
+    modules: [
+      { module: TableVirtualScrollbar },
+      { module: TableAlign },
+      { module: TableResizeLine },
+      { module: TableResizeScale },
+      { module: TableSelection },
+      {
+        module: TableMenuSelect,
+        options: {
+          tools: menuTools,
+        },
       },
-    },
+    ],
   },
   {
     full: true,
-    scrollbar: TableVirtualScrollbar,
-    align: TableAlign,
-    resize: TableResizeBox,
-    resizeScale: TableResizeScale,
     customSelect: defaultCustomSelect,
     customBtn: true,
-    selection: TableSelection,
-    selectionOptions: {
-      tableMenu: TableMenuContextmenu,
-      tableMenuOptions: {
-        tools: menuTools,
+    modules: [
+      { module: TableVirtualScrollbar },
+      { module: TableAlign },
+      { module: TableResizeBox },
+      { module: TableResizeScale },
+      { module: TableSelection },
+      {
+        module: TableMenuContextmenu,
+        options: {
+          tools: menuTools,
+        },
       },
-    },
+    ],
   },
   {
     full: false,
-    scrollbar: TableVirtualScrollbar,
-    align: TableAlign,
-    resize: TableResizeLine,
-    resizeScale: TableResizeScale,
     customSelect: defaultCustomSelect,
     customBtn: true,
-    selection: TableSelection,
-    selectionOptions: {
-      tableMenu: TableMenuContextmenu,
-      tableMenuOptions: {
-        tools: menuTools,
+    modules: [
+      { module: TableVirtualScrollbar },
+      { module: TableAlign },
+      { module: TableResizeLine },
+      { module: TableResizeScale },
+      { module: TableSelection },
+      {
+        module: TableMenuContextmenu,
+        options: {
+          tools: menuTools,
+        },
       },
-    },
+    ],
   },
 ].map((ops, i) => {
   return new Quill(`#editor${i + 1}`, {

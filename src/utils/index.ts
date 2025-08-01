@@ -6,7 +6,7 @@ export * from './constants';
 export * from './is';
 export * from './position';
 export * from './resize-observer-helper';
-export * from './scroll-event-helper';
+export * from './scroll';
 export * from './transformer';
 export * from './transition-event-helper';
 export * from './types';
