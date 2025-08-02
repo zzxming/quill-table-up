@@ -76,8 +76,11 @@ export class TableMenuContextmenu extends TableMenuCommon {
   update(position?: { x: number; y: number }) {
     super.update();
     const tableSelection = this.tableModule.getModule<TableSelection>('table-selection');
-    if (!this.table || !this.isMenuDisplay || !this.menu || !tableSelection?.isDisplaySelection || !position) {
+    if (!this.table || !this.isMenuDisplay || !this.menu) {
       this.hide();
+      return;
+    }
+    if (!position || !tableSelection?.isDisplaySelection) {
       return;
     }
 
