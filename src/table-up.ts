@@ -1229,6 +1229,10 @@ export class TableUp {
     baseTd.colspan = colCount;
     baseTd.rowspan = rowCount;
 
+    // selection will move with cursor. make sure selection is in baseTd
+    const index = this.quill.getIndex(baseTd);
+    this.quill.setSelection({ index, length: 0 }, Quill.sources.SILENT);
+
     const tableBlot = findParentBlot(baseTd, blotName.tableMain);
     this.fixTableByRemove(tableBlot);
   }
