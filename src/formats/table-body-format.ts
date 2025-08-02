@@ -1,4 +1,4 @@
-import { blotName, findParentBlot, randomId } from '../utils';
+import { blotName } from '../utils';
 import { ContainerFormat } from './container-format';
 
 export class TableBodyFormat extends ContainerFormat {
