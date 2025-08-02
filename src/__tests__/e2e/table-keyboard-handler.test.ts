@@ -26,9 +26,9 @@ extendTest.describe('table cell keyboard handler enter', () => {
     const contents = [
       { insert: '\n' },
       { insert: { 'table-up-col': { tableId: '1', colId: '1', full: true, width: 100 } } },
-      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '1', rowspan: 1, colspan: 1, tag: 'td' } }, insert: '\n' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '1', rowspan: 1, colspan: 1, tag: 'td', wrapTag: 'tbody' } }, insert: '\n' },
       { insert: { video: 'https://quilljs.com/' } },
-      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '1', rowspan: 1, colspan: 1, tag: 'td' } }, insert: '\n' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '1', rowspan: 1, colspan: 1, tag: 'td', wrapTag: 'tbody' } }, insert: '\n' },
       { insert: '\n' },
     ];
     for (const [i, op] of delta.ops.entries()) {
@@ -56,7 +56,7 @@ extendTest.describe('table cell keyboard handler enter', () => {
       { insert: '\n' },
       { insert: { 'table-up-col': { tableId: '1', colId: '1', full: true, width: 100 } } },
       { insert: { video: 'https://quilljs.com/' } },
-      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '1', rowspan: 1, colspan: 1, tag: 'td' } }, insert: '\n\n' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '1', rowspan: 1, colspan: 1, tag: 'td', wrapTag: 'tbody' } }, insert: '\n\n' },
       { insert: '\n' },
     ];
     for (const [i, op] of delta.ops.entries()) {
