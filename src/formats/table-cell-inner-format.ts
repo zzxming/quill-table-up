@@ -41,6 +41,7 @@ export class TableCellInnerFormat extends ContainerFormat {
       style,
       emptyRow,
       tag = 'td',
+      wrapTag = 'tbody',
     } = value;
     const node = super.create() as HTMLElement;
     node.dataset.tableId = tableId;
@@ -49,6 +50,7 @@ export class TableCellInnerFormat extends ContainerFormat {
     node.dataset.rowspan = String(getValidCellspan(rowspan));
     node.dataset.colspan = String(getValidCellspan(colspan));
     node.dataset.tag = tag;
+    node.dataset.wrapTag = wrapTag;
     style && (node.dataset.style = style);
     try {
       emptyRow && (node.dataset.emptyRow = JSON.stringify(emptyRow));
@@ -67,6 +69,7 @@ export class TableCellInnerFormat extends ContainerFormat {
       style,
       emptyRow,
       tag = 'td',
+      wrapTag = 'tbody',
     } = domNode.dataset;
     const value: Record<string, any> = {
       tableId: String(tableId),
@@ -75,12 +78,16 @@ export class TableCellInnerFormat extends ContainerFormat {
       rowspan: Number(getValidCellspan(rowspan)),
       colspan: Number(getValidCellspan(colspan)),
       tag,
+      wrapTag,
     };
+
     style && (value.style = style);
+
     try {
       emptyRow && (value.emptyRow = JSON.parse(emptyRow));
     }
     catch {}
+
     return value;
   }
 

@@ -7,7 +7,7 @@ import type TypeToolbar from 'quill/modules/toolbar';
 import type { TableSelection } from './modules';
 import type { Constructor, QuillTheme, QuillThemePicker, TableCellValue, TableConstantsData, TableTextOptions, TableUpOptions } from './utils';
 import Quill from 'quill';
-import { BlockEmbedOverride, BlockOverride, ContainerFormat, ScrollOverride, TableBodyFormat, TableCaptionFormat, TableCellFormat, TableCellInnerFormat, TableColFormat, TableColgroupFormat, TableMainFormat, TableRowFormat, TableWrapperFormat } from './formats';
+import { BlockEmbedOverride, BlockOverride, ContainerFormat, ScrollOverride, TableBodyFormat, TableCaptionFormat, TableCellFormat, TableCellInnerFormat, TableColFormat, TableColgroupFormat, TableFootFormat, TableHeadFormat, TableMainFormat, TableRowFormat, TableWrapperFormat } from './formats';
 import { TableClipboard } from './modules';
 import { blotName, createBEM, createSelectBox, cssTextToObject, debounce, findParentBlot, findParentBlots, getScrollBarWidth, isForbidInTable, isFunction, isNumber, isString, isSubclassOf, limitDomInViewPort, mixinClass, objectToCssText, randomId, tableCantInsert, tableUpEvent, tableUpInternal, tableUpSize, toCamelCase } from './utils';
 
@@ -213,7 +213,7 @@ export class TableUp {
   static register() {
     TableWrapperFormat.allowedChildren = [TableMainFormat];
 
-    TableMainFormat.allowedChildren = [TableBodyFormat, TableColgroupFormat, TableCaptionFormat];
+    TableMainFormat.allowedChildren = [TableColgroupFormat, TableCaptionFormat, TableHeadFormat, TableBodyFormat, TableFootFormat];
     TableMainFormat.requiredContainer = TableWrapperFormat;
 
     TableCaptionFormat.requiredContainer = TableMainFormat;
@@ -221,11 +221,14 @@ export class TableUp {
     TableColgroupFormat.allowedChildren = [TableColFormat];
     TableColgroupFormat.requiredContainer = TableMainFormat;
 
+    TableHeadFormat.allowedChildren = [TableRowFormat];
+    TableHeadFormat.requiredContainer = TableMainFormat;
     TableBodyFormat.allowedChildren = [TableRowFormat];
     TableBodyFormat.requiredContainer = TableMainFormat;
+    TableFootFormat.allowedChildren = [TableRowFormat];
+    TableFootFormat.requiredContainer = TableMainFormat;
 
     TableRowFormat.allowedChildren = [TableCellFormat];
-    TableCellFormat.requiredContainer = TableBodyFormat;
 
     TableCellFormat.allowedChildren = [TableCellInnerFormat, Break];
     TableCellFormat.requiredContainer = TableRowFormat;
@@ -259,7 +262,9 @@ export class TableUp {
       [`formats/${blotName.tableCell}`]: TableCellFormat,
       [`formats/${blotName.tableCellInner}`]: TableCellInnerFormat,
       [`formats/${blotName.tableRow}`]: TableRowFormat,
+      [`formats/${blotName.tableHead}`]: TableHeadFormat,
       [`formats/${blotName.tableBody}`]: TableBodyFormat,
+      [`formats/${blotName.tableFoot}`]: TableFootFormat,
       [`formats/${blotName.tableCol}`]: TableColFormat,
       [`formats/${blotName.tableColgroup}`]: TableColgroupFormat,
       [`formats/${blotName.tableCaption}`]: TableCaptionFormat,

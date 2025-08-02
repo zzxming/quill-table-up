@@ -35,12 +35,14 @@ export class TableCellFormat extends ContainerFormat {
       style,
       emptyRow,
       tag = 'td',
+      wrapTag = 'tbody',
     } = value;
     const node = document.createElement(tag);
     node.classList.add(...ensureArray(this.className));
     node.dataset.tableId = tableId;
     node.dataset.rowId = rowId;
     node.dataset.colId = colId;
+    node.dataset.wrapTag = wrapTag;
     node.setAttribute('rowspan', String(getValidCellspan(rowspan)));
     node.setAttribute('colspan', String(getValidCellspan(colspan)));
     style && (node.style.cssText = style);
@@ -52,7 +54,7 @@ export class TableCellFormat extends ContainerFormat {
   }
 
   static formats(domNode: HTMLElement) {
-    const { tableId, rowId, colId, emptyRow } = domNode.dataset;
+    const { tableId, rowId, colId, emptyRow, wrapTag = 'tbody' } = domNode.dataset;
     const rowspan = Number(domNode.getAttribute('rowspan'));
     const colspan = Number(domNode.getAttribute('colspan'));
     const value: Record<string, any> = {
@@ -62,6 +64,7 @@ export class TableCellFormat extends ContainerFormat {
       rowspan: getValidCellspan(rowspan),
       colspan: getValidCellspan(colspan),
       tag: domNode.tagName.toLowerCase(),
+      wrapTag,
     };
 
     const inlineStyles: Record<string, any> = {};
@@ -228,6 +231,10 @@ export class TableCellFormat extends ContainerFormat {
     }
   }
 
+  get wrapTag() {
+    return this.domNode.dataset.wrapTag || 'tbody';
+  }
+
   getColumnIndex() {
     const table = findParentBlot(this, blotName.tableMain);
     return table.getColIds().indexOf(this.colId);
@@ -271,13 +278,13 @@ export class TableCellFormat extends ContainerFormat {
 
   optimize(context: Record<string, any>) {
     const parent = this.parent as TableRowFormat;
-    const { tableId, rowId } = this;
+    const { tableId, rowId, wrapTag } = this;
     if (parent !== null && parent.statics.blotName !== blotName.tableRow) {
-      this.wrap(blotName.tableRow, { tableId, rowId });
+      this.wrap(blotName.tableRow, { tableId, rowId, wrapTag });
     }
     if (this.emptyRow.length > 0) {
       for (const rowId of this.emptyRow) {
-        this.parent.parent.insertBefore(this.scroll.create(blotName.tableRow, { tableId: this.tableId, rowId }), this.parent.next);
+        this.parent.parent.insertBefore(this.scroll.create(blotName.tableRow, { tableId, rowId, wrapTag }), this.parent.next);
       }
     }
 

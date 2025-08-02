@@ -257,7 +257,9 @@ export class TableMainFormat extends ContainerFormat {
     const childs: Record<string, ContainerFormat[]> = {
       [blotName.tableCaption]: [],
       [blotName.tableColgroup]: [],
+      [blotName.tableHead]: [],
       [blotName.tableBody]: [],
+      [blotName.tableFoot]: [],
     };
     // eslint-disable-next-line unicorn/no-array-for-each
     this.children.forEach((child) => {
@@ -274,19 +276,27 @@ export class TableMainFormat extends ContainerFormat {
     // check sort child
     const tableCaption = childs[blotName.tableCaption][0];
     const tableColgroup = childs[blotName.tableColgroup][0];
+    const tableHead = childs[blotName.tableHead][0];
     const tableBody = childs[blotName.tableBody][0];
+    const tableFoot = childs[blotName.tableFoot][0];
 
     const isCaptionFirst = tableCaption && this.children.head !== tableCaption;
     const isColgroupSecond = tableColgroup && tableCaption && tableCaption.next !== tableColgroup;
     const isColgroupFirst = tableColgroup && !tableCaption && this.children.head !== tableColgroup;
-    const isBodyLast = tableBody && this.children.tail !== tableBody;
+    const isHeadLast = tableHead && !tableBody && !tableFoot && this.children.tail !== tableHead;
+    const isBodyAfterHead = tableBody && tableHead && tableBody.prev !== tableHead;
+    const isBodyLast = tableBody && !tableFoot && this.children.tail !== tableBody;
+    const isBodyBeforeFoot = tableBody && tableFoot && tableBody.next !== tableFoot;
+    const isFootLast = tableFoot && this.children.tail !== tableFoot;
 
     // sort child
-    if (isCaptionFirst || isColgroupSecond || isColgroupFirst || isBodyLast) {
+    if (isCaptionFirst || isColgroupSecond || isColgroupFirst || isHeadLast || isBodyAfterHead || isBodyLast || isBodyBeforeFoot || isFootLast) {
       const tableMain = this.clone() as TableMainFormat;
       tableCaption && tableMain.appendChild(tableCaption);
       tableColgroup && tableMain.appendChild(tableColgroup);
+      tableHead && tableMain.appendChild(tableHead);
       tableBody && tableMain.appendChild(tableBody);
+      tableFoot && tableMain.appendChild(tableFoot);
 
       // eslint-disable-next-line unicorn/no-array-for-each
       this.children.forEach(child => child.remove());
