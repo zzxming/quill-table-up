@@ -3,7 +3,7 @@ import type { TableMainFormat, TableWrapperFormat } from '../formats';
 import type { TableUp } from '../table-up';
 import type { RelactiveRect, TableSelectionOptions } from '../utils';
 import Quill from 'quill';
-import { getTableMainRect, TableBodyFormat, TableCellFormat, TableCellInnerFormat } from '../formats';
+import { getTableMainRect, TableCellFormat, TableCellInnerFormat } from '../formats';
 import { addScrollEvent, blotName, clearScrollEvent, createBEM, createResizeObserver, findAllParentBlot, findParentBlot, getElementScrollPosition, getRelativeRect, isRectanglesIntersect, tableUpEvent } from '../utils';
 import { TableDomSelector } from './table-dom-selector';
 
@@ -352,15 +352,13 @@ export class TableSelection extends TableDomSelector {
 
     const tableMainBlot = Quill.find(this.table) as TableMainFormat;
     if (!tableMainBlot) return [];
-    const tableBodyBlot = tableMainBlot.descendants(TableBodyFormat)[0];
-    if (!tableBodyBlot) return [];
     // Use TableCell to calculation selected range, because TableCellInner is scrollable, the width will effect calculate
     const tableCells = new Set(
       // reverse cell. search from bottom.
       // when mouse click on the cell border. the selection will be in the lower cell.
       // but `isRectanglesIntersect` judge intersect include border. the upper cell bottom border will intersect with boundary
       // so need to search the cell from bottom
-      (tableBodyBlot.descendants(TableCellFormat) as TempSortedTableCellFormat[]).map((cell, i) => {
+      (tableMainBlot.descendants(TableCellFormat) as TempSortedTableCellFormat[]).map((cell, i) => {
         cell.index = i;
         return cell;
       }),
