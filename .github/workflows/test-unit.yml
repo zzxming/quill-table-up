@@ -8,7 +8,8 @@ on:
   pull_request:
     branches:
       - master
-
+      - 3.x
+      
   merge_group: {}
 
 jobs:

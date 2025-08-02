@@ -299,7 +299,11 @@ export class TableMenuCommon extends TableDomSelector {
     this.menu = this.buildTools();
   }
 
-  update() {}
+  update() {
+    if (this.table && !this.quill.root.contains(this.table)) {
+      this.setSelectionTable(undefined);
+    }
+  }
 
   hide() {
     if (this.menu) {

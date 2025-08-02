@@ -128,6 +128,7 @@ type ColOptions = Omit<TableColValue, 'width' | 'tableId' | 'colId'> & { width?:
 interface TableCaptionCreatorOptions extends Omit<TableCaptionValue, 'tableId'> {
   text: string;
 }
+export const datasetWrapTag = (tag: string = 'tbody') => `data-wrap-tag="${tag}"`;
 export const datasetTableId = (id: string) => `data-table-id="${id}"`;
 export const datasetFull = (full: boolean) => full ? ' data-full="true"' : '';
 export const datasetAlign = (align: string) => align === 'left' ? '' : ` data-align="${align}"`;
@@ -212,10 +213,10 @@ export function createTableBodyHTML(row: number, col: number, options?: Partial<
     <tbody ${datasetTableId(tableId)}>
       ${
         new Array(row).fill(0).map((_, i) => `
-          <tr ${datasetTableId(tableId)} data-row-id="${i + 1}">
+          <tr ${datasetTableId(tableId)} data-row-id="${i + 1}" ${datasetWrapTag('tbody')}>
             ${
-              new Array(col).fill(0).map((_, j) => `<td rowspan="1" colspan="1" ${datasetTableId(tableId)} data-row-id="${i + 1}" data-col-id="${j + 1}">
-                <div data-tag="td" ${datasetTableId(tableId)} data-rowspan="1" data-colspan="1" data-row-id="${i + 1}" data-col-id="${j + 1}"${contenteditableString(editable)}>
+              new Array(col).fill(0).map((_, j) => `<td rowspan="1" colspan="1" ${datasetTableId(tableId)} data-row-id="${i + 1}" data-col-id="${j + 1}" ${datasetWrapTag('tbody')}>
+                <div data-tag="td" ${datasetTableId(tableId)} data-rowspan="1" data-colspan="1" data-row-id="${i + 1}" data-col-id="${j + 1}" ${datasetWrapTag('tbody')}${contenteditableString(editable)}>
                   <p>
                     ${isEmpty ? '<br>' : i * row + j + 1}
                   </p>

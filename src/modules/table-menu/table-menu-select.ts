@@ -52,21 +52,22 @@ export class TableMenuSelect extends TableMenuCommon {
   }
 
   update() {
+    super.update();
     if (!this.menu && this.table) {
       this.show();
       return;
     }
     const selectedTds = this.getSelectedTds();
-    if (!this.menu || selectedTds.length === 0) {
-      if (this.menu) {
+    if (!this.menu || !this.table || selectedTds.length === 0) {
+      if (this.menu || !this.table) {
         this.isMenuDisplay = false;
-        this.menu.classList.add(this.bem.is('hidden'));
+        this.menu && this.menu.classList.add(this.bem.is('hidden'));
+        this.hide();
       }
       return;
     }
     this.isMenuDisplay = true;
     this.menu.classList.remove(this.bem.is('hidden'));
-    super.update();
 
     const tableSelection = this.tableModule.getModule<TableSelection>('table-selection');
     if (tableSelection?.isDisplaySelection) {

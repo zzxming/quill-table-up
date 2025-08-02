@@ -87,7 +87,7 @@ describe('clipboard cell structure', () => {
         </div>
         <p><br></p>
       `,
-      { ignoreAttrs: ['data-tag', 'class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'contenteditable'] },
+      { ignoreAttrs: ['data-wrap-tag', 'data-tag', 'class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'contenteditable'] },
     );
   });
 
@@ -177,7 +177,7 @@ describe('clipboard cell structure', () => {
         </div>
         <p><br></p>
       `,
-      { ignoreAttrs: ['data-tag', 'class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'contenteditable'] },
+      { ignoreAttrs: ['data-wrap-tag', 'data-tag', 'class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'contenteditable'] },
     );
   });
 
@@ -240,7 +240,7 @@ describe('clipboard cell structure', () => {
         </div>
         <p><br></p>
       `,
-      { ignoreAttrs: ['data-tag', 'class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'contenteditable'] },
+      { ignoreAttrs: ['data-wrap-tag', 'data-tag', 'class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'contenteditable'] },
     );
   });
 
@@ -294,7 +294,7 @@ describe('clipboard cell structure', () => {
         </div>
         <p><br></p>
       `,
-      { ignoreAttrs: ['data-tag', 'class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'contenteditable'] },
+      { ignoreAttrs: ['data-wrap-tag', 'data-tag', 'class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'contenteditable'] },
     );
   });
 
@@ -373,7 +373,7 @@ describe('clipboard cell structure', () => {
         </div>
         <p><br></p>
       `,
-      { ignoreAttrs: ['data-tag', 'class', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
+      { ignoreAttrs: ['data-wrap-tag', 'data-tag', 'class', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
     );
   });
 
@@ -448,7 +448,7 @@ describe('clipboard cell structure', () => {
         </div>
         <p><br></p>
       `,
-      { ignoreAttrs: ['data-tag', 'class', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
+      { ignoreAttrs: ['data-wrap-tag', 'data-tag', 'class', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
     );
   });
 
@@ -524,7 +524,7 @@ describe('clipboard cell structure', () => {
         </div>
         <p><br></p>
       `,
-      { ignoreAttrs: ['data-tag', 'class', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
+      { ignoreAttrs: ['data-wrap-tag', 'data-tag', 'class', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
     );
   });
 
@@ -573,7 +573,7 @@ describe('clipboard cell structure', () => {
         </div>
         <p><br></p>
       `,
-      { ignoreAttrs: ['data-tag', 'class', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
+      { ignoreAttrs: ['data-wrap-tag', 'data-tag', 'class', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
     );
   });
 
@@ -649,7 +649,7 @@ describe('clipboard cell structure', () => {
         </div>
         <p><br></p>
       `,
-      { ignoreAttrs: ['class', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
+      { ignoreAttrs: ['data-wrap-tag', 'class', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
     );
   });
 
@@ -687,7 +687,7 @@ describe('clipboard cell structure', () => {
         </div>
         <p><br></p>
       `,
-      { ignoreAttrs: ['data-tag', 'class', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
+      { ignoreAttrs: ['data-wrap-tag', 'data-tag', 'class', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
     );
     expectDelta(
       new Delta([
@@ -738,7 +738,7 @@ describe('clipboard cell structure', () => {
         </div>
         <p><br></p>
       `,
-      { ignoreAttrs: ['data-tag', 'class', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
+      { ignoreAttrs: ['data-wrap-tag', 'data-tag', 'class', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
     );
   });
 
@@ -773,11 +773,11 @@ describe('clipboard cell structure', () => {
         { insert: { 'table-up-col': { full: false, width: 100 } } },
         { insert: { 'table-up-col': { full: false, width: 100 } } },
         { insert: '1' },
-        { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1 } }, insert: '\n' },
+        { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1, tag: 'td', wrapTag: 'tbody' } }, insert: '\n' },
         { insert: '2' },
-        { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1 } }, insert: '\n' },
+        { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1, tag: 'td', wrapTag: 'tbody' } }, insert: '\n' },
         { insert: '3' },
-        { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1 } }, insert: '\n' },
+        { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1, tag: 'td', wrapTag: 'tbody' } }, insert: '\n' },
         { insert: '\n' },
       ]),
       quill.getContents(),
@@ -854,7 +854,7 @@ describe('clipboard cell structure', () => {
         </div>
         <p><br></p>
       `,
-      { ignoreAttrs: ['data-tag', 'class', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'data-style', 'style', 'contenteditable'] },
+      { ignoreAttrs: ['data-wrap-tag', 'data-tag', 'class', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'data-style', 'style', 'contenteditable'] },
     );
     expectDelta(
       new Delta([
@@ -946,7 +946,7 @@ describe('clipboard cell structure', () => {
         <p><br></p>
       `,
       {
-        ignoreAttrs: ['data-tag', 'class', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'data-style', 'style', 'contenteditable'],
+        ignoreAttrs: ['data-wrap-tag', 'data-tag', 'class', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'data-style', 'style', 'contenteditable'],
         replaceAttrs: {
           'data-empty-row': function (value: string) {
             try {
@@ -1073,7 +1073,7 @@ describe('clipboard cell structure', () => {
         </div>
         <p><br></p>
       `,
-      { ignoreAttrs: ['class', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
+      { ignoreAttrs: ['data-wrap-tag', 'class', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
     );
   });
 });
@@ -1329,7 +1329,7 @@ describe('clipboard content format', () => {
         </div>
         <p><br></p>
       `,
-      { ignoreAttrs: ['data-tag', 'class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'contenteditable'] },
+      { ignoreAttrs: ['data-wrap-tag', 'data-tag', 'class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'contenteditable'] },
     );
   });
 
@@ -1408,7 +1408,7 @@ describe('clipboard content format', () => {
         <p><br></p>
       `,
       {
-        ignoreAttrs: ['data-tag', 'class', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'],
+        ignoreAttrs: ['data-wrap-tag', 'data-tag', 'class', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'],
       },
     );
   });
@@ -1505,7 +1505,7 @@ describe('clipboard content format', () => {
         </div>
         <p><br></p>
       `,
-      { ignoreAttrs: ['data-tag', 'class', 'colspan', 'rowspan', 'data-colspan', 'data-rowspan', 'data-table-id', 'data-row-id', 'data-col-id', 'contenteditable'] },
+      { ignoreAttrs: ['data-wrap-tag', 'data-tag', 'class', 'colspan', 'rowspan', 'data-colspan', 'data-rowspan', 'data-table-id', 'data-row-id', 'data-col-id', 'contenteditable'] },
     );
     expectDelta(
       new Delta([

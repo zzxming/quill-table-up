@@ -85,10 +85,12 @@ export interface TableCellValue {
   style?: string;
   emptyRow?: string[];
   tag?: 'td' | 'th';
+  wrapTag?: 'thead' | 'tbody' | 'tfoot';
 }
 export interface TableRowValue {
   tableId: string;
   rowId: string;
+  wrapTag?: 'thead' | 'tbody' | 'tfoot';
 }
 export interface TableCaptionValue {
   tableId: string;

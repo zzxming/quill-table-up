@@ -74,13 +74,16 @@ export class TableMenuContextmenu extends TableMenuCommon {
   show() {}
 
   update(position?: { x: number; y: number }) {
+    super.update();
     const tableSelection = this.tableModule.getModule<TableSelection>('table-selection');
-    if (!this.isMenuDisplay || !this.menu || !tableSelection?.isDisplaySelection) return;
-    if (!position) {
+    if (!this.table || !this.isMenuDisplay || !this.menu) {
+      this.hide();
+      return;
+    }
+    if (!position || !tableSelection?.isDisplaySelection) {
       return;
     }
 
-    super.update();
     const style: Record<string, any> = {
       display: 'flex',
       left: 0,

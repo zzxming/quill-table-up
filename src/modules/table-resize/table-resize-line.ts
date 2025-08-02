@@ -1,8 +1,9 @@
+import type { TableCellFormat } from '../../formats';
 import type { TableUp } from '../../table-up';
 import type { TableSelection } from '../table-selection';
 import Quill from 'quill';
-import { type TableCellFormat, TableRowFormat } from '../../formats';
-import { blotName, createBEM, findParentBlot, findParentBlots } from '../../utils';
+import { getTableMainRect, TableRowFormat } from '../../formats';
+import { blotName, createBEM, findParentBlot } from '../../utils';
 import { TableResizeCommon } from './table-resize-common';
 import { isTableAlignRight } from './utils';
 
@@ -60,7 +61,7 @@ export class TableResizeLine extends TableResizeCommon {
 
   findTableCell(e: MouseEvent) {
     for (const el of e.composedPath()) {
-      if (el instanceof HTMLElement && el.tagName === 'TD') {
+      if (el instanceof HTMLElement && ['TD', 'TH'].includes(el.tagName)) {
         return el;
       }
       if (el === document.body) {
@@ -83,10 +84,9 @@ export class TableResizeLine extends TableResizeCommon {
     if (!this.tableBlot || !this.tableCellBlot || !this.colResizer) return;
     const tableCellBlot = this.tableCellBlot;
     this.colResizer.remove();
+    const { rect } = getTableMainRect(this.tableBlot);
+    if (!rect) return;
     this.colResizer = this.tableModule.addContainer(this.bem.be('col'));
-
-    const [tableBodyBlot] = findParentBlots(tableCellBlot, [blotName.tableBody] as const);
-    const tableBodyect = tableBodyBlot.domNode.getBoundingClientRect();
     const tableCellRect = tableCellBlot.domNode.getBoundingClientRect();
     const rootRect = this.quill.root.getBoundingClientRect();
     let left = tableCellRect.right - rootRect.x;
@@ -94,9 +94,9 @@ export class TableResizeLine extends TableResizeCommon {
       left = tableCellRect.left - rootRect.x;
     }
     Object.assign(this.colResizer.style, {
-      top: `${tableBodyect.y - rootRect.y}px`,
+      top: `${rect.y - rootRect.y}px`,
       left: `${left}px`,
-      height: `${tableBodyect.height}px`,
+      height: `${rect.height}px`,
     });
 
     const cols = this.tableBlot.getCols();
@@ -121,20 +121,20 @@ export class TableResizeLine extends TableResizeCommon {
     if (!this.tableBlot || !this.tableCellBlot || !this.rowResizer) return;
     const tableCellBlot = this.tableCellBlot;
     this.rowResizer.remove();
+    const { rect } = getTableMainRect(this.tableBlot);
+    if (!rect) return;
     this.rowResizer = this.tableModule.addContainer(this.bem.be('row'));
     const currentRow = tableCellBlot.parent;
     if (!(currentRow instanceof TableRowFormat)) {
       return;
     }
 
-    const [tableBodyBlot] = findParentBlots(tableCellBlot, [blotName.tableBody] as const);
-    const tableBodynRect = tableBodyBlot.domNode.getBoundingClientRect();
     const tableCellRect = tableCellBlot.domNode.getBoundingClientRect();
     const rootRect = this.quill.root.getBoundingClientRect();
     Object.assign(this.rowResizer.style, {
       top: `${tableCellRect.bottom - rootRect.y}px`,
-      left: `${tableBodynRect.x - rootRect.x}px`,
-      width: `${tableBodynRect.width}px`,
+      left: `${rect.x - rootRect.x}px`,
+      width: `${rect.width}px`,
     });
 
     const rows = this.tableBlot.getRows();

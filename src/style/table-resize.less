@@ -85,6 +85,9 @@
   }
   &__col,
   &__row {
+    &-wrapper {
+      display: flex;
+    }
     &-header {
       position: relative;
       flex-shrink: 0;
@@ -93,6 +96,9 @@
     }
   }
   &__col {
+    &-wrapper {
+      height: 100%;
+    }
     &-header {
       height: 100%;
       cursor: pointer;
@@ -128,7 +134,10 @@
     }
   }
   &__row {
-    flex-direction: column;
+    &-wrapper {
+      flex-direction: column;
+      width: 100%;
+    }
     &-header {
       width: 100%;
       cursor: pointer;

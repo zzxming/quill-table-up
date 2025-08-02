@@ -12,9 +12,15 @@ export class TableRowFormat extends ContainerFormat {
   static className = 'ql-table-row';
 
   static create(value: TableRowValue) {
+    const {
+      tableId,
+      rowId,
+      wrapTag = 'tbody',
+    } = value;
     const node = super.create() as HTMLElement;
-    node.dataset.tableId = value.tableId;
-    node.dataset.rowId = value.rowId;
+    node.dataset.tableId = tableId;
+    node.dataset.rowId = rowId;
+    node.dataset.wrapTag = wrapTag;
     return node;
   }
 
@@ -26,6 +32,10 @@ export class TableRowFormat extends ContainerFormat {
 
   get tableId() {
     return this.domNode.dataset.tableId!;
+  }
+
+  get wrapTag() {
+    return this.domNode.dataset.wrapTag || 'tbody';
   }
 
   setHeight(value: string) {
@@ -160,15 +170,13 @@ export class TableRowFormat extends ContainerFormat {
   optimize(_context: Record<string, any>) {
     const parent = this.parent;
     const { tableId } = this;
-    if (parent !== null && parent.statics.blotName !== blotName.tableBody) {
-      this.wrap(blotName.tableBody, tableId);
-    }
-
-    if (
-      this.statics.requiredContainer
-      && !(this.parent instanceof this.statics.requiredContainer)
-    ) {
-      this.wrap(this.statics.requiredContainer.blotName);
+    const blotNameMap: Record<string, string> = {
+      thead: blotName.tableHead,
+      tbody: blotName.tableBody,
+      tfoot: blotName.tableFoot,
+    };
+    if (parent !== null && parent.statics.blotName !== blotNameMap[this.wrapTag]) {
+      this.wrap(blotNameMap[this.wrapTag], tableId);
     }
 
     this.enforceAllowedChildren();
