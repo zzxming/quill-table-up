@@ -259,8 +259,8 @@ export class TableResizeCommon extends TableDomSelector {
     if (e.button !== 0) return;
     e.preventDefault();
     if (!this.tableBlot) return;
-    const { rect: tableRect, body: tableBodyBlot } = getTableMainRect(this.tableBlot);
-    if (!tableBodyBlot || !tableRect) return;
+    const { rect: tableRect } = getTableMainRect(this.tableBlot);
+    if (!tableRect) return;
     // set drag init width
     const cols = this.tableBlot.getCols();
     this.colIndex = this.findCurrentColIndex(e);

@@ -200,8 +200,8 @@ export class TableResizeBox extends TableResizeCommon {
 
   update() {
     if (!this.tableBlot || !this.tableWrapperBlot) return;
-    const { rect: tableRect, body: tableBodyBlot } = getTableMainRect(this.tableBlot);
-    if (!tableBodyBlot || !tableRect) return;
+    const { rect: tableRect } = getTableMainRect(this.tableBlot);
+    if (!tableRect) return;
 
     this.root.innerHTML = '';
 
