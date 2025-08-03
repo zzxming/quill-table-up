@@ -1,4 +1,4 @@
-import type { TableCellValue } from '../utils';
+import type { TableBodyTag, TableCellValue } from '../utils';
 import { blotName, ensureArray, findParentBlot, toCamelCase } from '../utils';
 import { ContainerFormat } from './container-format';
 import { TableCellInnerFormat } from './table-cell-inner-format';
@@ -231,8 +231,12 @@ export class TableCellFormat extends ContainerFormat {
     }
   }
 
+  set wrapTag(value: TableBodyTag) {
+    this.domNode.dataset.wrapTag = value;
+  }
+
   get wrapTag() {
-    return this.domNode.dataset.wrapTag || 'tbody';
+    return this.domNode.dataset.wrapTag as TableBodyTag || 'tbody';
   }
 
   getColumnIndex() {

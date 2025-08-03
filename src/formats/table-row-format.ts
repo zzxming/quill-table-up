@@ -1,5 +1,5 @@
 import type { Parchment as TypeParchment } from 'quill';
-import type { TableCellValue, TableRowValue } from '../utils';
+import type { TableBodyTag, TableCellValue, TableRowValue } from '../utils';
 import type { TableCellFormat } from './table-cell-format';
 import { blotName, findParentBlot } from '../utils';
 import { ContainerFormat } from './container-format';
@@ -34,8 +34,12 @@ export class TableRowFormat extends ContainerFormat {
     return this.domNode.dataset.tableId!;
   }
 
+  set wrapTag(value: TableBodyTag) {
+    this.domNode.dataset.wrapTag = value;
+  }
+
   get wrapTag() {
-    return this.domNode.dataset.wrapTag || 'tbody';
+    return this.domNode.dataset.wrapTag as TableBodyTag || 'tbody';
   }
 
   setHeight(value: string) {
@@ -154,7 +158,7 @@ export class TableRowFormat extends ContainerFormat {
     let cur: TableCellFormat | null;
     while ((cur = next())) {
       const [tableCell] = cur.descendants(TableCellInnerFormat);
-      if (func(tableCell, i++)) break;
+      if (tableCell && func(tableCell, i++)) break;
     }
   }
 

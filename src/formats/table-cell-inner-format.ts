@@ -1,11 +1,12 @@
 import type { Parchment as TypeParchment } from 'quill';
 import type TypeBlock from 'quill/blots/block';
 import type TypeScroll from 'quill/blots/scroll';
-import type { TableCellValue } from '../utils';
+import type { TableBodyTag, TableCellValue } from '../utils';
 import type { TableCellFormat } from './table-cell-format';
 import Quill from 'quill';
 import { blotName, cssTextToObject, findParentBlot, findParentBlots, toCamelCase } from '../utils';
 import { ContainerFormat } from './container-format';
+import { TableBodyFormat } from './table-body-format';
 import { getValidCellspan } from './utils';
 
 const Block = Quill.import('blots/block') as TypeParchment.BlotConstructor;
@@ -189,9 +190,29 @@ export class TableCellInnerFormat extends ContainerFormat {
     }
   }
 
+  set wrapTag(value: TableBodyTag) {
+    this.domNode.dataset.wrapTag = value;
+    this.clearCache();
+  }
+
+  get wrapTag() {
+    return this.domNode.dataset.wrapTag as TableBodyTag || 'tbody';
+  }
+
   getColumnIndex() {
     const table = findParentBlot(this, blotName.tableMain);
     return table.getColIds().indexOf(this.colId);
+  }
+
+  getTableBody() {
+    let target: TypeParchment.Parent = this.parent;
+    while (target && !(target instanceof TableBodyFormat) && target !== this.scroll) {
+      target = target.parent;
+    }
+    if (target === this.scroll) {
+      return null;
+    }
+    return target as TableBodyFormat;
   }
 
   setStyleByString(styleStr: string) {

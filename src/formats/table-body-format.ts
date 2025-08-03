@@ -1,3 +1,4 @@
+import type { TableBodyTag } from '../utils';
 import { blotName } from '../utils';
 import { ContainerFormat } from './container-format';
 
@@ -32,5 +33,20 @@ export class TableBodyFormat extends ContainerFormat {
     }
 
     super.optimize(context);
+  }
+
+  convertBody(tag: TableBodyTag) {
+    const blots = this.descendants((blot: any) => blot.wrapTag);
+    for (const blot of blots) {
+      if ((blot as any).wrapTag) {
+        (blot as any).wrapTag = tag;
+      }
+    }
+    const blotNameMap: Record<TableBodyTag, string> = {
+      thead: blotName.tableHead,
+      tbody: blotName.tableBody,
+      tfoot: blotName.tableFoot,
+    };
+    this.replaceWith(blotNameMap[tag], this.tableId);
   }
 }
