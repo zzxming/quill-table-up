@@ -1,6 +1,7 @@
 import type { TableBodyTag } from '../utils';
 import { blotName } from '../utils';
 import { ContainerFormat } from './container-format';
+import { TableCellInnerFormat } from './table-cell-inner-format';
 
 export class TableBodyFormat extends ContainerFormat {
   static blotName: string = blotName.tableBody;
@@ -36,17 +37,9 @@ export class TableBodyFormat extends ContainerFormat {
   }
 
   convertBody(tag: TableBodyTag) {
-    const blots = this.descendants((blot: any) => blot.wrapTag);
+    const blots = this.descendants(TableCellInnerFormat);
     for (const blot of blots) {
-      if ((blot as any).wrapTag) {
-        (blot as any).wrapTag = tag;
-      }
+      (blot as any).wrapTag = tag;
     }
-    const blotNameMap: Record<TableBodyTag, string> = {
-      thead: blotName.tableHead,
-      tbody: blotName.tableBody,
-      tfoot: blotName.tableFoot,
-    };
-    this.replaceWith(blotNameMap[tag], this.tableId);
   }
 }

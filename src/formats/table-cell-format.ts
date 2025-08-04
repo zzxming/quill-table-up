@@ -9,8 +9,8 @@ export class TableCellFormat extends ContainerFormat {
   static blotName = blotName.tableCell;
   static tagName = 'td';
   static className = 'ql-table-cell';
-  static allowDataAttrs = new Set(['table-id', 'row-id', 'col-id', 'empty-row']);
   static allowAttrs = new Set(['rowspan', 'colspan']);
+  static allowDataAttrs = new Set(['table-id', 'row-id', 'col-id', 'empty-row', 'wrap-tag']);
 
   // keep `isAllowStyle` and `allowStyle` same with TableCellInnerFormat
   static allowStyle = new Set(['background-color', 'border', 'height']);
@@ -124,6 +124,10 @@ export class TableCellFormat extends ContainerFormat {
     ) {
       (headChild.domNode as HTMLElement).dataset.style = this.domNode.style.cssText;
     }
+
+    if (this.parent && this.parent.statics.blotName === blotName.tableRow) {
+      (this.parent as TableRowFormat).setFormatValue(name, value);
+    }
   }
 
   setStyleBoder(name: string, value?: any) {
@@ -231,10 +235,6 @@ export class TableCellFormat extends ContainerFormat {
     }
   }
 
-  set wrapTag(value: TableBodyTag) {
-    this.domNode.dataset.wrapTag = value;
-  }
-
   get wrapTag() {
     return this.domNode.dataset.wrapTag as TableBodyTag || 'tbody';
   }
@@ -281,11 +281,15 @@ export class TableCellFormat extends ContainerFormat {
   }
 
   optimize(context: Record<string, any>) {
-    const parent = this.parent as TableRowFormat;
     const { tableId, rowId, wrapTag } = this;
-    if (parent !== null && parent.statics.blotName !== blotName.tableRow) {
+    if (this.parent !== null && this.parent.statics.blotName !== blotName.tableRow) {
       this.wrap(blotName.tableRow, { tableId, rowId, wrapTag });
     }
+    // when `replaceWith` called to replace cell. wrapTag may change. so row wrapTag also need to update
+    if (this.parent.statics.blotName === blotName.tableRow && (this.parent as TableRowFormat).wrapTag !== wrapTag) {
+      (this.parent as TableRowFormat).setFormatValue('wrap-tag', this.wrapTag);
+    }
+
     if (this.emptyRow.length > 0) {
       for (const rowId of this.emptyRow) {
         this.parent.parent.insertBefore(this.scroll.create(blotName.tableRow, { tableId, rowId, wrapTag }), this.parent.next);

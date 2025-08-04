@@ -16,7 +16,7 @@ export class TableCellInnerFormat extends ContainerFormat {
   static blotName = blotName.tableCellInner;
   static tagName = 'div';
   static className = 'ql-table-cell-inner';
-  static allowDataAttrs: Set<string> = new Set(['table-id', 'row-id', 'col-id', 'rowspan', 'colspan', 'empty-row']);
+  static allowDataAttrs: Set<string> = new Set(['table-id', 'row-id', 'col-id', 'rowspan', 'colspan', 'empty-row', 'wrap-tag']);
   static defaultChild: TypeParchment.BlotConstructor = Block;
   declare parent: TableCellFormat;
   // keep `isAllowStyle` and `allowStyle` same with TableCellFormat
@@ -97,25 +97,15 @@ export class TableCellInnerFormat extends ContainerFormat {
     domNode.setAttribute('contenteditable', String(scroll.isEnabled()));
   }
 
-  setFormatValue(name: string, value: any, isStyle: boolean = false) {
+  setFormatValue(name: string, value?: any, isStyle: boolean = false) {
     if (isStyle) {
       if (!this.statics.isAllowStyle(name)) return;
-      if (this.parent && this.parent.statics.blotName === blotName.tableCell) {
-        this.parent.setFormatValue(name, value);
-      }
     }
     else {
-      if (!this.statics.allowDataAttrs.has(name)) return;
-      const attrName = `data-${name}`;
-      if (value) {
-        this.domNode.setAttribute(attrName, value);
-      }
-      else {
-        this.domNode.removeAttribute(attrName);
-      }
-      if (this.parent && this.parent.statics.blotName === blotName.tableCell) {
-        this.parent.setFormatValue(name, value);
-      }
+      super.setFormatValue(name, value);
+    }
+    if (this.parent && this.parent.statics.blotName === blotName.tableCell) {
+      this.parent.setFormatValue(name, value);
     }
 
     this.clearCache();
@@ -191,8 +181,7 @@ export class TableCellInnerFormat extends ContainerFormat {
   }
 
   set wrapTag(value: TableBodyTag) {
-    this.domNode.dataset.wrapTag = value;
-    this.clearCache();
+    this.setFormatValue('wrap-tag', value);
   }
 
   get wrapTag() {
@@ -213,6 +202,15 @@ export class TableCellInnerFormat extends ContainerFormat {
       return null;
     }
     return target as TableBodyFormat;
+  }
+
+  getTableRow() {
+    try {
+      return findParentBlot(this, blotName.tableRow);
+    }
+    catch {
+      return null;
+    }
   }
 
   setStyleByString(styleStr: string) {
@@ -283,8 +281,8 @@ export class TableCellInnerFormat extends ContainerFormat {
         this.insertBefore(afterBlock, prev.next);
       }
     }
-    const parentIsTableCell = parent !== null && parent.statics.blotName !== blotName.tableCell;
-    if (parentIsTableCell) {
+    const parentNotTableCell = parent !== null && parent.statics.blotName !== blotName.tableCell;
+    if (parentNotTableCell) {
       this.wrap(blotName.tableCell, blotValue);
       // when insert delta like: [ { attributes: { 'table-up-cell-inner': { ... } }, insert: '\n' }, { attributes: { 'table-up-cell-inner': { ... } }, insert: '\n' }, ...]
       // that delta will create dom like: <td><div></div></td>... . that means TableCellInner will be an empty cell without 'block'
@@ -312,7 +310,7 @@ export class TableCellInnerFormat extends ContainerFormat {
       // update delta data
       if (
         this.domNode.dataset.style
-        && parentIsTableCell
+        && parentNotTableCell
         && parent.domNode.style.cssText !== this.domNode.dataset.style
       ) {
         this.setStyleByString(this.domNode.dataset.style);

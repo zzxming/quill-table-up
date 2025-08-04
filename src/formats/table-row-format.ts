@@ -4,12 +4,17 @@ import type { TableCellFormat } from './table-cell-format';
 import { blotName, findParentBlot } from '../utils';
 import { ContainerFormat } from './container-format';
 import { TableCellInnerFormat } from './table-cell-inner-format';
+import { tableBodyBlotNameMap } from './utils';
 
 export type SkipRowCount = number[] & { skipRowNum?: number };
 export class TableRowFormat extends ContainerFormat {
   static blotName = blotName.tableRow;
   static tagName = 'tr';
   static className = 'ql-table-row';
+  static allowDataAttrs = new Set(['table-id', 'row-id', 'wrap-tag']);
+  static allowDataAttrsChangeHandler: Record<string, keyof TableRowFormat> = {
+    'wrap-tag': 'wrapParentTag',
+  };
 
   static create(value: TableRowValue) {
     const {
@@ -32,10 +37,6 @@ export class TableRowFormat extends ContainerFormat {
 
   get tableId() {
     return this.domNode.dataset.tableId!;
-  }
-
-  set wrapTag(value: TableBodyTag) {
-    this.domNode.dataset.wrapTag = value;
   }
 
   get wrapTag() {
@@ -171,17 +172,30 @@ export class TableRowFormat extends ContainerFormat {
     );
   }
 
-  optimize(_context: Record<string, any>) {
+  wrapParentTag() {
     const parent = this.parent;
-    const { tableId } = this;
-    const blotNameMap: Record<string, string> = {
-      thead: blotName.tableHead,
-      tbody: blotName.tableBody,
-      tfoot: blotName.tableFoot,
-    };
-    if (parent !== null && parent.statics.blotName !== blotNameMap[this.wrapTag]) {
-      this.wrap(blotNameMap[this.wrapTag], tableId);
+
+    if (parent !== null && parent.statics.blotName !== tableBodyBlotNameMap[this.wrapTag]) {
+      if (Object.values(tableBodyBlotNameMap).includes(parent.statics.blotName)) {
+        const index = this.offset(this.parent);
+        const newParent = this.parent.split(index);
+        if (newParent && newParent.length() <= 0) {
+          newParent.remove();
+        }
+        const afterParent = (this.parent as any).splitAfter(this);
+        if (afterParent && afterParent.length() <= 0) {
+          afterParent.remove();
+        }
+        this.parent.replaceWith(tableBodyBlotNameMap[this.wrapTag], this.tableId);
+      }
+      else {
+        this.wrap(tableBodyBlotNameMap[this.wrapTag], this.tableId);
+      }
     }
+  }
+
+  optimize(_context: Record<string, any>) {
+    this.wrapParentTag();
 
     this.enforceAllowedChildren();
     if (this.children.length > 0 && this.next != null && this.checkMerge()) {
