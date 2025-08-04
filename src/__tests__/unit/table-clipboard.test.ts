@@ -742,6 +742,87 @@ describe('clipboard cell structure', () => {
     );
   });
 
+  it('convert background on table/tbody/tr/td', async () => {
+    const quill = createQuillWithTableModule(`<p><br></p>`);
+    quill.setContents(
+      quill.clipboard.convert({
+        html: `
+          <table style="background-color: red">
+            <tbody>
+              <tr style="background-color: yellow">
+                <td style="background-color: aqua">1</td>
+                <td>2</td>
+              </tr>
+              <tr>
+                <td>3</td>
+                <td>4</td>
+              </tr>
+            </tbody><tfoot style="background-color: blue">
+              <tr>
+                <td>5</td>
+                <td>6</td>
+              </tr>
+            </tfoot>
+          </table>
+        `,
+      }),
+    );
+    await vi.runAllTimersAsync();
+
+    expect(quill.root).toEqualHTML(
+      `
+        <p><br></p>
+        <div>
+          <table cellpadding="0" cellspacing="0" style="margin-right: auto; width: 200px;">
+            ${createTaleColHTML(2, { full: false, width: 100 })}
+            <tbody>
+              <tr>
+                <td colspan="1" rowspan="1" style="background-color: aqua;">
+                  <div data-style="background-color: aqua;">
+                    <p><span style="background-color: aqua;">1</span></p>
+                  </div>
+                </td>
+                <td colspan="1" rowspan="1" style="background-color: yellow;">
+                  <div data-style="background-color: yellow;">
+                    <p><span style="background-color: yellow;">2</span></p>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td colspan="1" rowspan="1" style="background-color: red;">
+                  <div data-style="background-color: red;">
+                    <p><span style="background-color: red;">3</span></p>
+                  </div>
+                </td>
+                <td colspan="1" rowspan="1" style="background-color: red;">
+                  <div data-style="background-color: red;">
+                    <p><span style="background-color: red;">4</span></p>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+            <tfoot>
+              <tr>
+                <td colspan="1" rowspan="1" style="background-color: blue;">
+                  <div data-style="background-color: blue;">
+                    <p><span style="background-color: blue;">5</span></p>
+                  </div>
+                </td>
+                <td colspan="1" rowspan="1" style="background-color: blue;">
+                  <div data-style="background-color: blue;">
+                    <p><span style="background-color: blue;">6</span></p>
+                  </div>
+                </td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+        <p><br></p>
+      `,
+      { ignoreAttrs: ['data-wrap-tag', 'data-tag', 'class', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
+    );
+  });
+
   it('clipboard convert should generate colgroup at correct position', async () => {
     const quill = createQuillWithTableModule(`<p><br></p>`);
     quill.setContents(
