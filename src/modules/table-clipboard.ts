@@ -138,13 +138,15 @@ export class TableClipboard extends Clipboard {
     }, [] as Record<string, any>[]);
     ops.splice(bodyStartIndex + 1, 0, ...newCols);
 
+    const resultDelta = new Delta(ops);
+    this.getStyleBackgroundColor(node, resultDelta);
     // reset variable to avoid conflict with other table
     this.tableId = randomId();
     this.colIds = [];
     this.rowspanCount = [];
     this.cellCount = 0;
     this.colCount = 0;
-    return new Delta(ops);
+    return resultDelta;
   }
 
   matchTbody(node: Node, delta: TypeDelta) {
