@@ -1203,6 +1203,25 @@ export class TableUp {
 
   mergeCells(selectedTds: TableCellInnerFormat[]) {
     if (selectedTds.length <= 1) return;
+    const baseCell = selectedTds[0];
+    // move selected cells in same table body
+    const baseCellBody = baseCell.getTableBody();
+    // insert base row
+    let baseRow = baseCell.getTableRow();
+    if (!baseCellBody || !baseRow) return;
+    for (let i = 1; i < selectedTds.length; i++) {
+      const selectTd = selectedTds[i];
+      const currentTdBody = selectTd.getTableBody();
+      if (currentTdBody && currentTdBody !== baseCellBody) {
+        const currentRow = selectTd.getTableRow();
+        if (currentRow) {
+          baseRow.parent.insertBefore(currentRow, baseRow.next);
+          baseRow = currentRow;
+        }
+      }
+    }
+    baseCellBody.convertBody(baseCell.wrapTag);
+
     const counts = selectedTds.reduce(
       (pre, selectTd, index) => {
         // count column span
@@ -1220,7 +1239,7 @@ export class TableUp {
         }
         return pre;
       },
-      [{} as Record<string, number>, {} as Record<string, number>, selectedTds[0]] as const,
+      [{} as Record<string, number>, {} as Record<string, number>, baseCell] as const,
     );
 
     const rowCount = Math.max(...Object.values(counts[0]));
@@ -1239,38 +1258,43 @@ export class TableUp {
 
   splitCell(selectedTds: TableCellInnerFormat[]) {
     if (selectedTds.length !== 1) return;
-    const baseTd = selectedTds[0];
-    if (baseTd.colspan === 1 && baseTd.rowspan === 1) return;
-    const [tableBlot, baseTr] = findParentBlots(baseTd, [blotName.tableMain, blotName.tableRow] as const);
+    const baseCell = selectedTds[0];
+    if (baseCell.colspan === 1 && baseCell.rowspan === 1) return;
+    const [tableBlot, baseTr] = findParentBlots(baseCell, [blotName.tableMain, blotName.tableRow] as const);
+    const rows = tableBlot.getRows();
     const tableId = tableBlot.tableId;
-    const colIndex = baseTd.getColumnIndex();
-    const colIds = tableBlot.getColIds().slice(colIndex, colIndex + baseTd.colspan).reverse();
-    const baseTdStyle = (baseTd.formats()[blotName.tableCellInner] as TableCellValue).style;
+    const colIndex = baseCell.getColumnIndex();
+    const colIds = tableBlot.getColIds().slice(colIndex, colIndex + baseCell.colspan).reverse();
+    const baseCellValue = baseCell.formats()[blotName.tableCellInner] as TableCellValue;
+    const { emptyRow, ...extendsBaseCellValue } = baseCellValue;
 
-    let curTr = baseTr;
-    let rowspan = baseTd.rowspan;
+    let rowIndex = rows.indexOf(baseTr);
+    if (rowIndex === -1) return;
+    let curTr = rows[rowIndex];
+    let rowspan = baseCell.rowspan;
     // reset span first. insertCell need colspan to judge insert position
-    baseTd.colspan = 1;
-    baseTd.rowspan = 1;
+    baseCell.colspan = 1;
+    baseCell.rowspan = 1;
     while (curTr && rowspan > 0) {
       for (const id of colIds) {
-        // keep baseTd. baseTr should insert at baseTd's column index + 1
-        if (curTr === baseTr && id === baseTd.colId) continue;
-        const value: TableCellValue = {
-          tableId,
-          rowId: curTr.rowId,
-          colId: id,
-          rowspan: 1,
-          colspan: 1,
-        };
-        if (baseTdStyle) {
-          value.style = baseTdStyle;
-        }
-        curTr.insertCell(colIndex + (curTr === baseTr ? 1 : 0), value);
+        // keep baseCell. baseTr should insert at baseCell's column index + 1
+        if (curTr === baseTr && id === baseCell.colId) continue;
+        curTr.insertCell(
+          colIndex + (curTr === baseTr ? 1 : 0),
+          {
+            ...extendsBaseCellValue,
+            tableId,
+            rowId: curTr.rowId,
+            colId: id,
+            rowspan: 1,
+            colspan: 1,
+          },
+        );
       }
 
       rowspan -= 1;
-      curTr = curTr.next as TableRowFormat;
+      rowIndex += 1;
+      curTr = rows[rowIndex];
     }
   }
 }
