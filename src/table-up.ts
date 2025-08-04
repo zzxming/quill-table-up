@@ -7,7 +7,7 @@ import type TypeToolbar from 'quill/modules/toolbar';
 import type { TableSelection } from './modules';
 import type { Constructor, QuillTheme, QuillThemePicker, TableCellValue, TableConstantsData, TableTextOptions, TableUpOptions } from './utils';
 import Quill from 'quill';
-import { BlockEmbedOverride, BlockOverride, ContainerFormat, ScrollOverride, TableBodyFormat, TableCaptionFormat, TableCellFormat, TableCellInnerFormat, TableColFormat, TableColgroupFormat, TableMainFormat, TableRowFormat, TableWrapperFormat } from './formats';
+import { BlockEmbedOverride, BlockOverride, ContainerFormat, ScrollOverride, TableBodyFormat, TableCaptionFormat, TableCellFormat, TableCellInnerFormat, TableColFormat, TableColgroupFormat, TableFootFormat, TableHeadFormat, TableMainFormat, TableRowFormat, TableWrapperFormat } from './formats';
 import { TableClipboard } from './modules';
 import { blotName, createBEM, createSelectBox, cssTextToObject, debounce, findParentBlot, findParentBlots, getScrollBarWidth, isForbidInTable, isFunction, isNumber, isString, isSubclassOf, limitDomInViewPort, mixinClass, objectToCssText, randomId, tableCantInsert, tableUpEvent, tableUpInternal, tableUpSize, toCamelCase } from './utils';
 
@@ -213,7 +213,7 @@ export class TableUp {
   static register() {
     TableWrapperFormat.allowedChildren = [TableMainFormat];
 
-    TableMainFormat.allowedChildren = [TableBodyFormat, TableColgroupFormat, TableCaptionFormat];
+    TableMainFormat.allowedChildren = [TableColgroupFormat, TableCaptionFormat, TableHeadFormat, TableBodyFormat, TableFootFormat];
     TableMainFormat.requiredContainer = TableWrapperFormat;
 
     TableCaptionFormat.requiredContainer = TableMainFormat;
@@ -221,11 +221,14 @@ export class TableUp {
     TableColgroupFormat.allowedChildren = [TableColFormat];
     TableColgroupFormat.requiredContainer = TableMainFormat;
 
+    TableHeadFormat.allowedChildren = [TableRowFormat];
+    TableHeadFormat.requiredContainer = TableMainFormat;
     TableBodyFormat.allowedChildren = [TableRowFormat];
     TableBodyFormat.requiredContainer = TableMainFormat;
+    TableFootFormat.allowedChildren = [TableRowFormat];
+    TableFootFormat.requiredContainer = TableMainFormat;
 
     TableRowFormat.allowedChildren = [TableCellFormat];
-    TableCellFormat.requiredContainer = TableBodyFormat;
 
     TableCellFormat.allowedChildren = [TableCellInnerFormat, Break];
     TableCellFormat.requiredContainer = TableRowFormat;
@@ -259,7 +262,9 @@ export class TableUp {
       [`formats/${blotName.tableCell}`]: TableCellFormat,
       [`formats/${blotName.tableCellInner}`]: TableCellInnerFormat,
       [`formats/${blotName.tableRow}`]: TableRowFormat,
+      [`formats/${blotName.tableHead}`]: TableHeadFormat,
       [`formats/${blotName.tableBody}`]: TableBodyFormat,
+      [`formats/${blotName.tableFoot}`]: TableFootFormat,
       [`formats/${blotName.tableCol}`]: TableColFormat,
       [`formats/${blotName.tableColgroup}`]: TableColgroupFormat,
       [`formats/${blotName.tableCaption}`]: TableCaptionFormat,
@@ -956,12 +961,12 @@ export class TableUp {
     if (selectedTds.length <= 0) return;
     // find baseTd and baseTr
     const baseTd = selectedTds[isDown ? selectedTds.length - 1 : 0];
-    const [tableBlot, tableBodyBlot, baseTdParentTr] = findParentBlots(baseTd, [blotName.tableMain, blotName.tableBody, blotName.tableRow] as const);
+    const [tableBlot, baseTdParentTr] = findParentBlots(baseTd, [blotName.tableMain, blotName.tableRow] as const);
     const tableTrs = tableBlot.getRows();
     const i = tableTrs.indexOf(baseTdParentTr);
     const insertRowIndex = i + (isDown ? baseTd.rowspan : 0);
 
-    tableBodyBlot.insertRow(insertRowIndex);
+    tableBlot.insertRow(insertRowIndex);
   }
 
   appendCol(selectedTds: TableCellInnerFormat[], isRight: boolean) {
@@ -1198,6 +1203,25 @@ export class TableUp {
 
   mergeCells(selectedTds: TableCellInnerFormat[]) {
     if (selectedTds.length <= 1) return;
+    const baseCell = selectedTds[0];
+    // move selected cells in same table body
+    const baseCellBody = baseCell.getTableBody();
+    // insert base row
+    let baseRow = baseCell.getTableRow();
+    if (!baseCellBody || !baseRow) return;
+    for (let i = 1; i < selectedTds.length; i++) {
+      const selectTd = selectedTds[i];
+      const currentTdBody = selectTd.getTableBody();
+      if (currentTdBody && currentTdBody !== baseCellBody) {
+        const currentRow = selectTd.getTableRow();
+        if (currentRow) {
+          baseRow.parent.insertBefore(currentRow, baseRow.next);
+          baseRow = currentRow;
+        }
+      }
+    }
+    baseCellBody.convertBody(baseCell.wrapTag);
+
     const counts = selectedTds.reduce(
       (pre, selectTd, index) => {
         // count column span
@@ -1215,7 +1239,7 @@ export class TableUp {
         }
         return pre;
       },
-      [{} as Record<string, number>, {} as Record<string, number>, selectedTds[0]] as const,
+      [{} as Record<string, number>, {} as Record<string, number>, baseCell] as const,
     );
 
     const rowCount = Math.max(...Object.values(counts[0]));
@@ -1224,44 +1248,53 @@ export class TableUp {
     baseTd.colspan = colCount;
     baseTd.rowspan = rowCount;
 
+    // selection will move with cursor. make sure selection is in baseTd
+    const index = this.quill.getIndex(baseTd);
+    this.quill.setSelection({ index, length: 0 }, Quill.sources.SILENT);
+
     const tableBlot = findParentBlot(baseTd, blotName.tableMain);
     this.fixTableByRemove(tableBlot);
   }
 
   splitCell(selectedTds: TableCellInnerFormat[]) {
     if (selectedTds.length !== 1) return;
-    const baseTd = selectedTds[0];
-    if (baseTd.colspan === 1 && baseTd.rowspan === 1) return;
-    const [tableBlot, baseTr] = findParentBlots(baseTd, [blotName.tableMain, blotName.tableRow] as const);
+    const baseCell = selectedTds[0];
+    if (baseCell.colspan === 1 && baseCell.rowspan === 1) return;
+    const [tableBlot, baseTr] = findParentBlots(baseCell, [blotName.tableMain, blotName.tableRow] as const);
+    const rows = tableBlot.getRows();
     const tableId = tableBlot.tableId;
-    const colIndex = baseTd.getColumnIndex();
-    const colIds = tableBlot.getColIds().slice(colIndex, colIndex + baseTd.colspan).reverse();
-    const baseTdStyle = (baseTd.formats()[blotName.tableCellInner] as TableCellValue).style;
+    const colIndex = baseCell.getColumnIndex();
+    const colIds = tableBlot.getColIds().slice(colIndex, colIndex + baseCell.colspan).reverse();
+    const baseCellValue = baseCell.formats()[blotName.tableCellInner] as TableCellValue;
+    const { emptyRow, ...extendsBaseCellValue } = baseCellValue;
 
-    let curTr = baseTr;
-    let rowspan = baseTd.rowspan;
+    let rowIndex = rows.indexOf(baseTr);
+    if (rowIndex === -1) return;
+    let curTr = rows[rowIndex];
+    let rowspan = baseCell.rowspan;
     // reset span first. insertCell need colspan to judge insert position
-    baseTd.colspan = 1;
-    baseTd.rowspan = 1;
+    baseCell.colspan = 1;
+    baseCell.rowspan = 1;
     while (curTr && rowspan > 0) {
       for (const id of colIds) {
-        // keep baseTd. baseTr should insert at baseTd's column index + 1
-        if (curTr === baseTr && id === baseTd.colId) continue;
-        const value: TableCellValue = {
-          tableId,
-          rowId: curTr.rowId,
-          colId: id,
-          rowspan: 1,
-          colspan: 1,
-        };
-        if (baseTdStyle) {
-          value.style = baseTdStyle;
-        }
-        curTr.insertCell(colIndex + (curTr === baseTr ? 1 : 0), value);
+        // keep baseCell. baseTr should insert at baseCell's column index + 1
+        if (curTr === baseTr && id === baseCell.colId) continue;
+        curTr.insertCell(
+          colIndex + (curTr === baseTr ? 1 : 0),
+          {
+            ...extendsBaseCellValue,
+            tableId,
+            rowId: curTr.rowId,
+            colId: id,
+            rowspan: 1,
+            colspan: 1,
+          },
+        );
       }
 
       rowspan -= 1;
-      curTr = curTr.next as TableRowFormat;
+      rowIndex += 1;
+      curTr = rows[rowIndex];
     }
   }
 }

@@ -3,7 +3,7 @@ import type { TableMainFormat, TableWrapperFormat } from '../formats';
 import type { TableUp } from '../table-up';
 import type { RelactiveRect, TableSelectionOptions } from '../utils';
 import Quill from 'quill';
-import { getTableMainRect, TableBodyFormat, TableCellFormat, TableCellInnerFormat } from '../formats';
+import { getTableMainRect, TableCellFormat, TableCellInnerFormat } from '../formats';
 import { addScrollEvent, blotName, clearScrollEvent, createBEM, createResizeObserver, findAllParentBlot, findParentBlot, getElementScrollPosition, getRelativeRect, isRectanglesIntersect, tableUpEvent } from '../utils';
 import { TableDomSelector } from './table-dom-selector';
 
@@ -60,17 +60,37 @@ export class TableSelection extends TableDomSelector {
     this.cellSelectWrap = tableModule.addContainer(this.bem.b());
     this.cellSelect = this.helpLinesInitial();
 
-    this.resizeObserver = createResizeObserver(() => this.updateAfterEvent(), { ignoreFirstBind: true });
+    this.resizeObserver = createResizeObserver(this.updateAfterEvent, { ignoreFirstBind: true });
     this.resizeObserver.observe(this.quill.root);
 
     this.quill.emitter.listenDOM('selectionchange', document, this.selectionChangeHandler.bind(this));
     this.quill.on(tableUpEvent.AFTER_TABLE_RESIZE, this.updateAfterEvent);
-    this.quill.on(Quill.events.TEXT_CHANGE, this.updateAfterEvent);
     this.quill.on(Quill.events.SELECTION_CHANGE, this.quillSelectionChangeHandler);
+    this.quill.on(Quill.events.EDITOR_CHANGE, this.updateWhenTextChange);
     this.hide();
   }
 
+  updateWhenTextChange = (eventName: string) => {
+    if (eventName === Quill.events.TEXT_CHANGE) {
+      if (this.table && !this.quill.root.contains(this.table)) {
+        this.setSelectionTable(undefined);
+      }
+      else {
+        this.updateAfterEvent();
+      }
+    }
+  };
+
   updateAfterEvent = () => {
+    // if cell already remove from the editor. need remove it
+    const existCells: TableCellInnerFormat[] = [];
+    for (let i = 0; i < this.selectedTds.length; i++) {
+      const td = this.selectedTds[i];
+      if (this.quill.root.contains(td.domNode)) {
+        existCells.push(td);
+      }
+    }
+    this.selectedTds = existCells;
     this.updateWithSelectedTds();
   };
 
@@ -332,15 +352,13 @@ export class TableSelection extends TableDomSelector {
 
     const tableMainBlot = Quill.find(this.table) as TableMainFormat;
     if (!tableMainBlot) return [];
-    const tableBodyBlot = tableMainBlot.descendants(TableBodyFormat)[0];
-    if (!tableBodyBlot) return [];
     // Use TableCell to calculation selected range, because TableCellInner is scrollable, the width will effect calculate
     const tableCells = new Set(
       // reverse cell. search from bottom.
       // when mouse click on the cell border. the selection will be in the lower cell.
       // but `isRectanglesIntersect` judge intersect include border. the upper cell bottom border will intersect with boundary
       // so need to search the cell from bottom
-      (tableBodyBlot.descendants(TableCellFormat) as TempSortedTableCellFormat[]).map((cell, i) => {
+      (tableMainBlot.descendants(TableCellFormat) as TempSortedTableCellFormat[]).map((cell, i) => {
         cell.index = i;
         return cell;
       }),
@@ -483,7 +501,10 @@ export class TableSelection extends TableDomSelector {
   }
 
   updateWithSelectedTds() {
-    if (this.selectedTds.length <= 0) return;
+    if (this.selectedTds.length <= 0) {
+      this.hide();
+      return;
+    }
     const startPoint = { x: Infinity, y: Infinity };
     const endPoint = { x: -Infinity, y: -Infinity };
     for (const td of this.selectedTds) {
@@ -562,8 +583,8 @@ export class TableSelection extends TableDomSelector {
     if (!this.table) return;
     clearScrollEvent.call(this);
 
-    this.update();
     this.showDisplay();
+    this.update();
     this.quill.root.addEventListener('keydown', this.removeCell);
     addScrollEvent.call(this, this.quill.root, () => {
       this.update();
@@ -596,9 +617,8 @@ export class TableSelection extends TableDomSelector {
     this.cellSelectWrap.remove();
     clearScrollEvent.call(this);
 
-    this.quill.root.removeEventListener('mousedown', this.tableSelectHandler);
     this.quill.off(tableUpEvent.AFTER_TABLE_RESIZE, this.updateAfterEvent);
-    this.quill.off(Quill.events.TEXT_CHANGE, this.updateAfterEvent);
+    this.quill.off(Quill.events.EDITOR_CHANGE, this.updateWhenTextChange);
     this.quill.off(Quill.events.SELECTION_CHANGE, this.quillSelectionChangeHandler);
   }
 }

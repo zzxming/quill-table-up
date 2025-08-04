@@ -1,6 +1,6 @@
 import type { Parchment as TypeParchment } from 'quill';
 import Quill from 'quill';
-import { blotName } from '../utils';
+import { blotName, isFunction } from '../utils';
 
 const Parchment = Quill.import('parchment');
 const Container = Quill.import('blots/container') as typeof TypeParchment.ContainerBlot;
@@ -11,10 +11,14 @@ export class ContainerFormat extends Container {
   static tagName: string;
   static blotName: string = blotName.container;
   static scope = Parchment.Scope.BLOCK_BLOT;
-
   static allowedChildren?: TypeParchment.BlotConstructor[] = [Block, BlockEmbed, Container];
   static requiredContainer: TypeParchment.BlotConstructor;
   static defaultChild?: TypeParchment.BlotConstructor;
+
+  static allowAttrs = new Set<string>([]);
+  static allowDataAttrs = new Set<string>([]);
+  // handle the attribute change when use `setFormatValue`
+  static allowDataAttrsChangeHandler: Record<string, string> = {};
 
   static create(_value?: unknown) {
     const node = document.createElement(this.tagName);
@@ -22,6 +26,25 @@ export class ContainerFormat extends Container {
       node.classList.add(this.className);
     }
     return node;
+  }
+
+  setFormatValue(name: string, value?: any) {
+    if (this.statics.allowAttrs.has(name) || this.statics.allowDataAttrs.has(name)) {
+      let attrName = name;
+      if (this.statics.allowDataAttrs.has(name)) {
+        attrName = `data-${name}`;
+      }
+      if (value) {
+        this.domNode.setAttribute(attrName, value);
+      }
+      else {
+        this.domNode.removeAttribute(attrName);
+      }
+      const methodName = this.statics.allowDataAttrsChangeHandler[name] as keyof this;
+      if (methodName && isFunction(this[methodName])) {
+        (this[methodName] as Function)(value);
+      }
+    }
   }
 
   public optimize(_context: Record<string, any>) {

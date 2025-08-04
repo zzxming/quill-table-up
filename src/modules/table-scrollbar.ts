@@ -74,15 +74,16 @@ export class Scrollbar {
   }
 
   setScrollbarPosition() {
-    const { rect: tableRect, body: tableBodyBlot } = getTableMainRect(this.tableMainBlot);
-    if (!tableBodyBlot || !tableRect) return;
+    const { rect: tableRect, head: tableHeadBlot, body: tableBodyBlot, foot: tableFootBlot } = getTableMainRect(this.tableMainBlot);
+    const tableMainContentBlot = tableHeadBlot || tableBodyBlot || tableFootBlot;
+    if (!tableMainContentBlot || !tableRect) return;
     const { scrollLeft: editorScrollX, scrollTop: editorScrollY, offsetLeft: rootOffsetLeft, offsetTop: rootOffsetTop } = this.quill.root;
     const { offsetLeft: containerOffsetLeft, offsetTop: containerOffsetTop } = this.container;
-    const { offsetLeft: bodyOffsetLeft, offsetTop: bodyOffsetTop } = tableBodyBlot.domNode;
+    const { offsetLeft: tableOffsetLeft, offsetTop: tableOffsetTop } = tableMainContentBlot.domNode;
     const { width: containerWidth, height: containerHeight } = this.container.getBoundingClientRect();
 
-    let x = containerOffsetLeft + bodyOffsetLeft - rootOffsetLeft;
-    let y = containerOffsetTop + bodyOffsetTop - rootOffsetTop;
+    let x = containerOffsetLeft + tableOffsetLeft - rootOffsetLeft;
+    let y = containerOffsetTop + tableOffsetTop - rootOffsetTop;
     if (this.isVertical) {
       x += Math.min(containerWidth, tableRect.width);
     }

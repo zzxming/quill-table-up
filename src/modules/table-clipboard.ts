@@ -53,7 +53,9 @@ export class TableClipboard extends Clipboard {
   constructor(public quill: Quill, options: Partial<ClipboardOptions>) {
     super(quill, options);
     this.addMatcher('table', this.matchTable.bind(this));
+    this.addMatcher('thead', this.matchThead.bind(this));
     this.addMatcher('tbody', this.matchTbody.bind(this));
+    this.addMatcher('tfoot', this.matchTfoot.bind(this));
     this.addMatcher('colgroup', this.matchColgroup.bind(this));
     this.addMatcher('col', this.matchCol.bind(this));
     this.addMatcher('tr', this.matchTr.bind(this));
@@ -62,6 +64,22 @@ export class TableClipboard extends Clipboard {
     this.addMatcher('caption', this.matchCaption.bind(this));
 
     this.addMatcher(Node.ELEMENT_NODE, this.matchTdAttributor.bind(this));
+  }
+
+  getStyleBackgroundColor(node: Node, delta: TypeDelta) {
+    const backgroundColor = (node as HTMLElement).style.backgroundColor;
+    if (backgroundColor) {
+      for (const op of delta.ops) {
+        if (op.attributes?.[blotName.tableCellInner]) {
+          const { style, ...value } = op.attributes[blotName.tableCellInner] as TableCellValue;
+          const styleObj = cssTextToObject(style || '');
+          if (!styleObj.backgroundColor) {
+            styleObj.backgroundColor = backgroundColor;
+            op.attributes[blotName.tableCellInner] = { ...value, style: objectToCssText(styleObj) };
+          }
+        }
+      }
+    }
   }
 
   matchTable(node: Node, delta: TypeDelta) {
@@ -130,19 +148,7 @@ export class TableClipboard extends Clipboard {
   }
 
   matchTbody(node: Node, delta: TypeDelta) {
-    const backgroundColor = (node as HTMLElement).style.backgroundColor;
-    if (backgroundColor) {
-      for (const op of delta.ops) {
-        if (op.attributes?.[blotName.tableCellInner]) {
-          const { style, ...value } = op.attributes[blotName.tableCellInner] as TableCellValue;
-          const styleObj = cssTextToObject(style || '');
-          if (!styleObj.backgroundColor) {
-            styleObj.backgroundColor = backgroundColor;
-            op.attributes[blotName.tableCellInner] = { ...value, style: objectToCssText(styleObj) };
-          }
-        }
-      }
-    }
+    this.getStyleBackgroundColor(node, delta);
     // add `emptyRow`
     let emptyRows = [];
     for (let i = delta.ops.length - 1; i >= 0; i--) {
@@ -166,6 +172,28 @@ export class TableClipboard extends Clipboard {
       }
     }
     return delta;
+  }
+
+  matchThead(node: Node, delta: TypeDelta) {
+    const deltaData = this.matchTbody(node, delta);
+    for (const op of deltaData.ops) {
+      if (op.attributes && op.attributes[blotName.tableCellInner]) {
+        const tableCellInner = op.attributes[blotName.tableCellInner] as TableCellValue;
+        tableCellInner.wrapTag = 'thead';
+      }
+    }
+    return deltaData;
+  }
+
+  matchTfoot(node: Node, delta: TypeDelta) {
+    const deltaData = this.matchTbody(node, delta);
+    for (const op of deltaData.ops) {
+      if (op.attributes && op.attributes[blotName.tableCellInner]) {
+        const tableCellInner = op.attributes[blotName.tableCellInner] as TableCellValue;
+        tableCellInner.wrapTag = 'tfoot';
+      }
+    }
+    return deltaData;
   }
 
   matchColgroup(node: Node, delta: TypeDelta) {
@@ -213,17 +241,7 @@ export class TableClipboard extends Clipboard {
         this.rowspanCount[i] = { rowspan: 0, colspan: 0 };
       }
     }
-    for (const op of delta.ops) {
-      if (op.attributes) {
-        const { background, [blotName.tableCellInner]: tableCellInner } = op.attributes;
-        if (tableCellInner && background) {
-          const { style = '' } = tableCellInner as TableCellValue;
-          const styleObj = cssTextToObject(style);
-          styleObj.backgroundColor = background as string;
-          (op.attributes![blotName.tableCellInner] as TableCellValue).style = objectToCssText(styleObj);
-        }
-      }
-    }
+    this.getStyleBackgroundColor(node, delta);
     return delta;
   }
 

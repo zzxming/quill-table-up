@@ -76,6 +76,7 @@ export interface TableColValue {
   full?: boolean;
   align?: string;
 }
+export type TableBodyTag = 'thead' | 'tbody' | 'tfoot';
 export interface TableCellValue {
   tableId: string;
   rowId: string;
@@ -85,10 +86,12 @@ export interface TableCellValue {
   style?: string;
   emptyRow?: string[];
   tag?: 'td' | 'th';
+  wrapTag?: TableBodyTag;
 }
 export interface TableRowValue {
   tableId: string;
   rowId: string;
+  wrapTag?: TableBodyTag;
 }
 export interface TableCaptionValue {
   tableId: string;

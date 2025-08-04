@@ -1,4 +1,4 @@
-import type { TableCellValue } from '../utils';
+import type { TableBodyTag, TableCellValue } from '../utils';
 import { blotName, ensureArray, findParentBlot, toCamelCase } from '../utils';
 import { ContainerFormat } from './container-format';
 import { TableCellInnerFormat } from './table-cell-inner-format';
@@ -9,8 +9,8 @@ export class TableCellFormat extends ContainerFormat {
   static blotName = blotName.tableCell;
   static tagName = 'td';
   static className = 'ql-table-cell';
-  static allowDataAttrs = new Set(['table-id', 'row-id', 'col-id', 'empty-row']);
   static allowAttrs = new Set(['rowspan', 'colspan']);
+  static allowDataAttrs = new Set(['table-id', 'row-id', 'col-id', 'empty-row', 'wrap-tag']);
 
   // keep `isAllowStyle` and `allowStyle` same with TableCellInnerFormat
   static allowStyle = new Set(['background-color', 'border', 'height']);
@@ -35,12 +35,14 @@ export class TableCellFormat extends ContainerFormat {
       style,
       emptyRow,
       tag = 'td',
+      wrapTag = 'tbody',
     } = value;
     const node = document.createElement(tag);
     node.classList.add(...ensureArray(this.className));
     node.dataset.tableId = tableId;
     node.dataset.rowId = rowId;
     node.dataset.colId = colId;
+    node.dataset.wrapTag = wrapTag;
     node.setAttribute('rowspan', String(getValidCellspan(rowspan)));
     node.setAttribute('colspan', String(getValidCellspan(colspan)));
     style && (node.style.cssText = style);
@@ -52,7 +54,7 @@ export class TableCellFormat extends ContainerFormat {
   }
 
   static formats(domNode: HTMLElement) {
-    const { tableId, rowId, colId, emptyRow } = domNode.dataset;
+    const { tableId, rowId, colId, emptyRow, wrapTag = 'tbody' } = domNode.dataset;
     const rowspan = Number(domNode.getAttribute('rowspan'));
     const colspan = Number(domNode.getAttribute('colspan'));
     const value: Record<string, any> = {
@@ -62,6 +64,7 @@ export class TableCellFormat extends ContainerFormat {
       rowspan: getValidCellspan(rowspan),
       colspan: getValidCellspan(colspan),
       tag: domNode.tagName.toLowerCase(),
+      wrapTag,
     };
 
     const inlineStyles: Record<string, any> = {};
@@ -120,6 +123,10 @@ export class TableCellFormat extends ContainerFormat {
       && this.domNode.style.cssText !== (headChild.domNode as HTMLElement).dataset.style
     ) {
       (headChild.domNode as HTMLElement).dataset.style = this.domNode.style.cssText;
+    }
+
+    if (this.parent && this.parent.statics.blotName === blotName.tableRow) {
+      (this.parent as TableRowFormat).setFormatValue(name, value);
     }
   }
 
@@ -228,6 +235,10 @@ export class TableCellFormat extends ContainerFormat {
     }
   }
 
+  get wrapTag() {
+    return this.domNode.dataset.wrapTag as TableBodyTag || 'tbody';
+  }
+
   getColumnIndex() {
     const table = findParentBlot(this, blotName.tableMain);
     return table.getColIds().indexOf(this.colId);
@@ -270,14 +281,18 @@ export class TableCellFormat extends ContainerFormat {
   }
 
   optimize(context: Record<string, any>) {
-    const parent = this.parent as TableRowFormat;
-    const { tableId, rowId } = this;
-    if (parent !== null && parent.statics.blotName !== blotName.tableRow) {
-      this.wrap(blotName.tableRow, { tableId, rowId });
+    const { tableId, rowId, wrapTag } = this;
+    if (this.parent !== null && this.parent.statics.blotName !== blotName.tableRow) {
+      this.wrap(blotName.tableRow, { tableId, rowId, wrapTag });
     }
+    // when `replaceWith` called to replace cell. wrapTag may change. so row wrapTag also need to update
+    if (this.parent.statics.blotName === blotName.tableRow && (this.parent as TableRowFormat).wrapTag !== wrapTag) {
+      (this.parent as TableRowFormat).setFormatValue('wrap-tag', this.wrapTag);
+    }
+
     if (this.emptyRow.length > 0) {
       for (const rowId of this.emptyRow) {
-        this.parent.parent.insertBefore(this.scroll.create(blotName.tableRow, { tableId: this.tableId, rowId }), this.parent.next);
+        this.parent.parent.insertBefore(this.scroll.create(blotName.tableRow, { tableId, rowId, wrapTag }), this.parent.next);
       }
     }
 
