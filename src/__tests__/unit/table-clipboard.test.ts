@@ -1076,6 +1076,130 @@ describe('clipboard cell structure', () => {
       { ignoreAttrs: ['data-wrap-tag', 'class', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
     );
   });
+
+  it('convert thead and tfoot correctly', async () => {
+    const quill = createQuillWithTableModule(`<p><br></p>`);
+    quill.setContents(
+      quill.clipboard.convert({
+        html: `
+          <table>
+            <thead>
+              <tr>
+                <th>head1</th>
+                <th>head2</th>
+                <th>head3</th>
+              </tr>
+            </thead><tbody>
+              <tr>
+                <td>body1</td>
+                <td>body2</td>
+                <td>body3</td>
+              </tr>
+              <tr>
+                <td>body4</td>
+                <td>body5</td>
+                <td>body6</td>
+              </tr>
+            </tbody><tfoot>
+              <tr>
+                <td>foot1</td>
+                <td>foot2</td>
+                <td>foot3</td>
+              </tr>
+            </tfoot>
+          </table>
+        `,
+      }),
+    );
+    await vi.runAllTimersAsync();
+
+    expect(quill.root).toEqualHTML(
+      `
+        <p><br></p>
+        <div>
+          <table cellpadding="0" cellspacing="0" style="margin-right: auto; width: 300px;">
+            ${createTaleColHTML(3, { full: false, width: 100 })}
+            <thead>
+              <tr data-wrap-tag="thead">
+                <th colspan="1" rowspan="1" data-wrap-tag="thead">
+                  <div data-tag="th" data-wrap-tag="thead">
+                    <p>head1</p>
+                  </div>
+                </th>
+                <th colspan="1" rowspan="1" data-wrap-tag="thead">
+                  <div data-tag="th" data-wrap-tag="thead">
+                    <p>head2</p>
+                  </div>
+                </th>
+                <th colspan="1" rowspan="1" data-wrap-tag="thead">
+                  <div data-tag="th" data-wrap-tag="thead">
+                    <p>head3</p>
+                  </div>
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr data-wrap-tag="tbody">
+                <td colspan="1" rowspan="1" data-wrap-tag="tbody">
+                  <div data-tag="td" data-wrap-tag="tbody">
+                    <p>body1</p>
+                  </div>
+                </td>
+                <td colspan="1" rowspan="1" data-wrap-tag="tbody">
+                  <div data-tag="td" data-wrap-tag="tbody">
+                    <p>body2</p>
+                  </div>
+                </td>
+                <td colspan="1" rowspan="1" data-wrap-tag="tbody">
+                  <div data-tag="td" data-wrap-tag="tbody">
+                    <p>body3</p>
+                  </div>
+                </td>
+              </tr>
+              <tr data-wrap-tag="tbody">
+                <td colspan="1" rowspan="1" data-wrap-tag="tbody">
+                  <div data-tag="td" data-wrap-tag="tbody">
+                    <p>body4</p>
+                  </div>
+                </td>
+                <td colspan="1" rowspan="1" data-wrap-tag="tbody">
+                  <div data-tag="td" data-wrap-tag="tbody">
+                    <p>body5</p>
+                  </div>
+                </td>
+                <td colspan="1" rowspan="1" data-wrap-tag="tbody">
+                  <div data-tag="td" data-wrap-tag="tbody">
+                    <p>body6</p>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+            <tfoot>
+              <tr data-wrap-tag="tfoot">
+                <td colspan="1" rowspan="1" data-wrap-tag="tfoot">
+                  <div data-tag="td" data-wrap-tag="tfoot">
+                    <p>foot1</p>
+                  </div>
+                </td>
+                <td colspan="1" rowspan="1" data-wrap-tag="tfoot">
+                  <div data-tag="td" data-wrap-tag="tfoot">
+                    <p>foot2</p>
+                  </div>
+                </td>
+                <td colspan="1" rowspan="1" data-wrap-tag="tfoot">
+                  <div data-tag="td" data-wrap-tag="tfoot">
+                    <p>foot3</p>
+                  </div>
+                </td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+        <p><br></p>
+      `,
+      { ignoreAttrs: ['class', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
+    );
+  });
 });
 
 describe('clipboard content format', () => {
