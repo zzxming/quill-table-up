@@ -1,13 +1,11 @@
 import type { Parchment as TypeParchment } from 'quill';
 import type TypeBlock from 'quill/blots/block';
-import type TypeContainer from 'quill/blots/container';
 import type { TableCellInnerFormat } from '../table-cell-inner-format';
 import Quill from 'quill';
 import { blotName, findParentBlot, isString } from '../../utils';
 
 const Parchment = Quill.import('parchment');
 const Block = Quill.import('blots/block') as typeof TypeBlock;
-const Container = Quill.import('blots/container') as typeof TypeContainer;
 
 export class BlockOverride extends Block {
   replaceWith(name: string | TypeParchment.Blot, value?: any): TypeParchment.Blot {
@@ -19,52 +17,42 @@ export class BlockOverride extends Block {
       // wrap with TableCellInner.formatAt when length is 0 will create a new block
       // that can make sure TableCellInner struct correctly
       if (replacement.statics.blotName === blotName.tableCellInner) {
-        // skip if current block already in TableCellInner
+        // skip if current block already in same TableCellInner
+        let currentTableCellInner: TableCellInnerFormat | null = null;
         try {
-          const cellInner = findParentBlot(this, blotName.tableCellInner);
-          const cellValue = cellInner.formats();
+          currentTableCellInner = findParentBlot(this, blotName.tableCellInner);
+          const cellValue = currentTableCellInner.formats();
           const replacementValue = (replacement as TableCellInnerFormat).formats();
           const keys = Object.keys(cellValue);
           if (keys.every(key => JSON.stringify(cellValue[key]) === JSON.stringify(replacementValue[key]))) {
-            return cellInner;
+            return currentTableCellInner;
           }
         }
         catch {}
 
-        const selfParent = this.parent;
-        if (selfParent.statics.blotName === blotName.tableCellInner) {
-          if (selfParent != null) {
-            selfParent.insertBefore(replacement, this.prev ? null : this.next);
-          }
-          if (selfParent.statics.blotName === blotName.tableCellInner) {
-            let block: TypeBlock | null = this;
-            while (block) {
-              const next = block.next as TypeBlock | null;
-              replacement.appendChild(block);
-              block = next;
-            }
-          }
-          else {
-            replacement.appendChild(this);
+        if (currentTableCellInner) {
+          currentTableCellInner.insertBefore(replacement, this.prev ? null : this.next);
+          let block: TypeBlock | null = this;
+          while (block) {
+            const next = block.next as TypeBlock | null;
+            replacement.appendChild(block);
+            block = next;
           }
           // remove empty cell. tableCellFormat.optimize need col to compute
-          if (selfParent && selfParent.length() === 0) {
-            selfParent.remove();
-            if (selfParent.parent.statics.blotName === blotName.tableCell && selfParent.parent.length() === 0) {
-              selfParent.parent.remove();
+          if (currentTableCellInner && currentTableCellInner.length() === 0) {
+            currentTableCellInner.remove();
+            if (currentTableCellInner.parent.statics.blotName === blotName.tableCell && currentTableCellInner.parent.length() === 0) {
+              currentTableCellInner.parent.remove();
             }
-            const selfRow = selfParent.parent.parent;
+            const selfRow = currentTableCellInner.parent.parent;
             if (selfRow.statics.blotName === blotName.tableRow && selfRow.children.length === 0) {
               selfRow.remove();
             }
           }
         }
         else {
-          // `list` will wrap Container. tableCellInner should be insert outside it
-          if (selfParent instanceof Container) {
-            selfParent.parent.insertBefore(replacement, selfParent);
-          }
-          else if (selfParent != null) {
+          const selfParent = this.parent;
+          if (selfParent !== null) {
             selfParent.insertBefore(replacement, this.next);
           }
           replacement.appendChild(this);
@@ -75,7 +63,7 @@ export class BlockOverride extends Block {
         this.moveChildren(replacement);
       }
     }
-    if (this.parent != null) {
+    if (this.parent !== null) {
       this.parent.insertBefore(replacement, this.next);
       this.remove();
     }
