@@ -67,15 +67,10 @@ export class TableCellFormat extends ContainerFormat {
       wrapTag,
     };
 
-    const inlineStyles: Record<string, any> = {};
-    for (let i = 0; i < domNode.style.length; i++) {
-      const property = domNode.style[i];
-      const value = domNode.style[property as keyof CSSStyleDeclaration] as string;
-      if (this.isAllowStyle(String(property)) && !['initial', 'inherit'].includes(value)) {
-        inlineStyles[property] = value;
-      }
-    }
-    const entries = Object.entries(inlineStyles);
+    const inlineStyles = getInlineStyles(domNode);
+    const entries = Object.entries(inlineStyles).filter(([, value]) => {
+      return !['initial', 'inherit'].includes(value);
+    });
     if (entries.length > 0) {
       value.style = entries.map(([key, value]) => `${key}: ${value}`).join(';');
     }
