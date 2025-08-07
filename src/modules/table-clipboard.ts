@@ -64,6 +64,22 @@ export class TableClipboard extends Clipboard {
     this.addMatcher(Node.ELEMENT_NODE, this.matchTdAttributor.bind(this));
   }
 
+  getStyleBackgroundColor(node: Node, delta: TypeDelta) {
+    const backgroundColor = (node as HTMLElement).style.backgroundColor;
+    if (backgroundColor) {
+      for (const op of delta.ops) {
+        if (op.attributes?.[blotName.tableCellInner]) {
+          const { style, ...value } = op.attributes[blotName.tableCellInner] as TableCellValue;
+          const styleObj = cssTextToObject(style || '');
+          if (!styleObj.backgroundColor) {
+            styleObj.backgroundColor = backgroundColor;
+            op.attributes[blotName.tableCellInner] = { ...value, style: objectToCssText(styleObj) };
+          }
+        }
+      }
+    }
+  }
+
   matchTable(node: Node, delta: TypeDelta) {
     if (delta.ops.length === 0) return delta;
 
@@ -120,29 +136,19 @@ export class TableClipboard extends Clipboard {
     }, [] as Record<string, any>[]);
     ops.splice(bodyStartIndex + 1, 0, ...newCols);
 
+    const resultDelta = new Delta(ops);
+    this.getStyleBackgroundColor(node, resultDelta);
     // reset variable to avoid conflict with other table
     this.tableId = randomId();
     this.colIds = [];
     this.rowspanCount = [];
     this.cellCount = 0;
     this.colCount = 0;
-    return new Delta(ops);
+    return resultDelta;
   }
 
   matchTbody(node: Node, delta: TypeDelta) {
-    const backgroundColor = (node as HTMLElement).style.backgroundColor;
-    if (backgroundColor) {
-      for (const op of delta.ops) {
-        if (op.attributes?.[blotName.tableCellInner]) {
-          const { style, ...value } = op.attributes[blotName.tableCellInner] as TableCellValue;
-          const styleObj = cssTextToObject(style || '');
-          if (!styleObj.backgroundColor) {
-            styleObj.backgroundColor = backgroundColor;
-            op.attributes[blotName.tableCellInner] = { ...value, style: objectToCssText(styleObj) };
-          }
-        }
-      }
-    }
+    this.getStyleBackgroundColor(node, delta);
     // add `emptyRow`
     let emptyRows = [];
     for (let i = delta.ops.length - 1; i >= 0; i--) {
@@ -213,17 +219,7 @@ export class TableClipboard extends Clipboard {
         this.rowspanCount[i] = { rowspan: 0, colspan: 0 };
       }
     }
-    for (const op of delta.ops) {
-      if (op.attributes) {
-        const { background, [blotName.tableCellInner]: tableCellInner } = op.attributes;
-        if (tableCellInner && background) {
-          const { style = '' } = tableCellInner as TableCellValue;
-          const styleObj = cssTextToObject(style);
-          styleObj.backgroundColor = background as string;
-          (op.attributes![blotName.tableCellInner] as TableCellValue).style = objectToCssText(styleObj);
-        }
-      }
-    }
+    this.getStyleBackgroundColor(node, delta);
     return delta;
   }
 
