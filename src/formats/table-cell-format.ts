@@ -1,5 +1,5 @@
 import type { TableBodyTag, TableCellValue } from '../utils';
-import { blotName, ensureArray, findParentBlot, toCamelCase } from '../utils';
+import { blotName, ensureArray, findParentBlot, getInlineStyles, toCamelCase } from '../utils';
 import { ContainerFormat } from './container-format';
 import { TableCellInnerFormat } from './table-cell-inner-format';
 import { TableRowFormat } from './table-row-format';
