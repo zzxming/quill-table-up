@@ -1,5 +1,5 @@
 import type { TableCellValue } from '../utils';
-import { blotName, ensureArray, findParentBlot, toCamelCase } from '../utils';
+import { blotName, ensureArray, findParentBlot, getInlineStyles, toCamelCase } from '../utils';
 import { ContainerFormat } from './container-format';
 import { TableCellInnerFormat } from './table-cell-inner-format';
 import { TableRowFormat } from './table-row-format';
@@ -64,15 +64,10 @@ export class TableCellFormat extends ContainerFormat {
       tag: domNode.tagName.toLowerCase(),
     };
 
-    const inlineStyles: Record<string, any> = {};
-    for (let i = 0; i < domNode.style.length; i++) {
-      const property = domNode.style[i];
-      const value = domNode.style[property as keyof CSSStyleDeclaration] as string;
-      if (this.isAllowStyle(String(property)) && !['initial', 'inherit'].includes(value)) {
-        inlineStyles[property] = value;
-      }
-    }
-    const entries = Object.entries(inlineStyles);
+    const inlineStyles = getInlineStyles(domNode);
+    const entries = Object.entries(inlineStyles).filter(([, value]) => {
+      return !['initial', 'inherit'].includes(value);
+    });
     if (entries.length > 0) {
       value.style = entries.map(([key, value]) => `${key}: ${value}`).join(';');
     }

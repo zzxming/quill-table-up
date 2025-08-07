@@ -7,6 +7,7 @@ export * from './is';
 export * from './position';
 export * from './resize-observer-helper';
 export * from './scroll-event-helper';
+export * from './style-helper';
 export * from './transformer';
 export * from './transition-event-helper';
 export * from './types';
