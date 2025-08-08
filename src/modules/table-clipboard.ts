@@ -53,7 +53,9 @@ export class TableClipboard extends Clipboard {
   constructor(public quill: Quill, options: Partial<ClipboardOptions>) {
     super(quill, options);
     this.addMatcher('table', this.matchTable.bind(this));
+    this.addMatcher('thead', this.matchThead.bind(this));
     this.addMatcher('tbody', this.matchTbody.bind(this));
+    this.addMatcher('tfoot', this.matchTfoot.bind(this));
     this.addMatcher('colgroup', this.matchColgroup.bind(this));
     this.addMatcher('col', this.matchCol.bind(this));
     this.addMatcher('tr', this.matchTr.bind(this));
@@ -172,6 +174,28 @@ export class TableClipboard extends Clipboard {
       }
     }
     return delta;
+  }
+
+  matchThead(node: Node, delta: TypeDelta) {
+    const deltaData = this.matchTbody(node, delta);
+    for (const op of deltaData.ops) {
+      if (op.attributes && op.attributes[blotName.tableCellInner]) {
+        const tableCellInner = op.attributes[blotName.tableCellInner] as TableCellValue;
+        tableCellInner.wrapTag = 'thead';
+      }
+    }
+    return deltaData;
+  }
+
+  matchTfoot(node: Node, delta: TypeDelta) {
+    const deltaData = this.matchTbody(node, delta);
+    for (const op of deltaData.ops) {
+      if (op.attributes && op.attributes[blotName.tableCellInner]) {
+        const tableCellInner = op.attributes[blotName.tableCellInner] as TableCellValue;
+        tableCellInner.wrapTag = 'tfoot';
+      }
+    }
+    return deltaData;
   }
 
   matchColgroup(node: Node, delta: TypeDelta) {

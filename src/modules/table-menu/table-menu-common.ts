@@ -1,20 +1,23 @@
 import type { TableUp } from '../../table-up';
 import type { TableMenuOptions, ToolOption, TooltipInstance, ToolTipOptions } from '../../utils';
+import type { TableSelection } from '../table-selection';
 import Quill from 'quill';
-import { createBEM, createColorPicker, createTooltip, debounce, defaultColorMap, isArray, isFunction, randomId } from '../../utils';
+import { createBEM, createColorPicker, createTooltip, debounce, defaultColorMap, isArray, isFunction, randomId, tableUpEvent } from '../../utils';
+import { TableDomSelector } from '../table-dom-selector';
 import { colorClassName, maxSaveColorCount, menuColorSelectClassName, tableMenuTools } from './constants';
 
 export type TableMenuOptionsInput = Partial<Omit<TableMenuOptions, 'texts'>>;
 export interface MenuTooltipInstance extends TooltipInstance {
   isColorPick?: boolean;
 }
-export class TableMenuCommon {
+export class TableMenuCommon extends TableDomSelector {
+  static moduleName = 'table-menu';
+
   usedColors = new Set<string>();
   options: TableMenuOptions;
   menu: HTMLElement | null = null;
   isMenuDisplay: boolean = false;
   isColorPicking: boolean = false;
-  updateUsedColor: (this: any, color?: string) => void;
   tooltipItem: MenuTooltipInstance[] = [];
   activeTooltip: MenuTooltipInstance | null = null;
   bem = createBEM('menu');
@@ -24,8 +27,9 @@ export class TableMenuCommon {
   };
 
   constructor(public tableModule: TableUp, public quill: Quill, options: TableMenuOptionsInput) {
-    this.options = this.resolveOptions(options);
+    super(tableModule, quill);
 
+    this.options = this.resolveOptions(options);
     try {
       const storageValue = localStorage.getItem(this.options.localstorageKey) || '[]';
       let colorValue = JSON.parse(storageValue);
@@ -36,38 +40,44 @@ export class TableMenuCommon {
     }
     catch {}
 
-    this.updateUsedColor = debounce((color?: string) => {
-      if (!color) return;
-      this.usedColors.add(color);
-      if (this.usedColors.size > maxSaveColorCount) {
-        const saveColors = Array.from(this.usedColors).slice(-1 * maxSaveColorCount);
-        this.usedColors.clear();
-        saveColors.map(v => this.usedColors.add(v));
-      }
-
-      localStorage.setItem(this.options.localstorageKey, JSON.stringify(Array.from(this.usedColors)));
-      const usedColorWrappers = Array.from(document.querySelectorAll(`.${this.colorItemClass}.${colorClassName.used}`));
-      for (const usedColorWrapper of usedColorWrappers) {
-        const newColorItem = document.createElement('div');
-        newColorItem.classList.add(colorClassName.item);
-        newColorItem.style.backgroundColor = String(color);
-        // if already have same color item. doesn't need insert
-        const sameColorItem = Array.from(usedColorWrapper.querySelectorAll(`.${colorClassName.item}[style*="background-color: ${newColorItem.style.backgroundColor}"]`));
-        if (sameColorItem.length <= 0) {
-          usedColorWrapper.appendChild(newColorItem);
-        }
-
-        const colorItem = Array.from(usedColorWrapper.querySelectorAll(`.${colorClassName.item}`)).slice(0, -1 * maxSaveColorCount);
-        for (const item of colorItem) {
-          item.remove();
-        }
-      }
-    }, 1000);
-    this.quill.on(Quill.events.TEXT_CHANGE, this.updateWhenTextChange);
+    this.quill.on(Quill.events.EDITOR_CHANGE, this.updateWhenTextChange);
+    this.quill.on(tableUpEvent.TABLE_SELECTION_DRAG_START, this.hideWhenSelectionDragStart);
   }
 
-  updateWhenTextChange = () => {
-    if (this.isMenuDisplay) {
+  updateUsedColor = debounce((color?: string) => {
+    if (!color) return;
+    this.usedColors.add(color);
+    if (this.usedColors.size > maxSaveColorCount) {
+      const saveColors = Array.from(this.usedColors).slice(-1 * maxSaveColorCount);
+      this.usedColors.clear();
+      saveColors.map(v => this.usedColors.add(v));
+    }
+
+    localStorage.setItem(this.options.localstorageKey, JSON.stringify(Array.from(this.usedColors)));
+    const usedColorWrappers = Array.from(document.querySelectorAll(`.${this.colorItemClass}.${colorClassName.used}`));
+    for (const usedColorWrapper of usedColorWrappers) {
+      const newColorItem = document.createElement('div');
+      newColorItem.classList.add(colorClassName.item);
+      newColorItem.style.backgroundColor = String(color);
+      // if already have same color item. doesn't need insert
+      const sameColorItem = Array.from(usedColorWrapper.querySelectorAll(`.${colorClassName.item}[style*="background-color: ${newColorItem.style.backgroundColor}"]`));
+      if (sameColorItem.length <= 0) {
+        usedColorWrapper.appendChild(newColorItem);
+      }
+
+      const colorItem = Array.from(usedColorWrapper.querySelectorAll(`.${colorClassName.item}`)).slice(0, -1 * maxSaveColorCount);
+      for (const item of colorItem) {
+        item.remove();
+      }
+    }
+  }, 1000);
+
+  hideWhenSelectionDragStart = () => {
+    this.hide();
+  };
+
+  updateWhenTextChange = (eventName: string) => {
+    if (eventName === Quill.events.TEXT_CHANGE && this.isMenuDisplay) {
       this.update();
     }
   };
@@ -128,7 +138,7 @@ export class TableMenuCommon {
         else {
           isFunction(handle) && item.addEventListener('click', (e) => {
             this.quill.focus();
-            handle(this.tableModule, this.getSelectedTds(), e);
+            handle.call(this, this.tableModule, this.getSelectedTds(), e);
           }, false);
         }
 
@@ -173,20 +183,20 @@ export class TableMenuCommon {
     transparentColor.classList.add(colorClassName.btn, 'transparent');
     transparentColor.textContent = this.tableModule.options.texts.transparent;
     transparentColor.addEventListener('click', () => {
-      handle(this.tableModule, this.getSelectedTds(), 'transparent');
+      handle.call(this, this.tableModule, this.getSelectedTds(), 'transparent');
     });
     const clearColor = document.createElement('div');
     clearColor.classList.add(colorClassName.btn, 'clear');
     clearColor.textContent = this.tableModule.options.texts.clear;
     clearColor.addEventListener('click', () => {
-      handle(this.tableModule, this.getSelectedTds(), null);
+      handle.call(this, this.tableModule, this.getSelectedTds(), null);
     });
     const customColor = document.createElement('div');
     customColor.classList.add(colorClassName.btn, 'custom');
     customColor.textContent = this.tableModule.options.texts.custom;
     const colorPicker = createColorPicker({
       onChange: (color) => {
-        handle(this.tableModule, this.getSelectedTds(), color);
+        handle.call(this, this.tableModule, this.getSelectedTds(), color);
         this.updateUsedColor(color);
       },
     });
@@ -230,16 +240,18 @@ export class TableMenuCommon {
       type: 'click',
       content: colorSelectWrapper,
       onOpen: () => {
-        if (this.isMenuDisplay && this.tableModule.tableSelection) {
-          this.tableModule.tableSelection.hideDisplay();
+        const tableSelection = this.tableModule.getModule<TableSelection>('table-selection');
+        if (this.isMenuDisplay && tableSelection) {
+          tableSelection.hideDisplay();
         }
         this.setActiveTooltip(tooltip);
         return false;
       },
       onClose: () => {
-        if (this.isMenuDisplay && this.tableModule.tableSelection) {
-          this.tableModule.tableSelection.updateWithSelectedTds();
-          this.tableModule.tableSelection.showDisplay();
+        const tableSelection = this.tableModule.getModule<TableSelection>('table-selection');
+        if (this.isMenuDisplay && tableSelection) {
+          tableSelection.updateWithSelectedTds();
+          tableSelection.showDisplay();
         }
         const isChild = colorSelectWrapper.contains(colorPicker);
         if (isChild) {
@@ -270,7 +282,8 @@ export class TableMenuCommon {
   }
 
   getSelectedTds() {
-    return this.tableModule.tableSelection?.selectedTds || [];
+    const tableSelection = this.tableModule.getModule<TableSelection>('table-selection');
+    return tableSelection?.selectedTds || [];
   }
 
   createTipText(item: HTMLElement, text: string) {
@@ -279,17 +292,24 @@ export class TableMenuCommon {
   }
 
   show() {
-    if (!this.menu || !this.tableModule.tableSelection || !this.tableModule.tableSelection.boundary) return;
-    Object.assign(this.menu.style, { display: 'flex' });
-    this.isMenuDisplay = true;
-    this.update();
+    if (!this.table) return;
+    if (this.menu) {
+      this.hide();
+    }
+    this.menu = this.buildTools();
   }
 
   update() {
+    if (this.table && !this.quill.root.contains(this.table)) {
+      this.setSelectionTable(undefined);
+    }
   }
 
   hide() {
-    this.menu && Object.assign(this.menu.style, { display: 'none' });
+    if (this.menu) {
+      this.menu.remove();
+      this.menu = null;
+    }
     for (const tooltip of this.tooltipItem) {
       tooltip.hide(true);
     }
@@ -298,11 +318,12 @@ export class TableMenuCommon {
 
   destroy() {
     this.quill.off(Quill.events.TEXT_CHANGE, this.updateWhenTextChange);
+    this.quill.off(tableUpEvent.TABLE_SELECTION_DRAG_START, this.hideWhenSelectionDragStart);
     this.activeTooltip = null;
-    for (const tooltip of this.tooltipItem) tooltip.destroy();
-    if (!this.menu) return;
+    for (const tooltip of this.tooltipItem) {
+      tooltip.destroy();
+    }
+    this.tooltipItem = [];
     this.hide();
-    this.menu.remove();
-    this.menu = null;
   }
 }

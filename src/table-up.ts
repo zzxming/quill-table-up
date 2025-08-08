@@ -4,11 +4,12 @@ import type TypeBlock from 'quill/blots/block';
 import type { Context } from 'quill/modules/keyboard';
 import type TypeKeyboard from 'quill/modules/keyboard';
 import type TypeToolbar from 'quill/modules/toolbar';
-import type { Constructor, InternalModule, InternalTableSelectionModule, QuillTheme, QuillThemePicker, TableCellValue, TableConstantsData, TableTextOptions, TableUpOptions } from './utils';
+import type { TableSelection } from './modules';
+import type { Constructor, QuillTheme, QuillThemePicker, TableCellValue, TableConstantsData, TableTextOptions, TableUpOptions } from './utils';
 import Quill from 'quill';
-import { BlockEmbedOverride, BlockOverride, ContainerFormat, ScrollOverride, TableBodyFormat, TableCaptionFormat, TableCellFormat, TableCellInnerFormat, TableColFormat, TableColgroupFormat, TableMainFormat, TableRowFormat, TableWrapperFormat } from './formats';
+import { BlockEmbedOverride, BlockOverride, ContainerFormat, ScrollOverride, TableBodyFormat, TableCaptionFormat, TableCellFormat, TableCellInnerFormat, TableColFormat, TableColgroupFormat, TableFootFormat, TableHeadFormat, TableMainFormat, TableRowFormat, TableWrapperFormat } from './formats';
 import { TableClipboard } from './modules';
-import { blotName, createBEM, createSelectBox, cssTextToObject, debounce, findParentBlot, findParentBlots, isForbidInTable, isFunction, isNumber, isString, isSubclassOf, limitDomInViewPort, mixinClass, objectToCssText, randomId, tableCantInsert, tableUpEvent, tableUpInternal, tableUpSize, toCamelCase } from './utils';
+import { blotName, createBEM, createSelectBox, cssTextToObject, debounce, findParentBlot, findParentBlots, getScrollBarWidth, isForbidInTable, isFunction, isNumber, isString, isSubclassOf, limitDomInViewPort, mixinClass, objectToCssText, randomId, tableCantInsert, tableUpEvent, tableUpInternal, tableUpSize, toCamelCase } from './utils';
 
 const Parchment = Quill.import('parchment');
 const Delta = Quill.import('delta');
@@ -59,7 +60,7 @@ export function updateTableConstants(data: Partial<TableConstantsData>) {
 export function defaultCustomSelect(tableModule: TableUp, picker: QuillThemePicker) {
   return createSelectBox({
     onSelect: (row: number, col: number) => {
-      tableModule.insertTable(row, col);
+      tableModule.insertTable(row, col, Quill.sources.USER);
       if (picker) {
         picker.close();
       }
@@ -212,7 +213,7 @@ export class TableUp {
   static register() {
     TableWrapperFormat.allowedChildren = [TableMainFormat];
 
-    TableMainFormat.allowedChildren = [TableBodyFormat, TableColgroupFormat, TableCaptionFormat];
+    TableMainFormat.allowedChildren = [TableColgroupFormat, TableCaptionFormat, TableHeadFormat, TableBodyFormat, TableFootFormat];
     TableMainFormat.requiredContainer = TableWrapperFormat;
 
     TableCaptionFormat.requiredContainer = TableMainFormat;
@@ -220,11 +221,14 @@ export class TableUp {
     TableColgroupFormat.allowedChildren = [TableColFormat];
     TableColgroupFormat.requiredContainer = TableMainFormat;
 
+    TableHeadFormat.allowedChildren = [TableRowFormat];
+    TableHeadFormat.requiredContainer = TableMainFormat;
     TableBodyFormat.allowedChildren = [TableRowFormat];
     TableBodyFormat.requiredContainer = TableMainFormat;
+    TableFootFormat.allowedChildren = [TableRowFormat];
+    TableFootFormat.requiredContainer = TableMainFormat;
 
     TableRowFormat.allowedChildren = [TableCellFormat];
-    TableCellFormat.requiredContainer = TableBodyFormat;
 
     TableCellFormat.allowedChildren = [TableCellInnerFormat, Break];
     TableCellFormat.requiredContainer = TableRowFormat;
@@ -258,7 +262,9 @@ export class TableUp {
       [`formats/${blotName.tableCell}`]: TableCellFormat,
       [`formats/${blotName.tableCellInner}`]: TableCellInnerFormat,
       [`formats/${blotName.tableRow}`]: TableRowFormat,
+      [`formats/${blotName.tableHead}`]: TableHeadFormat,
       [`formats/${blotName.tableBody}`]: TableBodyFormat,
+      [`formats/${blotName.tableFoot}`]: TableFootFormat,
       [`formats/${blotName.tableCol}`]: TableColFormat,
       [`formats/${blotName.tableColgroup}`]: TableColgroupFormat,
       [`formats/${blotName.tableCaption}`]: TableCaptionFormat,
@@ -273,13 +279,8 @@ export class TableUp {
   toolBox: HTMLDivElement;
   fixTableByLisenter = debounce(this.balanceTables, 100);
   selector?: HTMLElement;
-  table?: HTMLElement;
-  tableSelection?: InternalTableSelectionModule;
-  tableResize?: InternalModule;
-  tableScrollbar?: InternalModule;
-  tableAlign?: InternalModule;
-  tableResizeScale?: InternalModule;
   resizeOb!: ResizeObserver;
+  modules: Record<string, Constructor> = {};
 
   get statics(): any {
     return this.constructor;
@@ -289,15 +290,6 @@ export class TableUp {
     this.quill = quill;
     this.options = this.resolveOptions(options || {});
     this.toolBox = this.initialContainer();
-
-    if (!this.options.scrollbar) {
-      const scrollbarBEM = createBEM('scrollbar');
-      this.quill.container.classList.add(scrollbarBEM.bm('origin'));
-    }
-
-    if (this.options.selection) {
-      this.tableSelection = new this.options.selection(this, this.quill, this.options.selectionOptions);
-    }
 
     const toolbar = this.quill.getModule('toolbar') as TypeToolbar;
     if (toolbar && (this.quill.theme as QuillTheme).pickers) {
@@ -334,36 +326,7 @@ export class TableUp {
       }
     }
 
-    this.quill.root.addEventListener(
-      'click',
-      (evt: MouseEvent) => {
-        const path = evt.composedPath() as HTMLElement[];
-        if (!path || path.length <= 0) return;
-
-        const tableNode = path.find(node => node.tagName && node.tagName.toUpperCase() === 'TABLE' && node.classList.contains('ql-table'));
-        if (tableNode) {
-          if (this.table === tableNode) {
-            this.tableSelection && this.tableSelection.show();
-            this.tableAlign && this.tableAlign.update();
-            this.tableResize && this.tableResize.update();
-            this.tableScrollbar && this.tableScrollbar.update();
-            return;
-          }
-          if (this.table) this.hideTableTools();
-          this.showTableTools(tableNode);
-        }
-        else if (this.table) {
-          this.hideTableTools();
-        }
-      },
-      false,
-    );
-    this.quill.on(Quill.events.EDITOR_CHANGE, (type: typeof Quill.events.TEXT_CHANGE | typeof Quill.events.SELECTION_CHANGE) => {
-      if (type === Quill.events.TEXT_CHANGE && (!this.table || !this.quill.root.contains(this.table))) {
-        this.hideTableTools();
-      }
-    });
-
+    this.initModules();
     this.quillHack();
     this.listenBalanceCells();
   }
@@ -408,12 +371,8 @@ export class TableUp {
       full: false,
       fullSwitch: true,
       icon: icons.table,
-      selectionOptions: {},
-      alignOptions: {},
-      scrollbarOptions: {},
-      resizeOptions: {},
-      resizeScaleOptions: {},
       autoMergeCell: true,
+      modules: [],
     } as TableUpOptions, options);
   }
 
@@ -446,6 +405,16 @@ export class TableUp {
     }, options);
   }
 
+  initModules() {
+    for (const item of this.options.modules) {
+      this.modules[item.module.moduleName] = new item.module(this, this.quill, item.options);
+    }
+  }
+
+  getModule<T>(name: string) {
+    return this.modules[name] as T | undefined;
+  }
+
   quillHack() {
     const originGetSemanticHTML = this.quill.getSemanticHTML;
     this.quill.getSemanticHTML = ((index: number = 0, length?: number) => {
@@ -471,12 +440,14 @@ export class TableUp {
         const range = this.getSelection(true);
         const formats = this.getFormat(range);
         // only when selection in cell and selectedTds > 1 can format all cells
-        if (!formats[blotName.tableCellInner] || range.length > 0 || (tableUpModule && tableUpModule.tableSelection && tableUpModule.tableSelection.selectedTds.length <= 1)) {
+        const tableSelection = tableUpModule.getModule<TableSelection>('table-selection');
+        console.log(tableSelection?.selectedTds);
+        if (!formats[blotName.tableCellInner] || range.length > 0 || (tableUpModule && tableSelection && tableSelection.selectedTds.length <= 1)) {
           return originFormat.call(this, name, value, source);
         }
         // format in selected cells
-        if (tableUpModule && tableUpModule.tableSelection && tableUpModule.tableSelection.selectedTds.length > 0) {
-          const selectedTds = tableUpModule.tableSelection.selectedTds;
+        if (tableUpModule && tableSelection && tableSelection.selectedTds.length > 0) {
+          const selectedTds = tableSelection.selectedTds;
           // calculate the format value. the format should be canceled when this value exists in all selected cells
           let setOrigin = false;
           const tdRanges = [];
@@ -571,13 +542,14 @@ export class TableUp {
           }
           // if selection range is not in table, but use the TableSelection selected cells
           // clean all other formats in cell
-          if (tableUpModule && tableUpModule.tableSelection && tableUpModule.tableSelection.selectedTds.length > 0 && tableUpModule.tableSelection.table) {
-            const tableMain = Quill.find(tableUpModule.tableSelection.table) as TableMainFormat;
+          const tableSelection = tableUpModule.getModule<TableSelection>('table-selection');
+          if (tableUpModule && tableSelection && tableSelection.selectedTds.length > 0 && tableSelection.table) {
+            const tableMain = Quill.find(tableSelection.table) as TableMainFormat;
             if (!tableMain) {
               console.warn('TableMainFormat not found');
               return;
             }
-            const selectedTds = tableUpModule.tableSelection.selectedTds;
+            const selectedTds = tableSelection.selectedTds;
 
             // get all need clean style cells. include border-right/border-bottom effect cells
             const editTds = new Set<TableCellFormat>();
@@ -637,45 +609,6 @@ export class TableUp {
         };
       }
     }
-  }
-
-  showTableTools(table: HTMLElement) {
-    if (table) {
-      this.table = table;
-      this.tableSelection?.show();
-      if (this.options.align) {
-        this.tableAlign = new this.options.align(this, table, this.quill, this.options.alignOptions);
-      }
-      if (this.options.scrollbar) {
-        this.tableScrollbar = new this.options.scrollbar(this, table, this.quill, this.options.scrollbarOptions);
-      }
-      if (this.options.resize) {
-        this.tableResize = new this.options.resize(this, table, this.quill, this.options.resizeOptions);
-      }
-      if (this.options.resizeScale) {
-        this.tableResizeScale = new this.options.resizeScale(this, table, this.quill, this.options.resizeScaleOptions);
-      }
-    }
-  }
-
-  hideTableTools() {
-    this.tableSelection?.hide();
-    if (this.tableScrollbar) {
-      this.tableScrollbar.destroy();
-      this.tableScrollbar = undefined;
-    }
-    if (this.tableAlign) {
-      this.tableAlign.destroy();
-      this.tableAlign = undefined;
-    }
-    if (this.tableResize) {
-      this.tableResize.destroy();
-      this.tableResize = undefined;
-    }
-    if (this.tableResizeScale) {
-      this.tableResizeScale.destroy();
-    }
-    this.table = undefined;
   }
 
   async buildCustomSelect(customSelect: ((module: TableUp, picker: QuillThemePicker) => HTMLElement | Promise<HTMLElement>) | undefined, picker: QuillThemePicker) {
@@ -820,7 +753,7 @@ export class TableUp {
     return doc.body.innerHTML;
   }
 
-  insertTable(rows: number, columns: number) {
+  insertTable(rows: number, columns: number, source: EmitterSource = Quill.sources.API) {
     if (rows >= 30 || columns >= 30) {
       throw new Error('Both rows and columns must be less than 30.');
     }
@@ -834,14 +767,15 @@ export class TableUp {
       throw new Error(`Not supported ${currentBlot.statics.blotName} insert into table.`);
     }
 
+    const tableId = randomId();
+    const colIds = new Array(columns).fill(0).map(() => randomId());
+
     const borderWidth = this.calculateTableCellBorderWidth();
     const rootStyle = getComputedStyle(this.quill.root);
     const paddingLeft = Number.parseInt(rootStyle.paddingLeft);
     const paddingRight = Number.parseInt(rootStyle.paddingRight);
-    const width = Number.parseInt(rootStyle.width) - paddingLeft - paddingRight - borderWidth;
-
-    const tableId = randomId();
-    const colIds = new Array(columns).fill(0).map(() => randomId());
+    const scrollBarWidth = this.quill.root.scrollHeight > this.quill.root.clientHeight ? getScrollBarWidth({ target: this.quill.root }) : 0;
+    const width = Number.parseInt(rootStyle.width) - paddingLeft - paddingRight - borderWidth - scrollBarWidth;
 
     // insert delta data to create table
     const colWidth = !this.options.full ? `${Math.max(Math.floor(width / columns), tableUpSize.colMinWidthPx)}px` : `${Math.max((1 / columns) * 100, tableUpSize.colMinWidthPre)}%`;
@@ -880,7 +814,7 @@ export class TableUp {
       }
     }
 
-    this.quill.updateContents(new Delta(delta), Quill.sources.USER);
+    this.quill.updateContents(new Delta(delta), source);
     this.quill.setSelection(range.index + columns, Quill.sources.SILENT);
     this.quill.focus();
   }
@@ -1021,19 +955,18 @@ export class TableUp {
     if (selectedTds.length === 0) return;
     const tableBlot = findParentBlot(selectedTds[0], blotName.tableMain);
     tableBlot && tableBlot.remove();
-    this.hideTableTools();
   }
 
   appendRow(selectedTds: TableCellInnerFormat[], isDown: boolean) {
     if (selectedTds.length <= 0) return;
     // find baseTd and baseTr
     const baseTd = selectedTds[isDown ? selectedTds.length - 1 : 0];
-    const [tableBlot, tableBodyBlot, baseTdParentTr] = findParentBlots(baseTd, [blotName.tableMain, blotName.tableBody, blotName.tableRow] as const);
+    const [tableBlot, baseTdParentTr] = findParentBlots(baseTd, [blotName.tableMain, blotName.tableRow] as const);
     const tableTrs = tableBlot.getRows();
     const i = tableTrs.indexOf(baseTdParentTr);
     const insertRowIndex = i + (isDown ? baseTd.rowspan : 0);
 
-    tableBodyBlot.insertRow(insertRowIndex);
+    tableBlot.insertRow(insertRowIndex);
   }
 
   appendCol(selectedTds: TableCellInnerFormat[], isRight: boolean) {
@@ -1270,6 +1203,25 @@ export class TableUp {
 
   mergeCells(selectedTds: TableCellInnerFormat[]) {
     if (selectedTds.length <= 1) return;
+    const baseCell = selectedTds[0];
+    // move selected cells in same table body
+    const baseCellBody = baseCell.getTableBody();
+    // insert base row
+    let baseRow = baseCell.getTableRow();
+    if (!baseCellBody || !baseRow) return;
+    for (let i = 1; i < selectedTds.length; i++) {
+      const selectTd = selectedTds[i];
+      const currentTdBody = selectTd.getTableBody();
+      if (currentTdBody && currentTdBody !== baseCellBody) {
+        const currentRow = selectTd.getTableRow();
+        if (currentRow) {
+          baseRow.parent.insertBefore(currentRow, baseRow.next);
+          baseRow = currentRow;
+        }
+      }
+    }
+    baseCellBody.convertBody(baseCell.wrapTag);
+
     const counts = selectedTds.reduce(
       (pre, selectTd, index) => {
         // count column span
@@ -1287,7 +1239,7 @@ export class TableUp {
         }
         return pre;
       },
-      [{} as Record<string, number>, {} as Record<string, number>, selectedTds[0]] as const,
+      [{} as Record<string, number>, {} as Record<string, number>, baseCell] as const,
     );
 
     const rowCount = Math.max(...Object.values(counts[0]));
@@ -1296,44 +1248,53 @@ export class TableUp {
     baseTd.colspan = colCount;
     baseTd.rowspan = rowCount;
 
+    // selection will move with cursor. make sure selection is in baseTd
+    const index = this.quill.getIndex(baseTd);
+    this.quill.setSelection({ index, length: 0 }, Quill.sources.SILENT);
+
     const tableBlot = findParentBlot(baseTd, blotName.tableMain);
     this.fixTableByRemove(tableBlot);
   }
 
   splitCell(selectedTds: TableCellInnerFormat[]) {
     if (selectedTds.length !== 1) return;
-    const baseTd = selectedTds[0];
-    if (baseTd.colspan === 1 && baseTd.rowspan === 1) return;
-    const [tableBlot, baseTr] = findParentBlots(baseTd, [blotName.tableMain, blotName.tableRow] as const);
+    const baseCell = selectedTds[0];
+    if (baseCell.colspan === 1 && baseCell.rowspan === 1) return;
+    const [tableBlot, baseTr] = findParentBlots(baseCell, [blotName.tableMain, blotName.tableRow] as const);
+    const rows = tableBlot.getRows();
     const tableId = tableBlot.tableId;
-    const colIndex = baseTd.getColumnIndex();
-    const colIds = tableBlot.getColIds().slice(colIndex, colIndex + baseTd.colspan).reverse();
-    const baseTdStyle = (baseTd.formats()[blotName.tableCellInner] as TableCellValue).style;
+    const colIndex = baseCell.getColumnIndex();
+    const colIds = tableBlot.getColIds().slice(colIndex, colIndex + baseCell.colspan).reverse();
+    const baseCellValue = baseCell.formats()[blotName.tableCellInner] as TableCellValue;
+    const { emptyRow, ...extendsBaseCellValue } = baseCellValue;
 
-    let curTr = baseTr;
-    let rowspan = baseTd.rowspan;
+    let rowIndex = rows.indexOf(baseTr);
+    if (rowIndex === -1) return;
+    let curTr = rows[rowIndex];
+    let rowspan = baseCell.rowspan;
     // reset span first. insertCell need colspan to judge insert position
-    baseTd.colspan = 1;
-    baseTd.rowspan = 1;
+    baseCell.colspan = 1;
+    baseCell.rowspan = 1;
     while (curTr && rowspan > 0) {
       for (const id of colIds) {
-        // keep baseTd. baseTr should insert at baseTd's column index + 1
-        if (curTr === baseTr && id === baseTd.colId) continue;
-        const value: TableCellValue = {
-          tableId,
-          rowId: curTr.rowId,
-          colId: id,
-          rowspan: 1,
-          colspan: 1,
-        };
-        if (baseTdStyle) {
-          value.style = baseTdStyle;
-        }
-        curTr.insertCell(colIndex + (curTr === baseTr ? 1 : 0), value);
+        // keep baseCell. baseTr should insert at baseCell's column index + 1
+        if (curTr === baseTr && id === baseCell.colId) continue;
+        curTr.insertCell(
+          colIndex + (curTr === baseTr ? 1 : 0),
+          {
+            ...extendsBaseCellValue,
+            tableId,
+            rowId: curTr.rowId,
+            colId: id,
+            rowspan: 1,
+            colspan: 1,
+          },
+        );
       }
 
       rowspan -= 1;
-      curTr = curTr.next as TableRowFormat;
+      rowIndex += 1;
+      curTr = rows[rowIndex];
     }
   }
 }

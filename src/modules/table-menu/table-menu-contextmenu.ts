@@ -1,7 +1,8 @@
 import type Quill from 'quill';
 import type { TableUp } from '../../table-up';
-import type { TableMenuOptions, ToolTipOptions } from '../../utils';
-import { limitDomInViewPort } from '../../utils';
+import type { InternalTableSelectionModule, TableMenuOptions, ToolTipOptions } from '../../utils';
+import type { TableSelection } from '../table-selection';
+import { limitDomInViewPort, tableUpEvent } from '../../utils';
 import { menuColorSelectClassName } from './constants';
 import { TableMenuCommon } from './table-menu-common';
 
@@ -15,7 +16,15 @@ export class TableMenuContextmenu extends TableMenuCommon {
     super(tableModule, quill, options);
 
     this.quill.root.addEventListener('contextmenu', this.listenContextmenu);
+    this.quill.on(tableUpEvent.TABLE_SELECTION_CHANGE, this.tableSelectioChange);
+    this.quill.on(tableUpEvent.TABLE_SELECTION_DISPLAY_CHANGE, this.tableSelectioChange);
   }
+
+  tableSelectioChange = (tableSelection: InternalTableSelectionModule) => {
+    if (tableSelection.selectedTds.length <= 0) {
+      this.hide();
+    }
+  };
 
   listenContextmenu = (e: MouseEvent) => {
     e.preventDefault();
@@ -25,7 +34,8 @@ export class TableMenuContextmenu extends TableMenuCommon {
 
     const tableNode = path.find(node => node.tagName && node.tagName.toUpperCase() === 'TABLE' && node.classList.contains('ql-table'));
 
-    if (tableNode && this.tableModule.tableSelection?.selectedTds?.length) {
+    const tableSelection = this.tableModule.getModule<TableSelection>('table-selection');
+    if (tableNode && tableSelection?.selectedTds?.length) {
       if (!this.menu) {
         this.menu = this.buildTools();
       }
@@ -64,12 +74,16 @@ export class TableMenuContextmenu extends TableMenuCommon {
   show() {}
 
   update(position?: { x: number; y: number }) {
-    if (!this.isMenuDisplay || !this.menu || !this.tableModule.tableSelection || !this.tableModule.tableSelection.isDisplaySelection) return;
-    if (!position) {
+    super.update();
+    const tableSelection = this.tableModule.getModule<TableSelection>('table-selection');
+    if (!this.table || !this.isMenuDisplay || !this.menu) {
+      this.hide();
+      return;
+    }
+    if (!position || !tableSelection?.isDisplaySelection) {
       return;
     }
 
-    super.update();
     const style: Record<string, any> = {
       display: 'flex',
       left: 0,
@@ -98,5 +112,7 @@ export class TableMenuContextmenu extends TableMenuCommon {
   destroy() {
     this.quill.root.removeEventListener('contextmenu', this.listenContextmenu);
     super.destroy();
+    this.quill.off(tableUpEvent.TABLE_SELECTION_CHANGE, this.tableSelectioChange);
+    this.quill.off(tableUpEvent.TABLE_SELECTION_DISPLAY_CHANGE, this.tableSelectioChange);
   }
 }

@@ -26,9 +26,9 @@ extendTest.describe('table cell keyboard handler enter', () => {
     const contents = [
       { insert: '\n' },
       { insert: { 'table-up-col': { tableId: '1', colId: '1', full: true, width: 100 } } },
-      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '1', rowspan: 1, colspan: 1, tag: 'td' } }, insert: '\n' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '1', rowspan: 1, colspan: 1, tag: 'td', wrapTag: 'tbody' } }, insert: '\n' },
       { insert: { video: 'https://quilljs.com/' } },
-      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '1', rowspan: 1, colspan: 1, tag: 'td' } }, insert: '\n' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '1', rowspan: 1, colspan: 1, tag: 'td', wrapTag: 'tbody' } }, insert: '\n' },
       { insert: '\n' },
     ];
     for (const [i, op] of delta.ops.entries()) {
@@ -56,7 +56,7 @@ extendTest.describe('table cell keyboard handler enter', () => {
       { insert: '\n' },
       { insert: { 'table-up-col': { tableId: '1', colId: '1', full: true, width: 100 } } },
       { insert: { video: 'https://quilljs.com/' } },
-      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '1', rowspan: 1, colspan: 1, tag: 'td' } }, insert: '\n\n' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '1', rowspan: 1, colspan: 1, tag: 'td', wrapTag: 'tbody' } }, insert: '\n\n' },
       { insert: '\n' },
     ];
     for (const [i, op] of delta.ops.entries()) {
@@ -287,7 +287,7 @@ extendTest.describe('TableSelection keyboard handler', () => {
     await page.mouse.move(cell1Bounding.x + cell1Bounding.width * 1.5, cell1Bounding.y + cell1Bounding.height / 2);
     await page.mouse.up();
     await editorPage.blur();
-    await page.dispatchEvent('body', 'keydown', {
+    await page.dispatchEvent('#editor1 .ql-editor', 'keydown', {
       key: 'Backspace',
       code: 'Backspace',
       keyCode: 13,
@@ -307,7 +307,7 @@ extendTest.describe('TableSelection keyboard handler', () => {
     await page.mouse.move(cell8Bounding.x - cell8Bounding.width * 0.5, cell8Bounding.y + cell8Bounding.height / 2);
     await page.mouse.up();
     await editorPage.blur();
-    await page.dispatchEvent('body', 'keydown', {
+    await page.dispatchEvent('#editor1 .ql-editor', 'keydown', {
       key: 'Backspace',
       code: 'Backspace',
       keyCode: 13,
@@ -358,7 +358,7 @@ extendTest.describe('TableSelection keyboard handler', () => {
     await page.mouse.move(cell1Bounding.x + cell1Bounding.width * 2.5, cell1Bounding.y + cell1Bounding.height * 2.5);
     await page.mouse.up();
     await editorPage.blur();
-    await page.dispatchEvent('body', 'keydown', {
+    await page.dispatchEvent('#editor1 .ql-editor', 'keydown', {
       key: 'Backspace',
       code: 'Backspace',
       keyCode: 13,

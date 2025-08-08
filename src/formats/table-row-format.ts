@@ -1,20 +1,31 @@
 import type { Parchment as TypeParchment } from 'quill';
-import type { TableCellValue, TableRowValue } from '../utils';
+import type { TableBodyTag, TableCellValue, TableRowValue } from '../utils';
 import type { TableCellFormat } from './table-cell-format';
 import { blotName, findParentBlot } from '../utils';
 import { ContainerFormat } from './container-format';
 import { TableCellInnerFormat } from './table-cell-inner-format';
+import { tableBodyBlotNameMap } from './utils';
 
 export type SkipRowCount = number[] & { skipRowNum?: number };
 export class TableRowFormat extends ContainerFormat {
   static blotName = blotName.tableRow;
   static tagName = 'tr';
   static className = 'ql-table-row';
+  static allowDataAttrs = new Set(['table-id', 'row-id', 'wrap-tag']);
+  static allowDataAttrsChangeHandler: Record<string, keyof TableRowFormat> = {
+    'wrap-tag': 'wrapParentTag',
+  };
 
   static create(value: TableRowValue) {
+    const {
+      tableId,
+      rowId,
+      wrapTag = 'tbody',
+    } = value;
     const node = super.create() as HTMLElement;
-    node.dataset.tableId = value.tableId;
-    node.dataset.rowId = value.rowId;
+    node.dataset.tableId = tableId;
+    node.dataset.rowId = rowId;
+    node.dataset.wrapTag = wrapTag;
     return node;
   }
 
@@ -26,6 +37,10 @@ export class TableRowFormat extends ContainerFormat {
 
   get tableId() {
     return this.domNode.dataset.tableId!;
+  }
+
+  get wrapTag() {
+    return this.domNode.dataset.wrapTag as TableBodyTag || 'tbody';
   }
 
   setHeight(value: string) {
@@ -144,7 +159,7 @@ export class TableRowFormat extends ContainerFormat {
     let cur: TableCellFormat | null;
     while ((cur = next())) {
       const [tableCell] = cur.descendants(TableCellInnerFormat);
-      if (func(tableCell, i++)) break;
+      if (tableCell && func(tableCell, i++)) break;
     }
   }
 
@@ -157,19 +172,30 @@ export class TableRowFormat extends ContainerFormat {
     );
   }
 
-  optimize(_context: Record<string, any>) {
+  wrapParentTag() {
     const parent = this.parent;
-    const { tableId } = this;
-    if (parent !== null && parent.statics.blotName !== blotName.tableBody) {
-      this.wrap(blotName.tableBody, tableId);
-    }
 
-    if (
-      this.statics.requiredContainer
-      && !(this.parent instanceof this.statics.requiredContainer)
-    ) {
-      this.wrap(this.statics.requiredContainer.blotName);
+    if (parent !== null && parent.statics.blotName !== tableBodyBlotNameMap[this.wrapTag]) {
+      if (Object.values(tableBodyBlotNameMap).includes(parent.statics.blotName)) {
+        const index = this.offset(this.parent);
+        const newParent = this.parent.split(index);
+        if (newParent && newParent.length() <= 0) {
+          newParent.remove();
+        }
+        const afterParent = (this.parent as any).splitAfter(this);
+        if (afterParent && afterParent.length() <= 0) {
+          afterParent.remove();
+        }
+        this.parent.replaceWith(tableBodyBlotNameMap[this.wrapTag], this.tableId);
+      }
+      else {
+        this.wrap(tableBodyBlotNameMap[this.wrapTag], this.tableId);
+      }
     }
+  }
+
+  optimize(_context: Record<string, any>) {
+    this.wrapParentTag();
 
     this.enforceAllowedChildren();
     if (this.children.length > 0 && this.next != null && this.checkMerge()) {

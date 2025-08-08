@@ -1,6 +1,6 @@
 import type TypeScroll from 'quill/blots/scroll';
 import type { TableValue } from '../utils';
-import { blotName, tableUpSize } from '../utils';
+import { blotName, randomId, tableUpSize } from '../utils';
 import { ContainerFormat } from './container-format';
 import { TableCellInnerFormat } from './table-cell-inner-format';
 import { TableColFormat } from './table-col-format';
@@ -257,7 +257,9 @@ export class TableMainFormat extends ContainerFormat {
     const childs: Record<string, ContainerFormat[]> = {
       [blotName.tableCaption]: [],
       [blotName.tableColgroup]: [],
+      [blotName.tableHead]: [],
       [blotName.tableBody]: [],
+      [blotName.tableFoot]: [],
     };
     // eslint-disable-next-line unicorn/no-array-for-each
     this.children.forEach((child) => {
@@ -274,23 +276,93 @@ export class TableMainFormat extends ContainerFormat {
     // check sort child
     const tableCaption = childs[blotName.tableCaption][0];
     const tableColgroup = childs[blotName.tableColgroup][0];
+    const tableHead = childs[blotName.tableHead][0];
     const tableBody = childs[blotName.tableBody][0];
+    const tableFoot = childs[blotName.tableFoot][0];
 
     const isCaptionFirst = tableCaption && this.children.head !== tableCaption;
     const isColgroupSecond = tableColgroup && tableCaption && tableCaption.next !== tableColgroup;
     const isColgroupFirst = tableColgroup && !tableCaption && this.children.head !== tableColgroup;
-    const isBodyLast = tableBody && this.children.tail !== tableBody;
+    const isHeadLast = tableHead && !tableBody && !tableFoot && this.children.tail !== tableHead;
+    const isBodyAfterHead = tableBody && tableHead && tableBody.prev !== tableHead;
+    const isBodyLast = tableBody && !tableFoot && this.children.tail !== tableBody;
+    const isBodyBeforeFoot = tableBody && tableFoot && tableBody.next !== tableFoot;
+    const isFootLast = tableFoot && this.children.tail !== tableFoot;
 
     // sort child
-    if (isCaptionFirst || isColgroupSecond || isColgroupFirst || isBodyLast) {
+    if (isCaptionFirst || isColgroupSecond || isColgroupFirst || isHeadLast || isBodyAfterHead || isBodyLast || isBodyBeforeFoot || isFootLast) {
       const tableMain = this.clone() as TableMainFormat;
       tableCaption && tableMain.appendChild(tableCaption);
       tableColgroup && tableMain.appendChild(tableColgroup);
+      tableHead && tableMain.appendChild(tableHead);
       tableBody && tableMain.appendChild(tableBody);
+      tableFoot && tableMain.appendChild(tableFoot);
 
       // eslint-disable-next-line unicorn/no-array-for-each
       this.children.forEach(child => child.remove());
       tableMain.moveChildren(this);
+    }
+  }
+
+  // insert row at index
+  insertRow(targetIndex: number) {
+    // get all column id. exclude the columns of the target index row with rowspan
+    const colIds = this.getColIds();
+    const rows = this.descendants(TableRowFormat);
+    const insertColIds = new Set(colIds);
+    let index = 0;
+    for (const row of rows) {
+      if (index === targetIndex) break;
+      row.foreachCellInner((cell) => {
+        if (index + cell.rowspan > targetIndex) {
+          cell.rowspan += 1;
+          insertColIds.delete(cell.colId);
+          // colspan cell need remove all includes colId
+          if (cell.colspan !== 1) {
+            const colIndex = colIds.indexOf(cell.colId);
+            for (let i = 0; i < cell.colspan - 1; i++) {
+              insertColIds.delete(colIds[colIndex + i + 1]);
+            }
+          }
+        }
+      });
+      index += 1;
+    }
+    // append new row
+    const tableId = this.tableId;
+    const rowId = randomId();
+    const tableRow = this.scroll.create(blotName.tableRow, {
+      tableId,
+      rowId,
+    }) as ContainerFormat;
+    for (const colId of insertColIds) {
+      const breakBlot = this.scroll.create('break');
+      const block = breakBlot.wrap('block');
+      const tableCellInner = block.wrap(blotName.tableCellInner, {
+        tableId,
+        rowId,
+        colId,
+        rowspan: 1,
+        colspan: 1,
+      });
+      const tableCell = tableCellInner.wrap(blotName.tableCell, {
+        tableId,
+        rowId,
+        colId,
+        rowspan: 1,
+        colspan: 1,
+      });
+      tableRow.appendChild(tableCell);
+    }
+
+    // insert the new row at the target index
+    // if you insert a row at the thead, then the new row will be inserted in thead. Similarly for tbody and tfoot
+    const refRow = rows[targetIndex] || null;
+    if (!refRow) {
+      rows[rows.length - 1].parent.appendChild(tableRow);
+    }
+    else {
+      refRow.parent.insertBefore(tableRow, refRow);
     }
   }
 }

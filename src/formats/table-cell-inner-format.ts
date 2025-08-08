@@ -1,11 +1,12 @@
 import type { Parchment as TypeParchment } from 'quill';
 import type TypeBlock from 'quill/blots/block';
 import type TypeScroll from 'quill/blots/scroll';
-import type { TableCellValue } from '../utils';
+import type { TableBodyTag, TableCellValue } from '../utils';
 import type { TableCellFormat } from './table-cell-format';
 import Quill from 'quill';
 import { blotName, cssTextToObject, findParentBlot, findParentBlots, toCamelCase } from '../utils';
 import { ContainerFormat } from './container-format';
+import { TableBodyFormat } from './table-body-format';
 import { getValidCellspan } from './utils';
 
 const Block = Quill.import('blots/block') as TypeParchment.BlotConstructor;
@@ -15,7 +16,7 @@ export class TableCellInnerFormat extends ContainerFormat {
   static blotName = blotName.tableCellInner;
   static tagName = 'div';
   static className = 'ql-table-cell-inner';
-  static allowDataAttrs: Set<string> = new Set(['table-id', 'row-id', 'col-id', 'rowspan', 'colspan', 'empty-row']);
+  static allowDataAttrs: Set<string> = new Set(['table-id', 'row-id', 'col-id', 'rowspan', 'colspan', 'empty-row', 'wrap-tag']);
   static defaultChild: TypeParchment.BlotConstructor = Block;
   declare parent: TableCellFormat;
   // keep `isAllowStyle` and `allowStyle` same with TableCellFormat
@@ -41,6 +42,7 @@ export class TableCellInnerFormat extends ContainerFormat {
       style,
       emptyRow,
       tag = 'td',
+      wrapTag = 'tbody',
     } = value;
     const node = super.create() as HTMLElement;
     node.dataset.tableId = tableId;
@@ -49,6 +51,7 @@ export class TableCellInnerFormat extends ContainerFormat {
     node.dataset.rowspan = String(getValidCellspan(rowspan));
     node.dataset.colspan = String(getValidCellspan(colspan));
     node.dataset.tag = tag;
+    node.dataset.wrapTag = wrapTag;
     style && (node.dataset.style = style);
     try {
       emptyRow && (node.dataset.emptyRow = JSON.stringify(emptyRow));
@@ -67,6 +70,7 @@ export class TableCellInnerFormat extends ContainerFormat {
       style,
       emptyRow,
       tag = 'td',
+      wrapTag = 'tbody',
     } = domNode.dataset;
     const value: Record<string, any> = {
       tableId: String(tableId),
@@ -75,12 +79,16 @@ export class TableCellInnerFormat extends ContainerFormat {
       rowspan: Number(getValidCellspan(rowspan)),
       colspan: Number(getValidCellspan(colspan)),
       tag,
+      wrapTag,
     };
+
     style && (value.style = style);
+
     try {
       emptyRow && (value.emptyRow = JSON.parse(emptyRow));
     }
     catch {}
+
     return value;
   }
 
@@ -89,25 +97,15 @@ export class TableCellInnerFormat extends ContainerFormat {
     domNode.setAttribute('contenteditable', String(scroll.isEnabled()));
   }
 
-  setFormatValue(name: string, value: any, isStyle: boolean = false) {
+  setFormatValue(name: string, value?: any, isStyle: boolean = false) {
     if (isStyle) {
       if (!this.statics.isAllowStyle(name)) return;
-      if (this.parent && this.parent.statics.blotName === blotName.tableCell) {
-        this.parent.setFormatValue(name, value);
-      }
     }
     else {
-      if (!this.statics.allowDataAttrs.has(name)) return;
-      const attrName = `data-${name}`;
-      if (value) {
-        this.domNode.setAttribute(attrName, value);
-      }
-      else {
-        this.domNode.removeAttribute(attrName);
-      }
-      if (this.parent && this.parent.statics.blotName === blotName.tableCell) {
-        this.parent.setFormatValue(name, value);
-      }
+      super.setFormatValue(name, value);
+    }
+    if (this.parent && this.parent.statics.blotName === blotName.tableCell) {
+      this.parent.setFormatValue(name, value);
     }
 
     this.clearCache();
@@ -182,9 +180,37 @@ export class TableCellInnerFormat extends ContainerFormat {
     }
   }
 
+  set wrapTag(value: TableBodyTag) {
+    this.setFormatValue('wrap-tag', value);
+  }
+
+  get wrapTag() {
+    return this.domNode.dataset.wrapTag as TableBodyTag || 'tbody';
+  }
+
   getColumnIndex() {
     const table = findParentBlot(this, blotName.tableMain);
     return table.getColIds().indexOf(this.colId);
+  }
+
+  getTableBody() {
+    let target: TypeParchment.Parent = this.parent;
+    while (target && !(target instanceof TableBodyFormat) && target !== this.scroll) {
+      target = target.parent;
+    }
+    if (target === this.scroll) {
+      return null;
+    }
+    return target as TableBodyFormat;
+  }
+
+  getTableRow() {
+    try {
+      return findParentBlot(this, blotName.tableRow);
+    }
+    catch {
+      return null;
+    }
   }
 
   setStyleByString(styleStr: string) {
@@ -255,8 +281,8 @@ export class TableCellInnerFormat extends ContainerFormat {
         this.insertBefore(afterBlock, prev.next);
       }
     }
-    const parentIsTableCell = parent !== null && parent.statics.blotName !== blotName.tableCell;
-    if (parentIsTableCell) {
+    const parentNotTableCell = parent !== null && parent.statics.blotName !== blotName.tableCell;
+    if (parentNotTableCell) {
       this.wrap(blotName.tableCell, blotValue);
       // when insert delta like: [ { attributes: { 'table-up-cell-inner': { ... } }, insert: '\n' }, { attributes: { 'table-up-cell-inner': { ... } }, insert: '\n' }, ...]
       // that delta will create dom like: <td><div></div></td>... . that means TableCellInner will be an empty cell without 'block'
@@ -284,7 +310,7 @@ export class TableCellInnerFormat extends ContainerFormat {
       // update delta data
       if (
         this.domNode.dataset.style
-        && parentIsTableCell
+        && parentNotTableCell
         && parent.domNode.style.cssText !== this.domNode.dataset.style
       ) {
         this.setStyleByString(this.domNode.dataset.style);
