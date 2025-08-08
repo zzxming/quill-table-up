@@ -154,14 +154,14 @@ const quill = new Quill('#editor1', {
       ['clean'],
     ],
     [TableUp.moduleName]: {
-      scrollbar: TableVirtualScrollbar,
-      align: TableAlign,
-      resize: TableResizeBox,
       customSelect: defaultCustomSelect,
-      selection: TableSelection,
-      selectionOptions: {
-        tableMenu: TableMenuContextmenu,
-      },
+      modules: [
+        { module: TableVirtualScrollbar },
+        { module: TableAlign },
+        { module: TableResizeBox },
+        { module: TableSelection },
+        { module: TableMenuContextmenu },
+      ],
     },
   },
 });
