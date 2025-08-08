@@ -1,11 +1,13 @@
 import type { Parchment as TypeParchment } from 'quill';
 import type TypeBlock from 'quill/blots/block';
+import type TypeContainer from 'quill/blots/container';
 import type { TableCellInnerFormat } from '../table-cell-inner-format';
 import Quill from 'quill';
 import { blotName, findParentBlot, isString } from '../../utils';
 
 const Parchment = Quill.import('parchment');
 const Block = Quill.import('blots/block') as typeof TypeBlock;
+const Container = Quill.import('blots/container') as typeof TypeContainer;
 
 export class BlockOverride extends Block {
   replaceWith(name: string | TypeParchment.Blot, value?: any): TypeParchment.Blot {
@@ -51,9 +53,24 @@ export class BlockOverride extends Block {
           }
         }
         else {
-          const selfParent = this.parent;
-          if (selfParent !== null) {
-            selfParent.insertBefore(replacement, this.next);
+          // find the first parent not container
+          let currentParent = this as TypeParchment.Parent;
+          let lastParent = currentParent;
+          while (currentParent.parent !== this.scroll && currentParent.parent instanceof Container) {
+            lastParent = currentParent;
+            currentParent = currentParent.parent;
+          }
+          // if parent all container until scroll. use the last container
+          if (currentParent === this.scroll) {
+            currentParent = lastParent;
+          }
+          // split current block as a separate "line" and wrap tableCellInner
+          const index = this.offset(currentParent);
+          const length = this.length();
+          currentParent.split(index + length);
+          const selfParent = currentParent.split(index);
+          if (selfParent && selfParent.parent) {
+            selfParent.parent.insertBefore(replacement, selfParent.next);
           }
           replacement.appendChild(this);
         }
