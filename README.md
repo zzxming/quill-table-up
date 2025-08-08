@@ -134,24 +134,6 @@ The table cell selection handler
 
 The table cell resize handler
 
-### TableResizeScale
-
-Equal scale table cell handler
-
-#### Options
-
-| attribute | description              | type     | default |
-| --------- | ------------------------ | -------- | ------- |
-| blockSize | resize handle block size | `number` | `12`    |
-
-### TableVirtualScrollbar
-
-The table virtual scrollbar
-
-### TableAlign
-
-The table alignment
-
 ### TableMenuContextmenu / TableMenuSelect
 
 The table operate menu
@@ -308,6 +290,59 @@ const defaultTools = [
 ```
 
 </details>
+
+### TableResizeScale
+
+Equal scale table cell handler
+
+#### Options
+
+| attribute | description              | type     | default |
+| --------- | ------------------------ | -------- | ------- |
+| blockSize | resize handle block size | `number` | `12`    |
+
+### TableAlign
+
+The table alignment tool
+
+### TableVirtualScrollbar
+
+The table virtual scrollbar
+
+## Migrate to 3.x
+
+In version 3.x, only changed the way options are passed in, the relevant additional modules are used in the `modules` option. e.g.
+
+```ts
+new Quill('#editor', {
+  theme: 'snow',
+  modules: {
+    toolbar: toolbarConfig,
+    [TableUp.moduleName]: {
+      customSelect: defaultCustomSelect,
+      customBtn: true,
+      modules: [
+        { module: TableVirtualScrollbar },
+        { module: TableAlign },
+        { module: TableResizeLine },
+        { module: TableResizeScale, options: { blockSize: 12, }, },
+        { module: TableSelection, options: { selectColor: '#00ff8b4d', }, },
+        {
+          module: TableMenuContextmenu,
+          options: {
+            localstorageKey: 'used-color',
+            tipText: true,
+            tools: [],
+            defaultColorMap: [],
+          },
+        },
+      ],
+    },
+  },
+});
+```
+
+You can use `quill.getModule(TableUp.moduleName).getModule(TableSelection.moduleName)` to get the TableSelection instance in the TableUp
 
 ## Overrides
 
