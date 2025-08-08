@@ -14,7 +14,7 @@ Enhancement of quill table module
 - [x] line break in cells
 - [x] redo and undo
 - [x] support whole table align left/center/right
-- [x] `<caption>` `<th>` support
+- [x] `<caption>` `<th>` `<thead>` `<tfoot>` support
 
 ## Usage
 
@@ -343,6 +343,10 @@ new Quill('#editor', {
 ```
 
 You can use `quill.getModule(TableUp.moduleName).getModule(TableSelection.moduleName)` to get the TableSelection instance in the TableUp
+
+### Other
+
+- add new attributes `tag` and `wrap-tag` in `table-up-cell-inner` which to represent parent label types
 
 ## Overrides
 
