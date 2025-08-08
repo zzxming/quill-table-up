@@ -53,7 +53,9 @@ export class TableClipboard extends Clipboard {
   constructor(public quill: Quill, options: Partial<ClipboardOptions>) {
     super(quill, options);
     this.addMatcher('table', this.matchTable.bind(this));
+    this.addMatcher('thead', this.matchThead.bind(this));
     this.addMatcher('tbody', this.matchTbody.bind(this));
+    this.addMatcher('tfoot', this.matchTfoot.bind(this));
     this.addMatcher('colgroup', this.matchColgroup.bind(this));
     this.addMatcher('col', this.matchCol.bind(this));
     this.addMatcher('tr', this.matchTr.bind(this));
@@ -89,7 +91,7 @@ export class TableClipboard extends Clipboard {
     for (let i = 0; i < delta.ops.length; i++) {
       const { attributes, insert } = delta.ops[i];
       // if attribute doesn't have tableCellInner, treat it as a blank line(emptyRow)
-      if (!isObject(insert) && attributes && !attributes[blotName.tableCellInner] && !attributes[blotName.tableCaption]) {
+      if (!isObject(insert) && (!attributes || (!attributes[blotName.tableCellInner] && !attributes[blotName.tableCaption]))) {
         delta.ops.splice(i, 1);
         i -= 1;
         continue;
@@ -153,25 +155,47 @@ export class TableClipboard extends Clipboard {
     let emptyRows = [];
     for (let i = delta.ops.length - 1; i >= 0; i--) {
       const op = delta.ops[i];
-      if (op.attributes) {
-        if (!op.attributes[blotName.tableCellInner]) {
+      if (!op.attributes?.[blotName.tableCellInner]) {
+        emptyRows = [];
+        emptyRows.push(randomId());
+      }
+      else if (op.attributes) {
+        if ((op.attributes[blotName.tableCellInner] as TableCellValue).rowspan === 1) {
           emptyRows = [];
-          emptyRows.push(randomId());
         }
-        else {
-          if ((op.attributes[blotName.tableCellInner] as TableCellValue).rowspan === 1) {
-            emptyRows = [];
+        else if (emptyRows.length > 0) {
+          if (!(op.attributes[blotName.tableCellInner] as TableCellValue).emptyRow) {
+            (op.attributes[blotName.tableCellInner] as TableCellValue).emptyRow = [];
           }
-          else if (emptyRows.length > 0) {
-            if (!(op.attributes[blotName.tableCellInner] as TableCellValue).emptyRow) {
-              (op.attributes[blotName.tableCellInner] as TableCellValue).emptyRow = [];
-            }
-            (op.attributes[blotName.tableCellInner] as TableCellValue).emptyRow!.push(...emptyRows);
-          }
+          (op.attributes[blotName.tableCellInner] as TableCellValue).emptyRow!.push(...emptyRows);
         }
       }
     }
+    // clear rowspan. thead/tbody/tfoot will not share rowspan
+    this.rowspanCount = [];
     return delta;
+  }
+
+  matchThead(node: Node, delta: TypeDelta) {
+    const deltaData = this.matchTbody(node, delta);
+    for (const op of deltaData.ops) {
+      if (op.attributes && op.attributes[blotName.tableCellInner]) {
+        const tableCellInner = op.attributes[blotName.tableCellInner] as TableCellValue;
+        tableCellInner.wrapTag = 'thead';
+      }
+    }
+    return deltaData;
+  }
+
+  matchTfoot(node: Node, delta: TypeDelta) {
+    const deltaData = this.matchTbody(node, delta);
+    for (const op of deltaData.ops) {
+      if (op.attributes && op.attributes[blotName.tableCellInner]) {
+        const tableCellInner = op.attributes[blotName.tableCellInner] as TableCellValue;
+        tableCellInner.wrapTag = 'tfoot';
+      }
+    }
+    return deltaData;
   }
 
   matchColgroup(node: Node, delta: TypeDelta) {
@@ -220,7 +244,8 @@ export class TableClipboard extends Clipboard {
       }
     }
     this.getStyleBackgroundColor(node, delta);
-    return delta;
+    // if delta.ops is empty, return a new line. make sure emptyRow parse correctly in `matchTbody`
+    return delta.ops.length === 0 ? new Delta([{ insert: '\n' }]) : delta;
   }
 
   matchTd(node: Node, delta: TypeDelta) {

@@ -126,7 +126,7 @@ describe('hack html convert', () => {
         </div>
         <p></p>
       `,
-      { ignoreAttrs: ['class', 'data-table-id', 'data-tag'] },
+      { ignoreAttrs: ['data-wrap-tag', 'class', 'data-table-id', 'data-tag'] },
     );
   });
 
@@ -201,7 +201,7 @@ describe('hack html convert', () => {
           </table>
         </div>
       `,
-      { ignoreAttrs: ['data-tag', 'class', 'data-table-id', 'data-tag'] },
+      { ignoreAttrs: ['data-wrap-tag', 'data-tag', 'class', 'data-table-id', 'data-tag'] },
     );
   });
 });
@@ -246,25 +246,25 @@ describe('hack format cell', () => {
         .insert('123456789'),
     );
     expectDelta(
+      quill.getContents(),
       new Delta([
         { insert: '\n' },
         { insert: { 'table-up-col': { tableId: '1', colId: '1', full: false, width: 100 } } },
         { insert: { 'table-up-col': { tableId: '1', colId: '2', full: false, width: 100 } } },
         { insert: '123456789' },
-        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '1', rowspan: 1, colspan: 1 } }, insert: '\n' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '1', rowspan: 1, colspan: 1, tag: 'td', wrapTag: 'tbody' } }, insert: '\n' },
         { insert: '12345' },
-        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '1', rowspan: 1, colspan: 1 } }, insert: '\n' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '1', rowspan: 1, colspan: 1, tag: 'td', wrapTag: 'tbody' } }, insert: '\n' },
         { insert: '123456789' },
-        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '1', rowspan: 1, colspan: 1 } }, insert: '\n' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '1', rowspan: 1, colspan: 1, tag: 'td', wrapTag: 'tbody' } }, insert: '\n' },
         { insert: '2' },
-        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '2', rowspan: 1, colspan: 1 } }, insert: '\n' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '2', rowspan: 1, colspan: 1, tag: 'td', wrapTag: 'tbody' } }, insert: '\n' },
         { insert: '3' },
-        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '1', rowspan: 1, colspan: 1 } }, insert: '\n' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '1', rowspan: 1, colspan: 1, tag: 'td', wrapTag: 'tbody' } }, insert: '\n' },
         { insert: '4' },
-        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '2', rowspan: 1, colspan: 1 } }, insert: '\n' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '2', rowspan: 1, colspan: 1, tag: 'td', wrapTag: 'tbody' } }, insert: '\n' },
         { insert: '\n' },
       ]),
-      quill.getContents(),
     );
 
     quill.setSelection(7, 17, Quill.sources.SILENT);
@@ -279,18 +279,18 @@ describe('hack format cell', () => {
         { insert: { 'table-up-col': { tableId: '1', colId: '2', full: false, width: 100 } } },
         { insert: '1234' },
         { attributes: { underline: true, bold: true }, insert: '56789' },
-        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '1', rowspan: 1, colspan: 1, tag: 'td' } }, insert: '\n' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '1', rowspan: 1, colspan: 1, tag: 'td', wrapTag: 'tbody' } }, insert: '\n' },
         { attributes: { underline: true, bold: true }, insert: '12345' },
-        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '1', rowspan: 1, colspan: 1, tag: 'td' } }, insert: '\n' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '1', rowspan: 1, colspan: 1, tag: 'td', wrapTag: 'tbody' } }, insert: '\n' },
         { attributes: { underline: true, bold: true }, insert: '12345' },
         { insert: '6789' },
-        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '1', rowspan: 1, colspan: 1, tag: 'td' } }, insert: '\n' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '1', rowspan: 1, colspan: 1, tag: 'td', wrapTag: 'tbody' } }, insert: '\n' },
         { insert: '2' },
-        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '2', rowspan: 1, colspan: 1, tag: 'td' } }, insert: '\n' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '2', rowspan: 1, colspan: 1, tag: 'td', wrapTag: 'tbody' } }, insert: '\n' },
         { insert: '3' },
-        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '1', rowspan: 1, colspan: 1, tag: 'td' } }, insert: '\n' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '1', rowspan: 1, colspan: 1, tag: 'td', wrapTag: 'tbody' } }, insert: '\n' },
         { insert: '4' },
-        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '2', rowspan: 1, colspan: 1, tag: 'td' } }, insert: '\n' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '2', rowspan: 1, colspan: 1, tag: 'td', wrapTag: 'tbody' } }, insert: '\n' },
         { insert: '\n' },
       ]),
     );
@@ -314,22 +314,22 @@ describe('hack format cell', () => {
         { insert: { 'table-up-col': { tableId: '1', colId: '2', full: false, width: 100 } } },
         { insert: '1234' },
         { attributes: { underline: true, bold: true }, insert: '56789' },
-        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '1', rowspan: 1, colspan: 1, tag: 'td' } }, insert: '\n' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '1', rowspan: 1, colspan: 1, tag: 'td', wrapTag: 'tbody' } }, insert: '\n' },
         { attributes: { underline: true, bold: true }, insert: '12345' },
-        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '1', rowspan: 1, colspan: 1, tag: 'td' } }, insert: '\n' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '1', rowspan: 1, colspan: 1, tag: 'td', wrapTag: 'tbody' } }, insert: '\n' },
         { attributes: { underline: true, bold: true }, insert: '12345' },
         { insert: '6789' },
-        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '1', rowspan: 1, colspan: 1, tag: 'td' } }, insert: '\n' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '1', rowspan: 1, colspan: 1, tag: 'td', wrapTag: 'tbody' } }, insert: '\n' },
         { insert: '2345' },
-        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '2', rowspan: 1, colspan: 1, tag: 'td' } }, insert: '\n' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '2', rowspan: 1, colspan: 1, tag: 'td', wrapTag: 'tbody' } }, insert: '\n' },
         { insert: '2345' },
-        { attributes: { 'list': 'ordered', 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '2', rowspan: 1, colspan: 1, tag: 'td' } }, insert: '\n' },
+        { attributes: { 'list': 'ordered', 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '2', rowspan: 1, colspan: 1, tag: 'td', wrapTag: 'tbody' } }, insert: '\n' },
         { insert: '2345' },
-        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '2', rowspan: 1, colspan: 1, tag: 'td' } }, insert: '\n' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '2', rowspan: 1, colspan: 1, tag: 'td', wrapTag: 'tbody' } }, insert: '\n' },
         { insert: '3' },
-        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '1', rowspan: 1, colspan: 1, tag: 'td' } }, insert: '\n' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '1', rowspan: 1, colspan: 1, tag: 'td', wrapTag: 'tbody' } }, insert: '\n' },
         { insert: '4' },
-        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '2', rowspan: 1, colspan: 1, tag: 'td' } }, insert: '\n' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '2', rowspan: 1, colspan: 1, tag: 'td', wrapTag: 'tbody' } }, insert: '\n' },
         { insert: '\n' },
       ]),
     );
@@ -355,17 +355,17 @@ describe('hack format cell', () => {
         { insert: { 'table-up-col': { tableId: '1', colId: '1', full: false, width: 100 } } },
         { insert: { 'table-up-col': { tableId: '1', colId: '2', full: false, width: 100 } } },
         { insert: '123456789' },
-        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '1', rowspan: 1, colspan: 1, tag: 'td' } }, insert: '\n' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '1', rowspan: 1, colspan: 1, tag: 'td', wrapTag: 'tbody' } }, insert: '\n' },
         { insert: '12345' },
-        { attributes: { 'list': 'bullet', 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '1', rowspan: 1, colspan: 1, tag: 'td' } }, insert: '\n' },
+        { attributes: { 'list': 'bullet', 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '1', rowspan: 1, colspan: 1, tag: 'td', wrapTag: 'tbody' } }, insert: '\n' },
         { insert: '123456789' },
-        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '1', rowspan: 1, colspan: 1, tag: 'td' } }, insert: '\n' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '1', rowspan: 1, colspan: 1, tag: 'td', wrapTag: 'tbody' } }, insert: '\n' },
         { insert: '2' },
-        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '2', rowspan: 1, colspan: 1, tag: 'td' } }, insert: '\n' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '2', rowspan: 1, colspan: 1, tag: 'td', wrapTag: 'tbody' } }, insert: '\n' },
         { insert: '3' },
-        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '1', rowspan: 1, colspan: 1, tag: 'td' } }, insert: '\n' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '1', rowspan: 1, colspan: 1, tag: 'td', wrapTag: 'tbody' } }, insert: '\n' },
         { insert: '4' },
-        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '2', rowspan: 1, colspan: 1, tag: 'td' } }, insert: '\n' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '2', rowspan: 1, colspan: 1, tag: 'td', wrapTag: 'tbody' } }, insert: '\n' },
         { insert: '\n' },
       ]),
     );
@@ -373,7 +373,7 @@ describe('hack format cell', () => {
   });
 
   it('selection not in cell and selectedTds not empty should format all text in cell', async () => {
-    const quill = createQuillWithTableModule('<p></p>', { selection: TableSelection });
+    const quill = createQuillWithTableModule('<p></p>', { modules: [{ module: TableSelection }] });
     quill.setContents(createTableDeltaOps(2, 2, { full: false }));
     quill.updateContents(
       new Delta()
@@ -390,10 +390,11 @@ describe('hack format cell', () => {
     quill.focus();
     const tableUp = quill.getModule(TableUp.moduleName) as TableUp;
     const tds = quill.scroll.descendants(TableCellInnerFormat, 0);
-    tableUp.tableSelection!.selectedTds = [tds[0], tds[2]];
+    const tableSelection = tableUp.getModule<TableSelection>('table-selection');
+    tableSelection!.setSelectedTds([tds[0], tds[2]]);
     quill.format('bold', true);
     // simulate `getBoundingClientRect` will effect selectedTd computed position. need manual set
-    tableUp.tableSelection!.selectedTds = [tds[0], tds[2]];
+    tableSelection!.setSelectedTds([tds[0], tds[2]]);
     quill.format('list', 'bullet');
     expectDelta(
       quill.getContents(),
@@ -402,24 +403,24 @@ describe('hack format cell', () => {
         { insert: { 'table-up-col': { tableId: '1', colId: '1', full: false, width: 100 } } },
         { insert: { 'table-up-col': { tableId: '1', colId: '2', full: false, width: 100 } } },
         { insert: '123456789', attributes: { bold: true } },
-        { attributes: { 'list': 'bullet', 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '1', rowspan: 1, colspan: 1, tag: 'td' } }, insert: '\n' },
+        { attributes: { 'list': 'bullet', 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '1', rowspan: 1, colspan: 1, tag: 'td', wrapTag: 'tbody' } }, insert: '\n' },
         { insert: '12345', attributes: { bold: true } },
-        { attributes: { 'list': 'bullet', 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '1', rowspan: 1, colspan: 1, tag: 'td' } }, insert: '\n' },
+        { attributes: { 'list': 'bullet', 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '1', rowspan: 1, colspan: 1, tag: 'td', wrapTag: 'tbody' } }, insert: '\n' },
         { insert: '123456789', attributes: { bold: true } },
-        { attributes: { 'list': 'bullet', 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '1', rowspan: 1, colspan: 1, tag: 'td' } }, insert: '\n' },
+        { attributes: { 'list': 'bullet', 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '1', rowspan: 1, colspan: 1, tag: 'td', wrapTag: 'tbody' } }, insert: '\n' },
         { insert: '2' },
-        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '2', rowspan: 1, colspan: 1, tag: 'td' } }, insert: '\n' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '2', rowspan: 1, colspan: 1, tag: 'td', wrapTag: 'tbody' } }, insert: '\n' },
         { insert: '3', attributes: { bold: true } },
-        { attributes: { 'list': 'bullet', 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '1', rowspan: 1, colspan: 1, tag: 'td' } }, insert: '\n' },
+        { attributes: { 'list': 'bullet', 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '1', rowspan: 1, colspan: 1, tag: 'td', wrapTag: 'tbody' } }, insert: '\n' },
         { insert: '4' },
-        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '2', rowspan: 1, colspan: 1, tag: 'td' } }, insert: '\n' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '2', rowspan: 1, colspan: 1, tag: 'td', wrapTag: 'tbody' } }, insert: '\n' },
         { insert: '\n' },
       ]),
     );
   });
 
   it('selection can get format tableCellInner. should format like origin', async () => {
-    const quill = createQuillWithTableModule('<p></p>', { selection: TableSelection });
+    const quill = createQuillWithTableModule('<p></p>', { modules: [{ module: TableSelection }] });
     quill.setContents([
       { insert: '12345\n' },
       { insert: { 'table-up-col': { tableId: '1', colId: '1', full: false, width: 100 } } },
@@ -447,13 +448,13 @@ describe('hack format cell', () => {
         { insert: { 'table-up-col': { tableId: '1', colId: '1', full: false, width: 100 } } },
         { insert: { 'table-up-col': { tableId: '1', colId: '2', full: false, width: 100 } } },
         { insert: '1' },
-        { attributes: { 'list': 'bullet', 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '1', rowspan: 1, colspan: 1, tag: 'td' } }, insert: '\n' },
+        { attributes: { 'list': 'bullet', 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '1', rowspan: 1, colspan: 1, tag: 'td', wrapTag: 'tbody' } }, insert: '\n' },
         { insert: '2' },
-        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '2', rowspan: 1, colspan: 1, tag: 'td' } }, insert: '\n' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '2', rowspan: 1, colspan: 1, tag: 'td', wrapTag: 'tbody' } }, insert: '\n' },
         { insert: '3' },
-        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '1', rowspan: 1, colspan: 1, tag: 'td' } }, insert: '\n' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '1', rowspan: 1, colspan: 1, tag: 'td', wrapTag: 'tbody' } }, insert: '\n' },
         { attributes: { bold: true }, insert: '4' },
-        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '2', rowspan: 1, colspan: 1, tag: 'td' } }, insert: '\n' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '2', rowspan: 1, colspan: 1, tag: 'td', wrapTag: 'tbody' } }, insert: '\n' },
         { insert: '\n' },
       ]),
     );
@@ -508,13 +509,13 @@ describe('hack toolbar clean handler', () => {
         { insert: '1', attributes: { bold: true } },
         { insert: '234' },
         { insert: '5', attributes: { bold: true } },
-        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '1', rowspan: 1, colspan: 1, tag: 'td' } }, insert: '\n' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '1', rowspan: 1, colspan: 1, tag: 'td', wrapTag: 'tbody' } }, insert: '\n' },
         { insert: '22345', attributes: { bold: true } },
-        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '2', rowspan: 1, colspan: 1, tag: 'td' } }, insert: '\n' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '2', rowspan: 1, colspan: 1, tag: 'td', wrapTag: 'tbody' } }, insert: '\n' },
         { insert: '3' },
-        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '1', rowspan: 1, colspan: 1, tag: 'td' } }, insert: '\n' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '1', rowspan: 1, colspan: 1, tag: 'td', wrapTag: 'tbody' } }, insert: '\n' },
         { insert: '4' },
-        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '2', rowspan: 1, colspan: 1, tag: 'td' } }, insert: '\n' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '2', rowspan: 1, colspan: 1, tag: 'td', wrapTag: 'tbody' } }, insert: '\n' },
         { insert: '\n' },
       ]),
     );
@@ -549,15 +550,15 @@ describe('hack toolbar clean handler', () => {
         { insert: { 'table-up-col': { tableId: '1', colId: '1', full: false, width: 100 } } },
         { insert: { 'table-up-col': { tableId: '1', colId: '2', full: false, width: 100 } } },
         { insert: '12345', attributes: { bold: true } },
-        { attributes: { 'list': 'bullet', 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '1', rowspan: 1, colspan: 1, tag: 'td' } }, insert: '\n' },
+        { attributes: { 'list': 'bullet', 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '1', rowspan: 1, colspan: 1, tag: 'td', wrapTag: 'tbody' } }, insert: '\n' },
         { insert: '12345', attributes: { bold: true } },
-        { attributes: { 'list': 'bullet', 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '1', rowspan: 1, colspan: 1, tag: 'td' } }, insert: '\n' },
+        { attributes: { 'list': 'bullet', 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '1', rowspan: 1, colspan: 1, tag: 'td', wrapTag: 'tbody' } }, insert: '\n' },
         { insert: '22345', attributes: { bold: true } },
-        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '2', rowspan: 1, colspan: 1, tag: 'td' } }, insert: '\n' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '2', rowspan: 1, colspan: 1, tag: 'td', wrapTag: 'tbody' } }, insert: '\n' },
         { insert: '3' },
-        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '1', rowspan: 1, colspan: 1, tag: 'td' } }, insert: '\n' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '1', rowspan: 1, colspan: 1, tag: 'td', wrapTag: 'tbody' } }, insert: '\n' },
         { insert: '4' },
-        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '2', rowspan: 1, colspan: 1, tag: 'td' } }, insert: '\n' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '2', rowspan: 1, colspan: 1, tag: 'td', wrapTag: 'tbody' } }, insert: '\n' },
         { insert: '\n' },
       ]),
     );
@@ -565,7 +566,7 @@ describe('hack toolbar clean handler', () => {
   });
 
   it('clean handler should clean all format in selectedTds', async () => {
-    const quill = createQuillWithTableModule('<p></p>', { selection: TableSelection });
+    const quill = createQuillWithTableModule('<p></p>', { modules: [{ module: TableSelection }] });
     quill.setContents([
       { insert: '\n' },
       { insert: { 'table-up-col': { tableId: '1', colId: '1', full: false, width: 100 } } },
@@ -583,9 +584,10 @@ describe('hack toolbar clean handler', () => {
       { insert: '\n' },
     ]);
     const tableUp = quill.getModule(TableUp.moduleName) as TableUp;
-    tableUp.tableSelection!.table = quill.root.querySelector('table')!;
     const tds = quill.scroll.descendants(TableCellInnerFormat, 0);
-    tableUp.tableSelection!.selectedTds = tds;
+    const tableSelection = tableUp.getModule<TableSelection>('table-selection');
+    tableSelection!.table = quill.root.querySelector('table')!;
+    tableSelection!.setSelectedTds(tds);
 
     quill.theme.modules.toolbar!.handlers!.clean.call(quill.theme.modules.toolbar as any, true);
     expectDelta(
@@ -595,15 +597,15 @@ describe('hack toolbar clean handler', () => {
         { insert: { 'table-up-col': { tableId: '1', colId: '1', full: false, width: 100 } } },
         { insert: { 'table-up-col': { tableId: '1', colId: '2', full: false, width: 100 } } },
         { insert: '12345' },
-        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '1', rowspan: 1, colspan: 1, tag: 'td' } }, insert: '\n' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '1', rowspan: 1, colspan: 1, tag: 'td', wrapTag: 'tbody' } }, insert: '\n' },
         { insert: '12345' },
-        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '1', rowspan: 1, colspan: 1, tag: 'td' } }, insert: '\n' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '1', rowspan: 1, colspan: 1, tag: 'td', wrapTag: 'tbody' } }, insert: '\n' },
         { insert: '22345' },
-        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '2', rowspan: 1, colspan: 1, tag: 'td' } }, insert: '\n' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '2', rowspan: 1, colspan: 1, tag: 'td', wrapTag: 'tbody' } }, insert: '\n' },
         { insert: '3' },
-        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '1', rowspan: 1, colspan: 1, tag: 'td' } }, insert: '\n' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '1', rowspan: 1, colspan: 1, tag: 'td', wrapTag: 'tbody' } }, insert: '\n' },
         { insert: '4' },
-        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '2', rowspan: 1, colspan: 1, tag: 'td' } }, insert: '\n' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '2', rowspan: 1, colspan: 1, tag: 'td', wrapTag: 'tbody' } }, insert: '\n' },
         { insert: '\n' },
       ]),
     );
@@ -611,7 +613,7 @@ describe('hack toolbar clean handler', () => {
   });
 
   it('selection not in cell but have selectedTds. should clean all text in selected cell', async () => {
-    const quill = createQuillWithTableModule('<p></p>', { selection: TableSelection });
+    const quill = createQuillWithTableModule('<p></p>', { modules: [{ module: TableSelection }] });
     quill.setContents([
       { insert: '12345', attributes: { bold: true } },
       { insert: '\n' },
@@ -629,8 +631,9 @@ describe('hack toolbar clean handler', () => {
     ]);
     const tableUp = quill.getModule(TableUp.moduleName) as TableUp;
     const tds = quill.scroll.descendants(TableCellInnerFormat, 0);
-    tableUp.tableSelection!.table = quill.root.querySelector('table')!;
-    tableUp.tableSelection!.selectedTds = tds;
+    const tableSelection = tableUp.getModule<TableSelection>('table-selection');
+    tableSelection!.table = quill.root.querySelector('table')!;
+    tableSelection!.setSelectedTds(tds);
     quill.setSelection(1, 3, Quill.sources.SILENT);
 
     quill.theme.modules.toolbar!.handlers!.clean.call(quill.theme.modules.toolbar as any, true);
@@ -642,13 +645,13 @@ describe('hack toolbar clean handler', () => {
         { insert: { 'table-up-col': { tableId: '1', colId: '1', full: false, width: 100 } } },
         { insert: { 'table-up-col': { tableId: '1', colId: '2', full: false, width: 100 } } },
         { insert: '1' },
-        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '1', rowspan: 1, colspan: 1, tag: 'td' } }, insert: '\n' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '1', rowspan: 1, colspan: 1, tag: 'td', wrapTag: 'tbody' } }, insert: '\n' },
         { insert: '2' },
-        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '2', rowspan: 1, colspan: 1, tag: 'td' } }, insert: '\n' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '2', rowspan: 1, colspan: 1, tag: 'td', wrapTag: 'tbody' } }, insert: '\n' },
         { insert: '3' },
-        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '1', rowspan: 1, colspan: 1, tag: 'td' } }, insert: '\n' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '1', rowspan: 1, colspan: 1, tag: 'td', wrapTag: 'tbody' } }, insert: '\n' },
         { insert: '4' },
-        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '2', rowspan: 1, colspan: 1, tag: 'td' } }, insert: '\n' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '2', rowspan: 1, colspan: 1, tag: 'td', wrapTag: 'tbody' } }, insert: '\n' },
         { insert: '\n' },
       ]),
     );
@@ -684,16 +687,16 @@ describe('hack toolbar clean handler', () => {
         { insert: { 'table-up-col': { tableId: '1', colId: '2', full: false, width: 100 } } },
         { insert: '1', attributes: { bold: true } },
         { insert: '23' },
-        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '1', rowspan: 1, colspan: 1, tag: 'td' } }, insert: '\n' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '1', rowspan: 1, colspan: 1, tag: 'td', wrapTag: 'tbody' } }, insert: '\n' },
         { insert: '12' },
         { insert: '3', attributes: { bold: true } },
-        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '1', rowspan: 1, colspan: 1, tag: 'td' } }, insert: '\n' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '1', rowspan: 1, colspan: 1, tag: 'td', wrapTag: 'tbody' } }, insert: '\n' },
         { insert: '2' },
-        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '2', rowspan: 1, colspan: 1, tag: 'td' } }, insert: '\n' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '2', rowspan: 1, colspan: 1, tag: 'td', wrapTag: 'tbody' } }, insert: '\n' },
         { insert: '3', attributes: { bold: true } },
-        { attributes: { 'list': 'bullet', 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '1', rowspan: 1, colspan: 1, tag: 'td' } }, insert: '\n' },
+        { attributes: { 'list': 'bullet', 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '1', rowspan: 1, colspan: 1, tag: 'td', wrapTag: 'tbody' } }, insert: '\n' },
         { insert: '4' },
-        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '2', rowspan: 1, colspan: 1, tag: 'td' } }, insert: '\n' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '2', rowspan: 1, colspan: 1, tag: 'td', wrapTag: 'tbody' } }, insert: '\n' },
         { insert: '\n' },
       ]),
     );
@@ -701,7 +704,7 @@ describe('hack toolbar clean handler', () => {
   });
 
   it('clean handler should clean embed correct', async () => {
-    const quill = createQuillWithTableModule('<p></p>', { selection: TableSelection });
+    const quill = createQuillWithTableModule('<p></p>', { modules: [{ module: TableSelection }] });
     quill.setContents([
       { insert: '\n' },
       { insert: { 'table-up-col': { tableId: '1', colId: '1', full: false, width: 100 } } },
@@ -723,10 +726,10 @@ describe('hack toolbar clean handler', () => {
         { insert: '\n' },
         { insert: { 'table-up-col': { tableId: '1', colId: '1', full: false, width: 100 } } },
         { insert: { 'table-up-col': { tableId: '1', colId: '2', full: false, width: 100 } } },
-        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '1', rowspan: 1, colspan: 1, tag: 'td' } }, insert: '\n' },
-        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '2', rowspan: 1, colspan: 1, tag: 'td' } }, insert: '\n' },
-        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '1', rowspan: 1, colspan: 1, tag: 'td' } }, insert: '\n' },
-        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '2', rowspan: 1, colspan: 1, tag: 'td' } }, insert: '\n' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '1', rowspan: 1, colspan: 1, tag: 'td', wrapTag: 'tbody' } }, insert: '\n' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '2', rowspan: 1, colspan: 1, tag: 'td', wrapTag: 'tbody' } }, insert: '\n' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '1', rowspan: 1, colspan: 1, tag: 'td', wrapTag: 'tbody' } }, insert: '\n' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '2', rowspan: 1, colspan: 1, tag: 'td', wrapTag: 'tbody' } }, insert: '\n' },
         { insert: '\n' },
       ]),
     );
@@ -736,8 +739,9 @@ describe('hack toolbar clean handler', () => {
     await vi.runAllTimersAsync();
     const tableUp = quill.getModule(TableUp.moduleName) as TableUp;
     const tds = quill.scroll.descendants(TableCellInnerFormat, 0);
-    tableUp.tableSelection!.table = quill.root.querySelector('table')!;
-    tableUp.tableSelection!.selectedTds = [tds[1]];
+    const tableSelection = tableUp.getModule<TableSelection>('table-selection');
+    tableSelection!.table = quill.root.querySelector('table')!;
+    tableSelection!.setSelectedTds([tds[1]]);
     quill.theme.modules.toolbar!.handlers!.clean.call(quill.theme.modules.toolbar as any, true);
     expectDelta(
       quill.getContents(),
@@ -745,17 +749,17 @@ describe('hack toolbar clean handler', () => {
         { insert: '\n' },
         { insert: { 'table-up-col': { tableId: '1', colId: '1', full: false, width: 100 } } },
         { insert: { 'table-up-col': { tableId: '1', colId: '2', full: false, width: 100 } } },
-        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '1', rowspan: 1, colspan: 1, tag: 'td' } }, insert: '\n' },
-        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '2', rowspan: 1, colspan: 1, tag: 'td' } }, insert: '\n' },
-        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '1', rowspan: 1, colspan: 1, tag: 'td' } }, insert: '\n' },
-        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '2', rowspan: 1, colspan: 1, tag: 'td' } }, insert: '\n' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '1', rowspan: 1, colspan: 1, tag: 'td', wrapTag: 'tbody' } }, insert: '\n' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '2', rowspan: 1, colspan: 1, tag: 'td', wrapTag: 'tbody' } }, insert: '\n' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '1', rowspan: 1, colspan: 1, tag: 'td', wrapTag: 'tbody' } }, insert: '\n' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '2', rowspan: 1, colspan: 1, tag: 'td', wrapTag: 'tbody' } }, insert: '\n' },
         { insert: '\n' },
       ]),
     );
   });
 
   it('clean handler trigger source should be USER', async () => {
-    const quill = createQuillWithTableModule('<p></p>', { selection: TableSelection });
+    const quill = createQuillWithTableModule('<p></p>', { modules: [{ module: TableSelection }] });
     quill.setContents([
       { insert: '\n' },
       { insert: { 'table-up-col': { tableId: '1', colId: '1', full: false, width: 100 } } },
@@ -776,21 +780,21 @@ describe('hack toolbar clean handler', () => {
   });
 
   it('clean handler should not clean cell style when selection in cell', async () => {
-    const quill = createQuillWithTableModule('<p></p>', { selection: TableSelection });
+    const quill = createQuillWithTableModule('<p></p>', { modules: [{ module: TableSelection }] });
     quill.setContents([
       { insert: '\n' },
-      { insert: { 'table-up-col': { tableId: 'jb784n9k6x', colId: '22nxu0uo4pa', full: false, width: 121 } } },
-      { insert: { 'table-up-col': { tableId: 'jb784n9k6x', colId: 'bmx6pu6y5s', full: false, width: 121 } } },
+      { insert: { 'table-up-col': { tableId: '1', colId: '1', full: false, width: 121 } } },
+      { insert: { 'table-up-col': { tableId: '1', colId: '2', full: false, width: 121 } } },
       { attributes: { background: '#e60000' }, insert: '1' },
-      { attributes: { 'table-up-cell-inner': { tableId: 'jb784n9k6x', rowId: 'duq5dazb08o', colId: '22nxu0uo4pa', rowspan: 1, colspan: 1, style: 'background-color: rgb(41, 114, 244);' } }, insert: '\n' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '1', rowspan: 1, colspan: 1, style: 'background-color: rgb(41, 114, 244);' } }, insert: '\n' },
       { insert: '2' },
-      { attributes: { 'table-up-cell-inner': { tableId: 'jb784n9k6x', rowId: 'duq5dazb08o', colId: 'bmx6pu6y5s', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '2', rowspan: 1, colspan: 1 } }, insert: '\n' },
       { insert: '3' },
-      { attributes: { 'table-up-cell-inner': { tableId: 'jb784n9k6x', rowId: 'd4ckk1exgug', colId: '22nxu0uo4pa', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '1', rowspan: 1, colspan: 1 } }, insert: '\n' },
       { attributes: { italic: true, bold: true }, insert: '5555' },
-      { attributes: { 'list': 'bullet', 'table-up-cell-inner': { tableId: 'jb784n9k6x', rowId: 'd4ckk1exgug', colId: 'bmx6pu6y5s', rowspan: 1, colspan: 1, style: 'background-color: rgb(49, 155, 98);' } }, insert: '\n' },
+      { attributes: { 'list': 'bullet', 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '2', rowspan: 1, colspan: 1, style: 'background-color: rgb(49, 155, 98);' } }, insert: '\n' },
       { attributes: { italic: true, bold: true }, insert: '6666' },
-      { attributes: { 'list': 'bullet', 'table-up-cell-inner': { tableId: 'jb784n9k6x', rowId: 'd4ckk1exgug', colId: 'bmx6pu6y5s', rowspan: 1, colspan: 1, style: 'background-color: rgb(49, 155, 98);' } }, insert: '\n' },
+      { attributes: { 'list': 'bullet', 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '2', rowspan: 1, colspan: 1, style: 'background-color: rgb(49, 155, 98);' } }, insert: '\n' },
       { insert: '\n' },
     ]);
 
@@ -798,25 +802,25 @@ describe('hack toolbar clean handler', () => {
     quill.theme.modules.toolbar!.handlers!.clean.call(quill.theme.modules.toolbar as any, true);
 
     expectDelta(
+      quill.getContents(),
       new Delta([
         { insert: '\n' },
-        { insert: { 'table-up-col': { full: false, width: 121 } } },
-        { insert: { 'table-up-col': { full: false, width: 121 } } },
+        { insert: { 'table-up-col': { tableId: '1', colId: '1', full: false, width: 121 } } },
+        { insert: { 'table-up-col': { tableId: '1', colId: '2', full: false, width: 121 } } },
         { attributes: { background: '#e60000' }, insert: '1' },
-        { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1, style: 'background-color: rgb(41, 114, 244);' } }, insert: '\n' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', colId: '1', rowId: '1', rowspan: 1, colspan: 1, tag: 'td', wrapTag: 'tbody', style: 'background-color: rgb(41, 114, 244);' } }, insert: '\n' },
         { insert: '2' },
-        { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1 } }, insert: '\n' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', colId: '2', rowId: '1', rowspan: 1, colspan: 1, tag: 'td', wrapTag: 'tbody' } }, insert: '\n' },
         { insert: '3' },
-        { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1 } }, insert: '\n' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', colId: '1', rowId: '2', rowspan: 1, colspan: 1, tag: 'td', wrapTag: 'tbody' } }, insert: '\n' },
         { attributes: { italic: true, bold: true }, insert: '55' },
         { insert: '55' },
-        { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1, style: 'background-color: rgb(49, 155, 98);' } }, insert: '\n' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', colId: '2', rowId: '2', rowspan: 1, colspan: 1, tag: 'td', wrapTag: 'tbody', style: 'background-color: rgb(49, 155, 98);' } }, insert: '\n' },
         { insert: '66' },
         { attributes: { italic: true, bold: true }, insert: '66' },
-        { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1, style: 'background-color: rgb(49, 155, 98);' } }, insert: '\n' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', colId: '2', rowId: '2', rowspan: 1, colspan: 1, tag: 'td', wrapTag: 'tbody', style: 'background-color: rgb(49, 155, 98);' } }, insert: '\n' },
         { insert: '\n' },
       ]),
-      quill.getContents(),
     );
     expect(quill.root).toEqualHTML(
       `
@@ -854,53 +858,54 @@ describe('hack toolbar clean handler', () => {
         </div>
         <p><br></p>
       `,
-      { ignoreAttrs: ['data-tag', 'class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
+      { ignoreAttrs: ['data-wrap-tag', 'data-tag', 'class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
     );
   });
 
   it('clean handler should clean cell style when have selectedTds cleaning', async () => {
-    const quill = createQuillWithTableModule('<p></p>', { selection: TableSelection });
+    const quill = createQuillWithTableModule('<p></p>', { modules: [{ module: TableSelection }] });
     quill.setContents([
       { insert: '\n' },
-      { insert: { 'table-up-col': { tableId: 'jb784n9k6x', colId: '22nxu0uo4pa', full: false, width: 121 } } },
-      { insert: { 'table-up-col': { tableId: 'jb784n9k6x', colId: 'bmx6pu6y5s', full: false, width: 121 } } },
+      { insert: { 'table-up-col': { tableId: '1', colId: '1', full: false, width: 121 } } },
+      { insert: { 'table-up-col': { tableId: '1', colId: '2', full: false, width: 121 } } },
       { attributes: { background: '#e60000' }, insert: '1' },
-      { attributes: { 'table-up-cell-inner': { tableId: 'jb784n9k6x', rowId: 'duq5dazb08o', colId: '22nxu0uo4pa', rowspan: 1, colspan: 1, style: 'background-color: rgb(41, 114, 244);' } }, insert: '\n' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '1', rowspan: 1, colspan: 1, style: 'background-color: rgb(41, 114, 244);' } }, insert: '\n' },
       { insert: '2' },
-      { attributes: { 'table-up-cell-inner': { tableId: 'jb784n9k6x', rowId: 'duq5dazb08o', colId: 'bmx6pu6y5s', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '2', rowspan: 1, colspan: 1 } }, insert: '\n' },
       { insert: '3' },
-      { attributes: { 'table-up-cell-inner': { tableId: 'jb784n9k6x', rowId: 'd4ckk1exgug', colId: '22nxu0uo4pa', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '1', rowspan: 1, colspan: 1 } }, insert: '\n' },
       { attributes: { italic: true, bold: true }, insert: '5555' },
-      { attributes: { 'list': 'bullet', 'table-up-cell-inner': { tableId: 'jb784n9k6x', rowId: 'd4ckk1exgug', colId: 'bmx6pu6y5s', rowspan: 1, colspan: 1, style: 'background-color: rgb(49, 155, 98);' } }, insert: '\n' },
+      { attributes: { 'list': 'bullet', 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '2', rowspan: 1, colspan: 1, style: 'background-color: rgb(49, 155, 98);' } }, insert: '\n' },
       { attributes: { italic: true, bold: true }, insert: '6666' },
-      { attributes: { 'list': 'bullet', 'table-up-cell-inner': { tableId: 'jb784n9k6x', rowId: 'd4ckk1exgug', colId: 'bmx6pu6y5s', rowspan: 1, colspan: 1, style: 'background-color: rgb(49, 155, 98);' } }, insert: '\n' },
+      { attributes: { 'list': 'bullet', 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '2', rowspan: 1, colspan: 1, style: 'background-color: rgb(49, 155, 98);' } }, insert: '\n' },
       { insert: '\n' },
     ]);
 
     const tableUp = quill.getModule(TableUp.moduleName) as TableUp;
     const tds = quill.scroll.descendants(TableCellInnerFormat, 0);
-    tableUp.tableSelection!.table = quill.root.querySelector('table')!;
-    tableUp.tableSelection!.selectedTds = tds;
+    const tableSelection = tableUp.getModule<TableSelection>('table-selection');
+    tableSelection!.table = quill.root.querySelector('table')!;
+    tableSelection!.setSelectedTds(tds);
     quill.theme.modules.toolbar!.handlers!.clean.call(quill.theme.modules.toolbar as any, true);
 
     expectDelta(
+      quill.getContents(),
       new Delta([
         { insert: '\n' },
-        { insert: { 'table-up-col': { full: false, width: 121 } } },
-        { insert: { 'table-up-col': { full: false, width: 121 } } },
+        { insert: { 'table-up-col': { tableId: '1', colId: '1', full: false, width: 121 } } },
+        { insert: { 'table-up-col': { tableId: '1', colId: '2', full: false, width: 121 } } },
         { insert: '1' },
-        { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1 } }, insert: '\n' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '1', rowspan: 1, colspan: 1, tag: 'td', wrapTag: 'tbody' } }, insert: '\n' },
         { insert: '2' },
-        { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1 } }, insert: '\n' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '2', rowspan: 1, colspan: 1, tag: 'td', wrapTag: 'tbody' } }, insert: '\n' },
         { insert: '3' },
-        { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1 } }, insert: '\n' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '1', rowspan: 1, colspan: 1, tag: 'td', wrapTag: 'tbody' } }, insert: '\n' },
         { insert: '5555' },
-        { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1 } }, insert: '\n' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '2', rowspan: 1, colspan: 1, tag: 'td', wrapTag: 'tbody' } }, insert: '\n' },
         { insert: '6666' },
-        { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1 } }, insert: '\n' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '2', rowspan: 1, colspan: 1, tag: 'td', wrapTag: 'tbody' } }, insert: '\n' },
         { insert: '\n' },
       ]),
-      quill.getContents(),
     );
     expect(quill.root).toEqualHTML(
       `
@@ -938,12 +943,12 @@ describe('hack toolbar clean handler', () => {
         </div>
         <p><br></p>
       `,
-      { ignoreAttrs: ['data-tag', 'class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
+      { ignoreAttrs: ['data-wrap-tag', 'data-tag', 'class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
     );
   });
 
   it('clean handler should clean cell selectedTds style', async () => {
-    const quill = createQuillWithTableModule('<p></p>', { selection: TableSelection });
+    const quill = createQuillWithTableModule('<p></p>', { modules: [{ module: TableSelection }] });
     quill.setContents([
       { insert: '\n' },
       { insert: { 'table-up-col': { tableId: '1', colId: '1', full: false, width: 100 } } },
@@ -972,8 +977,9 @@ describe('hack toolbar clean handler', () => {
 
     const tableUp = quill.getModule(TableUp.moduleName) as TableUp;
     const tds = quill.scroll.descendants(TableCellInnerFormat, 0);
-    tableUp.tableSelection!.table = quill.root.querySelector('table')!;
-    tableUp.tableSelection!.selectedTds = [tds[4]];
+    const tableSelection = tableUp.getModule<TableSelection>('table-selection');
+    tableSelection!.table = quill.root.querySelector('table')!;
+    tableSelection!.setSelectedTds([tds[4]]);
     quill.theme.modules.toolbar!.handlers!.clean.call(quill.theme.modules.toolbar as any, true);
 
     expectDelta(
@@ -984,23 +990,23 @@ describe('hack toolbar clean handler', () => {
         { insert: { 'table-up-col': { tableId: '1', colId: '2', full: false, width: 100 } } },
         { insert: { 'table-up-col': { tableId: '1', colId: '3', full: false, width: 100 } } },
         { insert: '1' },
-        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '1', rowspan: 1, colspan: 1, style: 'background-color: rgb(201, 16, 16);', tag: 'td' } }, insert: '\n' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '1', rowspan: 1, colspan: 1, style: 'background-color: rgb(201, 16, 16);', tag: 'td', wrapTag: 'tbody' } }, insert: '\n' },
         { insert: '2' },
-        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '2', rowspan: 1, colspan: 1, style: 'background-color: rgb(201, 16, 16);', tag: 'td' } }, insert: '\n' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '2', rowspan: 1, colspan: 1, style: 'background-color: rgb(201, 16, 16);', tag: 'td', wrapTag: 'tbody' } }, insert: '\n' },
         { insert: '3' },
-        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '3', rowspan: 1, colspan: 1, style: 'background-color: rgb(201, 16, 16);', tag: 'td' } }, insert: '\n' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '3', rowspan: 1, colspan: 1, style: 'background-color: rgb(201, 16, 16);', tag: 'td', wrapTag: 'tbody' } }, insert: '\n' },
         { insert: '4' },
-        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '1', rowspan: 1, colspan: 1, style: 'background-color: rgb(201, 16, 16);', tag: 'td' } }, insert: '\n' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '1', rowspan: 1, colspan: 1, style: 'background-color: rgb(201, 16, 16);', tag: 'td', wrapTag: 'tbody' } }, insert: '\n' },
         { insert: '5' },
-        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '2', rowspan: 1, colspan: 1, tag: 'td' } }, insert: '\n' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '2', rowspan: 1, colspan: 1, tag: 'td', wrapTag: 'tbody' } }, insert: '\n' },
         { insert: '6' },
-        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '3', rowspan: 1, colspan: 1, style: 'background-color: rgb(201, 16, 16);', tag: 'td' } }, insert: '\n' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '3', rowspan: 1, colspan: 1, style: 'background-color: rgb(201, 16, 16);', tag: 'td', wrapTag: 'tbody' } }, insert: '\n' },
         { insert: '7' },
-        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '3', colId: '1', rowspan: 1, colspan: 1, style: 'background-color: rgb(201, 16, 16);', tag: 'td' } }, insert: '\n' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '3', colId: '1', rowspan: 1, colspan: 1, style: 'background-color: rgb(201, 16, 16);', tag: 'td', wrapTag: 'tbody' } }, insert: '\n' },
         { insert: '8' },
-        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '3', colId: '2', rowspan: 1, colspan: 1, style: 'background-color: rgb(201, 16, 16);', tag: 'td' } }, insert: '\n' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '3', colId: '2', rowspan: 1, colspan: 1, style: 'background-color: rgb(201, 16, 16);', tag: 'td', wrapTag: 'tbody' } }, insert: '\n' },
         { insert: '9' },
-        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '3', colId: '3', rowspan: 1, colspan: 1, style: 'background-color: rgb(201, 16, 16);', tag: 'td' } }, insert: '\n' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '3', colId: '3', rowspan: 1, colspan: 1, style: 'background-color: rgb(201, 16, 16);', tag: 'td', wrapTag: 'tbody' } }, insert: '\n' },
         { insert: '\n' },
       ]),
     );

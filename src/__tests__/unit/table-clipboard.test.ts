@@ -87,7 +87,7 @@ describe('clipboard cell structure', () => {
         </div>
         <p><br></p>
       `,
-      { ignoreAttrs: ['data-tag', 'class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'contenteditable'] },
+      { ignoreAttrs: ['data-wrap-tag', 'data-tag', 'class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'contenteditable'] },
     );
   });
 
@@ -177,7 +177,7 @@ describe('clipboard cell structure', () => {
         </div>
         <p><br></p>
       `,
-      { ignoreAttrs: ['data-tag', 'class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'contenteditable'] },
+      { ignoreAttrs: ['data-wrap-tag', 'data-tag', 'class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'contenteditable'] },
     );
   });
 
@@ -240,7 +240,7 @@ describe('clipboard cell structure', () => {
         </div>
         <p><br></p>
       `,
-      { ignoreAttrs: ['data-tag', 'class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'contenteditable'] },
+      { ignoreAttrs: ['data-wrap-tag', 'data-tag', 'class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'contenteditable'] },
     );
   });
 
@@ -294,7 +294,7 @@ describe('clipboard cell structure', () => {
         </div>
         <p><br></p>
       `,
-      { ignoreAttrs: ['data-tag', 'class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'contenteditable'] },
+      { ignoreAttrs: ['data-wrap-tag', 'data-tag', 'class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'contenteditable'] },
     );
   });
 
@@ -373,7 +373,7 @@ describe('clipboard cell structure', () => {
         </div>
         <p><br></p>
       `,
-      { ignoreAttrs: ['data-tag', 'class', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
+      { ignoreAttrs: ['data-wrap-tag', 'data-tag', 'class', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
     );
   });
 
@@ -448,7 +448,7 @@ describe('clipboard cell structure', () => {
         </div>
         <p><br></p>
       `,
-      { ignoreAttrs: ['data-tag', 'class', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
+      { ignoreAttrs: ['data-wrap-tag', 'data-tag', 'class', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
     );
   });
 
@@ -524,7 +524,7 @@ describe('clipboard cell structure', () => {
         </div>
         <p><br></p>
       `,
-      { ignoreAttrs: ['data-tag', 'class', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
+      { ignoreAttrs: ['data-wrap-tag', 'data-tag', 'class', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
     );
   });
 
@@ -573,7 +573,7 @@ describe('clipboard cell structure', () => {
         </div>
         <p><br></p>
       `,
-      { ignoreAttrs: ['data-tag', 'class', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
+      { ignoreAttrs: ['data-wrap-tag', 'data-tag', 'class', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
     );
   });
 
@@ -649,7 +649,7 @@ describe('clipboard cell structure', () => {
         </div>
         <p><br></p>
       `,
-      { ignoreAttrs: ['class', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
+      { ignoreAttrs: ['data-wrap-tag', 'class', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
     );
   });
 
@@ -687,7 +687,7 @@ describe('clipboard cell structure', () => {
         </div>
         <p><br></p>
       `,
-      { ignoreAttrs: ['data-tag', 'class', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
+      { ignoreAttrs: ['data-wrap-tag', 'data-tag', 'class', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
     );
     expectDelta(
       new Delta([
@@ -738,7 +738,88 @@ describe('clipboard cell structure', () => {
         </div>
         <p><br></p>
       `,
-      { ignoreAttrs: ['data-tag', 'class', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
+      { ignoreAttrs: ['data-wrap-tag', 'data-tag', 'class', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
+    );
+  });
+
+  it('convert background on table/tbody/tr/td', async () => {
+    const quill = createQuillWithTableModule(`<p><br></p>`);
+    quill.setContents(
+      quill.clipboard.convert({
+        html: `
+          <table style="background-color: red">
+            <tbody>
+              <tr style="background-color: yellow">
+                <td style="background-color: aqua">1</td>
+                <td>2</td>
+              </tr>
+              <tr>
+                <td>3</td>
+                <td>4</td>
+              </tr>
+            </tbody><tfoot style="background-color: blue">
+              <tr>
+                <td>5</td>
+                <td>6</td>
+              </tr>
+            </tfoot>
+          </table>
+        `,
+      }),
+    );
+    await vi.runAllTimersAsync();
+
+    expect(quill.root).toEqualHTML(
+      `
+        <p><br></p>
+        <div>
+          <table cellpadding="0" cellspacing="0" style="margin-right: auto; width: 200px;">
+            ${createTaleColHTML(2, { full: false, width: 100 })}
+            <tbody>
+              <tr>
+                <td colspan="1" rowspan="1" style="background-color: aqua;">
+                  <div data-style="background-color: aqua;">
+                    <p><span style="background-color: aqua;">1</span></p>
+                  </div>
+                </td>
+                <td colspan="1" rowspan="1" style="background-color: yellow;">
+                  <div data-style="background-color: yellow;">
+                    <p><span style="background-color: yellow;">2</span></p>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td colspan="1" rowspan="1" style="background-color: red;">
+                  <div data-style="background-color: red;">
+                    <p><span style="background-color: red;">3</span></p>
+                  </div>
+                </td>
+                <td colspan="1" rowspan="1" style="background-color: red;">
+                  <div data-style="background-color: red;">
+                    <p><span style="background-color: red;">4</span></p>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+            <tfoot>
+              <tr>
+                <td colspan="1" rowspan="1" style="background-color: blue;">
+                  <div data-style="background-color: blue;">
+                    <p><span style="background-color: blue;">5</span></p>
+                  </div>
+                </td>
+                <td colspan="1" rowspan="1" style="background-color: blue;">
+                  <div data-style="background-color: blue;">
+                    <p><span style="background-color: blue;">6</span></p>
+                  </div>
+                </td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+        <p><br></p>
+      `,
+      { ignoreAttrs: ['data-wrap-tag', 'data-tag', 'class', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
     );
   });
 
@@ -773,11 +854,11 @@ describe('clipboard cell structure', () => {
         { insert: { 'table-up-col': { full: false, width: 100 } } },
         { insert: { 'table-up-col': { full: false, width: 100 } } },
         { insert: '1' },
-        { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1 } }, insert: '\n' },
+        { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1, tag: 'td', wrapTag: 'tbody' } }, insert: '\n' },
         { insert: '2' },
-        { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1 } }, insert: '\n' },
+        { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1, tag: 'td', wrapTag: 'tbody' } }, insert: '\n' },
         { insert: '3' },
-        { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1 } }, insert: '\n' },
+        { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1, tag: 'td', wrapTag: 'tbody' } }, insert: '\n' },
         { insert: '\n' },
       ]),
       quill.getContents(),
@@ -854,7 +935,7 @@ describe('clipboard cell structure', () => {
         </div>
         <p><br></p>
       `,
-      { ignoreAttrs: ['data-tag', 'class', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'data-style', 'style', 'contenteditable'] },
+      { ignoreAttrs: ['data-wrap-tag', 'data-tag', 'class', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'data-style', 'style', 'contenteditable'] },
     );
     expectDelta(
       new Delta([
@@ -869,6 +950,89 @@ describe('clipboard cell structure', () => {
         { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1 } }, insert: '\n' },
         { insert: '合并4' },
         { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1 } }, insert: '\n' },
+        { insert: '\n' },
+      ]),
+      quill.getContents(),
+    );
+  });
+
+  it('clipboard convert empty tr to `emptyRow`', async () => {
+    const quill = createQuillWithTableModule(`<p><br></p>`, { autoMergeCell: false });
+    quill.setContents(
+      quill.clipboard.convert({
+        html: `<table><thead><tr><td rowspan="2" colspan="2">1</td></tr><tr></tr></thead><tbody><tr><td>1</td><td>2</td></tr><tr><td>1</td><td>2</td></tr></tbody></table>`,
+      }),
+    );
+
+    await vi.runAllTimersAsync();
+
+    expect(quill.root).toEqualHTML(
+      `
+        <p><br></p>
+        <div>
+          <table cellpadding="0" cellspacing="0">
+            ${createTaleColHTML(2, { full: false, width: 100 })}
+            <thead>
+              <tr>
+                <td rowspan="2" colspan="2" data-empty-row="length:1">
+                  <div data-empty-row="length:1"><p>1</p></div>
+                </td>
+              </tr>
+              <tr>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td rowspan="1" colspan="1">
+                  <div><p>1</p></div>
+                </td>
+                <td rowspan="1" colspan="1">
+                  <div><p>2</p></div>
+                </td>
+              </tr>
+              <tr>
+                <td rowspan="1" colspan="1">
+                  <div><p>1</p></div>
+                </td>
+                <td rowspan="1" colspan="1">
+                  <div><p>2</p></div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p><br></p>
+      `,
+      {
+        ignoreAttrs: ['data-wrap-tag', 'data-tag', 'class', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'data-style', 'style', 'contenteditable'],
+        replaceAttrs: {
+          'data-empty-row': function (value: string) {
+            try {
+              const emptyRow = JSON.parse(value);
+              return `length:${emptyRow.length}`;
+            }
+            catch {
+              return value;
+            }
+          },
+        },
+      },
+    );
+    expectDelta(
+      new Delta([
+        { insert: '\n' },
+        { insert: { 'table-up-col': { full: false, width: 100 } } },
+        { insert: { 'table-up-col': { full: false, width: 100 } } },
+        { insert: '1' },
+        { attributes: { 'table-up-cell-inner': { rowspan: 2, colspan: 2, wrapTag: 'thead' } }, insert: '\n' },
+        { insert: '1' },
+        { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1, wrapTag: 'tbody' } }, insert: '\n' },
+        { insert: '2' },
+        { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1, wrapTag: 'tbody' } }, insert: '\n' },
+        { insert: '1' },
+        { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1, wrapTag: 'tbody' } }, insert: '\n' },
+        { insert: '2' },
+        { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1, wrapTag: 'tbody' } }, insert: '\n' },
         { insert: '\n' },
       ]),
       quill.getContents(),
@@ -946,7 +1110,7 @@ describe('clipboard cell structure', () => {
         <p><br></p>
       `,
       {
-        ignoreAttrs: ['data-tag', 'class', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'data-style', 'style', 'contenteditable'],
+        ignoreAttrs: ['data-wrap-tag', 'data-tag', 'class', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'data-style', 'style', 'contenteditable'],
         replaceAttrs: {
           'data-empty-row': function (value: string) {
             try {
@@ -1065,6 +1229,206 @@ describe('clipboard cell structure', () => {
                 <td colspan="1" rowspan="1">
                   <div data-tag="td">
                     <p>Mexico</p>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p><br></p>
+      `,
+      { ignoreAttrs: ['data-wrap-tag', 'class', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
+    );
+  });
+
+  it('convert thead and tfoot correctly', async () => {
+    const quill = createQuillWithTableModule(`<p><br></p>`);
+    quill.setContents(
+      quill.clipboard.convert({
+        html: `
+          <table>
+            <thead>
+              <tr>
+                <th>head1</th>
+                <th>head2</th>
+                <th>head3</th>
+              </tr>
+            </thead><tbody>
+              <tr>
+                <td>body1</td>
+                <td>body2</td>
+                <td>body3</td>
+              </tr>
+              <tr>
+                <td>body4</td>
+                <td>body5</td>
+                <td>body6</td>
+              </tr>
+            </tbody><tfoot>
+              <tr>
+                <td>foot1</td>
+                <td>foot2</td>
+                <td>foot3</td>
+              </tr>
+            </tfoot>
+          </table>
+        `,
+      }),
+    );
+    await vi.runAllTimersAsync();
+
+    expect(quill.root).toEqualHTML(
+      `
+        <p><br></p>
+        <div>
+          <table cellpadding="0" cellspacing="0" style="margin-right: auto; width: 300px;">
+            ${createTaleColHTML(3, { full: false, width: 100 })}
+            <thead>
+              <tr data-wrap-tag="thead">
+                <th colspan="1" rowspan="1" data-wrap-tag="thead">
+                  <div data-tag="th" data-wrap-tag="thead">
+                    <p>head1</p>
+                  </div>
+                </th>
+                <th colspan="1" rowspan="1" data-wrap-tag="thead">
+                  <div data-tag="th" data-wrap-tag="thead">
+                    <p>head2</p>
+                  </div>
+                </th>
+                <th colspan="1" rowspan="1" data-wrap-tag="thead">
+                  <div data-tag="th" data-wrap-tag="thead">
+                    <p>head3</p>
+                  </div>
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr data-wrap-tag="tbody">
+                <td colspan="1" rowspan="1" data-wrap-tag="tbody">
+                  <div data-tag="td" data-wrap-tag="tbody">
+                    <p>body1</p>
+                  </div>
+                </td>
+                <td colspan="1" rowspan="1" data-wrap-tag="tbody">
+                  <div data-tag="td" data-wrap-tag="tbody">
+                    <p>body2</p>
+                  </div>
+                </td>
+                <td colspan="1" rowspan="1" data-wrap-tag="tbody">
+                  <div data-tag="td" data-wrap-tag="tbody">
+                    <p>body3</p>
+                  </div>
+                </td>
+              </tr>
+              <tr data-wrap-tag="tbody">
+                <td colspan="1" rowspan="1" data-wrap-tag="tbody">
+                  <div data-tag="td" data-wrap-tag="tbody">
+                    <p>body4</p>
+                  </div>
+                </td>
+                <td colspan="1" rowspan="1" data-wrap-tag="tbody">
+                  <div data-tag="td" data-wrap-tag="tbody">
+                    <p>body5</p>
+                  </div>
+                </td>
+                <td colspan="1" rowspan="1" data-wrap-tag="tbody">
+                  <div data-tag="td" data-wrap-tag="tbody">
+                    <p>body6</p>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+            <tfoot>
+              <tr data-wrap-tag="tfoot">
+                <td colspan="1" rowspan="1" data-wrap-tag="tfoot">
+                  <div data-tag="td" data-wrap-tag="tfoot">
+                    <p>foot1</p>
+                  </div>
+                </td>
+                <td colspan="1" rowspan="1" data-wrap-tag="tfoot">
+                  <div data-tag="td" data-wrap-tag="tfoot">
+                    <p>foot2</p>
+                  </div>
+                </td>
+                <td colspan="1" rowspan="1" data-wrap-tag="tfoot">
+                  <div data-tag="td" data-wrap-tag="tfoot">
+                    <p>foot3</p>
+                  </div>
+                </td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+        <p><br></p>
+      `,
+      { ignoreAttrs: ['class', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
+    );
+  });
+
+  it('convert thead rowspan to tbody', async () => {
+    const quill = createQuillWithTableModule(`<p><br></p>`);
+    quill.setContents(
+      quill.clipboard.convert({
+        html: `
+          <table>
+            <thead>
+              <tr>
+                <td rowspan="2" colspan="2">123</td>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>1</td>
+                <td>2</td>
+              </tr>
+              <tr>
+                <td>1</td>
+                <td>2</td>
+              </tr>
+            </tbody>
+          </table>
+        `,
+      }),
+    );
+    await vi.runAllTimersAsync();
+
+    expect(quill.root).toEqualHTML(
+      `
+        <p><br></p>
+        <div>
+          <table cellpadding="0" cellspacing="0" style="margin-right: auto; width: 200px;">
+            ${createTaleColHTML(2, { full: false, width: 100 })}
+            <thead>
+              <tr data-wrap-tag="thead">
+                <td colspan="2" rowspan="1" data-wrap-tag="thead">
+                  <div data-tag="td" data-wrap-tag="thead">
+                    <p>123</p>
+                  </div>
+                </td>
+              </tr>
+            </thead>
+            <tbody>
+              <tr data-wrap-tag="tbody">
+                <td colspan="1" rowspan="1" data-wrap-tag="tbody">
+                  <div data-tag="td" data-wrap-tag="tbody">
+                    <p>1</p>
+                  </div>
+                </td>
+                <td colspan="1" rowspan="1" data-wrap-tag="tbody">
+                  <div data-tag="td" data-wrap-tag="tbody">
+                    <p>2</p>
+                  </div>
+                </td>
+              </tr>
+              <tr data-wrap-tag="tbody">
+                <td colspan="1" rowspan="1" data-wrap-tag="tbody">
+                  <div data-tag="td" data-wrap-tag="tbody">
+                    <p>1</p>
+                  </div>
+                </td>
+                <td colspan="1" rowspan="1" data-wrap-tag="tbody">
+                  <div data-tag="td" data-wrap-tag="tbody">
+                    <p>2</p>
                   </div>
                 </td>
               </tr>
@@ -1329,7 +1693,7 @@ describe('clipboard content format', () => {
         </div>
         <p><br></p>
       `,
-      { ignoreAttrs: ['data-tag', 'class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'contenteditable'] },
+      { ignoreAttrs: ['data-wrap-tag', 'data-tag', 'class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'contenteditable'] },
     );
   });
 
@@ -1408,7 +1772,7 @@ describe('clipboard content format', () => {
         <p><br></p>
       `,
       {
-        ignoreAttrs: ['data-tag', 'class', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'],
+        ignoreAttrs: ['data-wrap-tag', 'data-tag', 'class', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'],
       },
     );
   });
@@ -1505,7 +1869,7 @@ describe('clipboard content format', () => {
         </div>
         <p><br></p>
       `,
-      { ignoreAttrs: ['data-tag', 'class', 'colspan', 'rowspan', 'data-colspan', 'data-rowspan', 'data-table-id', 'data-row-id', 'data-col-id', 'contenteditable'] },
+      { ignoreAttrs: ['data-wrap-tag', 'data-tag', 'class', 'colspan', 'rowspan', 'data-colspan', 'data-rowspan', 'data-table-id', 'data-row-id', 'data-col-id', 'contenteditable'] },
     );
     expectDelta(
       new Delta([

@@ -7,7 +7,9 @@ export const blotName = {
   tableMain: 'table-up-main',
   tableColgroup: 'table-up-colgroup',
   tableCol: 'table-up-col',
+  tableHead: 'table-up-head',
   tableBody: 'table-up-body',
+  tableFoot: 'table-up-foot',
   tableRow: 'table-up-row',
   tableCell: 'table-up-cell',
   tableCellInner: 'table-up-cell-inner',
@@ -22,6 +24,10 @@ export const tableUpSize = {
 
 export const tableUpEvent = {
   AFTER_TABLE_RESIZE: 'after-table-resize',
+  TABLE_SELECTION_DRAG_START: 'table-selection-drag-start',
+  TABLE_SELECTION_DRAG_END: 'table-selection-drag-end',
+  TABLE_SELECTION_CHANGE: 'table-selection-change',
+  TABLE_SELECTION_DISPLAY_CHANGE: 'table-selection-display-change',
 };
 
 export const tableUpInternal = {

@@ -5,7 +5,7 @@
   &-align {
     position: absolute;
     z-index: 1;
-    display: none;
+    display: flex;
     align-items: center;
     padding: 4px;
     border-radius: 6px;
@@ -31,6 +31,9 @@
         background-color: #a3a3a3;
         cursor: default;
       }
+    }
+    &.is-hidden {
+      display: none;
     }
     .icon {
       display: flex;
@@ -65,9 +68,6 @@
     }
   }
   &-align {
-    &--active {
-      display: flex;
-    }
     .icon {
       width: 20px;
       height: 20px;

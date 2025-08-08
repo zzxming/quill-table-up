@@ -2,7 +2,7 @@ import type Quill from 'quill';
 import type BaseTheme from 'quill/themes/base';
 import type Picker from 'quill/ui/picker';
 import type { TableCellInnerFormat } from '../formats';
-import type { MenuTooltipInstance } from '../modules';
+import type { MenuTooltipInstance, TableMenuCommon } from '../modules';
 import type { TableUp } from '../table-up';
 import type { blotName, tableUpEvent, tableUpInternal, tableUpSize } from './constants';
 
@@ -16,7 +16,7 @@ export interface ToolOption {
   tip?: string;
   isColorChoose?: boolean;
   key?: string;
-  handle: (tableModule: TableUp, selectedTds: TableCellInnerFormat[], e: Event | string | null) => void;
+  handle: (this: TableMenuCommon, tableModule: TableUp, selectedTds: TableCellInnerFormat[], e: Event | string | null) => void;
 }
 export interface ToolOptionBreak {
   name: 'break';
@@ -31,8 +31,6 @@ export interface TableMenuOptions {
 }
 export interface TableSelectionOptions {
   selectColor: string;
-  tableMenu?: Constructor<InternalTableMenuModule, [TableUp, Quill, Partial<TableMenuOptions>]>;
-  tableMenuOptions: TableMenuOptions;
 }
 export interface TableResizeScaleOptions {
   blockSize: number;
@@ -54,6 +52,13 @@ export interface TableTextOptions extends TableCreatorTextOptions, TableMenuText
   transparent: string;
   perWidthInsufficient: string;
 }
+export interface TableUpExtraModule extends Constructor<any, [TableUp, Quill, any]> {
+  moduleName: string;
+}
+export interface TableUpModule {
+  module: TableUpExtraModule;
+  options?: any;
+}
 export interface TableUpOptions {
   customSelect?: (tableModule: TableUp, picker: QuillThemePicker) => Promise<HTMLElement> | HTMLElement;
   full: boolean;
@@ -61,17 +66,8 @@ export interface TableUpOptions {
   customBtn: boolean;
   texts: TableTextOptions;
   icon: string;
-  selection?: Constructor<InternalTableSelectionModule, [TableUp, Quill, Partial<TableSelectionOptions>]>;
-  selectionOptions: Partial<TableSelectionOptions>;
-  resize?: Constructor<InternalModule, [TableUp, HTMLElement, Quill, any]>;
-  resizeOptions: any;
-  scrollbar?: Constructor<InternalModule, [TableUp, HTMLElement, Quill, any]>;
-  scrollbarOptions: any;
-  align?: Constructor<InternalModule, [TableUp, HTMLElement, Quill, any]>;
-  alignOptions: any;
-  resizeScale?: Constructor<InternalModule, [TableUp, HTMLElement, Quill, Partial<TableResizeScaleOptions>]>;
-  resizeScaleOptions: Partial<TableResizeScaleOptions>;
   autoMergeCell: boolean;
+  modules: TableUpModule[];
 }
 export interface TableColValue {
   tableId: string;
@@ -80,6 +76,7 @@ export interface TableColValue {
   full?: boolean;
   align?: string;
 }
+export type TableBodyTag = 'thead' | 'tbody' | 'tfoot';
 export interface TableCellValue {
   tableId: string;
   rowId: string;
@@ -89,10 +86,12 @@ export interface TableCellValue {
   style?: string;
   emptyRow?: string[];
   tag?: 'td' | 'th';
+  wrapTag?: TableBodyTag;
 }
 export interface TableRowValue {
   tableId: string;
   rowId: string;
+  wrapTag?: TableBodyTag;
 }
 export interface TableCaptionValue {
   tableId: string;
@@ -114,6 +113,7 @@ export interface RelactiveRect {
 }
 
 export interface InternalModule {
+  table?: HTMLElement;
   show: () => void;
   hide: () => void;
   update: () => void;
@@ -121,7 +121,6 @@ export interface InternalModule {
 }
 export type Constructor<T = any, U extends Array<any> = any[]> = new (...args: U) => T;
 export interface InternalTableSelectionModule extends InternalModule {
-  table?: HTMLElement;
   dragging: boolean;
   boundary: RelactiveRect | null;
   selectedTds: TableCellInnerFormat[];
@@ -138,6 +137,7 @@ export interface InternalTableSelectionModule extends InternalModule {
       y: number;
     }
   ) => TableCellInnerFormat[];
+  setSelectedTds: (tds: TableCellInnerFormat[]) => void;
   updateWithSelectedTds: () => void;
   showDisplay: () => void;
   hideDisplay: () => void;

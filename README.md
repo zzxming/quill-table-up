@@ -14,7 +14,7 @@ Enhancement of quill table module
 - [x] line break in cells
 - [x] redo and undo
 - [x] support whole table align left/center/right
-- [x] `<caption>` `<th>` support
+- [x] `<caption>` `<th>` `<thead>` `<tfoot>` support
 
 ## Usage
 
@@ -47,15 +47,15 @@ const quill = new Quill('#editor', {
       ],
     ],
     [TableUp.moduleName]: {
-      scrollbar: TableVirtualScrollbar,
-      align: TableAlign,
-      resize: TableResizeBox,
-      resizeScale: TableResizeScale,
       customSelect: defaultCustomSelect,
-      selection: TableSelection,
-      selectionOptions: {
-        tableMenu: TableMenuContextmenu,
-      }
+      modules: [
+        { module: TableVirtualScrollbar },
+        { module: TableAlign },
+        { module: TableResizeLine },
+        { module: TableResizeScale },
+        { module: TableSelection },
+        { module: TableMenuContextmenu, },
+      ],
     },
   },
 });
@@ -67,25 +67,16 @@ const quill = new Quill('#editor', {
 
 **Full options usage see [demo](https://github.com/zzxming/quill-table-up/blob/master/docs/index.js#L38)**
 
-| attribute          | description                                                                                                                           | type                                                                            | default             |
-| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- | ------------------- |
-| full               | if set `true`. width max will be 100%                                                                                                 | `boolean`                                                                       | `false`             |
-| fullSwitch         | enable to choose insert a full width table                                                                                            | `boolean`                                                                       | `true`              |
-| texts              | the text used to create the table                                                                                                     | `TableTextOptions`                                                              | `defaultTexts`      |
-| customSelect       | display a custom select to custom row and column number add a table. module provides default selector `defaultCustomSelect`           | `(tableModule: TableUp, picker: Picker) => Promise<HTMLElement> \| HTMLElement` | -                   |
-| customBtn          | display a custom button to custom row and column number add a table. it only when use `defaultCustomSelect` will effect               | `boolean`                                                                       | `false`             |
-| selection          | table selection handler. module provides `TableSelection`                                                                             | `Constructor`                                                                   | -                   |
-| selectionOptions   | table selection options                                                                                                               | `TableSelectionOptions`                                                         | -                   |
-| icon               | picker svg icon string. it will set with `innerHTML`                                                                                  | `string`                                                                        | `origin table icon` |
-| resize             | table cell resize handler. module provides `TableResizeLine` and `TableResizeBox`                                                     | `Constructor`                                                                   | -                   |
-| resizeScale        | equal scale table cell handler. module provides `TableResizeScale`                                                                    | `Constructor`                                                                   | -                   |
-| scrollbar          | table virtual scrollbar handler(don't have any other functional, just like origin scrollbar). module provides `TableVirtualScrollbar` | `Constructor`                                                                   | -                   |
-| align              | table alignment handler. module provides `TableAlign`                                                                                 | `Constructor`                                                                   | -                   |
-| resizeOptions      | table cell resize handler options                                                                                                     | `any`                                                                           | -                   |
-| resizeScaleOptions | equal scale table cell handler options                                                                                                | `TableResizeScaleOptions`                                                       | -                   |
-| alignOptions       | table alignment handler options                                                                                                       | `any`                                                                           | -                   |
-| scrollbarOptions   | table virtual scrollbar handler options                                                                                               | `any`                                                                           | -                   |
-| autoMergeCell      | empty row or column will auto merge to one                                                                                            | `boolean`                                                                       | `true`              |
+| attribute     | description                                                                                                                 | type                                                                            | default                                    |
+| ------------- | --------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- | ------------------------------------------ |
+| full          | if set `true`. width max will be 100%                                                                                       | `boolean`                                                                       | `false`                                    |
+| fullSwitch    | enable to choose insert a full width table                                                                                  | `boolean`                                                                       | `true`                                     |
+| texts         | the text used to create the table                                                                                           | `TableTextOptions`                                                              | `defaultTexts`                             |
+| customSelect  | display a custom select to custom row and column number add a table. module provides default selector `defaultCustomSelect` | `(tableModule: TableUp, picker: Picker) => Promise<HTMLElement> \| HTMLElement` | -                                          |
+| customBtn     | display a custom button to custom row and column number add a table. it only when use `defaultCustomSelect` will effect     | `boolean`                                                                       | `false`                                    |
+| icon          | picker svg icon string. it will set with `innerHTML`                                                                        | `string`                                                                        | `origin table icon`                        |
+| autoMergeCell | empty row or column will auto merge to one                                                                                  | `boolean`                                                                       | `true`                                     |
+| modules       | the module plugin to help user control about table operate. see [`Export Internal Module`](#export-internal-module)         | `[]`                                                                            | `{ module: Contstructor, options: any }[]` |
 
 > I'm not suggest to use `TableVirtualScrollbar` and `TableResizeLine` at same time, because it have a little conflict when user hover on it. Just like the first editor in [demo](https://zzxming.github.io/quill-table-up/)
 
@@ -127,21 +118,29 @@ const defaultTexts = {
 
 </details>
 
-### TableResizeScale Options
+## Export Internal Module
 
-| attribute | description              | type     | default |
-| --------- | ------------------------ | -------- | ------- |
-| blockSize | resize handle block size | `number` | `12`    |
+### TableSelection
 
-### TableSelection Options
+The table cell selection handler
 
-| attribute        | description                                                                          | type               | default   |
-| ---------------- | ------------------------------------------------------------------------------------ | ------------------ | --------- |
-| selectColor      | selector border color                                                                | `string`           | `#0589f3` |
-| tableMenu        | the table operate menu. module provides `TableMenuContextmenu` and `TableMenuSelect` | `Constructor`      | -         |
-| tableMenuOptions | module TableMenu options                                                             | `TableMenuOptions` | -         |
+#### Options
 
-### TableMenu Options
+| attribute   | description           | type     | default   |
+| ----------- | --------------------- | -------- | --------- |
+| selectColor | selector border color | `string` | `#0589f3` |
+
+### TableResizeLine / TableResizeBox
+
+The table cell resize handler
+
+### TableMenuContextmenu / TableMenuSelect
+
+The table operate menu
+
+> This module needs to be used together with `TableSelection`
+
+#### Options
 
 | attribute       | description                                                                                                                                                                  | type         | default                 |
 | --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------ | ----------------------- |
@@ -160,7 +159,7 @@ interface ToolOption {
   tip?: string;
   isColorChoose?: boolean; // trigger a color picker first. need set `key`
   key?: string; // the style name to set on td.
-  handle: (tableModule: TableUp, selectedTds: TableCellInnerFormat[], e: Event | string) => void;
+  handle: (this: TableMenu, tableModule: TableUp, selectedTds: TableCellInnerFormat[], e: Event | string) => void;
 }
 interface ToolOptionBreak {
   name: 'break';
@@ -291,6 +290,63 @@ const defaultTools = [
 ```
 
 </details>
+
+### TableResizeScale
+
+Equal scale table cell handler
+
+#### Options
+
+| attribute | description              | type     | default |
+| --------- | ------------------------ | -------- | ------- |
+| blockSize | resize handle block size | `number` | `12`    |
+
+### TableAlign
+
+The table alignment tool
+
+### TableVirtualScrollbar
+
+The table virtual scrollbar
+
+## Migrate to 3.x
+
+In version 3.x, only changed the way options are passed in, the relevant additional modules are used in the `modules` option. e.g.
+
+```ts
+new Quill('#editor', {
+  theme: 'snow',
+  modules: {
+    toolbar: toolbarConfig,
+    [TableUp.moduleName]: {
+      customSelect: defaultCustomSelect,
+      customBtn: true,
+      modules: [
+        { module: TableVirtualScrollbar },
+        { module: TableAlign },
+        { module: TableResizeLine },
+        { module: TableResizeScale, options: { blockSize: 12, }, },
+        { module: TableSelection, options: { selectColor: '#00ff8b4d', }, },
+        {
+          module: TableMenuContextmenu,
+          options: {
+            localstorageKey: 'used-color',
+            tipText: true,
+            tools: [],
+            defaultColorMap: [],
+          },
+        },
+      ],
+    },
+  },
+});
+```
+
+You can use `quill.getModule(TableUp.moduleName).getModule(TableSelection.moduleName)` to get the TableSelection instance in the TableUp
+
+### Other
+
+- add new attributes `tag` and `wrap-tag` in `table-up-cell-inner` which to represent parent label types
 
 ## Overrides
 

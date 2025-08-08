@@ -4,12 +4,13 @@ import type { TableResizeScaleOptions } from '../../utils';
 import Quill from 'quill';
 import { getTableMainRect } from '../../formats';
 import { addScrollEvent, clearScrollEvent, createBEM, tableUpSize } from '../../utils';
+import { TableDomSelector } from '../table-dom-selector';
 import { isTableAlignRight } from './utils';
 
-export class TableResizeScale {
+export class TableResizeScale extends TableDomSelector {
   scrollHandler: [HTMLElement, (e: Event) => void][] = [];
-  tableMainBlot: TableMainFormat | null = null;
-  tableWrapperBlot: TableWrapperFormat | null = null;
+  tableMainBlot?: TableMainFormat;
+  tableWrapperBlot?: TableWrapperFormat;
   bem = createBEM('scale');
   startX: number = 0;
   startY: number = 0;
@@ -18,20 +19,22 @@ export class TableResizeScale {
   root?: HTMLElement;
   block?: HTMLElement;
   resizeobserver: ResizeObserver = new ResizeObserver(() => this.update());
-  constructor(public tableModule: TableUp, public table: HTMLElement, public quill: Quill, options: Partial<TableResizeScaleOptions>) {
+  constructor(public tableModule: TableUp, public quill: Quill, options: Partial<TableResizeScaleOptions>) {
+    super(tableModule, quill);
     this.options = this.resolveOptions(options);
-    this.tableMainBlot = Quill.find(table) as TableMainFormat;
 
-    if (this.tableMainBlot && !this.tableMainBlot.full) {
-      this.tableWrapperBlot = this.tableMainBlot.parent as TableWrapperFormat;
-      this.buildResizer();
-      this.show();
-    }
-    this.quill.on(Quill.events.TEXT_CHANGE, this.updateWhenTextChange);
+    this.quill.on(Quill.events.EDITOR_CHANGE, this.updateWhenTextChange);
   }
 
-  updateWhenTextChange = () => {
-    this.update();
+  updateWhenTextChange = (eventName: string) => {
+    if (eventName === Quill.events.TEXT_CHANGE) {
+      if (this.table && !this.quill.root.contains(this.table)) {
+        this.setSelectionTable(undefined);
+      }
+      else {
+        this.update();
+      }
+    }
   };
 
   resolveOptions(options: Partial<TableResizeScaleOptions>) {
@@ -43,7 +46,6 @@ export class TableResizeScale {
   buildResizer() {
     if (!this.tableMainBlot || !this.tableWrapperBlot) return;
     this.root = this.tableModule.addContainer(this.bem.b());
-    this.root.classList.add(this.bem.is('hidden'));
     this.block = document.createElement('div');
     this.block.classList.add(this.bem.be('block'));
     Object.assign(this.block.style, {
@@ -87,10 +89,6 @@ export class TableResizeScale {
       document.addEventListener('mouseup', handleMouseUp);
     });
     this.block.addEventListener('dragstart', e => e.preventDefault());
-
-    this.resizeobserver.observe(this.tableMainBlot.domNode);
-    addScrollEvent.call(this, this.quill.root, () => this.update());
-    addScrollEvent.call(this, this.tableWrapperBlot.domNode, () => this.update());
   }
 
   isTableOutofEditor(): boolean {
@@ -115,8 +113,8 @@ export class TableResizeScale {
       this.hide();
       return;
     }
-    const { rect: tableRect, body: tableBodyBlot } = getTableMainRect(this.tableMainBlot);
-    if (!tableBodyBlot || !tableRect) return;
+    const { rect: tableRect } = getTableMainRect(this.tableMainBlot);
+    if (!tableRect) return;
     const tableWrapperRect = this.tableWrapperBlot.domNode.getBoundingClientRect();
     const editorRect = this.quill.root.getBoundingClientRect();
     const { scrollTop, scrollLeft } = this.tableWrapperBlot.domNode;
@@ -144,15 +142,25 @@ export class TableResizeScale {
   }
 
   show() {
-    if (this.root) {
-      this.root.classList.remove(this.bem.is('hidden'));
-      this.update();
+    if (!this.table) return;
+    this.tableMainBlot = Quill.find(this.table) as TableMainFormat;
+    if (this.tableMainBlot && !this.tableMainBlot.full) {
+      this.tableWrapperBlot = this.tableMainBlot.parent as TableWrapperFormat;
+
+      this.resizeobserver.observe(this.tableMainBlot.domNode);
+      addScrollEvent.call(this, this.quill.root, () => this.update());
+      addScrollEvent.call(this, this.tableWrapperBlot.domNode, () => this.update());
     }
+    this.buildResizer();
   }
 
   hide() {
+    this.tableMainBlot = undefined;
+    this.tableWrapperBlot = undefined;
     if (this.root) {
-      this.root.classList.add(this.bem.is('hidden'));
+      this.root.remove();
+      this.root = undefined;
+      this.block = undefined;
     }
   }
 
@@ -160,9 +168,6 @@ export class TableResizeScale {
     this.hide();
     this.quill.off(Quill.events.TEXT_CHANGE, this.updateWhenTextChange);
     this.resizeobserver.disconnect();
-    if (this.root) {
-      this.root.remove();
-    }
     clearScrollEvent.call(this);
   }
 }

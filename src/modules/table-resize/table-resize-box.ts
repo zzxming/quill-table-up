@@ -1,10 +1,10 @@
-import type { Parchment as TypeParchment } from 'quill';
-import type { TableColFormat, TableMainFormat, TableRowFormat } from '../../formats';
+import type { TableColFormat, TableMainFormat, TableRowFormat, TableWrapperFormat } from '../../formats';
 import type { TableUp } from '../../table-up';
+import type { TableSelection } from '../table-selection';
 import type { sizeChangeValue } from './table-resize-common';
 import Quill from 'quill';
 import { getTableMainRect, TableCaptionFormat, TableCellInnerFormat } from '../../formats';
-import { addScrollEvent, clearScrollEvent, createBEM, findChildBlot } from '../../utils';
+import { addScrollEvent, clearScrollEvent, createBEM, createResizeObserver, findChildBlot } from '../../utils';
 import { TableResizeCommon } from './table-resize-common';
 import { isTableAlignRight } from './utils';
 
@@ -13,10 +13,9 @@ interface Point {
   y: number;
 }
 export class TableResizeBox extends TableResizeCommon {
-  root!: HTMLElement;
-  tableMain: TableMainFormat;
-  tableWrapper!: TypeParchment.Parent;
-  resizeObserver!: ResizeObserver;
+  root: HTMLElement;
+  tableWrapperBlot?: TableWrapperFormat;
+  resizeObserver?: ResizeObserver;
   tableCols: TableColFormat[] = [];
   tableRows: TableRowFormat[] = [];
   rowHeadWrapper: HTMLElement | null = null;
@@ -27,80 +26,94 @@ export class TableResizeBox extends TableResizeCommon {
   size: number = 12;
   bem = createBEM('resize-box');
 
-  constructor(public tableModule: TableUp, public table: HTMLElement, quill: Quill) {
+  constructor(public tableModule: TableUp, public quill: Quill, _options: any) {
     super(tableModule, quill);
-    this.tableMain = Quill.find(this.table) as TableMainFormat;
-
-    if (!this.tableMain) return;
-    this.tableWrapper = this.tableMain.parent;
-    if (!this.tableWrapper) return;
 
     this.root = this.tableModule.addContainer(this.bem.b());
-    this.resizeObserver = new ResizeObserver(() => {
-      this.show();
-    });
-    this.resizeObserver.observe(this.table);
-    this.quill.on(Quill.events.TEXT_CHANGE, this.updateWhenTextChange);
+    this.quill.on(Quill.events.EDITOR_CHANGE, this.updateWhenTextChange);
   }
 
-  updateWhenTextChange = () => {
-    this.update();
-  };
-
-  handleResizerHeader(isX: boolean, index: number, e: MouseEvent) {
-    const { clientX, clientY } = e;
-    const tableRect = this.table.getBoundingClientRect();
-    if (this.tableModule.tableSelection) {
-      const tableSelection = this.tableModule.tableSelection;
-      if (!e.shiftKey) {
-        this.lastHeaderSelect = null;
-      }
-      const currentBoundary: [Point, Point] = [
-        { x: isX ? tableRect.left : clientX, y: isX ? clientY : tableRect.top },
-        { x: isX ? tableRect.right : clientX, y: isX ? clientY : tableRect.bottom },
-      ];
-      if (this.lastHeaderSelect) {
-        // find last click head
-        let lastX: number;
-        let lastY: number;
-        if (this.lastHeaderSelect.isX) {
-          const tableRowHeads = Array.from(this.root.getElementsByClassName(this.bem.be('row-header'))) as HTMLElement[];
-          const rect = tableRowHeads[this.lastHeaderSelect.index].getBoundingClientRect();
-          lastX = Math.min(rect.left, tableRect.left);
-          lastY = rect.top + rect.height / 2;
-        }
-        else {
-          const tableColHeads = Array.from(this.root.getElementsByClassName(this.bem.be('col-header'))) as HTMLElement[];
-          const rect = tableColHeads[this.lastHeaderSelect.index].getBoundingClientRect();
-          lastX = rect.left + rect.width / 2;
-          lastY = Math.min(rect.top, tableRect.top);
-        }
-
-        if (this.lastHeaderSelect.isX !== isX) {
-          currentBoundary[1] = {
-            x: Math.max(currentBoundary[0].x, lastX),
-            y: Math.max(currentBoundary[0].y, lastY),
-          };
-          currentBoundary[0] = {
-            x: Math.min(currentBoundary[0].x, lastX),
-            y: Math.min(currentBoundary[0].y, lastY),
-          };
-        }
-        else if (isX) {
-          currentBoundary[0].y = Math.min(currentBoundary[0].y, lastY);
-          currentBoundary[1].y = Math.max(currentBoundary[1].y, lastY);
-        }
-        else {
-          currentBoundary[0].x = Math.min(currentBoundary[0].x, lastX);
-          currentBoundary[1].x = Math.max(currentBoundary[1].x, lastX);
-        }
+  updateWhenTextChange = (eventName: string) => {
+    if (eventName === Quill.events.TEXT_CHANGE) {
+      if (this.table && !this.quill.root.contains(this.table)) {
+        this.setSelectionTable(undefined);
       }
       else {
-        this.lastHeaderSelect = { isX, index };
+        this.update();
+      }
+    }
+  };
+
+  setSelectionTable(table: HTMLTableElement | undefined) {
+    if (this.table === table) return;
+    this.hide();
+    this.table = table;
+    if (this.table) {
+      const newTableBlot = Quill.find(this.table) as TableMainFormat;
+      if (newTableBlot) {
+        this.tableBlot = newTableBlot;
+        this.tableWrapperBlot = this.tableBlot.parent as TableWrapperFormat;
+      }
+      this.show();
+    }
+    this.update();
+  }
+
+  handleResizerHeader(isX: boolean, index: number, e: MouseEvent) {
+    if (!this.table) return;
+    const { clientX, clientY } = e;
+    const tableRect = this.table.getBoundingClientRect();
+    if (!e.shiftKey) {
+      this.lastHeaderSelect = null;
+    }
+    const currentBoundary: [Point, Point] = [
+      { x: isX ? tableRect.left : clientX, y: isX ? clientY : tableRect.top },
+      { x: isX ? tableRect.right : clientX, y: isX ? clientY : tableRect.bottom },
+    ];
+    if (this.lastHeaderSelect) {
+      // find last click head
+      let lastX: number;
+      let lastY: number;
+      if (this.lastHeaderSelect.isX) {
+        const tableRowHeads = Array.from(this.root.getElementsByClassName(this.bem.be('row-header'))) as HTMLElement[];
+        const rect = tableRowHeads[this.lastHeaderSelect.index].getBoundingClientRect();
+        lastX = Math.min(rect.left, tableRect.left);
+        lastY = rect.top + rect.height / 2;
+      }
+      else {
+        const tableColHeads = Array.from(this.root.getElementsByClassName(this.bem.be('col-header'))) as HTMLElement[];
+        const rect = tableColHeads[this.lastHeaderSelect.index].getBoundingClientRect();
+        lastX = rect.left + rect.width / 2;
+        lastY = Math.min(rect.top, tableRect.top);
       }
 
+      if (this.lastHeaderSelect.isX !== isX) {
+        currentBoundary[1] = {
+          x: Math.max(currentBoundary[0].x, lastX),
+          y: Math.max(currentBoundary[0].y, lastY),
+        };
+        currentBoundary[0] = {
+          x: Math.min(currentBoundary[0].x, lastX),
+          y: Math.min(currentBoundary[0].y, lastY),
+        };
+      }
+      else if (isX) {
+        currentBoundary[0].y = Math.min(currentBoundary[0].y, lastY);
+        currentBoundary[1].y = Math.max(currentBoundary[1].y, lastY);
+      }
+      else {
+        currentBoundary[0].x = Math.min(currentBoundary[0].x, lastX);
+        currentBoundary[1].x = Math.max(currentBoundary[1].x, lastX);
+      }
+    }
+    else {
+      this.lastHeaderSelect = { isX, index };
+    }
+
+    const tableSelection = this.tableModule.getModule<TableSelection>('table-selection');
+    if (tableSelection) {
       tableSelection.table = this.table;
-      tableSelection.selectedTds = tableSelection.computeSelectedTds(...currentBoundary);
+      tableSelection.setSelectedTds(tableSelection.computeSelectedTds(...currentBoundary));
       tableSelection.show();
     }
   }
@@ -116,8 +129,8 @@ export class TableResizeBox extends TableResizeCommon {
 
   handleColMouseDownFunc = function (this: TableResizeBox, e: MouseEvent) {
     const value = this.handleColMouseDown(e);
-    if (value && this.dragColBreak) {
-      const [tableCaptionBlot] = findChildBlot(this.tableMain, TableCaptionFormat);
+    if (value && this.dragColBreak && this.tableBlot) {
+      const [tableCaptionBlot] = findChildBlot(this.tableBlot, TableCaptionFormat);
       const offset = tableCaptionBlot && tableCaptionBlot.side === 'top' ? 0 : this.size;
       Object.assign(this.dragColBreak.style, {
         top: `${value.top - offset}px`,
@@ -132,8 +145,8 @@ export class TableResizeBox extends TableResizeCommon {
     const tableColHeads = Array.from(this.root.getElementsByClassName(this.bem.be('col-header'))) as HTMLElement[];
     const tableColHeadSeparators = Array.from(this.root.getElementsByClassName(this.bem.be('col-separator'))) as HTMLElement[];
 
-    addScrollEvent.call(this, this.tableWrapper.domNode, () => {
-      this.colHeadWrapper!.scrollLeft = this.tableWrapper.domNode.scrollLeft;
+    addScrollEvent.call(this, this.tableWrapperBlot!.domNode, () => {
+      this.colHeadWrapper!.scrollLeft = this.tableWrapperBlot!.domNode.scrollLeft;
     });
 
     for (const [i, el] of tableColHeads.entries()) {
@@ -171,8 +184,8 @@ export class TableResizeBox extends TableResizeCommon {
     const tableRowHeads = Array.from(this.root.getElementsByClassName(this.bem.be('row-header'))) as HTMLElement[];
     const tableRowHeadSeparators = Array.from(this.root.getElementsByClassName(this.bem.be('row-separator'))) as HTMLElement[];
 
-    addScrollEvent.call(this, this.tableWrapper.domNode, () => {
-      this.rowHeadWrapper!.scrollTop = this.tableWrapper.domNode.scrollTop;
+    addScrollEvent.call(this, this.tableWrapperBlot!.domNode, () => {
+      this.rowHeadWrapper!.scrollTop = this.tableWrapperBlot!.domNode.scrollTop;
     });
 
     for (const [i, el] of tableRowHeads.entries()) {
@@ -186,60 +199,20 @@ export class TableResizeBox extends TableResizeCommon {
   }
 
   update() {
-    const { rect: tableRect, body: tableBodyBlot } = getTableMainRect(this.tableMain);
-    if (!tableBodyBlot || !tableRect) return;
-    const tableWrapperRect = this.tableWrapper.domNode.getBoundingClientRect();
+    if (!this.tableBlot || !this.tableWrapperBlot) return;
+    const { rect: tableRect } = getTableMainRect(this.tableBlot);
+    if (!tableRect) return;
+
+    this.root.innerHTML = '';
+
+    this.tableCols = this.tableBlot.getCols();
+    this.tableRows = this.tableBlot.getRows();
+    const tableWrapperRect = this.tableWrapperBlot.domNode.getBoundingClientRect();
     const rootRect = this.quill.root.getBoundingClientRect();
     Object.assign(this.root.style, {
       top: `${Math.max(tableRect.y, tableWrapperRect.y) - rootRect.y}px`,
       left: `${Math.max(tableRect.x, tableWrapperRect.x) - rootRect.x}px`,
     });
-
-    let cornerTranslateX = -1 * this.size;
-    let rowHeadWrapperTranslateX = -1 * this.size;
-    if (isTableAlignRight(this.tableMain)) {
-      this.root.classList.add(this.bem.is('align-right'));
-      cornerTranslateX = Math.min(tableWrapperRect.width, tableRect.width);
-      rowHeadWrapperTranslateX = Math.min(tableWrapperRect.width, tableRect.width);
-    }
-    else {
-      this.root.classList.remove(this.bem.is('align-right'));
-    }
-
-    const [tableCaptionBlot] = findChildBlot(this.tableMain, TableCaptionFormat);
-    const tableCaptionIsTop = !tableCaptionBlot || !(tableCaptionBlot && tableCaptionBlot.side === 'top');
-    if (tableCaptionIsTop) {
-      this.root.classList.remove(this.bem.is('caption-bottom'));
-    }
-    else {
-      this.root.classList.add(this.bem.is('caption-bottom'));
-    }
-
-    if (this.corner) {
-      Object.assign(this.corner.style, {
-        transform: `translateY(${-1 * this.size}px) translateX(${cornerTranslateX}px)`,
-        top: `${tableCaptionIsTop ? 0 : tableRect.height + this.size}px`,
-      });
-    }
-    if (this.rowHeadWrapper) {
-      Object.assign(this.rowHeadWrapper.style, {
-        transform: `translateX(${rowHeadWrapperTranslateX}px)`,
-      });
-    }
-    if (this.colHeadWrapper) {
-      Object.assign(this.colHeadWrapper.style, {
-        top: `${tableCaptionIsTop ? 0 : tableRect.height + this.size}px`,
-      });
-    }
-  }
-
-  show() {
-    this.tableCols = this.tableMain.getCols();
-    this.tableRows = this.tableMain.getRows();
-    this.root.innerHTML = '';
-    const { rect: tableRect, body: tableBodyBlot } = getTableMainRect(this.tableMain);
-    if (!tableBodyBlot || !tableRect) return;
-    const tableWrapperRect = this.tableWrapper.domNode.getBoundingClientRect();
 
     if (this.tableCols.length > 0 && this.tableRows.length > 0) {
       this.corner = document.createElement('div');
@@ -249,10 +222,9 @@ export class TableResizeBox extends TableResizeCommon {
         height: `${this.size}px`,
       });
       this.corner.addEventListener('click', () => {
-        if (this.tableModule.tableSelection) {
-          const cellInners = this.tableMain.descendants(TableCellInnerFormat);
-          const tableSelection = this.tableModule.tableSelection;
-          tableSelection.selectedTds = cellInners;
+        const tableSelection = this.tableModule.getModule<TableSelection>('table-selection');
+        if (tableSelection && this.tableBlot) {
+          tableSelection.setSelectedTds(this.tableBlot.descendants(TableCellInnerFormat));
           tableSelection.show();
           tableSelection.updateWithSelectedTds();
         }
@@ -283,7 +255,7 @@ export class TableResizeBox extends TableResizeCommon {
       colHead.innerHTML = colHeadStr;
       colHeadWrapper.appendChild(colHead);
       this.root.appendChild(colHeadWrapper);
-      colHeadWrapper.scrollLeft = this.tableWrapper.domNode.scrollLeft;
+      colHeadWrapper.scrollLeft = this.tableWrapperBlot.domNode.scrollLeft;
       this.colHeadWrapper = colHeadWrapper;
       this.bindColEvents();
     }
@@ -300,7 +272,6 @@ export class TableResizeBox extends TableResizeCommon {
       rowHeadWrapper.classList.add(this.bem.be('row'));
       const rowHead = document.createElement('div');
       rowHead.classList.add(this.bem.be('row-wrapper'));
-
       Object.assign(rowHeadWrapper.style, {
         transform: `translateX(-${this.size}px)`,
         width: `${this.size}px`,
@@ -312,10 +283,56 @@ export class TableResizeBox extends TableResizeCommon {
       rowHead.innerHTML = rowHeadStr;
       rowHeadWrapper.appendChild(rowHead);
       this.root.appendChild(rowHeadWrapper);
-      rowHeadWrapper.scrollTop = this.tableWrapper.domNode.scrollTop;
+      rowHeadWrapper.scrollTop = this.tableWrapperBlot.domNode.scrollTop;
       this.rowHeadWrapper = rowHeadWrapper;
       this.bindRowEvents();
     }
+
+    // computed about `caption`
+    const [tableCaptionBlot] = findChildBlot(this.tableBlot, TableCaptionFormat);
+    const tableCaptionIsTop = !tableCaptionBlot || !(tableCaptionBlot && tableCaptionBlot.side === 'top');
+    if (tableCaptionIsTop) {
+      this.root.classList.remove(this.bem.is('caption-bottom'));
+    }
+    else {
+      this.root.classList.add(this.bem.is('caption-bottom'));
+    }
+    let cornerTranslateX = -1 * this.size;
+    let rowHeadWrapperTranslateX = -1 * this.size;
+    if (isTableAlignRight(this.tableBlot)) {
+      this.root.classList.add(this.bem.is('align-right'));
+      cornerTranslateX = Math.min(tableWrapperRect.width, tableRect.width);
+      rowHeadWrapperTranslateX = Math.min(tableWrapperRect.width, tableRect.width);
+    }
+    else {
+      this.root.classList.remove(this.bem.is('align-right'));
+    }
+    if (this.corner) {
+      Object.assign(this.corner.style, {
+        transform: `translateY(${-1 * this.size}px) translateX(${cornerTranslateX}px)`,
+        top: `${tableCaptionIsTop ? 0 : tableRect.height + this.size}px`,
+      });
+    }
+    if (this.rowHeadWrapper) {
+      Object.assign(this.rowHeadWrapper.style, {
+        transform: `translateX(${rowHeadWrapperTranslateX}px)`,
+        maxHeight: `${tableWrapperRect.height}px`,
+      });
+    }
+    if (this.colHeadWrapper) {
+      Object.assign(this.colHeadWrapper.style, {
+        top: `${tableCaptionIsTop ? 0 : tableRect.height + this.size}px`,
+        maxWidth: `${tableWrapperRect.width}px`,
+      });
+    }
+  }
+
+  show() {
+    if (!this.table || !this.tableBlot || !this.tableWrapperBlot) return;
+
+    this.root.classList.remove(this.bem.is('hidden'));
+    this.resizeObserver = createResizeObserver(() => this.update(), { ignoreFirstBind: true });
+    this.resizeObserver.observe(this.table);
 
     this.update();
     addScrollEvent.call(this, this.quill.root, () => {
@@ -325,13 +342,16 @@ export class TableResizeBox extends TableResizeCommon {
 
   hide() {
     this.root.classList.add(this.bem.is('hidden'));
+    if (this.resizeObserver) {
+      this.resizeObserver.disconnect();
+      this.resizeObserver = undefined;
+    }
   }
 
   destroy() {
     this.hide();
     clearScrollEvent.call(this);
-    this.resizeObserver.disconnect();
-    this.quill.off(Quill.events.TEXT_CHANGE, this.updateWhenTextChange);
+    this.quill.off(Quill.events.EDITOR_CHANGE, this.updateWhenTextChange);
     for (const [dom, handle] of this.scrollHandler) {
       dom.removeEventListener('scroll', handle);
     }
