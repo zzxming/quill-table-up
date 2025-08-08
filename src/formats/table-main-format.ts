@@ -1,5 +1,6 @@
 import type TypeScroll from 'quill/blots/scroll';
 import type { TableValue } from '../utils';
+import type { TableBodyFormat } from './table-body-format';
 import { blotName, randomId, tableUpSize } from '../utils';
 import { ContainerFormat } from './container-format';
 import { TableCellInnerFormat } from './table-cell-inner-format';
@@ -128,8 +129,14 @@ export class TableMainFormat extends ContainerFormat {
     Object.assign(this.domNode.style, style);
   }
 
+  getBodys() {
+    return Array.from(this.domNode.querySelectorAll('thead, tbody, tfoot'))
+      .map(el => this.scroll.find(el) as TableBodyFormat)
+      .filter(Boolean);
+  }
+
   getRows() {
-    return Array.from(this.domNode.querySelectorAll(`${TableRowFormat.tagName}`))
+    return Array.from(this.domNode.querySelectorAll('tr'))
       .map(el => this.scroll.find(el) as TableRowFormat)
       .filter(Boolean);
   }
@@ -228,7 +235,7 @@ export class TableMainFormat extends ContainerFormat {
       else {
         if (row.children.length === 0 && row.prev) {
           // find the not empty row
-          let prev: TableRowFormat = row.prev as TableRowFormat;
+          let prev = row.prev as TableRowFormat;
           while (prev && prev.children.length === 0) {
             prev = prev.prev as TableRowFormat;
           }

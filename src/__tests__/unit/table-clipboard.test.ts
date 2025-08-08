@@ -1364,6 +1364,82 @@ describe('clipboard cell structure', () => {
       { ignoreAttrs: ['class', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
     );
   });
+
+  it('convert thead rowspan to tbody', async () => {
+    const quill = createQuillWithTableModule(`<p><br></p>`);
+    quill.setContents(
+      quill.clipboard.convert({
+        html: `
+          <table>
+            <thead>
+              <tr>
+                <td rowspan="2" colspan="2">123</td>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>1</td>
+                <td>2</td>
+              </tr>
+              <tr>
+                <td>1</td>
+                <td>2</td>
+              </tr>
+            </tbody>
+          </table>
+        `,
+      }),
+    );
+    await vi.runAllTimersAsync();
+
+    expect(quill.root).toEqualHTML(
+      `
+        <p><br></p>
+        <div>
+          <table cellpadding="0" cellspacing="0" style="margin-right: auto; width: 200px;">
+            ${createTaleColHTML(2, { full: false, width: 100 })}
+            <thead>
+              <tr data-wrap-tag="thead">
+                <td colspan="2" rowspan="1" data-wrap-tag="thead">
+                  <div data-tag="td" data-wrap-tag="thead">
+                    <p>123</p>
+                  </div>
+                </td>
+              </tr>
+            </thead>
+            <tbody>
+              <tr data-wrap-tag="tbody">
+                <td colspan="1" rowspan="1" data-wrap-tag="tbody">
+                  <div data-tag="td" data-wrap-tag="tbody">
+                    <p>1</p>
+                  </div>
+                </td>
+                <td colspan="1" rowspan="1" data-wrap-tag="tbody">
+                  <div data-tag="td" data-wrap-tag="tbody">
+                    <p>2</p>
+                  </div>
+                </td>
+              </tr>
+              <tr data-wrap-tag="tbody">
+                <td colspan="1" rowspan="1" data-wrap-tag="tbody">
+                  <div data-tag="td" data-wrap-tag="tbody">
+                    <p>1</p>
+                  </div>
+                </td>
+                <td colspan="1" rowspan="1" data-wrap-tag="tbody">
+                  <div data-tag="td" data-wrap-tag="tbody">
+                    <p>2</p>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p><br></p>
+      `,
+      { ignoreAttrs: ['class', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
+    );
+  });
 });
 
 describe('clipboard content format', () => {

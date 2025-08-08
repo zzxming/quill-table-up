@@ -848,72 +848,76 @@ export class TableUp {
 
   // handle unusual delete cell
   fixUnusuaDeletelTable(tableBlot: TableMainFormat) {
-    // calculate all cells
-    const trBlots = tableBlot.getRows();
+    const bodys = tableBlot.getBodys();
     const tableColIds = tableBlot.getColIds();
-    if (trBlots.length === 0) {
-      return tableBlot.remove();
-    }
-    if (tableColIds.length === 0) return;
-    // append by col
-    const cellSpanMap = new Array(trBlots.length).fill(0).map(() => new Array(tableColIds.length).fill(false));
     const tableId = tableBlot.tableId;
-    for (const [indexTr, tr] of trBlots.entries()) {
-      let indexTd = 0;
-      let indexCol = 0;
-      const curCellSpan = cellSpanMap[indexTr];
-      const tds = tr.descendants(TableCellFormat);
-      // loop every row and column
-      while (indexCol < tableColIds.length) {
+    for (const body of bodys) {
+    // calculate all cells in body
+      const trBlots = body.getRows();
+      if (trBlots.length === 0) {
+        body.remove();
+        continue;
+      }
+      if (tableColIds.length === 0) continue;
+      // append by col
+      const cellSpanMap = new Array(trBlots.length).fill(0).map(() => new Array(tableColIds.length).fill(false));
+      for (const [indexTr, tr] of trBlots.entries()) {
+        let indexTd = 0;
+        let indexCol = 0;
+        const curCellSpan = cellSpanMap[indexTr];
+        const tds = tr.descendants(TableCellFormat);
+        // loop every row and column
+        while (indexCol < tableColIds.length) {
         // skip when rowspan or colspan
-        if (curCellSpan[indexCol]) {
-          indexCol += 1;
-          continue;
-        }
-        const curTd = tds[indexTd];
-        // if colId does not match. insert a new one
-        if (!curTd || curTd.colId !== tableColIds[indexCol]) {
-          tr.insertBefore(
-            createCell(
-              this.quill.scroll,
-              {
-                tableId,
-                colId: tableColIds[indexCol],
-                rowId: tr.rowId,
-              },
-            ),
-            curTd,
-          );
-        }
-        else {
-          if (indexTr + curTd.rowspan - 1 >= trBlots.length) {
-            curTd.getCellInner().rowspan = trBlots.length - indexTr;
+          if (curCellSpan[indexCol]) {
+            indexCol += 1;
+            continue;
           }
-
-          const { colspan, rowspan } = curTd;
-          // skip next column cell
-          if (colspan > 1) {
-            for (let c = 1; c < colspan; c++) {
-              curCellSpan[indexCol + c] = true;
+          const curTd = tds[indexTd];
+          // if colId does not match. insert a new one
+          if (!curTd || curTd.colId !== tableColIds[indexCol]) {
+            tr.insertBefore(
+              createCell(
+                this.quill.scroll,
+                {
+                  tableId,
+                  colId: tableColIds[indexCol],
+                  rowId: tr.rowId,
+                },
+              ),
+              curTd,
+            );
+          }
+          else {
+            if (indexTr + curTd.rowspan - 1 >= trBlots.length) {
+              curTd.getCellInner().rowspan = trBlots.length - indexTr;
             }
-          }
-          // skip next rowspan cell
-          if (rowspan > 1) {
-            for (let r = indexTr + 1; r < indexTr + rowspan; r++) {
-              for (let c = 0; c < colspan; c++) {
-                cellSpanMap[r][indexCol + c] = true;
+
+            const { colspan, rowspan } = curTd;
+            // skip next column cell
+            if (colspan > 1) {
+              for (let c = 1; c < colspan; c++) {
+                curCellSpan[indexCol + c] = true;
               }
             }
+            // skip next rowspan cell
+            if (rowspan > 1) {
+              for (let r = indexTr + 1; r < indexTr + rowspan; r++) {
+                for (let c = 0; c < colspan; c++) {
+                  cellSpanMap[r][indexCol + c] = true;
+                }
+              }
+            }
+            indexTd += 1;
           }
-          indexTd += 1;
+          indexCol += 1;
         }
-        indexCol += 1;
-      }
 
-      // if td not match all exist td. Indicates that a cell has been inserted
-      if (indexTd < tds.length) {
-        for (let i = indexTd; i < tds.length; i++) {
-          tds[i].remove();
+        // if td not match all exist td. Indicates that a cell has been inserted
+        if (indexTd < tds.length) {
+          for (let i = indexTd; i < tds.length; i++) {
+            tds[i].remove();
+          }
         }
       }
     }
@@ -921,7 +925,6 @@ export class TableUp {
 
   balanceTables() {
     for (const tableBlot of this.quill.scroll.descendants(TableMainFormat)) {
-      // 同时, 当关闭 autoMerge 时, 如何对 cell 数据的 emptyRow 处理
       tableBlot.checkEmptyCol(this.options.autoMergeCell);
       tableBlot.checkEmptyRow(this.options.autoMergeCell);
       this.fixUnusuaDeletelTable(tableBlot);

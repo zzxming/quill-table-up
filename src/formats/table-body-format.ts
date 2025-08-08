@@ -1,4 +1,5 @@
 import type { TableBodyTag } from '../utils';
+import type { TableRowFormat } from './table-row-format';
 import { blotName } from '../utils';
 import { ContainerFormat } from './container-format';
 import { TableCellInnerFormat } from './table-cell-inner-format';
@@ -41,5 +42,11 @@ export class TableBodyFormat extends ContainerFormat {
     for (const blot of blots) {
       (blot as any).wrapTag = tag;
     }
+  }
+
+  getRows() {
+    return Array.from(this.domNode.querySelectorAll('tr'))
+      .map(el => this.scroll.find(el) as TableRowFormat)
+      .filter(Boolean);
   }
 }

@@ -171,6 +171,8 @@ export class TableClipboard extends Clipboard {
         }
       }
     }
+    // clear rowspan. thead/tbody/tfoot will not share rowspan
+    this.rowspanCount = [];
     return delta;
   }
 
@@ -242,7 +244,6 @@ export class TableClipboard extends Clipboard {
       }
     }
     this.getStyleBackgroundColor(node, delta);
-    console.log(delta.ops);
     // if delta.ops is empty, return a new line. make sure emptyRow parse correctly in `matchTbody`
     return delta.ops.length === 0 ? new Delta([{ insert: '\n' }]) : delta;
   }
