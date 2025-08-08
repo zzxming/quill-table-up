@@ -956,6 +956,89 @@ describe('clipboard cell structure', () => {
     );
   });
 
+  it('clipboard convert empty tr to `emptyRow`', async () => {
+    const quill = createQuillWithTableModule(`<p><br></p>`, { autoMergeCell: false });
+    quill.setContents(
+      quill.clipboard.convert({
+        html: `<table><thead><tr><td rowspan="2" colspan="2">1</td></tr><tr></tr></thead><tbody><tr><td>1</td><td>2</td></tr><tr><td>1</td><td>2</td></tr></tbody></table>`,
+      }),
+    );
+
+    await vi.runAllTimersAsync();
+
+    expect(quill.root).toEqualHTML(
+      `
+        <p><br></p>
+        <div>
+          <table cellpadding="0" cellspacing="0">
+            ${createTaleColHTML(2, { full: false, width: 100 })}
+            <thead>
+              <tr>
+                <td rowspan="2" colspan="2" data-empty-row="length:1">
+                  <div data-empty-row="length:1"><p>1</p></div>
+                </td>
+              </tr>
+              <tr>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td rowspan="1" colspan="1">
+                  <div><p>1</p></div>
+                </td>
+                <td rowspan="1" colspan="1">
+                  <div><p>2</p></div>
+                </td>
+              </tr>
+              <tr>
+                <td rowspan="1" colspan="1">
+                  <div><p>1</p></div>
+                </td>
+                <td rowspan="1" colspan="1">
+                  <div><p>2</p></div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p><br></p>
+      `,
+      {
+        ignoreAttrs: ['data-wrap-tag', 'data-tag', 'class', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'data-style', 'style', 'contenteditable'],
+        replaceAttrs: {
+          'data-empty-row': function (value: string) {
+            try {
+              const emptyRow = JSON.parse(value);
+              return `length:${emptyRow.length}`;
+            }
+            catch {
+              return value;
+            }
+          },
+        },
+      },
+    );
+    expectDelta(
+      new Delta([
+        { insert: '\n' },
+        { insert: { 'table-up-col': { full: false, width: 100 } } },
+        { insert: { 'table-up-col': { full: false, width: 100 } } },
+        { insert: '1' },
+        { attributes: { 'table-up-cell-inner': { rowspan: 2, colspan: 2, wrapTag: 'thead' } }, insert: '\n' },
+        { insert: '1' },
+        { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1, wrapTag: 'tbody' } }, insert: '\n' },
+        { insert: '2' },
+        { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1, wrapTag: 'tbody' } }, insert: '\n' },
+        { insert: '1' },
+        { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1, wrapTag: 'tbody' } }, insert: '\n' },
+        { insert: '2' },
+        { attributes: { 'table-up-cell-inner': { rowspan: 1, colspan: 1, wrapTag: 'tbody' } }, insert: '\n' },
+        { insert: '\n' },
+      ]),
+      quill.getContents(),
+    );
+  });
+
   it('clipboard convert col with span attribute', async () => {
     const quill = createQuillWithTableModule(`<p><br></p>`, { autoMergeCell: false });
     quill.setContents(
