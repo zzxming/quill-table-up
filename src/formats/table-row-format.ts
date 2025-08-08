@@ -4,7 +4,6 @@ import type { TableCellFormat } from './table-cell-format';
 import { blotName, findParentBlot } from '../utils';
 import { ContainerFormat } from './container-format';
 import { TableCellInnerFormat } from './table-cell-inner-format';
-import { tableBodyBlotNameMap } from './utils';
 
 export type SkipRowCount = number[] & { skipRowNum?: number };
 export class TableRowFormat extends ContainerFormat {
@@ -173,8 +172,13 @@ export class TableRowFormat extends ContainerFormat {
   }
 
   wrapParentTag() {
-    const parent = this.parent;
+    const tableBodyBlotNameMap: Record<string, string> = {
+      thead: blotName.tableHead,
+      tbody: blotName.tableBody,
+      tfoot: blotName.tableFoot,
+    };
 
+    const parent = this.parent;
     if (parent !== null && parent.statics.blotName !== tableBodyBlotNameMap[this.wrapTag]) {
       if (Object.values(tableBodyBlotNameMap).includes(parent.statics.blotName)) {
         const index = this.offset(this.parent);

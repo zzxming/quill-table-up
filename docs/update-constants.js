@@ -7,10 +7,13 @@ updateTableConstants({
   blotName: {
     container: 'a-container',
     tableWrapper: 'a',
+    tableCaption: 'a-caption',
     tableMain: 'a-main',
     tableColgroup: 'a-colgroup',
     tableCol: 'a-col',
+    tableHead: 'a-head',
     tableBody: 'a-body',
+    tableFoot: 'a-foot',
     tableRow: 'a-row',
     tableCell: 'a-cell',
     tableCellInner: 'a-cell-inner',
@@ -24,6 +27,10 @@ updateTableConstants({
   // Table internal event. You can listen it by `quill.on(tableUpEvent.AFTER_TABLE_RESIZE, callback)`
   tableUpEvent: {
     AFTER_TABLE_RESIZE: 'after-table-resize',
+    TABLE_SELECTION_DRAG_START: 'table-selection-drag-start',
+    TABLE_SELECTION_DRAG_END: 'table-selection-drag-end',
+    TABLE_SELECTION_CHANGE: 'table-selection-change',
+    TABLE_SELECTION_DISPLAY_CHANGE: 'table-selection-display-change',
   },
   // Other variable
   tableUpInternal: {
@@ -55,14 +62,14 @@ const _quill = new Quill('#editor1', {
       ['clean'],
     ],
     [TableUp.moduleName]: {
-      scrollbar: TableVirtualScrollbar,
-      align: TableAlign,
-      resize: TableResizeBox,
       customSelect: defaultCustomSelect,
-      selection: TableSelection,
-      selectionOptions: {
-        tableMenu: TableMenuContextmenu,
-      },
+      modules: [
+        { module: TableVirtualScrollbar },
+        { module: TableAlign },
+        { module: TableResizeBox },
+        { module: TableSelection },
+        { module: TableMenuContextmenu },
+      ],
     },
   },
 });

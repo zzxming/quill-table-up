@@ -46,11 +46,14 @@ export function updateTableConstants(data: Partial<TableConstantsData>) {
 
   TableUp.toolName = blotName.tableWrapper;
   ContainerFormat.blotName = blotName.container;
+  TableCaptionFormat.blotName = blotName.tableCaption;
   TableWrapperFormat.blotName = blotName.tableWrapper;
   TableMainFormat.blotName = blotName.tableMain;
   TableColgroupFormat.blotName = blotName.tableColgroup;
   TableColFormat.blotName = blotName.tableCol;
+  TableHeadFormat.blotName = blotName.tableHead;
   TableBodyFormat.blotName = blotName.tableBody;
+  TableFootFormat.blotName = blotName.tableFoot;
   TableRowFormat.blotName = blotName.tableRow;
   TableCellFormat.blotName = blotName.tableCell;
   TableCellInnerFormat.blotName = blotName.tableCellInner;
