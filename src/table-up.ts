@@ -444,7 +444,6 @@ export class TableUp {
         const formats = this.getFormat(range);
         // only when selection in cell and selectedTds > 1 can format all cells
         const tableSelection = tableUpModule.getModule<TableSelection>('table-selection');
-        console.log(tableSelection?.selectedTds);
         if (!formats[blotName.tableCellInner] || range.length > 0 || (tableUpModule && tableSelection && tableSelection.selectedTds.length <= 1)) {
           return originFormat.call(this, name, value, source);
         }
