@@ -9,13 +9,28 @@ test.beforeEach(async ({ page }) => {
 extendTest('test menu color picker should work correctly', async ({ page }) => {
   await createTableBySelect(page, 'container1', 3, 3);
   const container1Cell = page.locator('#editor1 .ql-table-cell').nth(0);
+  const cellBoundbox = (await container1Cell.boundingBox())!;
+  expect(cellBoundbox).not.toBeNull();
   await container1Cell.click();
+  await page.mouse.down();
+  await page.mouse.move(cellBoundbox.x + cellBoundbox.width * 1.5, cellBoundbox.y + cellBoundbox.height * 1.5);
+  await page.mouse.up();
   await container1Cell.click({ button: 'right' });
+  const selectionBoundbox = (await page.locator('#container1 .table-up-toolbox .table-up-selection .table-up-selection__line').boundingBox())!;
+  expect(selectionBoundbox).not.toBeNull();
+  expect(selectionBoundbox.x).toBeCloseTo(cellBoundbox.x, 0);
+  expect(selectionBoundbox.y).toBeCloseTo(cellBoundbox.y, 0);
+  expect(selectionBoundbox.width).toBeCloseTo(cellBoundbox.width * 2, 0);
+  expect(selectionBoundbox.height).toBeCloseTo(cellBoundbox.height * 2, 0);
 
   await page.locator('.table-up-menu.is-contextmenu .table-up-menu__item').filter({ hasText: 'Set background color' }).first().click();
   await page.locator('.table-up-tooltip .table-up-color-map .table-up-color-map__item[style="background-color: rgb(255, 255, 255);"]').first().click();
   await expect(page.locator('.table-up-menu.is-contextmenu')).toBeVisible();
+  await expect(page.locator('#editor1 .ql-table-cell[style="background-color: rgb(255, 255, 255);"]')).toHaveCount(4);
   await expect(page.locator('#editor1 .ql-table-cell').nth(0)).toHaveCSS('background-color', 'rgb(255, 255, 255)');
+  await expect(page.locator('#editor1 .ql-table-cell').nth(1)).toHaveCSS('background-color', 'rgb(255, 255, 255)');
+  await expect(page.locator('#editor1 .ql-table-cell').nth(3)).toHaveCSS('background-color', 'rgb(255, 255, 255)');
+  await expect(page.locator('#editor1 .ql-table-cell').nth(4)).toHaveCSS('background-color', 'rgb(255, 255, 255)');
 
   await page.mouse.click(0, 0);
 
