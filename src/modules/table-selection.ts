@@ -154,7 +154,8 @@ export class TableSelection extends TableDomSelector {
       const formats = this.quill.getFormat(range);
       const [line] = this.quill.getLine(range.index);
       const isInCell = !!formats[blotName.tableCellInner] && !!line;
-      const containsLine = this.selectedTds.some(td => td.children.contains(line!));
+      // if the selection is in the cell inner, should not update
+      const containsLine = line && this.selectedTds.some(td => td.domNode.contains(line.domNode));
 
       if (isInCell && !containsLine) {
         try {
