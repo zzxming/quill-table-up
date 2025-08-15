@@ -7,7 +7,7 @@ import Quill from 'quill';
 import { blotName, cssTextToObject, findParentBlot, findParentBlots, toCamelCase } from '../utils';
 import { ContainerFormat } from './container-format';
 import { TableBodyFormat } from './table-body-format';
-import { getValidCellspan } from './utils';
+import { getValidCellspan, isSameCellValue } from './utils';
 
 const Block = Quill.import('blots/block') as TypeParchment.BlotConstructor;
 const BlockEmbed = Quill.import('blots/block/embed') as TypeParchment.BlotConstructor;
@@ -323,41 +323,39 @@ export class TableCellInnerFormat extends ContainerFormat {
       const cellInnerBlot = blot as TableCellInnerFormat;
       const cellInnerBlotValue = this.statics.formats(cellInnerBlot.domNode);
       const selfValue = this.statics.formats(this.domNode);
-      const isSame = Object.entries(selfValue).every(([key, value]) => String(value) === String(cellInnerBlotValue[key]));
+      const isSame = isSameCellValue(selfValue, cellInnerBlotValue);
 
       if (!isSame) {
         const [selfRow, selfCell] = findParentBlots(this, [blotName.tableRow, blotName.tableCell] as const);
+        let cellRef: TypeParchment.Blot = selfCell;
         // split current cellInner
         if (ref) {
           const index = ref.offset();
           const length = this.length();
-          if (index + 1 < length) {
-            const newCellInner = this.scroll.create(blotName.tableCellInner, selfValue) as TypeParchment.Parent;
-            this.children.forEachAt(index + 1, this.length(), (block) => {
-              newCellInner.appendChild(block);
-            });
-            selfRow.insertBefore(newCellInner.wrap(blotName.tableCell, selfValue), selfCell.next);
+          if (index !== 0 && index < length) {
+            const newCellInner = this.split(index)!;
+            const newCell = newCellInner.wrap(blotName.tableCell, selfValue);
+            selfRow.insertBefore(newCell, selfCell.next);
+            cellRef = newCell;
           }
         }
-        // different rowId. split current row. move lines which after ref to next row
+        // different rowId. split current row
         if (this.rowId !== cellInnerBlot.rowId) {
-          if (ref) {
-            const index = ref.offset(selfRow);
-            selfRow.split(index);
-          }
-          else if (selfCell.next) {
-            const index = selfCell.next.offset(selfRow);
-            selfRow.split(index);
+          let rowRef: TypeParchment.Blot | null = selfRow;
+          const splitRef = ref || selfCell;
+          if (splitRef) {
+            const index = splitRef.offset(selfRow);
+            rowRef = selfRow.split(index);
           }
           const row = this.scroll.create(blotName.tableRow, cellInnerBlotValue) as TypeParchment.Parent;
           const cell = this.scroll.create(blotName.tableCell, cellInnerBlotValue) as TypeParchment.Parent;
           cell.appendChild(cellInnerBlot);
           row.appendChild(cell);
-          return selfRow.parent.insertBefore(row, selfRow.next);
+          return selfRow.parent.insertBefore(row, rowRef);
         }
         return selfRow.insertBefore(
           cellInnerBlot.wrap(blotName.tableCell, cellInnerBlotValue),
-          ref ? selfCell : selfCell.next,
+          cellRef,
         );
       }
       else {
