@@ -4,6 +4,7 @@ import type TypeContainer from 'quill/blots/container';
 import type { TableCellInnerFormat } from '../table-cell-inner-format';
 import Quill from 'quill';
 import { blotName, findParentBlot, isString } from '../../utils';
+import { isSameCellValue } from '../utils';
 
 const Parchment = Quill.import('parchment');
 const Block = Quill.import('blots/block') as typeof TypeBlock;
@@ -25,32 +26,16 @@ export class BlockOverride extends Block {
           currentTableCellInner = findParentBlot(this, blotName.tableCellInner);
           const cellValue = currentTableCellInner.formats();
           const replacementValue = (replacement as TableCellInnerFormat).formats();
-          const keys = Object.keys(cellValue);
-          if (keys.every(key => JSON.stringify(cellValue[key]) === JSON.stringify(replacementValue[key]))) {
+          if (isSameCellValue(cellValue, replacementValue)) {
             return currentTableCellInner;
           }
         }
         catch {}
 
         if (currentTableCellInner) {
-          currentTableCellInner.insertBefore(replacement, this.prev ? null : this.next);
-          let block: TypeBlock | null = this;
-          while (block) {
-            const next = block.next as TypeBlock | null;
-            replacement.appendChild(block);
-            block = next;
-          }
-          // remove empty cell. tableCellFormat.optimize need col to compute
-          if (currentTableCellInner && currentTableCellInner.length() === 0) {
-            currentTableCellInner.remove();
-            if (currentTableCellInner.parent.statics.blotName === blotName.tableCell && currentTableCellInner.parent.length() === 0) {
-              currentTableCellInner.parent.remove();
-            }
-            const selfRow = currentTableCellInner.parent.parent;
-            if (selfRow.statics.blotName === blotName.tableRow && selfRow.children.length === 0) {
-              selfRow.remove();
-            }
-          }
+          // use TableCellInner insertBefore to find the correct position
+          currentTableCellInner.insertBefore(replacement, this);
+          replacement.appendChild(this);
         }
         else {
           // find the first parent not container
