@@ -4,11 +4,11 @@ on:
   push:
     branches:
       - master
+      - v**
 
   pull_request:
     branches:
       - master
-      - 3.x
 
   merge_group: {}
 
