@@ -339,10 +339,16 @@ export class TableCellInnerFormat extends ContainerFormat {
             cellRef = newCell;
           }
         }
+        if (this.tableId !== cellInnerBlot.tableId) {
+          const selfTableWrapper = findParentBlot(this, blotName.tableWrapper);
+          const index = selfTableWrapper.offset(this);
+          const afterSelfTableWrapper = selfTableWrapper.split(index + this.length());
+          return selfTableWrapper.parent.insertBefore(cellInnerBlot, afterSelfTableWrapper);
+        }
         // different rowId. split current row
         if (this.rowId !== cellInnerBlot.rowId) {
           let rowRef: TypeParchment.Blot | null = selfRow;
-          const splitRef = ref || selfCell;
+          const splitRef = ref;
           if (splitRef) {
             const index = splitRef.offset(selfRow);
             rowRef = selfRow.split(index);
