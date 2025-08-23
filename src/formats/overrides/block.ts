@@ -52,8 +52,7 @@ export class BlockOverride extends Block {
           // split current block as a separate "line" and wrap tableCellInner
           const index = this.offset(currentParent);
           const length = this.length();
-          currentParent.split(index + length);
-          const selfParent = currentParent.split(index);
+          const selfParent = currentParent.isolate(index, length);
           if (selfParent && selfParent.parent) {
             selfParent.parent.insertBefore(replacement, selfParent.next);
           }
