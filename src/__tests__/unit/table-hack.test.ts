@@ -126,7 +126,7 @@ describe('hack html convert', () => {
         </div>
         <p></p>
       `,
-      { ignoreAttrs: ['data-wrap-tag', 'class', 'data-table-id', 'data-tag'] },
+      { ignoreAttrs: ['data-wrap-tag', 'data-tag', 'class', 'data-table-id'] },
     );
   });
 
@@ -201,7 +201,7 @@ describe('hack html convert', () => {
           </table>
         </div>
       `,
-      { ignoreAttrs: ['data-wrap-tag', 'data-tag', 'class', 'data-table-id', 'data-tag'] },
+      { ignoreAttrs: ['data-wrap-tag', 'data-tag', 'class', 'data-table-id'] },
     );
   });
 });

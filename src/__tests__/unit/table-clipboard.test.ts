@@ -1,7 +1,7 @@
 import Quill from 'quill';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { TableUp } from '../../table-up';
-import { createQuillWithTableModule, createTableBodyHTML, createTableCaptionHTML, createTableDeltaOps, createTableHTML, createTaleColHTML, expectDelta, simulatePasteHTML } from './utils';
+import { createQuillWithTableModule, createTableBodyHTML, createTableCaptionHTML, createTableDeltaOps, createTableHTML, createTaleColHTML, datasetTag, expectDelta, simulatePasteHTML } from './utils';
 
 const Delta = Quill.import('delta');
 
@@ -29,7 +29,7 @@ describe('clipboard cell structure', () => {
         ${createTableHTML(3, 3, { width: 100, full: false }, undefined, { isEmpty: false })}
         <p><br></p>
       `,
-      { ignoreAttrs: ['data-tag', 'class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'contenteditable'] },
+      { ignoreAttrs: ['class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'contenteditable'] },
     );
   });
 
@@ -312,7 +312,7 @@ describe('clipboard cell structure', () => {
         ${createTableHTML(3, 3, { width: 100, full: false }, undefined, { isEmpty: false })}
         <p>123</p>
       `,
-      { ignoreAttrs: ['data-tag', 'class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'contenteditable'] },
+      { ignoreAttrs: ['class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'contenteditable'] },
     );
   });
 
@@ -595,51 +595,51 @@ describe('clipboard cell structure', () => {
             <tbody>
               <tr>
                 <th rowspan="1" colspan="1">
-                  <div data-tag="th">
+                  <div ${datasetTag('th')}>
                     <p>q</p>
                   </div>
                 </th>
                 <th rowspan="1" colspan="1">
-                  <div data-tag="th">
+                  <div ${datasetTag('th')}>
                     <p>w</p>
                   </div>
                 </th>
                 <th rowspan="1" colspan="1">
-                  <div data-tag="th">
+                  <div ${datasetTag('th')}>
                     <p>e</p>
                   </div>
                 </th>
               </tr>
               <tr>
                 <th rowspan="1" colspan="1">
-                  <div data-tag="th">
+                  <div ${datasetTag('th')}>
                     <p><br></p>
                   </div>
                 </th>
                 <td rowspan="1" colspan="1">
-                  <div data-tag="td">
+                  <div ${datasetTag('td')}>
                     <p>2</p>
                   </div>
                 </td>
                 <td rowspan="1" colspan="1">
-                  <div data-tag="td">
+                  <div ${datasetTag('td')}>
                     <p>3</p>
                   </div>
                 </td>
               </tr>
               <tr>
                 <th rowspan="1" colspan="1">
-                  <div data-tag="th">
+                  <div ${datasetTag('th')}>
                     <p><br></p>
                   </div>
                 </th>
                 <td rowspan="1" colspan="1">
-                  <div data-tag="td">
+                  <div ${datasetTag('td')}>
                     <p>4</p>
                   </div>
                 </td>
                 <td rowspan="1" colspan="1">
-                  <div data-tag="td">
+                  <div ${datasetTag('td')}>
                     <p>5</p>
                   </div>
                 </td>
@@ -844,7 +844,7 @@ describe('clipboard cell structure', () => {
         </div>
         <p><br></p>
       `,
-      { ignoreAttrs: ['data-tag', 'class', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
+      { ignoreAttrs: ['class', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
     );
     expectDelta(
       new Delta([
@@ -1183,51 +1183,51 @@ describe('clipboard cell structure', () => {
             <tbody>
               <tr>
                 <th colspan="1" rowspan="1">
-                  <div data-tag="th">
+                  <div ${datasetTag('th')}>
                     <p>Company</p>
                   </div>
                 </th>
                 <th colspan="1" rowspan="1">
-                  <div data-tag="th">
+                  <div ${datasetTag('th')}>
                     <p>Contact</p>
                   </div>
                 </th>
                 <th colspan="1" rowspan="1">
-                  <div data-tag="th">
+                  <div ${datasetTag('th')}>
                     <p>Country</p>
                   </div>
                 </th>
               </tr>
               <tr>
                 <td colspan="1" rowspan="1">
-                  <div data-tag="td">
+                  <div ${datasetTag('td')}>
                     <p>Alfreds Futterkiste</p>
                   </div>
                 </td>
                 <td colspan="1" rowspan="1">
-                  <div data-tag="td">
+                  <div ${datasetTag('td')}>
                     <p>Maria Anders</p>
                   </div>
                 </td>
                 <td colspan="1" rowspan="1">
-                  <div data-tag="td">
+                  <div ${datasetTag('td')}>
                     <p>Germany</p>
                   </div>
                 </td>
               </tr>
               <tr>
                 <td colspan="1" rowspan="1">
-                  <div data-tag="td">
+                  <div ${datasetTag('td')}>
                     <p>Centro comercial Moctezuma</p>
                   </div>
                 </td>
                 <td colspan="1" rowspan="1">
-                  <div data-tag="td">
+                  <div ${datasetTag('td')}>
                     <p>Francisco Chang</p>
                   </div>
                 </td>
                 <td colspan="1" rowspan="1">
-                  <div data-tag="td">
+                  <div ${datasetTag('td')}>
                     <p>Mexico</p>
                   </div>
                 </td>
@@ -1286,17 +1286,17 @@ describe('clipboard cell structure', () => {
             <thead>
               <tr data-wrap-tag="thead">
                 <th colspan="1" rowspan="1" data-wrap-tag="thead">
-                  <div data-tag="th" data-wrap-tag="thead">
+                  <div ${datasetTag('th')} data-wrap-tag="thead">
                     <p>head1</p>
                   </div>
                 </th>
                 <th colspan="1" rowspan="1" data-wrap-tag="thead">
-                  <div data-tag="th" data-wrap-tag="thead">
+                  <div ${datasetTag('th')} data-wrap-tag="thead">
                     <p>head2</p>
                   </div>
                 </th>
                 <th colspan="1" rowspan="1" data-wrap-tag="thead">
-                  <div data-tag="th" data-wrap-tag="thead">
+                  <div ${datasetTag('th')} data-wrap-tag="thead">
                     <p>head3</p>
                   </div>
                 </th>
@@ -1305,34 +1305,34 @@ describe('clipboard cell structure', () => {
             <tbody>
               <tr data-wrap-tag="tbody">
                 <td colspan="1" rowspan="1" data-wrap-tag="tbody">
-                  <div data-tag="td" data-wrap-tag="tbody">
+                  <div ${datasetTag('td')} data-wrap-tag="tbody">
                     <p>body1</p>
                   </div>
                 </td>
                 <td colspan="1" rowspan="1" data-wrap-tag="tbody">
-                  <div data-tag="td" data-wrap-tag="tbody">
+                  <div ${datasetTag('td')} data-wrap-tag="tbody">
                     <p>body2</p>
                   </div>
                 </td>
                 <td colspan="1" rowspan="1" data-wrap-tag="tbody">
-                  <div data-tag="td" data-wrap-tag="tbody">
+                  <div ${datasetTag('td')} data-wrap-tag="tbody">
                     <p>body3</p>
                   </div>
                 </td>
               </tr>
               <tr data-wrap-tag="tbody">
                 <td colspan="1" rowspan="1" data-wrap-tag="tbody">
-                  <div data-tag="td" data-wrap-tag="tbody">
+                  <div ${datasetTag('td')} data-wrap-tag="tbody">
                     <p>body4</p>
                   </div>
                 </td>
                 <td colspan="1" rowspan="1" data-wrap-tag="tbody">
-                  <div data-tag="td" data-wrap-tag="tbody">
+                  <div ${datasetTag('td')} data-wrap-tag="tbody">
                     <p>body5</p>
                   </div>
                 </td>
                 <td colspan="1" rowspan="1" data-wrap-tag="tbody">
-                  <div data-tag="td" data-wrap-tag="tbody">
+                  <div ${datasetTag('td')} data-wrap-tag="tbody">
                     <p>body6</p>
                   </div>
                 </td>
@@ -1341,17 +1341,17 @@ describe('clipboard cell structure', () => {
             <tfoot>
               <tr data-wrap-tag="tfoot">
                 <td colspan="1" rowspan="1" data-wrap-tag="tfoot">
-                  <div data-tag="td" data-wrap-tag="tfoot">
+                  <div ${datasetTag('td')} data-wrap-tag="tfoot">
                     <p>foot1</p>
                   </div>
                 </td>
                 <td colspan="1" rowspan="1" data-wrap-tag="tfoot">
-                  <div data-tag="td" data-wrap-tag="tfoot">
+                  <div ${datasetTag('td')} data-wrap-tag="tfoot">
                     <p>foot2</p>
                   </div>
                 </td>
                 <td colspan="1" rowspan="1" data-wrap-tag="tfoot">
-                  <div data-tag="td" data-wrap-tag="tfoot">
+                  <div ${datasetTag('td')} data-wrap-tag="tfoot">
                     <p>foot3</p>
                   </div>
                 </td>
@@ -1401,7 +1401,7 @@ describe('clipboard cell structure', () => {
             <thead>
               <tr data-wrap-tag="thead">
                 <td colspan="2" rowspan="1" data-wrap-tag="thead">
-                  <div data-tag="td" data-wrap-tag="thead">
+                  <div ${datasetTag('td')} data-wrap-tag="thead">
                     <p>123</p>
                   </div>
                 </td>
@@ -1410,24 +1410,24 @@ describe('clipboard cell structure', () => {
             <tbody>
               <tr data-wrap-tag="tbody">
                 <td colspan="1" rowspan="1" data-wrap-tag="tbody">
-                  <div data-tag="td" data-wrap-tag="tbody">
+                  <div ${datasetTag('td')} data-wrap-tag="tbody">
                     <p>1</p>
                   </div>
                 </td>
                 <td colspan="1" rowspan="1" data-wrap-tag="tbody">
-                  <div data-tag="td" data-wrap-tag="tbody">
+                  <div ${datasetTag('td')} data-wrap-tag="tbody">
                     <p>2</p>
                   </div>
                 </td>
               </tr>
               <tr data-wrap-tag="tbody">
                 <td colspan="1" rowspan="1" data-wrap-tag="tbody">
-                  <div data-tag="td" data-wrap-tag="tbody">
+                  <div ${datasetTag('td')} data-wrap-tag="tbody">
                     <p>1</p>
                   </div>
                 </td>
                 <td colspan="1" rowspan="1" data-wrap-tag="tbody">
-                  <div data-tag="td" data-wrap-tag="tbody">
+                  <div ${datasetTag('td')} data-wrap-tag="tbody">
                     <p>2</p>
                   </div>
                 </td>
