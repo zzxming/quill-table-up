@@ -1,5 +1,6 @@
 import type { Parchment as TypeParchment } from 'quill';
 import type TypeBlock from 'quill/blots/block';
+import type { BlockEmbed as TypeBlockEmbed } from 'quill/blots/block';
 import type TypeContainer from 'quill/blots/container';
 import type { TableCellInnerFormat } from '../table-cell-inner-format';
 import Quill from 'quill';
@@ -8,6 +9,7 @@ import { isSameCellValue } from '../utils';
 
 const Parchment = Quill.import('parchment');
 const Block = Quill.import('blots/block') as typeof TypeBlock;
+const BlockEmbed = Quill.import('blots/block/embed') as typeof TypeBlockEmbed;
 const Container = Quill.import('blots/container') as typeof TypeContainer;
 
 export class BlockOverride extends Block {
@@ -74,6 +76,7 @@ export class BlockOverride extends Block {
 
   format(name: string, value: any): void {
     if (name === blotName.tableCellInner && this.parent.statics.blotName === name && !value) {
+      if (this.prev && this.prev instanceof BlockEmbed) return;
       try {
         const cellInner = findParentBlot(this, blotName.tableCellInner);
         cellInner.unwrap();

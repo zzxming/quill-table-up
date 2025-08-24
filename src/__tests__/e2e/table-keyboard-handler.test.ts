@@ -78,9 +78,9 @@ extendTest.describe('table cell keyboard handler enter', () => {
     ]);
     await page.waitForTimeout(1000);
 
-    await editorPage.setSelection(3, 7);
+    await editorPage.setSelection(4, 7);
     await page.keyboard.press('Enter');
-    await expect(page.locator('#editor1 .ql-table-wrapper .ql-table-cell-inner p')).toHaveCount(1);
+    await expect(page.locator('#editor1 .ql-table-wrapper .ql-table-cell-inner p')).toHaveCount(2);
   });
 });
 
