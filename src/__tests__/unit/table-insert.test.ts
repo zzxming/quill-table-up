@@ -273,6 +273,55 @@ describe('insert block embed blot', () => {
       { ignoreAttrs: ['data-wrap-tag', 'data-tag', 'class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
     );
   });
+
+  it('makesure the text delta order is correct', async () => {
+    const quill = createQuillWithTableModule(`<p><br></p>`);
+    quill.setContents([
+      { insert: '\n' },
+      { insert: { 'table-up-col': { tableId: '1', colId: '1', full: 'true', width: 100 } } },
+      { insert: { video: 'https://quilljs.com/' } },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '1', rowspan: 1, colspan: 1 } }, insert: '\n\n' },
+      { insert: '\n' },
+    ]);
+
+    quill.insertText(4, '123');
+
+    expect(quill.root).toEqualHTML(
+      `
+        <p><br></p>
+        <div>
+          <table cellpadding="0" cellspacing="0" data-full="true">
+            <colgroup data-full="true">
+              <col width="100%" data-full="true" />
+            </colgroup>
+            <tbody>
+              <tr>
+                <td rowspan="1" colspan="1">
+                  <div>
+                    <iframe src="https://quilljs.com/" frameborder="0" allowfullscreen="true"></iframe>
+                    <p>123</p>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p><br></p>
+      `,
+      { ignoreAttrs: ['data-wrap-tag', 'data-tag', 'class', 'style', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'] },
+    );
+    expectDelta(
+      quill.getContents(),
+      new Delta([
+        { insert: '\n' },
+        { insert: { 'table-up-col': { tableId: '1', colId: '1', full: true, width: 100 } } },
+        { insert: { video: 'https://quilljs.com/' } },
+        { insert: '123' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '1', rowspan: 1, colspan: 1, tag: 'td', wrapTag: 'tbody' } }, insert: '\n' },
+        { insert: '\n' },
+      ]),
+    );
+  });
 });
 
 describe('set contents', () => {
