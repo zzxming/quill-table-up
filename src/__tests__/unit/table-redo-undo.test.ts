@@ -1,3 +1,4 @@
+import type { Parchment as TypeParchment } from 'quill';
 import type { TableCaptionFormat, TableMainFormat } from '../../formats';
 import type { ToolOption } from '../../utils';
 import Quill from 'quill';
@@ -1308,7 +1309,9 @@ describe('table undo', () => {
       { insert: '1' },
       { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '1', rowspan: 1, colspan: 1, tag: 'td', wrapTag: 'tbody' } }, insert: '\n' },
       { insert: { video: 'some.com' } },
-      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '2', rowspan: 1, colspan: 1, tag: 'td', wrapTag: 'tbody' } }, insert: '\n\n' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '2', rowspan: 1, colspan: 1, tag: 'td', wrapTag: 'tbody' } }, insert: '\n' },
+      { insert: '123' },
+      { attributes: { 'code-block': 'plain', 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '2', rowspan: 1, colspan: 1, tag: 'td', wrapTag: 'tbody' } }, insert: '\n' },
       { insert: '3' },
       { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '3', rowspan: 1, colspan: 1, tag: 'td', wrapTag: 'tbody' } }, insert: '\n' },
       { insert: '4' },
@@ -1351,7 +1354,10 @@ describe('table undo', () => {
 
     const tds = quill.scroll.descendants(TableCellInnerFormat, 0);
     for (const td of [tds[1], tds[4], tds[7]]) {
-      td.deleteAt(0, td.length() - 1);
+      const clearTd = td.clone() as TypeParchment.Parent;
+      clearTd.appendChild(td.scroll.create('block'));
+      td.parent.insertBefore(clearTd, td);
+      td.remove();
     }
     await vi.runAllTimersAsync();
     expectDelta(
