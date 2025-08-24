@@ -108,7 +108,10 @@ export class TableSelection extends TableDomSelector {
       }
     }
     for (const td of this.selectedTds) {
-      td.deleteAt(0, td.length() - 1);
+      const clearTd = td.clone() as TypeParchment.Parent;
+      clearTd.appendChild(td.scroll.create('block'));
+      td.parent.insertBefore(clearTd, td);
+      td.remove();
     }
   };
 
