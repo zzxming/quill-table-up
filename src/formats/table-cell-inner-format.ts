@@ -1,5 +1,6 @@
 import type { Parchment as TypeParchment } from 'quill';
 import type TypeBlock from 'quill/blots/block';
+import type { BlockEmbed as TypeBlockEmbed } from 'quill/blots/block';
 import type TypeScroll from 'quill/blots/scroll';
 import type { TableBodyTag, TableCellValue } from '../utils';
 import type { TableCellFormat } from './table-cell-format';
@@ -10,7 +11,7 @@ import { TableBodyFormat } from './table-body-format';
 import { getValidCellspan, isSameCellValue } from './utils';
 
 const Block = Quill.import('blots/block') as TypeParchment.BlotConstructor;
-const BlockEmbed = Quill.import('blots/block/embed') as TypeParchment.BlotConstructor;
+const BlockEmbed = Quill.import('blots/block/embed') as typeof TypeBlockEmbed;
 
 export class TableCellInnerFormat extends ContainerFormat {
   static blotName = blotName.tableCellInner;
@@ -247,6 +248,14 @@ export class TableCellInnerFormat extends ContainerFormat {
       this.appendChild(defaultChild);
     }
     super.insertAt(index, value, def);
+    // BlockEmbed will have a \n in delta, this will effect history stack
+    // so when insert a BlockEmbed, if current child length <= 1 then remove it
+    const blot = def == null
+      ? this.scroll.create('text', value)
+      : this.scroll.create(value, def);
+    if (blot instanceof BlockEmbed && child && child.length() <= 1) {
+      child.remove();
+    }
   }
 
   formats(): Record<string, any> {

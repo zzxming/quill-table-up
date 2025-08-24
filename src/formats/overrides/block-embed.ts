@@ -11,18 +11,15 @@ export class BlockEmbedOverride extends BlockEmbed {
     // if BlockEmbed is the last line of the tableCellInner. need to add value in delta
     const delta = super.delta();
     const formats = bubbleFormats(this);
-    // Only add tableCellInner format if BlockEmbed is truly at the end
-    // This prevents breaking the text ordering when BlockEmbed is in the middle
-    if (formats[blotName.tableCellInner] && (!this.next || this.next.length() <= 1)) {
+    if (formats[blotName.tableCellInner]) {
       delta.insert('\n', { [blotName.tableCellInner]: formats[blotName.tableCellInner] });
     }
     return delta;
   }
 
   length() {
-    // because BlockEmbed is the last line of the tableCellInner. need add value in delta, also need add 1 to length
     const formats = bubbleFormats(this);
-    if (formats[blotName.tableCellInner] && (!this.next || this.next.length() <= 1)) {
+    if (formats[blotName.tableCellInner]) {
       return super.length() + 1;
     }
     return super.length();
