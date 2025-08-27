@@ -350,8 +350,8 @@ export class TableCellInnerFormat extends ContainerFormat {
         }
         if (this.tableId !== cellInnerBlot.tableId) {
           const selfTableWrapper = findParentBlot(this, blotName.tableWrapper);
-          const index = selfTableWrapper.offset(this);
-          const afterSelfTableWrapper = selfTableWrapper.split(index + this.length());
+          const index = this.offset(selfTableWrapper);
+          const afterSelfTableWrapper = selfTableWrapper.split(index);
           return selfTableWrapper.parent.insertBefore(cellInnerBlot, afterSelfTableWrapper);
         }
         // different rowId. split current row

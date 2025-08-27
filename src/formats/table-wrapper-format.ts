@@ -55,6 +55,14 @@ export class TableWrapperFormat extends ContainerFormat {
     );
   }
 
+  optimize(context: Record<string, any>) {
+    if (this.length() === 0) {
+      this.remove();
+      return;
+    }
+    super.optimize(context);
+  }
+
   deleteAt(index: number, length: number) {
     super.deleteAt(index, length);
     const tableBodys = this.descendants(TableBodyFormat);

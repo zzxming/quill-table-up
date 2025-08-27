@@ -38,6 +38,9 @@ export class BlockOverride extends Block {
           // use TableCellInner insertBefore to find the correct position
           currentTableCellInner.insertBefore(replacement, this);
           replacement.appendChild(this);
+          if (currentTableCellInner.children.length === 0) {
+            currentTableCellInner.remove();
+          }
         }
         else {
           // find the first parent not container
