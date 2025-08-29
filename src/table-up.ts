@@ -244,10 +244,8 @@ export class TableUp {
       const blotName = name.split('formats/')[1];
       return name.startsWith('formats/')
         && !excludeFormat.has(blotName)
-        && !isSubclassOf(blot, Parchment.Attributor)
         && (isSubclassOf(blot, Block) || isSubclassOf(blot, BlockEmbed));
-    },
-    );
+    });
     const overrides = overrideFormats.reduce((pre, [name, blot]) => {
       const extendsClass = isSubclassOf(blot, BlockEmbed) ? BlockEmbedOverride : BlockOverride;
       pre[name] = class extends mixinClass(blot, [extendsClass]) {
