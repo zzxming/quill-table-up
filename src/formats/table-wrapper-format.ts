@@ -67,7 +67,7 @@ export class TableWrapperFormat extends ContainerFormat {
     super.deleteAt(index, length);
     const tableBodys = this.descendants(TableBodyFormat);
     const tableColgroups = this.descendants(TableColgroupFormat);
-    if (tableBodys.length === 0 || tableColgroups.length === 0) {
+    if (tableBodys.length === 0 && tableColgroups.length === 0) {
       this.remove();
     }
   }

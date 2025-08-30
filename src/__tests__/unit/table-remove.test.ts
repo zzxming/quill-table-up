@@ -215,7 +215,9 @@ describe('unusual delete', () => {
     await vi.runAllTimersAsync();
     quill.deleteText(0, 16);
     await vi.runAllTimersAsync();
-    expect(quill.root).toEqualHTML(`<p><br></p>`);
+    // After remove all `col`, `fixUnusuaDeletelTable` will remove whole table.
+    // The remaining two rows around
+    expect(quill.root).toEqualHTML(`<p><br></p><p><br></p>`);
   });
 
   it('delete tail from inside table to outside', async () => {

@@ -1383,11 +1383,16 @@ describe('table undo', () => {
   it('undo paste table', async () => {
     const quill = createQuillWithTableModule('<p><br></p>');
     quill.setContents(
-      quill.clipboard.convert({ html: '<div class="ql-table-wrapper" data-table-id="ktr6z4z4h3" contenteditable="false"><table class="ql-table" data-table-id="ktr6z4z4h3" cellpadding="0" cellspacing="0" style="margin-right: auto; width: 363px;"><colgroup data-table-id="ktr6z4z4h3" contenteditable="false"><col width="121px" data-table-id="ktr6z4z4h3" data-col-id="mtivwyfwooa"><col width="121px" data-table-id="ktr6z4z4h3" data-col-id="qt9to98pprk"><col width="121px" data-table-id="ktr6z4z4h3" data-col-id="3ngfyhncv4n"></colgroup><tbody data-table-id="ktr6z4z4h3"><tr class="ql-table-row" data-table-id="ktr6z4z4h3" data-row-id="sxz1naqfl1" data-wrap-tag="tbody"><td class="ql-table-cell" data-table-id="ktr6z4z4h3" data-row-id="sxz1naqfl1" data-col-id="mtivwyfwooa" data-wrap-tag="tbody" rowspan="1" colspan="1"><div class="ql-table-cell-inner" data-table-id="ktr6z4z4h3" data-row-id="sxz1naqfl1" data-col-id="mtivwyfwooa" data-rowspan="1" data-colspan="1" data-tag="td" data-wrap-tag="tbody"><p>1</p></div></td><td class="ql-table-cell" data-table-id="ktr6z4z4h3" data-row-id="sxz1naqfl1" data-col-id="qt9to98pprk" data-wrap-tag="tbody" rowspan="1" colspan="1"><div class="ql-table-cell-inner" data-table-id="ktr6z4z4h3" data-row-id="sxz1naqfl1" data-col-id="qt9to98pprk" data-rowspan="1" data-colspan="1" data-tag="td" data-wrap-tag="tbody"><h1>2</h1></div></td><td class="ql-table-cell" data-table-id="ktr6z4z4h3" data-row-id="sxz1naqfl1" data-col-id="3ngfyhncv4n" data-wrap-tag="tbody" rowspan="1" colspan="1"><div class="ql-table-cell-inner" data-table-id="ktr6z4z4h3" data-row-id="sxz1naqfl1" data-col-id="3ngfyhncv4n" data-rowspan="1" data-colspan="1" data-tag="td" data-wrap-tag="tbody"><p>3</p></div></td></tr><tr class="ql-table-row" data-table-id="ktr6z4z4h3" data-row-id="vipvi8dgv2c" data-wrap-tag="tbody"><td class="ql-table-cell" data-table-id="ktr6z4z4h3" data-row-id="vipvi8dgv2c" data-col-id="mtivwyfwooa" data-wrap-tag="tbody" rowspan="1" colspan="1"><div class="ql-table-cell-inner" data-table-id="ktr6z4z4h3" data-row-id="vipvi8dgv2c" data-col-id="mtivwyfwooa" data-rowspan="1" data-colspan="1" data-tag="td" data-wrap-tag="tbody"><p>4</p></div></td><td class="ql-table-cell" data-table-id="ktr6z4z4h3" data-row-id="vipvi8dgv2c" data-col-id="qt9to98pprk" data-wrap-tag="tbody" rowspan="1" colspan="1"><div class="ql-table-cell-inner" data-table-id="ktr6z4z4h3" data-row-id="vipvi8dgv2c" data-col-id="qt9to98pprk" data-rowspan="1" data-colspan="1" data-tag="td" data-wrap-tag="tbody"><p>5</p></div></td><td class="ql-table-cell" data-table-id="ktr6z4z4h3" data-row-id="vipvi8dgv2c" data-col-id="3ngfyhncv4n" data-wrap-tag="tbody" rowspan="1" colspan="1"><div class="ql-table-cell-inner" data-table-id="ktr6z4z4h3" data-row-id="vipvi8dgv2c" data-col-id="3ngfyhncv4n" data-rowspan="1" data-colspan="1" data-tag="td" data-wrap-tag="tbody"><p>6</p></div></td></tr><tr class="ql-table-row" data-table-id="ktr6z4z4h3" data-row-id="2fd9agcdmfo" data-wrap-tag="tbody"><td class="ql-table-cell" data-table-id="ktr6z4z4h3" data-row-id="2fd9agcdmfo" data-col-id="mtivwyfwooa" data-wrap-tag="tbody" rowspan="1" colspan="1"><div class="ql-table-cell-inner" data-table-id="ktr6z4z4h3" data-row-id="2fd9agcdmfo" data-col-id="mtivwyfwooa" data-rowspan="1" data-colspan="1" data-tag="td" data-wrap-tag="tbody"><p>7</p></div></td><td class="ql-table-cell" data-table-id="ktr6z4z4h3" data-row-id="2fd9agcdmfo" data-col-id="qt9to98pprk" data-wrap-tag="tbody" rowspan="1" colspan="1"><div class="ql-table-cell-inner" data-table-id="ktr6z4z4h3" data-row-id="2fd9agcdmfo" data-col-id="qt9to98pprk" data-rowspan="1" data-colspan="1" data-tag="td" data-wrap-tag="tbody"><p>8</p></div></td><td class="ql-table-cell" data-table-id="ktr6z4z4h3" data-row-id="2fd9agcdmfo" data-col-id="3ngfyhncv4n" data-wrap-tag="tbody" rowspan="1" colspan="1"><div class="ql-table-cell-inner" data-table-id="ktr6z4z4h3" data-row-id="2fd9agcdmfo" data-col-id="3ngfyhncv4n" data-rowspan="1" data-colspan="1" data-tag="td" data-wrap-tag="tbody"><ol><li>9</li><li>end</li></ol></div></td></tr></tbody></table></div>' }),
+      quill.clipboard.convert({ html: '<div class="ql-table-wrapper" data-table-id="1" contenteditable="false"><table class="ql-table" data-table-id="1" cellpadding="0" cellspacing="0" style="margin-right: auto; width: 363px;"><colgroup data-table-id="1" contenteditable="false"><col width="121px" data-table-id="1" data-col-id="1"><col width="121px" data-table-id="1" data-col-id="2"><col width="121px" data-table-id="1" data-col-id="3"></colgroup><tbody data-table-id="1"><tr class="ql-table-row" data-table-id="1" data-row-id="1" data-wrap-tag="tbody"><td class="ql-table-cell" data-table-id="1" data-row-id="1" data-col-id="1" data-wrap-tag="tbody" rowspan="1" colspan="1"><div class="ql-table-cell-inner" data-table-id="1" data-row-id="1" data-col-id="1" data-rowspan="1" data-colspan="1" data-tag="td" data-wrap-tag="tbody" contenteditable="true"><p>1</p></div></td><td class="ql-table-cell" data-table-id="1" data-row-id="1" data-col-id="2" data-wrap-tag="tbody" rowspan="1" colspan="1"><div class="ql-table-cell-inner" data-table-id="1" data-row-id="1" data-col-id="2" data-rowspan="1" data-colspan="1" data-tag="td" data-wrap-tag="tbody" contenteditable="true"><h1>2</h1></div></td><td class="ql-table-cell" data-table-id="1" data-row-id="1" data-col-id="3" data-wrap-tag="tbody" rowspan="1" colspan="1"><div class="ql-table-cell-inner" data-table-id="1" data-row-id="1" data-col-id="3" data-rowspan="1" data-colspan="1" data-tag="td" data-wrap-tag="tbody" contenteditable="true"><iframe class="ql-video" frameborder="0" allowfullscreen="true" src="some.com"></iframe></div></td></tr><tr class="ql-table-row" data-table-id="1" data-row-id="2" data-wrap-tag="tbody"><td class="ql-table-cell" data-table-id="1" data-row-id="2" data-col-id="1" data-wrap-tag="tbody" rowspan="1" colspan="1"><div class="ql-table-cell-inner" data-table-id="1" data-row-id="2" data-col-id="1" data-rowspan="1" data-colspan="1" data-tag="td" data-wrap-tag="tbody" contenteditable="true"><p>4</p></div></td><td class="ql-table-cell" data-table-id="1" data-row-id="2" data-col-id="2" data-wrap-tag="tbody" rowspan="1" colspan="1"><div class="ql-table-cell-inner" data-table-id="1" data-row-id="2" data-col-id="2" data-rowspan="1" data-colspan="1" data-tag="td" data-wrap-tag="tbody" contenteditable="true"><p>5</p></div></td><td class="ql-table-cell" data-table-id="1" data-row-id="2" data-col-id="3" data-wrap-tag="tbody" rowspan="1" colspan="1"><div class="ql-table-cell-inner" data-table-id="1" data-row-id="2" data-col-id="3" data-rowspan="1" data-colspan="1" data-tag="td" data-wrap-tag="tbody" contenteditable="true"><p>6</p></div></td></tr><tr class="ql-table-row" data-table-id="1" data-row-id="3" data-wrap-tag="tbody"><td class="ql-table-cell" data-table-id="1" data-row-id="3" data-col-id="1" data-wrap-tag="tbody" rowspan="1" colspan="1"><div class="ql-table-cell-inner" data-table-id="1" data-row-id="3" data-col-id="1" data-rowspan="1" data-colspan="1" data-tag="td" data-wrap-tag="tbody" contenteditable="true"><p>7</p></div></td><td class="ql-table-cell" data-table-id="1" data-row-id="3" data-col-id="2" data-wrap-tag="tbody" rowspan="1" colspan="1"><div class="ql-table-cell-inner" data-table-id="1" data-row-id="3" data-col-id="2" data-rowspan="1" data-colspan="1" data-tag="td" data-wrap-tag="tbody" contenteditable="true"><p>8</p></div></td><td class="ql-table-cell" data-table-id="1" data-row-id="3" data-col-id="3" data-wrap-tag="tbody" rowspan="1" colspan="1"><div class="ql-table-cell-inner" data-table-id="1" data-row-id="3" data-col-id="3" data-rowspan="1" data-colspan="1" data-tag="td" data-wrap-tag="tbody" contenteditable="true"><ol><li data-list="ordered"><span class="ql-ui" contenteditable="false"></span>9</li><li data-list="ordered"><span class="ql-ui" contenteditable="false"></span>end</li></ol></div></td></tr></tbody></table></div>' }),
+    );
+    await vi.runAllTimersAsync();
+    quill.setContents(
+      quill.getContents().insert('\n').concat(
+        quill.clipboard.convert({ html: '<div class="ql-table-wrapper" data-table-id="1" contenteditable="false"><table class="ql-table" data-table-id="1" cellpadding="0" cellspacing="0" style="margin-right: auto; width: 363px;"><colgroup data-table-id="1" contenteditable="false"><col width="121px" data-table-id="1" data-col-id="1"><col width="121px" data-table-id="1" data-col-id="2"><col width="121px" data-table-id="1" data-col-id="3"></colgroup><tbody data-table-id="1"><tr class="ql-table-row" data-table-id="1" data-row-id="1" data-wrap-tag="tbody"><td class="ql-table-cell" data-table-id="1" data-row-id="1" data-col-id="1" data-wrap-tag="tbody" rowspan="1" colspan="1"><div class="ql-table-cell-inner" data-table-id="1" data-row-id="1" data-col-id="1" data-rowspan="1" data-colspan="1" data-tag="td" data-wrap-tag="tbody" contenteditable="true"><p>1</p></div></td><td class="ql-table-cell" data-table-id="1" data-row-id="1" data-col-id="2" data-wrap-tag="tbody" rowspan="1" colspan="1"><div class="ql-table-cell-inner" data-table-id="1" data-row-id="1" data-col-id="2" data-rowspan="1" data-colspan="1" data-tag="td" data-wrap-tag="tbody" contenteditable="true"><h1>2</h1></div></td><td class="ql-table-cell" data-table-id="1" data-row-id="1" data-col-id="3" data-wrap-tag="tbody" rowspan="1" colspan="1"><div class="ql-table-cell-inner" data-table-id="1" data-row-id="1" data-col-id="3" data-rowspan="1" data-colspan="1" data-tag="td" data-wrap-tag="tbody" contenteditable="true"><iframe class="ql-video" frameborder="0" allowfullscreen="true" src="some.com"></iframe></div></td></tr><tr class="ql-table-row" data-table-id="1" data-row-id="2" data-wrap-tag="tbody"><td class="ql-table-cell" data-table-id="1" data-row-id="2" data-col-id="1" data-wrap-tag="tbody" rowspan="1" colspan="1"><div class="ql-table-cell-inner" data-table-id="1" data-row-id="2" data-col-id="1" data-rowspan="1" data-colspan="1" data-tag="td" data-wrap-tag="tbody" contenteditable="true"><p>4</p></div></td><td class="ql-table-cell" data-table-id="1" data-row-id="2" data-col-id="2" data-wrap-tag="tbody" rowspan="1" colspan="1"><div class="ql-table-cell-inner" data-table-id="1" data-row-id="2" data-col-id="2" data-rowspan="1" data-colspan="1" data-tag="td" data-wrap-tag="tbody" contenteditable="true"><p>5</p></div></td><td class="ql-table-cell" data-table-id="1" data-row-id="2" data-col-id="3" data-wrap-tag="tbody" rowspan="1" colspan="1"><div class="ql-table-cell-inner" data-table-id="1" data-row-id="2" data-col-id="3" data-rowspan="1" data-colspan="1" data-tag="td" data-wrap-tag="tbody" contenteditable="true"><p>6</p></div></td></tr><tr class="ql-table-row" data-table-id="1" data-row-id="3" data-wrap-tag="tbody"><td class="ql-table-cell" data-table-id="1" data-row-id="3" data-col-id="1" data-wrap-tag="tbody" rowspan="1" colspan="1"><div class="ql-table-cell-inner" data-table-id="1" data-row-id="3" data-col-id="1" data-rowspan="1" data-colspan="1" data-tag="td" data-wrap-tag="tbody" contenteditable="true"><p>7</p></div></td><td class="ql-table-cell" data-table-id="1" data-row-id="3" data-col-id="2" data-wrap-tag="tbody" rowspan="1" colspan="1"><div class="ql-table-cell-inner" data-table-id="1" data-row-id="3" data-col-id="2" data-rowspan="1" data-colspan="1" data-tag="td" data-wrap-tag="tbody" contenteditable="true"><p>8</p></div></td><td class="ql-table-cell" data-table-id="1" data-row-id="3" data-col-id="3" data-wrap-tag="tbody" rowspan="1" colspan="1"><div class="ql-table-cell-inner" data-table-id="1" data-row-id="3" data-col-id="3" data-rowspan="1" data-colspan="1" data-tag="td" data-wrap-tag="tbody" contenteditable="true"><ol><li data-list="ordered"><span class="ql-ui" contenteditable="false"></span>9</li><li data-list="ordered"><span class="ql-ui" contenteditable="false"></span>end</li></ol></div></td></tr></tbody></table></div>' }),
+      ),
     );
     await vi.runAllTimersAsync();
     const pasteTableHTML = `
-      <p><br></p>
       <div>
         <table cellpadding="0" cellspacing="0" style="margin-right: auto; width: 363px;">
           ${createTaleColHTML(3, { full: false, width: 121 })}
@@ -1400,7 +1405,9 @@ describe('table undo', () => {
                 <div><h1>2</h1></div>
               </td>
               <td>
-                <div><p>3</p></div>
+                <div>
+                  <iframe src="some.com" frameborder="0" allowfullscreen="true"></iframe>
+                </div>
               </td>
             </tr>
             <tr>
@@ -1433,21 +1440,44 @@ describe('table undo', () => {
           </tbody>
         </table>
       </div>
-      <p><br></p>
     `;
     expect(quill.root).toEqualHTML(
-      pasteTableHTML,
+      `
+        <p><br></p>
+        ${pasteTableHTML}
+        <p><br></p>
+        <p><br></p>
+        ${pasteTableHTML}
+        <p><br></p>
+      `,
       { ignoreAttrs: ['data-wrap-tag', 'data-tag', 'class', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'rowspan', 'data-colspan', 'colspan', 'contenteditable'] },
     );
 
     quill.history.undo();
     await vi.runAllTimersAsync();
-    expectDelta(quill.getContents(), new Delta([{ insert: '\n' }]));
+    expect(quill.root).toEqualHTML(
+      `
+        <p><br></p>
+        ${pasteTableHTML}
+        <p><br></p>
+        <p><br></p>
+        ${pasteTableHTML}
+        <p><br></p>
+      `,
+      { ignoreAttrs: ['data-wrap-tag', 'data-tag', 'class', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'rowspan', 'data-colspan', 'colspan', 'contenteditable'] },
+    );
 
-    quill.history.redo();
+    quill.history.undo();
     await vi.runAllTimersAsync();
     expect(quill.root).toEqualHTML(
-      pasteTableHTML,
+      `
+        <p><br></p>
+        ${pasteTableHTML}
+        <p><br></p>
+        <p><br></p>
+        ${pasteTableHTML}
+        <p><br></p>
+      `,
       { ignoreAttrs: ['data-wrap-tag', 'data-tag', 'class', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'rowspan', 'data-colspan', 'colspan', 'contenteditable'] },
     );
   });
