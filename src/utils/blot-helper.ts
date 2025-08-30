@@ -101,5 +101,5 @@ export function mixinClass<
   return targetClass;
 }
 export function isSubclassOf(childClass: any, parentClass: any): boolean {
-  return childClass.prototype instanceof parentClass;
+  return childClass.prototype && childClass.prototype instanceof parentClass;
 }
