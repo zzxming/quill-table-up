@@ -845,8 +845,12 @@ export class TableUp {
 
   // handle unusual delete cell
   fixUnusuaDeletelTable(tableBlot: TableMainFormat) {
-    const bodys = tableBlot.getBodys();
     const tableColIds = tableBlot.getColIds();
+    if (tableColIds.length === 0) {
+      tableBlot.remove();
+      return;
+    }
+    const bodys = tableBlot.getBodys();
     const tableId = tableBlot.tableId;
     for (const body of bodys) {
     // calculate all cells in body
@@ -855,7 +859,6 @@ export class TableUp {
         body.remove();
         continue;
       }
-      if (tableColIds.length === 0) continue;
       // append by col
       const cellSpanMap = new Array(trBlots.length).fill(0).map(() => new Array(tableColIds.length).fill(false));
       for (const [indexTr, tr] of trBlots.entries()) {
