@@ -65,13 +65,12 @@ extendTest('test menu color picker should not have two at the same time', async 
 });
 
 extendTest('test TableMenuSelect should update when text change', async ({ page, editorPage }) => {
-  await page.evaluate(() => {
-    window.scrollTo(0, 600);
-  });
-
   editorPage.index = 1;
   await createTableBySelect(page, 'container2', 3, 3);
 
+  await page.evaluate(() => {
+    window.scrollTo(0, 600);
+  });
   const lineBound = (await page.locator('#editor2 .ql-editor > p').first().boundingBox())!;
   expect(lineBound).not.toBeNull();
 
@@ -89,7 +88,7 @@ extendTest('test TableMenuSelect should update when text change', async ({ page,
   await expect(menuWrapper).toBeVisible();
   const newMenuWrapper = (await menuWrapper.boundingBox())!;
   expect(newMenuWrapper).not.toBeNull();
-
+  console.log(newMenuWrapper.y, menuBound.y, lineBound.height);
   expect(newMenuWrapper.y - menuBound.y).toBeCloseTo(lineBound.height, 0);
 });
 
