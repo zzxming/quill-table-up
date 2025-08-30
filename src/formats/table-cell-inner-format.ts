@@ -229,9 +229,10 @@ export class TableCellInnerFormat extends ContainerFormat {
 
   formatAt(index: number, length: number, name: string, value: any) {
     if (this.children.length === 0) {
-      this.appendChild(this.scroll.create(this.statics.defaultChild.blotName));
+      const defaultChild = this.scroll.create(this.statics.defaultChild.blotName);
+      this.appendChild(defaultChild);
       // block min length is 1
-      length += 1;
+      length += defaultChild.length();
     }
     super.formatAt(index, length, name, value);
     // set style for `td`
@@ -350,8 +351,8 @@ export class TableCellInnerFormat extends ContainerFormat {
         }
         if (this.tableId !== cellInnerBlot.tableId) {
           const selfTableWrapper = findParentBlot(this, blotName.tableWrapper);
-          const index = selfTableWrapper.offset(this);
-          const afterSelfTableWrapper = selfTableWrapper.split(index + this.length());
+          const index = this.offset(selfTableWrapper);
+          const afterSelfTableWrapper = selfTableWrapper.split(index);
           return selfTableWrapper.parent.insertBefore(cellInnerBlot, afterSelfTableWrapper);
         }
         // different rowId. split current row

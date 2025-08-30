@@ -55,11 +55,19 @@ export class TableWrapperFormat extends ContainerFormat {
     );
   }
 
+  optimize(context: Record<string, any>) {
+    if (this.length() === 0) {
+      this.remove();
+      return;
+    }
+    super.optimize(context);
+  }
+
   deleteAt(index: number, length: number) {
     super.deleteAt(index, length);
     const tableBodys = this.descendants(TableBodyFormat);
     const tableColgroups = this.descendants(TableColgroupFormat);
-    if (tableBodys.length === 0 || tableColgroups.length === 0) {
+    if (tableBodys.length === 0 && tableColgroups.length === 0) {
       this.remove();
     }
   }
