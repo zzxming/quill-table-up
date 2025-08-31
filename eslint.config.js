@@ -15,5 +15,26 @@ export default factory({
         'ts/no-unsafe-function-type': 'off',
       },
     },
+    {
+      files: ['**/*.md'],
+      rules: { 'markdown-preferences/heading-casing': [
+        'error',
+        {
+          style: 'Title Case',
+          preserveWords: [
+            'quill-table-up',
+            'Tableup',
+            'TableSelection',
+            'TableResizeLine',
+            'TableResizeBox',
+            'TableMenuContextmenu',
+            'TableMenuSelect',
+            'TableResizeScale',
+            'TableAlign',
+            'TableVirtualScrollbar',
+          ],
+        },
+      ] },
+    },
   ],
 });

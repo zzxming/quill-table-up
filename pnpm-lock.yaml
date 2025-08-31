@@ -52,8 +52,8 @@ importers:
         specifier: ^3.2.4
         version: 3.2.4(vitest@3.2.4)
       '@zzxming/eslint-config':
-        specifier: 0.5.3
-        version: 0.5.3(@prettier/plugin-xml@3.4.2(prettier@3.6.2))(@typescript-eslint/eslint-plugin@8.41.0(@typescript-eslint/parser@8.41.0(eslint@9.34.0(jiti@2.5.1))(typescript@5.9.2))(eslint@9.34.0(jiti@2.5.1))(typescript@5.9.2))(@typescript-eslint/parser@8.41.0(eslint@9.34.0(jiti@2.5.1))(typescript@5.9.2))(@typescript-eslint/utils@8.41.0(eslint@9.34.0(jiti@2.5.1))(typescript@5.9.2))(eslint@9.34.0(jiti@2.5.1))(typescript@5.9.2)
+        specifier: 0.5.7
+        version: 0.5.7(@prettier/plugin-xml@3.4.2(prettier@3.6.2))(@typescript-eslint/eslint-plugin@8.41.0(@typescript-eslint/parser@8.41.0(eslint@9.34.0(jiti@2.5.1))(typescript@5.9.2))(eslint@9.34.0(jiti@2.5.1))(typescript@5.9.2))(@typescript-eslint/parser@8.41.0(eslint@9.34.0(jiti@2.5.1))(typescript@5.9.2))(@typescript-eslint/utils@8.41.0(eslint@9.34.0(jiti@2.5.1))(typescript@5.9.2))(eslint@9.34.0(jiti@2.5.1))(typescript@5.9.2)
       autoprefixer:
         specifier: ^10.4.21
         version: 10.4.21(postcss@8.4.49)
@@ -1644,8 +1644,8 @@ packages:
   '@xml-tools/parser@1.0.11':
     resolution: {integrity: sha512-aKqQ077XnR+oQtHJlrAflaZaL7qZsulWc/i/ZEooar5JiWj1eLt0+Wg28cpa+XLney107wXqneC+oG1IZvxkTA==}
 
-  '@zzxming/eslint-config@0.5.3':
-    resolution: {integrity: sha512-I8bddQNTfEj70oyVWl9vERN+5hbYAH9QYBhW15lmpjSbG9uXUX2lKneW36x6+zTUC3mwsyEZeS392SV9y2PR5Q==}
+  '@zzxming/eslint-config@0.5.7':
+    resolution: {integrity: sha512-y56STh0AnerYuFltw7RjoP/OlnN7CPeV1wS9K7d7GadyPASsfjG77kwnobRJIix8D0LP7lYdOjeStETBdDPayg==}
     hasBin: true
     peerDependencies:
       '@eslint-react/eslint-plugin': ^1.48.5
@@ -5441,7 +5441,7 @@ snapshots:
     dependencies:
       chevrotain: 7.1.1
 
-  '@zzxming/eslint-config@0.5.3(@prettier/plugin-xml@3.4.2(prettier@3.6.2))(@typescript-eslint/eslint-plugin@8.41.0(@typescript-eslint/parser@8.41.0(eslint@9.34.0(jiti@2.5.1))(typescript@5.9.2))(eslint@9.34.0(jiti@2.5.1))(typescript@5.9.2))(@typescript-eslint/parser@8.41.0(eslint@9.34.0(jiti@2.5.1))(typescript@5.9.2))(@typescript-eslint/utils@8.41.0(eslint@9.34.0(jiti@2.5.1))(typescript@5.9.2))(eslint@9.34.0(jiti@2.5.1))(typescript@5.9.2)':
+  '@zzxming/eslint-config@0.5.7(@prettier/plugin-xml@3.4.2(prettier@3.6.2))(@typescript-eslint/eslint-plugin@8.41.0(@typescript-eslint/parser@8.41.0(eslint@9.34.0(jiti@2.5.1))(typescript@5.9.2))(eslint@9.34.0(jiti@2.5.1))(typescript@5.9.2))(@typescript-eslint/parser@8.41.0(eslint@9.34.0(jiti@2.5.1))(typescript@5.9.2))(@typescript-eslint/utils@8.41.0(eslint@9.34.0(jiti@2.5.1))(typescript@5.9.2))(eslint@9.34.0(jiti@2.5.1))(typescript@5.9.2)':
     dependencies:
       '@antfu/install-pkg': 1.1.0
       '@eslint/markdown': 7.2.0

@@ -63,11 +63,9 @@ const quill = new Quill('#editor', {
 
 ## Options
 
-### TableUp Options
-
 **Full options usage see [demo](https://github.com/zzxming/quill-table-up/blob/master/docs/index.js#L38)**
 
-| attribute     | description                                                                                                                 | type                                                                            | default                                    |
+| Attribute     | Description                                                                                                                 | Type                                                                            | Default                                    |
 | ------------- | --------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- | ------------------------------------------ |
 | full          | if set `true`. width max will be 100%                                                                                       | `boolean`                                                                       | `false`                                    |
 | fullSwitch    | enable to choose insert a full width table                                                                                  | `boolean`                                                                       | `true`                                     |
@@ -126,7 +124,7 @@ The table cell selection handler
 
 #### Options
 
-| attribute   | description           | type     | default   |
+| Attribute   | Description           | Type     | Default   |
 | ----------- | --------------------- | -------- | --------- |
 | selectColor | selector border color | `string` | `#0589f3` |
 
@@ -142,7 +140,7 @@ The table operate menu
 
 #### Options
 
-| attribute       | description                                                                                                                                                                  | type         | default                 |
+| Attribute       | Description                                                                                                                                                                  | Type         | Default                 |
 | --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------ | ----------------------- |
 | tipText         | when `tableMenuClass` set `TableUp.TableMenuSelect`, display tip text when hover icon. when `tableMenuClass` set `TableUp.TableMenuContextmenu`, display tip text after icon | `boolean`    | `true`                  |
 | localstorageKey | used color save localstorage key                                                                                                                                             | `string`     | `__table-bg-used-color` |
@@ -297,7 +295,7 @@ Equal scale table cell handler
 
 #### Options
 
-| attribute | description              | type     | default |
+| Attribute | Description              | Type     | Default |
 | --------- | ------------------------ | -------- | ------- |
 | blockSize | resize handle block size | `number` | `12`    |
 
@@ -366,7 +364,7 @@ class ScrollBlot extends ScrollOverride {
 
 ## Other
 
-### Change internal constants variable
+### Change Internal Constants Variable
 
 If it's not necessary, you should import constants variable from `quill-table-up` directly but not edit it.
 
