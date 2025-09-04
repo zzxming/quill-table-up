@@ -68,6 +68,7 @@ const quillOptions = [
               localstorageKey: 'used-color',
               tipText: true,
               tools: [
+                tableMenuTools.ConvertTothead,
                 tableMenuTools.InsertCaption,
                 tableMenuTools.InsertTop,
                 tableMenuTools.InsertRight,

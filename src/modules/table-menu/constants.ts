@@ -188,6 +188,18 @@ export const tableMenuTools: Record<string, Tool> = {
       }
     },
   },
+  ConvertTothead: {
+    name: 'ConvertTothead',
+    icon: ConvertCell,
+    tip: 'Convert to thead',
+    handle(tableModule, selectedTds) {
+      if (!this.table) return;
+      const tableMainBlot = Quill.find(this.table) as TableMainFormat;
+      if (!tableMainBlot) return;
+
+      tableModule.convertTableBodyByCells(tableMainBlot, selectedTds, 'thead');
+    },
+  },
 };
 
 export const maxSaveColorCount = 10;
