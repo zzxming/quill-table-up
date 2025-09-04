@@ -1311,12 +1311,11 @@ export class TableUp {
     }
   }
 
-  convertTableBodyByCells(tableBlot: TableMainFormat, cells: TableCellInnerFormat[], tag: TableBodyTag) {
-    // TODO 注意 rowspan 的 emptyRow
+  convertTableBodyByCells(tableBlot: TableMainFormat, selecteds: TableCellInnerFormat[], tag: TableBodyTag) {
     let firstRowIndex: number | undefined;
     let lastRowIndex: number | undefined;
     const rows = tableBlot.getRows();
-    for (const cell of cells) {
+    for (const cell of selecteds) {
       const row = cell.getTableRow();
       if (!row) continue;
       const index = rows.indexOf(row);
@@ -1341,12 +1340,10 @@ export class TableUp {
     }
     const firstRow = rows[firstRowIndex];
     const lastRow = rows[lastRowIndex];
-    // TODO 检查当有 emptyRow 时, 拆分是否会把 emptyRow 带到当前 table 中
     tableBlot.split(lastRow.offset(tableBlot) + lastRow.length());
     const currentTable = tableBlot.split(firstRow.offset(tableBlot)) as TableMainFormat;
-    console.log(currentTable);
-    // 可能会有多个 bodys
-    // 创建一个新 body, 插入到当前 table 中, 把所有的 rows 移动到新 body 中, 然后调用新 body 的 convertBody
+    // selecteds may in different bodys
+    // create a new body, insert to current table, move all rows to new body, then call new body's convertBody
     const currentTableRows = currentTable.getRows();
     const [firstBody] = currentTable.getBodys();
     const newBody = firstBody.clone() as TableBodyFormat;
