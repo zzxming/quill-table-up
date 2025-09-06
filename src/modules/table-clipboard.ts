@@ -162,17 +162,26 @@ export class TableClipboard extends Clipboard {
       const op = delta.ops[i];
       if (!op.attributes?.[blotName.tableCellInner]) {
         emptyRows = [];
-        emptyRows.push(randomId());
+        if (isString(op.insert)) {
+          const lines = op.insert.split('\n').length - 1;
+          for (let i = 0; i < lines; i++) {
+            emptyRows.push(randomId());
+          }
+        }
+        else if (op.insert) {
+          emptyRows.push(randomId());
+        }
       }
       else if (op.attributes) {
-        if ((op.attributes[blotName.tableCellInner] as TableCellValue).rowspan === 1) {
+        const cellValue = op.attributes[blotName.tableCellInner] as TableCellValue;
+        if (cellValue.rowspan === 1) {
           emptyRows = [];
         }
         else if (emptyRows.length > 0) {
-          if (!(op.attributes[blotName.tableCellInner] as TableCellValue).emptyRow) {
-            (op.attributes[blotName.tableCellInner] as TableCellValue).emptyRow = [];
+          if (!cellValue.emptyRow) {
+            cellValue.emptyRow = [];
           }
-          (op.attributes[blotName.tableCellInner] as TableCellValue).emptyRow!.push(...emptyRows);
+          cellValue.emptyRow!.push(...emptyRows);
         }
       }
     }

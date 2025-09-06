@@ -2,7 +2,7 @@ import Quill from 'quill';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { TableCellInnerFormat } from '../../formats';
 import { TableUp } from '../../table-up';
-import { createQuillWithTableModule, createTableBodyHTML, createTableCaptionHTML, createTableDeltaOps, createTableHTML, createTaleColHTML, datasetTag, expectDelta, simulatePasteHTML } from './utils';
+import { createQuillWithTableModule, createTableBodyHTML, createTableCaptionHTML, createTableDeltaOps, createTableHTML, createTaleColHTML, datasetTag, expectDelta, replaceAttrEmptyRow, simulatePasteHTML } from './utils';
 
 const Delta = Quill.import('delta');
 
@@ -957,14 +957,63 @@ describe('clipboard cell structure', () => {
     );
   });
 
-  it('clipboard convert empty tr to `emptyRow`', async () => {
+  it('clipboard convert empty multiple tr to `emptyRow`', async () => {
+    const quill = createQuillWithTableModule('<p><br></p>', { autoMergeCell: false });
+    quill.setContents(
+      quill.clipboard.convert({
+        html: `<table><tbody><tr><td rowspan="3" colspan="3">1</td></tr><tr></tr><tr></tr><tr><td>2</td><td>3</td><td>4</td></tr></tbody></table>`,
+      }),
+    );
+    await vi.runAllTimersAsync();
+
+    expect(quill.root).toEqualHTML(
+      `
+        <p><br></p>
+        <div>
+          <table cellpadding="0" cellspacing="0">
+            ${createTaleColHTML(3, { full: false, width: 100 })}
+            <tbody>
+              <tr>
+                <td rowspan="3" colspan="3" data-empty-row="length:2">
+                  <div data-empty-row="length:2"><p>1</p></div>
+                </td>
+              </tr>
+              <tr>
+              </tr>
+              <tr>
+              </tr>
+              <tr>
+                <td rowspan="1" colspan="1">
+                  <div><p>2</p></div>
+                </td>
+                <td rowspan="1" colspan="1">
+                  <div><p>3</p></div>
+                </td>
+                <td rowspan="1" colspan="1">
+                  <div><p>4</p></div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p><br></p>
+      `,
+      {
+        ignoreAttrs: ['data-wrap-tag', 'data-tag', 'class', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'data-style', 'style', 'contenteditable'],
+        replaceAttrs: {
+          'data-empty-row': replaceAttrEmptyRow,
+        },
+      },
+    );
+  });
+
+  it('clipboard convert empty tr to `emptyRow` in thead', async () => {
     const quill = createQuillWithTableModule(`<p><br></p>`, { autoMergeCell: false });
     quill.setContents(
       quill.clipboard.convert({
         html: `<table><thead><tr><td rowspan="2" colspan="2">1</td></tr><tr></tr></thead><tbody><tr><td>1</td><td>2</td></tr><tr><td>1</td><td>2</td></tr></tbody></table>`,
       }),
     );
-
     await vi.runAllTimersAsync();
 
     expect(quill.root).toEqualHTML(
