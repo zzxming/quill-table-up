@@ -1007,6 +1007,56 @@ describe('clipboard cell structure', () => {
     );
   });
 
+  it('clipboard convert `emptyRow` cell', async () => {
+    const quill = createQuillWithTableModule('<p><br></p>', { autoMergeCell: false });
+    quill.setContents(
+      quill.clipboard.convert({
+        html: `<div class="ql-table-wrapper" data-table-id="4rxokyjlh63" contenteditable="false"><table class="ql-table" data-table-id="4rxokyjlh63" cellpadding="0" cellspacing="0" style="margin-right: auto; width: 300px;"><colgroup data-table-id="4rxokyjlh63" contenteditable="false"><col width="100px" data-table-id="4rxokyjlh63" data-col-id="y5a4z42ufdr"><col width="100px" data-table-id="4rxokyjlh63" data-col-id="ukr081pgksl"><col width="100px" data-table-id="4rxokyjlh63" data-col-id="0kg1x92lxzv"></colgroup><tbody data-table-id="4rxokyjlh63"><tr class="ql-table-row" data-table-id="4rxokyjlh63" data-row-id="uezdr0no6w8" data-wrap-tag="tbody"><td class="ql-table-cell" data-table-id="4rxokyjlh63" data-row-id="uezdr0no6w8" data-col-id="y5a4z42ufdr" data-wrap-tag="tbody" rowspan="3" colspan="3" data-empty-row="[&quot;xghllrjrcar&quot;,&quot;j2cc6owtd9l&quot;]"><div class="ql-table-cell-inner" data-table-id="4rxokyjlh63" data-row-id="uezdr0no6w8" data-col-id="y5a4z42ufdr" data-rowspan="3" data-colspan="3" data-tag="td" data-wrap-tag="tbody" data-empty-row="[&quot;xghllrjrcar&quot;,&quot;j2cc6owtd9l&quot;]" contenteditable="true"><p><span>1</span></p></div></td></tr><tr class="ql-table-row" data-table-id="4rxokyjlh63" data-row-id="j2cc6owtd9l" data-wrap-tag="tbody"></tr><tr class="ql-table-row" data-table-id="4rxokyjlh63" data-row-id="xghllrjrcar" data-wrap-tag="tbody"></tr><tr class="ql-table-row" data-table-id="4rxokyjlh63" data-row-id="afwfmtyccci" data-wrap-tag="tbody"><td class="ql-table-cell" data-table-id="4rxokyjlh63" data-row-id="afwfmtyccci" data-col-id="y5a4z42ufdr" data-wrap-tag="tbody" rowspan="1" colspan="1"><div class="ql-table-cell-inner" data-table-id="4rxokyjlh63" data-row-id="afwfmtyccci" data-col-id="y5a4z42ufdr" data-rowspan="1" data-colspan="1" data-tag="td" data-wrap-tag="tbody" contenteditable="true"><p><span>2</span></p></div></td><td class="ql-table-cell" data-table-id="4rxokyjlh63" data-row-id="afwfmtyccci" data-col-id="ukr081pgksl" data-wrap-tag="tbody" rowspan="1" colspan="1"><div class="ql-table-cell-inner" data-table-id="4rxokyjlh63" data-row-id="afwfmtyccci" data-col-id="ukr081pgksl" data-rowspan="1" data-colspan="1" data-tag="td" data-wrap-tag="tbody" contenteditable="true"><p><span>3</span></p></div></td><td class="ql-table-cell" data-table-id="4rxokyjlh63" data-row-id="afwfmtyccci" data-col-id="0kg1x92lxzv" data-wrap-tag="tbody" rowspan="1" colspan="1"><div class="ql-table-cell-inner" data-table-id="4rxokyjlh63" data-row-id="afwfmtyccci" data-col-id="0kg1x92lxzv" data-rowspan="1" data-colspan="1" data-tag="td" data-wrap-tag="tbody" contenteditable="true"><p><span>4</span></p></div></td></tr></tbody></table></div>`,
+      }),
+    );
+    await vi.runAllTimersAsync();
+
+    expect(quill.root).toEqualHTML(
+      `
+        <p><br></p>
+        <div>
+          <table cellpadding="0" cellspacing="0">
+            ${createTaleColHTML(3, { full: false, width: 100 })}
+            <tbody>
+              <tr>
+                <td rowspan="3" colspan="3" data-empty-row="length:2">
+                  <div data-empty-row="length:2"><p>1</p></div>
+                </td>
+              </tr>
+              <tr>
+              </tr>
+              <tr>
+              </tr>
+              <tr>
+                <td rowspan="1" colspan="1">
+                  <div><p>2</p></div>
+                </td>
+                <td rowspan="1" colspan="1">
+                  <div><p>3</p></div>
+                </td>
+                <td rowspan="1" colspan="1">
+                  <div><p>4</p></div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p><br></p>
+      `,
+      {
+        ignoreAttrs: ['data-wrap-tag', 'data-tag', 'class', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'data-style', 'style', 'contenteditable'],
+        replaceAttrs: {
+          'data-empty-row': replaceAttrEmptyRow,
+        },
+      },
+    );
+  });
+
   it('clipboard convert empty tr to `emptyRow` in thead', async () => {
     const quill = createQuillWithTableModule(`<p><br></p>`, { autoMergeCell: false });
     quill.setContents(
