@@ -1,5 +1,6 @@
 import Quill from 'quill';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { TableCellInnerFormat } from '../../formats';
 import { TableUp } from '../../table-up';
 import { createQuillWithTableModule, createTableBodyHTML, createTableCaptionHTML, createTableDeltaOps, createTableHTML, createTaleColHTML, datasetTag, expectDelta, simulatePasteHTML } from './utils';
 
@@ -2006,5 +2007,28 @@ describe('clipboard cell in cell', () => {
       ]),
       quill.getContents(),
     );
+  });
+});
+
+describe('test TableUp `getHTMLByCell`', () => {
+  it('getHTMLByCell return cell html', async () => {
+    const quill = createQuillWithTableModule(`<p><br></p>`);
+    quill.setContents(createTableDeltaOps(4, 4, { full: true }, {}, { isEmpty: false }));
+
+    const tableModule = quill.getModule(TableUp.moduleName) as TableUp;
+    const tds = quill.scroll.descendants(TableCellInnerFormat, 0);
+    tableModule.mergeCells([tds[0], tds[1], tds[4], tds[5]]);
+    await vi.runAllTimersAsync();
+
+    const html = tableModule.getHTMLByCell([tds[0], tds[2], tds[6]]);
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, 'text/html');
+    const htmlCols = Array.from(doc.querySelectorAll('col'));
+    const htmlTds = Array.from(doc.querySelectorAll('td'));
+    expect(htmlCols.length).toBe(3);
+    expect(htmlTds.length).toBe(3);
+    for (const col of htmlCols) {
+      expect(col.getAttribute('width')).toBe('33%');
+    }
   });
 });
