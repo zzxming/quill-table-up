@@ -1,4 +1,5 @@
-import type { TableMainFormat } from '../../formats';
+import type { TableCellInnerFormat, TableMainFormat } from '../../formats';
+import type { TableUp } from '../../table-up';
 import type { Tool } from '../../utils';
 import Quill from 'quill';
 import AutoFull from '../../svg/auto-full.svg';
@@ -20,6 +21,16 @@ import TableHead from '../../svg/table-head.svg';
 import { blotName, createBEM } from '../../utils';
 
 export const menuColorSelectClassName = 'color-selector';
+export function copyCell(tableModule: TableUp, selectedTds: TableCellInnerFormat[], isCut: boolean = false) {
+  const text = tableModule.getTextByCell(selectedTds);
+  const html = tableModule.getHTMLByCell(selectedTds, isCut);
+
+  const clipboardItem = new ClipboardItem({
+    'text/plain': new Blob([text], { type: 'text/plain' }),
+    'text/html': new Blob([html], { type: 'text/html' }),
+  });
+  navigator.clipboard.write([clipboardItem]);
+}
 export const tableMenuTools: Record<string, Tool> = {
   Break: {
     name: 'break',
@@ -29,14 +40,7 @@ export const tableMenuTools: Record<string, Tool> = {
     tip: 'Copy cell',
     icon: Copy,
     handle(tableModule, selectedTds) {
-      const text = tableModule.getTextByCell(selectedTds);
-      const html = tableModule.getHTMLByCell(selectedTds);
-
-      const clipboardItem = new ClipboardItem({
-        'text/plain': new Blob([text], { type: 'text/plain' }),
-        'text/html': new Blob([html], { type: 'text/html' }),
-      });
-      navigator.clipboard.write([clipboardItem]);
+      copyCell.call(this, tableModule, selectedTds, false);
     },
   },
   CutCell: {
@@ -44,14 +48,7 @@ export const tableMenuTools: Record<string, Tool> = {
     tip: 'Cut cell',
     icon: Cut,
     handle(tableModule, selectedTds) {
-      const text = tableModule.getTextByCell(selectedTds);
-      const html = tableModule.getHTMLByCell(selectedTds, true);
-
-      const clipboardItem = new ClipboardItem({
-        'text/plain': new Blob([text], { type: 'text/plain' }),
-        'text/html': new Blob([html], { type: 'text/html' }),
-      });
-      navigator.clipboard.write([clipboardItem]);
+      copyCell.call(this, tableModule, selectedTds, true);
     },
   },
   InsertTop: {

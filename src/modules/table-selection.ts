@@ -1,13 +1,15 @@
-import type { EmitterSource, Parchment as TypeParchment, Range as TypeRange } from 'quill';
+import type { EmitterSource, Op, Parchment as TypeParchment, Range as TypeRange } from 'quill';
 import type { TableMainFormat, TableWrapperFormat } from '../formats';
 import type { TableUp } from '../table-up';
-import type { RelactiveRect, TableSelectionOptions } from '../utils';
+import type { RelactiveRect, TableCellValue, TableSelectionOptions } from '../utils';
 import Quill from 'quill';
 import { getTableMainRect, TableCellFormat, TableCellInnerFormat } from '../formats';
 import { addScrollEvent, blotName, clearScrollEvent, createBEM, createResizeObserver, findAllParentBlot, findParentBlot, getElementScrollPosition, getRelativeRect, isRectanglesIntersect, tableUpEvent } from '../utils';
 import { TableDomSelector } from './table-dom-selector';
+import { copyCell } from './table-menu/constants';
 
 const ERROR_LIMIT = 0;
+const Delta = Quill.import('delta');
 
 export interface SelectionData {
   anchorNode: Node | null;
@@ -63,12 +65,125 @@ export class TableSelection extends TableDomSelector {
     this.resizeObserver = createResizeObserver(this.updateAfterEvent, { ignoreFirstBind: true });
     this.resizeObserver.observe(this.quill.root);
 
+    document.addEventListener('paste', this.handlePaste);
     this.quill.emitter.listenDOM('selectionchange', document, this.selectionChangeHandler.bind(this));
     this.quill.on(tableUpEvent.AFTER_TABLE_RESIZE, this.updateAfterEvent);
     this.quill.on(Quill.events.SELECTION_CHANGE, this.quillSelectionChangeHandler);
     this.quill.on(Quill.events.EDITOR_CHANGE, this.updateWhenTextChange);
     this.hide();
   }
+
+  handlePaste = (event: ClipboardEvent) => {
+    const activeElement = document.activeElement && this.quill.root.contains(document.activeElement);
+    if (!activeElement || this.quill.getSelection()) return;
+
+    const clipboardData = event.clipboardData;
+    if (!clipboardData) return;
+    event.preventDefault();
+
+    const currentSelectedTds = this.selectedTds;
+    if (currentSelectedTds.length <= 0) return;
+
+    const html = clipboardData.getData('text/html');
+    const delta = this.quill.clipboard.convert({ html }).ops.filter(op => op.attributes && op.attributes[blotName.tableCellInner]);
+
+    // group by row
+    const rows = delta.reduce((pre: Op[][], op, index) => {
+      const currentCellValue = op.attributes![blotName.tableCellInner] as TableCellValue;
+      const currentRowId = currentCellValue.rowId;
+      const lastRow = pre[pre.length - 1];
+      const lastRowId = lastRow && lastRow[lastRow.length - 1].attributes && (lastRow[lastRow.length - 1].attributes![blotName.tableCellInner] as TableCellValue).rowId;
+      if (index === 0 || currentRowId !== lastRowId) {
+        pre.push([op]);
+      }
+      else {
+        pre[pre.length - 1].push(op);
+      }
+      return pre;
+    }, [] as Op[][]);
+    const rowCount = rows.length;
+    const [colCount] = rows.reduce((pre, row) => {
+      for (const cell of row) {
+        const cellValue = cell.attributes?.[blotName.tableCellInner] as TableCellValue
+        if (cellValue) {
+          if (pre[1].has(cellValue.colId)) {
+            return pre;
+          }
+          pre[0] += cellValue.colspan || 1;
+          pre[1].add(cellValue.colId);
+        }
+      }
+      return pre;
+    }, [0, new Set<string>()]);
+    console.log(rowCount, colCount, rows);
+
+    const offset = currentSelectedTds[0].offset(this.quill.scroll);
+    const updateDelta = new Delta().retain(offset);
+    let currentRowIndex = -1;
+    let currentColIndex = 0;
+    let lastRowId = '';
+    for (const [index, td] of currentSelectedTds.entries()) {
+      // loop cells in row
+      const rowId = td.rowId;
+      if (lastRowId !== rowId) {
+        // delta retain to current td
+        if (currentSelectedTds[index - 1]) {
+          const lastOffset = currentSelectedTds[index - 1].offset(this.quill.scroll);
+          const lastLength = currentSelectedTds[index - 1].length();
+          const offset = td.offset(this.quill.scroll);
+          updateDelta.retain(offset - lastOffset - lastLength);
+        }
+        lastRowId = rowId;
+        currentRowIndex += 1;
+        currentRowIndex %= rows.length;
+        currentColIndex = 0;
+      }
+      // clear current td content
+      updateDelta.delete(td.length());
+      // insert content in the same cell
+      let cell = rows[currentRowIndex][currentColIndex];
+      const colId = (cell.attributes?.[blotName.tableCellInner] as TableCellValue).colId;
+      while (cell && colId === (cell.attributes?.[blotName.tableCellInner] as TableCellValue).colId) {
+        const { attributes } = cell;
+        const updateAttributes = {
+          ...attributes,
+          [blotName.tableCellInner]: td.formats()[blotName.tableCellInner],
+        };
+        updateDelta.insert(cell.insert!, updateAttributes);
+
+        currentColIndex += 1;
+        currentColIndex %= rows[currentRowIndex].length;
+        cell = rows[currentRowIndex][currentColIndex];
+      }
+      // TODO 考虑 BlockEmbed 的情况
+    }
+    console.log(updateDelta);
+    this.quill.updateContents(updateDelta);
+
+    // 计算单元格, 如果单元格与当前selectedTds完全匹配, 则进行进行单元格替换
+    // 若不是, 则按行进行粘贴, 从头开始循环到结束后回到0继续, 直到粘贴完毕, 列粘贴一样
+  };
+
+  keyboardHandler = async (e: KeyboardEvent) => {
+    if (e.ctrlKey) {
+      switch (e.key) {
+        case 'c':
+        case 'x': {
+          copyCell(this.tableModule, this.selectedTds, e.key === 'x');
+          break;
+        }
+        case 'v': {
+          // console.log('paste', this.quill.getSelection(), this.selectedTds);
+
+          break;
+        }
+      }
+    }
+    else if (e.key === 'Backspace' || e.key === 'Delete') {
+      this.removeCell(e);
+    }
+    this.removeCell(e);
+  };
 
   updateWhenTextChange = (eventName: string) => {
     if (eventName === Quill.events.TEXT_CHANGE) {
@@ -94,7 +209,7 @@ export class TableSelection extends TableDomSelector {
     this.updateWithSelectedTds();
   };
 
-  removeCell = (e: KeyboardEvent) => {
+  removeCell(e: KeyboardEvent) {
     const range = this.quill.getSelection();
     const activeElement = document.activeElement;
     if (range || (e.key !== 'Backspace' && e.key !== 'Delete') || !this.quill.root.contains(activeElement)) return;
@@ -113,7 +228,7 @@ export class TableSelection extends TableDomSelector {
       td.parent.insertBefore(clearTd, td);
       td.remove();
     }
-  };
+  }
 
   setSelectedTds(tds: TableCellInnerFormat[]) {
     const currentSelectedTds = new Set(this.selectedTds);
@@ -589,7 +704,7 @@ export class TableSelection extends TableDomSelector {
 
     this.showDisplay();
     this.update();
-    this.quill.root.addEventListener('keydown', this.removeCell);
+    this.quill.root.addEventListener('keydown', this.keyboardHandler);
     addScrollEvent.call(this, this.quill.root, () => {
       this.update();
     });
@@ -607,7 +722,7 @@ export class TableSelection extends TableDomSelector {
 
   hide() {
     clearScrollEvent.call(this);
-    this.quill.root.removeEventListener('keydown', this.removeCell);
+    this.quill.root.removeEventListener('keydown', this.keyboardHandler);
     this.hideDisplay();
     this.boundary = null;
     this.setSelectedTds([]);
@@ -621,6 +736,7 @@ export class TableSelection extends TableDomSelector {
     this.cellSelectWrap.remove();
     clearScrollEvent.call(this);
 
+    document.removeEventListener('paste', this.handlePaste);
     this.quill.off(tableUpEvent.AFTER_TABLE_RESIZE, this.updateAfterEvent);
     this.quill.off(Quill.events.EDITOR_CHANGE, this.updateWhenTextChange);
     this.quill.off(Quill.events.SELECTION_CHANGE, this.quillSelectionChangeHandler);
