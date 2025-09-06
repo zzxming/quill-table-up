@@ -126,7 +126,7 @@ export function expectDelta(received: TypeDelta, expected: TypeDelta) {
 
 interface TableColDeltaValue extends Omit<TableColValue, 'width' | 'full'> {
   width: number;
-  full?: 'true';
+  full?: boolean;
 }
 interface TableCreatorOptions {
   isEmpty: boolean;
@@ -167,10 +167,8 @@ export function createTableDeltaOps(row: number, col: number, colOptions?: ColOp
   }
   for (const [i, _] of new Array(col).fill(0).entries()) {
     const value: TableColDeltaValue = { tableId, colId: `${i + 1}`, width: 1 / col * 100 };
-    if (full) {
-      value.full = 'true';
-    }
-    else {
+    value.full = full;
+    if (!full) {
       value.width = width;
     }
     if (align !== 'left') {
@@ -185,7 +183,7 @@ export function createTableDeltaOps(row: number, col: number, colOptions?: ColOp
       }
       table.push(
         {
-          attributes: { 'table-up-cell-inner': { tableId, rowId: i + 1, colId: j + 1, rowspan: 1, colspan: 1 } },
+          attributes: { 'table-up-cell-inner': { tableId, rowId: `${i + 1}`, colId: `${j + 1}`, rowspan: 1, colspan: 1, tag: 'td', wrapTag: 'tbody' } },
           insert: '\n',
         },
       );

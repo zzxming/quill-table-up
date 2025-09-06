@@ -35,6 +35,8 @@ const toolbarConfig = [
 ];
 const menuTools = [
   tableMenuTools.ToggleTdBetweenTh,
+  tableMenuTools.ConvertTothead,
+  tableMenuTools.ConvertTotfoot,
   tableMenuTools.Break,
   tableMenuTools.InsertCaption,
   tableMenuTools.InsertTop,

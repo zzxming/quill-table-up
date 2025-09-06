@@ -5,11 +5,11 @@ import type { Context } from 'quill/modules/keyboard';
 import type TypeKeyboard from 'quill/modules/keyboard';
 import type TypeToolbar from 'quill/modules/toolbar';
 import type { TableSelection } from './modules';
-import type { Constructor, QuillTheme, QuillThemePicker, TableCellValue, TableConstantsData, TableTextOptions, TableUpOptions } from './utils';
+import type { Constructor, QuillTheme, QuillThemePicker, TableBodyTag, TableCellValue, TableConstantsData, TableTextOptions, TableUpOptions } from './utils';
 import Quill from 'quill';
 import { BlockEmbedOverride, BlockOverride, ContainerFormat, ScrollOverride, TableBodyFormat, TableCaptionFormat, TableCellFormat, TableCellInnerFormat, TableColFormat, TableColgroupFormat, TableFootFormat, TableHeadFormat, TableMainFormat, TableRowFormat, TableWrapperFormat } from './formats';
 import { TableClipboard } from './modules';
-import { blotName, createBEM, createSelectBox, cssTextToObject, debounce, findParentBlot, findParentBlots, getScrollBarWidth, isForbidInTable, isFunction, isNumber, isString, isSubclassOf, limitDomInViewPort, mixinClass, objectToCssText, randomId, tableCantInsert, tableUpEvent, tableUpInternal, tableUpSize, toCamelCase } from './utils';
+import { blotName, createBEM, createSelectBox, cssTextToObject, debounce, findParentBlot, findParentBlots, getScrollBarWidth, isForbidInTable, isFunction, isNumber, isString, isSubclassOf, isUndefined, limitDomInViewPort, mixinClass, objectToCssText, randomId, tableCantInsert, tableUpEvent, tableUpInternal, tableUpSize, toCamelCase } from './utils';
 
 const Parchment = Quill.import('parchment');
 const Delta = Quill.import('delta');
@@ -1309,5 +1309,48 @@ export class TableUp {
       rowIndex += 1;
       curTr = rows[rowIndex];
     }
+  }
+
+  convertTableBodyByCells(tableBlot: TableMainFormat, selecteds: TableCellInnerFormat[], tag: TableBodyTag) {
+    let firstRowIndex: number | undefined;
+    let lastRowIndex: number | undefined;
+    const rows = tableBlot.getRows();
+    for (const cell of selecteds) {
+      const row = cell.getTableRow();
+      if (!row) continue;
+      const index = rows.indexOf(row);
+      if (isUndefined(firstRowIndex)) {
+        firstRowIndex = index;
+      }
+      if (isUndefined(lastRowIndex)) {
+        lastRowIndex = index;
+      }
+
+      if (index < firstRowIndex) {
+        lastRowIndex = firstRowIndex;
+        firstRowIndex = index;
+      }
+      else if (index > lastRowIndex) {
+        lastRowIndex = index;
+      }
+    }
+    if (isUndefined(firstRowIndex) || isUndefined(lastRowIndex)) {
+      console.warn('TableRow not found');
+      return;
+    }
+    const firstRow = rows[firstRowIndex];
+    const lastRow = rows[lastRowIndex];
+    tableBlot.split(lastRow.offset(tableBlot) + lastRow.length());
+    const currentTable = tableBlot.split(firstRow.offset(tableBlot)) as TableMainFormat;
+    // selecteds may in different bodys
+    // create a new body, insert to current table, move all rows to new body, then call new body's convertBody
+    const currentTableRows = currentTable.getRows();
+    const [firstBody] = currentTable.getBodys();
+    const newBody = firstBody.clone() as TableBodyFormat;
+    currentTable.appendChild(newBody);
+    for (const row of currentTableRows) {
+      newBody.appendChild(row);
+    }
+    newBody.convertBody(tag);
   }
 }

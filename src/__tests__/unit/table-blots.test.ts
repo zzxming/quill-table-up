@@ -1,8 +1,10 @@
+import type { ToolOption } from '../../utils';
 import Quill from 'quill';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { TableCellFormat } from '../../formats';
+import { TableCellFormat, TableCellInnerFormat } from '../../formats';
+import { tableMenuTools } from '../../modules';
 import { TableUp } from '../../table-up';
-import { createQuillWithTableModule, createTableBodyHTML, createTableCaptionHTML, createTableDeltaOps, createTaleColHTML, expectDelta } from './utils';
+import { createQuillWithTableModule, createTable, createTableBodyHTML, createTableCaptionHTML, createTableDeltaOps, createTaleColHTML, datasetWrapTag, expectDelta, replaceAttrEmptyRow } from './utils';
 
 const Delta = Quill.import('delta');
 
@@ -375,6 +377,343 @@ describe('test table around line', () => {
         { insert: '9' },
         { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '3', colId: '3', rowspan: 1, colspan: 1, tag: 'td', wrapTag: 'tbody' } }, insert: '\n' },
         { attributes: { list: 'ordered' }, insert: '\n' },
+      ]),
+    );
+  });
+});
+
+describe('test table body convert', () => {
+  it('table convert body should work correctly', async () => {
+    const quill = await createTable(3, 3, { full: false }, {}, { isEmpty: false });
+    const table = quill.root.querySelector('table')!;
+    const tableModule = quill.getModule(TableUp.moduleName) as TableUp;
+    const tds = quill.scroll.descendants(TableCellInnerFormat, 0);
+    (tableMenuTools.ConvertTothead as ToolOption).handle.call({ quill, table } as any, tableModule, tds.slice(0, 1), null);
+    await vi.runAllTimersAsync();
+
+    expectDelta(
+      quill.getContents(),
+      new Delta([
+        { insert: '\n' },
+        { insert: { 'table-up-col': { tableId: '1', colId: '1', full: false, width: 100 } } },
+        { insert: { 'table-up-col': { tableId: '1', colId: '2', full: false, width: 100 } } },
+        { insert: { 'table-up-col': { tableId: '1', colId: '3', full: false, width: 100 } } },
+        { insert: '1' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '1', rowspan: 1, colspan: 1, tag: 'td', wrapTag: 'thead' } }, insert: '\n' },
+        { insert: '2' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '2', rowspan: 1, colspan: 1, tag: 'td', wrapTag: 'thead' } }, insert: '\n' },
+        { insert: '3' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '3', rowspan: 1, colspan: 1, tag: 'td', wrapTag: 'thead' } }, insert: '\n' },
+        { insert: '4' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '1', rowspan: 1, colspan: 1, tag: 'td', wrapTag: 'tbody' } }, insert: '\n' },
+        { insert: '5' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '2', rowspan: 1, colspan: 1, tag: 'td', wrapTag: 'tbody' } }, insert: '\n' },
+        { insert: '6' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '3', rowspan: 1, colspan: 1, tag: 'td', wrapTag: 'tbody' } }, insert: '\n' },
+        { insert: '7' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '3', colId: '1', rowspan: 1, colspan: 1, tag: 'td', wrapTag: 'tbody' } }, insert: '\n' },
+        { insert: '8' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '3', colId: '2', rowspan: 1, colspan: 1, tag: 'td', wrapTag: 'tbody' } }, insert: '\n' },
+        { insert: '9' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '3', colId: '3', rowspan: 1, colspan: 1, tag: 'td', wrapTag: 'tbody' } }, insert: '\n' },
+        { insert: '\n' },
+      ]),
+    );
+  });
+
+  it('table convert body with multi body', async () => {
+    const quill = createQuillWithTableModule(`<p><br></p>`);
+    quill.setContents([
+      { insert: '\n' },
+      { insert: { 'table-up-col': { tableId: '1', colId: '1', width: 100 } } },
+      { insert: { 'table-up-col': { tableId: '1', colId: '2', width: 100 } } },
+      { insert: { 'table-up-col': { tableId: '1', colId: '3', width: 100 } } },
+      { insert: { 'table-up-col': { tableId: '1', colId: '4', width: 100 } } },
+      { insert: { 'table-up-col': { tableId: '1', colId: '5', width: 100 } } },
+      { insert: '1' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', wrapTag: 'thead', colId: '1', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '2' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', wrapTag: 'thead', colId: '2', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '3' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', wrapTag: 'thead', colId: '3', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '4' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', wrapTag: 'thead', colId: '4', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '5' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', wrapTag: 'thead', colId: '5', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '6' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', wrapTag: 'thead', colId: '1', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '7' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', wrapTag: 'thead', colId: '2', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '8' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', wrapTag: 'thead', colId: '3', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '9' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', wrapTag: 'thead', colId: '4', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '10' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', wrapTag: 'thead', colId: '5', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '11' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '3', colId: '1', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '12' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '3', colId: '2', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '13' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '3', colId: '3', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '14' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '3', colId: '4', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '15' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '3', colId: '5', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '16' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '4', wrapTag: 'tfoot', colId: '1', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '17' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '4', wrapTag: 'tfoot', colId: '2', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '18' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '4', wrapTag: 'tfoot', colId: '3', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '19' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '4', wrapTag: 'tfoot', colId: '4', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '20' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '4', wrapTag: 'tfoot', colId: '5', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '21' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '5', wrapTag: 'tfoot', colId: '1', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '22' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '5', wrapTag: 'tfoot', colId: '2', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '23' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '5', wrapTag: 'tfoot', colId: '3', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '24' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '5', wrapTag: 'tfoot', colId: '4', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '25' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '5', wrapTag: 'tfoot', colId: '5', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '\n' },
+    ]);
+    await vi.runAllTimersAsync();
+
+    const table = quill.root.querySelector('table')!;
+    const tableModule = quill.getModule(TableUp.moduleName) as TableUp;
+    const tds = quill.scroll.descendants(TableCellInnerFormat, 0);
+    (tableMenuTools.ConvertTothead as ToolOption).handle.call({ quill, table } as any, tableModule, tds.slice(5, 20), null);
+    await vi.runAllTimersAsync();
+
+    expectDelta(
+      quill.getContents(),
+      new Delta([
+        { insert: '\n' },
+        { insert: { 'table-up-col': { tableId: '1', colId: '1', full: false, width: 100 } } },
+        { insert: { 'table-up-col': { tableId: '1', colId: '2', full: false, width: 100 } } },
+        { insert: { 'table-up-col': { tableId: '1', colId: '3', full: false, width: 100 } } },
+        { insert: { 'table-up-col': { tableId: '1', colId: '4', full: false, width: 100 } } },
+        { insert: { 'table-up-col': { tableId: '1', colId: '5', full: false, width: 100 } } },
+        { insert: '1' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', tag: 'td', wrapTag: 'thead', colId: '1', rowspan: 1, colspan: 1 } }, insert: '\n' },
+        { insert: '2' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', tag: 'td', wrapTag: 'thead', colId: '2', rowspan: 1, colspan: 1 } }, insert: '\n' },
+        { insert: '3' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', tag: 'td', wrapTag: 'thead', colId: '3', rowspan: 1, colspan: 1 } }, insert: '\n' },
+        { insert: '4' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', tag: 'td', wrapTag: 'thead', colId: '4', rowspan: 1, colspan: 1 } }, insert: '\n' },
+        { insert: '5' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', tag: 'td', wrapTag: 'thead', colId: '5', rowspan: 1, colspan: 1 } }, insert: '\n' },
+        { insert: '6' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', tag: 'td', wrapTag: 'thead', colId: '1', rowspan: 1, colspan: 1 } }, insert: '\n' },
+        { insert: '7' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', tag: 'td', wrapTag: 'thead', colId: '2', rowspan: 1, colspan: 1 } }, insert: '\n' },
+        { insert: '8' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', tag: 'td', wrapTag: 'thead', colId: '3', rowspan: 1, colspan: 1 } }, insert: '\n' },
+        { insert: '9' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', tag: 'td', wrapTag: 'thead', colId: '4', rowspan: 1, colspan: 1 } }, insert: '\n' },
+        { insert: '10' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', tag: 'td', wrapTag: 'thead', colId: '5', rowspan: 1, colspan: 1 } }, insert: '\n' },
+        { insert: '11' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '3', tag: 'td', wrapTag: 'thead', colId: '1', rowspan: 1, colspan: 1 } }, insert: '\n' },
+        { insert: '12' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '3', tag: 'td', wrapTag: 'thead', colId: '2', rowspan: 1, colspan: 1 } }, insert: '\n' },
+        { insert: '13' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '3', tag: 'td', wrapTag: 'thead', colId: '3', rowspan: 1, colspan: 1 } }, insert: '\n' },
+        { insert: '14' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '3', tag: 'td', wrapTag: 'thead', colId: '4', rowspan: 1, colspan: 1 } }, insert: '\n' },
+        { insert: '15' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '3', tag: 'td', wrapTag: 'thead', colId: '5', rowspan: 1, colspan: 1 } }, insert: '\n' },
+        { insert: '16' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '4', tag: 'td', wrapTag: 'thead', colId: '1', rowspan: 1, colspan: 1 } }, insert: '\n' },
+        { insert: '17' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '4', tag: 'td', wrapTag: 'thead', colId: '2', rowspan: 1, colspan: 1 } }, insert: '\n' },
+        { insert: '18' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '4', tag: 'td', wrapTag: 'thead', colId: '3', rowspan: 1, colspan: 1 } }, insert: '\n' },
+        { insert: '19' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '4', tag: 'td', wrapTag: 'thead', colId: '4', rowspan: 1, colspan: 1 } }, insert: '\n' },
+        { insert: '20' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '4', tag: 'td', wrapTag: 'thead', colId: '5', rowspan: 1, colspan: 1 } }, insert: '\n' },
+        { insert: '21' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '5', tag: 'td', wrapTag: 'tfoot', colId: '1', rowspan: 1, colspan: 1 } }, insert: '\n' },
+        { insert: '22' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '5', tag: 'td', wrapTag: 'tfoot', colId: '2', rowspan: 1, colspan: 1 } }, insert: '\n' },
+        { insert: '23' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '5', tag: 'td', wrapTag: 'tfoot', colId: '3', rowspan: 1, colspan: 1 } }, insert: '\n' },
+        { insert: '24' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '5', tag: 'td', wrapTag: 'tfoot', colId: '4', rowspan: 1, colspan: 1 } }, insert: '\n' },
+        { insert: '25' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '5', tag: 'td', wrapTag: 'tfoot', colId: '5', rowspan: 1, colspan: 1 } }, insert: '\n' },
+        { insert: '\n' },
+      ]),
+    );
+  });
+
+  it('table convert body with emptyRow', async () => {
+    const quill = createQuillWithTableModule(`<p><br></p>`, { autoMergeCell: false });
+    quill.setContents([
+      { insert: '\n' },
+      { insert: { 'table-up-col': { tableId: '1', colId: '1', full: false, width: 100 } } },
+      { insert: { 'table-up-col': { tableId: '1', colId: '2', full: false, width: 100 } } },
+      { insert: { 'table-up-col': { tableId: '1', colId: '3', full: false, width: 100 } } },
+      { insert: { 'table-up-col': { tableId: '1', colId: '4', full: false, width: 100 } } },
+      { insert: { 'table-up-col': { tableId: '1', colId: '5', full: false, width: 100 } } },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '1', rowspan: 5, colspan: 5, emptyRow: ['2', '3', '4', '5'] } }, insert: '\n' },
+      { insert: '\n' },
+    ]);
+    await vi.runAllTimersAsync();
+
+    const table = quill.root.querySelector('table')!;
+    const tableModule = quill.getModule(TableUp.moduleName) as TableUp;
+    const tds = quill.scroll.descendants(TableCellInnerFormat, 0);
+    (tableMenuTools.ConvertTothead as ToolOption).handle.call({ quill, table } as any, tableModule, tds.slice(0, 1), null);
+    await vi.runAllTimersAsync();
+
+    expectDelta(
+      quill.getContents(),
+      new Delta([
+        { insert: '\n' },
+        { insert: { 'table-up-col': { tableId: '1', colId: '1', full: false, width: 100 } } },
+        { insert: { 'table-up-col': { tableId: '1', colId: '2', full: false, width: 100 } } },
+        { insert: { 'table-up-col': { tableId: '1', colId: '3', full: false, width: 100 } } },
+        { insert: { 'table-up-col': { tableId: '1', colId: '4', full: false, width: 100 } } },
+        { insert: { 'table-up-col': { tableId: '1', colId: '5', full: false, width: 100 } } },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '1', rowspan: 5, colspan: 5, tag: 'td', wrapTag: 'thead', emptyRow: ['2', '3', '4', '5'] } }, insert: '\n' },
+        { insert: '\n' },
+      ]),
+    );
+  });
+
+  it('table convert body with next emptyRow', async () => {
+    const quill = createQuillWithTableModule(`<p><br></p>`, { autoMergeCell: false });
+    quill.setContents([
+      { insert: '\n' },
+      { insert: { 'table-up-col': { tableId: '1', colId: '1', full: false, width: 100 } } },
+      { insert: { 'table-up-col': { tableId: '1', colId: '2', full: false, width: 100 } } },
+      { insert: { 'table-up-col': { tableId: '1', colId: '3', full: false, width: 100 } } },
+      { insert: { 'table-up-col': { tableId: '1', colId: '4', full: false, width: 100 } } },
+      { insert: { 'table-up-col': { tableId: '1', colId: '5', full: false, width: 100 } } },
+      { insert: '1' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '1', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '2' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '2', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '3' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '3', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '4' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '4', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '5' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '5', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: 'merge' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '1', rowspan: 3, colspan: 5, emptyRow: ['3', '4'] } }, insert: '\n' },
+      { insert: '6' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '5', colId: '1', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '7' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '5', colId: '2', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '8' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '5', colId: '3', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '9' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '5', colId: '4', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '10' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '5', colId: '5', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '\n' },
+    ]);
+    await vi.runAllTimersAsync();
+
+    const table = quill.root.querySelector('table')!;
+    const tableModule = quill.getModule(TableUp.moduleName) as TableUp;
+    const tds = quill.scroll.descendants(TableCellInnerFormat, 0);
+    (tableMenuTools.ConvertTothead as ToolOption).handle.call({ quill, table } as any, tableModule, tds.slice(0, 6), null);
+    await vi.runAllTimersAsync();
+
+    expect(quill.root).toEqualHTML(
+      `
+        <p><br></p>
+        <div>
+          <table cellpadding="0" cellspacing="0" style="margin-right: auto; width: 500px;">
+            ${createTaleColHTML(5, { full: false, width: 100 })}
+            <thead>
+              <tr ${datasetWrapTag('thead')}>
+                ${
+                  new Array(5).fill(0).map((_, i) => `<td rowspan="1" colspan="1" ${datasetWrapTag('thead')}>
+                    <div ${datasetWrapTag('thead')}>
+                      <p>
+                        ${i + 1}
+                      </p>
+                    </div>
+                  </td>`).join('\n')
+                }
+              </tr>
+              <tr ${datasetWrapTag('thead')}>
+                <td rowspan="3" colspan="5" ${datasetWrapTag('thead')} data-empty-row="length:2">
+                  <div ${datasetWrapTag('thead')} data-empty-row="length:2">
+                    <p>merge</p>
+                  </div>
+                </td>
+              </tr>
+              <tr ${datasetWrapTag('thead')}></tr>
+              <tr ${datasetWrapTag('thead')}></tr>
+            </thead>
+            <tbody>
+              <tr ${datasetWrapTag('tbody')}>
+                ${
+                  new Array(5).fill(0).map((_, i) => `<td rowspan="1" colspan="1" ${datasetWrapTag('tbody')}>
+                    <div ${datasetWrapTag('tbody')}>
+                      <p>
+                        ${5 + i + 1}
+                      </p>
+                    </div>
+                  </td>`).join('\n')
+                }
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p><br></p>
+      `,
+      {
+        ignoreAttrs: ['data-tag', 'class', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'contenteditable'],
+        replaceAttrs: {
+          'data-empty-row': replaceAttrEmptyRow,
+        },
+      },
+    );
+    expectDelta(
+      quill.getContents(),
+      new Delta([
+        { insert: '\n' },
+        { insert: { 'table-up-col': { tableId: '1', colId: '1', full: false, width: 100 } } },
+        { insert: { 'table-up-col': { tableId: '1', colId: '2', full: false, width: 100 } } },
+        { insert: { 'table-up-col': { tableId: '1', colId: '3', full: false, width: 100 } } },
+        { insert: { 'table-up-col': { tableId: '1', colId: '4', full: false, width: 100 } } },
+        { insert: { 'table-up-col': { tableId: '1', colId: '5', full: false, width: 100 } } },
+        { insert: '1' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '1', rowspan: 1, colspan: 1, tag: 'td', wrapTag: 'thead' } }, insert: '\n' },
+        { insert: '2' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '2', rowspan: 1, colspan: 1, tag: 'td', wrapTag: 'thead' } }, insert: '\n' },
+        { insert: '3' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '3', rowspan: 1, colspan: 1, tag: 'td', wrapTag: 'thead' } }, insert: '\n' },
+        { insert: '4' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '4', rowspan: 1, colspan: 1, tag: 'td', wrapTag: 'thead' } }, insert: '\n' },
+        { insert: '5' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '5', rowspan: 1, colspan: 1, tag: 'td', wrapTag: 'thead' } }, insert: '\n' },
+        { insert: 'merge' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '1', rowspan: 3, colspan: 5, tag: 'td', wrapTag: 'thead', emptyRow: ['3', '4'] } }, insert: '\n' },
+        { insert: '6' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '5', colId: '1', rowspan: 1, colspan: 1, tag: 'td', wrapTag: 'tbody' } }, insert: '\n' },
+        { insert: '7' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '5', colId: '2', rowspan: 1, colspan: 1, tag: 'td', wrapTag: 'tbody' } }, insert: '\n' },
+        { insert: '8' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '5', colId: '3', rowspan: 1, colspan: 1, tag: 'td', wrapTag: 'tbody' } }, insert: '\n' },
+        { insert: '9' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '5', colId: '4', rowspan: 1, colspan: 1, tag: 'td', wrapTag: 'tbody' } }, insert: '\n' },
+        { insert: '10' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '5', colId: '5', rowspan: 1, colspan: 1, tag: 'td', wrapTag: 'tbody' } }, insert: '\n' },
+        { insert: '\n' },
       ]),
     );
   });
