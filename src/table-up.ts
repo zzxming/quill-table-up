@@ -685,17 +685,26 @@ export class TableUp {
     const parser = new DOMParser();
     const doc = parser.parseFromString(tableHTML, 'text/html');
 
+    const cols = Array.from(doc.querySelectorAll('col'));
+    const colIds = cols.map(col => col.dataset.colId!);
     const cellColWidth: string[] = [];
     const cellColIds = new Set<string>();
     const cellIds = new Set<string>();
     for (const td of tds) {
       cellColIds.add(td.colId);
+      const currentColId = td.colId;
+      const colIndex = colIds.indexOf(currentColId);
+      for (let i = 0; i < td.colspan; i++) {
+        cellColIds.add(colIds[colIndex + i]);
+      }
       cellIds.add(`${td.rowId}-${td.colId}`);
     }
     // filter col
-    for (const col of Array.from(doc.querySelectorAll('col'))) {
+    for (let index = 0; index < cols.length; index++) {
+      const col = cols[index];
       if (!cellColIds.has(col.dataset.colId!)) {
         col.remove();
+        cols.splice(index--, 1);
       }
       else {
         cellColWidth.push(col.getAttribute('width')!);
@@ -720,11 +729,9 @@ export class TableUp {
       }
     }
     // calculate width
-    const cols = Array.from(doc.querySelectorAll('col'));
     const colsValue = cols.map(col => TableColFormat.value(col));
     if (tableMain.full) {
       const totalWidth = colsValue.reduce((total, col) => col.width + total, 0);
-
       for (const [i, col] of colsValue.entries()) {
         col.width = Math.round((col.width / totalWidth) * 100);
         cols[i].setAttribute('width', `${col.width}%`);

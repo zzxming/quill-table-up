@@ -15,12 +15,12 @@ export interface ClipboardOptions {
 }
 
 function getCellWidth(cell: HTMLElement): number {
-  let width = Number.parseFloat(cell.getAttribute('width') || String(tableUpSize.colDefaultWidth));
+  let width = Number.parseFloat(cell.getAttribute('width')!);
   if (Number.isNaN(width)) {
     const styleWidth = cell.style.width;
     width = styleWidth ? Number.parseFloat(styleWidth) : cell.offsetWidth;
   }
-  return width;
+  return width || tableUpSize.colDefaultWidth;
 }
 function calculateCols(tableNode: HTMLElement, colNums: number): number[] {
   const colWidths = new Array(colNums).fill(tableUpSize.colDefaultWidth);
@@ -30,14 +30,19 @@ function calculateCols(tableNode: HTMLElement, colNums: number): number[] {
   const rows = Array.from(tableNode.querySelectorAll('tr'));
   for (const row of rows) {
     const cells = Array.from(row.querySelectorAll('td'));
-    for (const [index, cell] of cells.entries()) {
+    let index = 0;
+    for (const cell of cells) {
+      const colspan = cell.colSpan || 1;
       if (index < colNums) {
         const cellWidth = getCellWidth(cell);
-        colWidths[index] = cellWidth || colWidths[index];
+        for (let i = 0; i < colspan; i++) {
+          colWidths[index + i] = cellWidth / colspan;
+        }
       }
       else {
         break;
       }
+      index += colspan;
     }
   }
   return colWidths;
