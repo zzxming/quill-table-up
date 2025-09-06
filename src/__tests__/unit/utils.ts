@@ -51,6 +51,15 @@ export function createQuillWithTableModule(html: string, tableOptions: Partial<T
   });
   return quill;
 }
+export function replaceAttrEmptyRow(value: string) {
+  try {
+    const emptyRow = JSON.parse(value);
+    return `length:${emptyRow.length}`;
+  }
+  catch {
+    return value;
+  }
+}
 
 expect.extend({
   toEqualHTML(
