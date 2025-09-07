@@ -189,6 +189,10 @@ export class TableCellInnerFormat extends ContainerFormat {
     return this.domNode.dataset.wrapTag as TableBodyTag || 'tbody';
   }
 
+  get style() {
+    return this.domNode.dataset.style;
+  }
+
   getColumnIndex() {
     const table = findParentBlot(this, blotName.tableMain);
     return table.getColIds().indexOf(this.colId);

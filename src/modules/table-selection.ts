@@ -1,13 +1,15 @@
-import type { EmitterSource, Parchment as TypeParchment, Range as TypeRange } from 'quill';
+import type { EmitterSource, Op, Parchment as TypeParchment, Range as TypeRange } from 'quill';
 import type { TableMainFormat, TableWrapperFormat } from '../formats';
 import type { TableUp } from '../table-up';
-import type { RelactiveRect, TableSelectionOptions } from '../utils';
+import type { RelactiveRect, TableCellValue, TableSelectionOptions } from '../utils';
 import Quill from 'quill';
 import { getTableMainRect, TableCellFormat, TableCellInnerFormat } from '../formats';
 import { addScrollEvent, blotName, clearScrollEvent, createBEM, createResizeObserver, findAllParentBlot, findParentBlot, getElementScrollPosition, getRelativeRect, isRectanglesIntersect, tableUpEvent } from '../utils';
 import { TableDomSelector } from './table-dom-selector';
+import { copyCell } from './table-menu/constants';
 
 const ERROR_LIMIT = 0;
+const Delta = Quill.import('delta');
 
 export interface SelectionData {
   anchorNode: Node | null;
@@ -63,12 +65,215 @@ export class TableSelection extends TableDomSelector {
     this.resizeObserver = createResizeObserver(this.updateAfterEvent, { ignoreFirstBind: true });
     this.resizeObserver.observe(this.quill.root);
 
+    document.addEventListener('paste', this.handlePaste);
     this.quill.emitter.listenDOM('selectionchange', document, this.selectionChangeHandler.bind(this));
     this.quill.on(tableUpEvent.AFTER_TABLE_RESIZE, this.updateAfterEvent);
     this.quill.on(Quill.events.SELECTION_CHANGE, this.quillSelectionChangeHandler);
     this.quill.on(Quill.events.EDITOR_CHANGE, this.updateWhenTextChange);
     this.hide();
   }
+
+  handlePaste = (event: ClipboardEvent) => {
+    const activeElement = document.activeElement && this.quill.root.contains(document.activeElement);
+    if (!activeElement || this.quill.getSelection()) return;
+
+    const clipboardData = event.clipboardData;
+    if (!clipboardData) return;
+    event.preventDefault();
+
+    const currentSelectedTds = this.selectedTds;
+    if (currentSelectedTds.length <= 0) return;
+
+    const html = clipboardData.getData('text/html');
+    const delta = this.quill.clipboard.convert({ html }).ops.filter(op => op.attributes && op.attributes[blotName.tableCellInner]);
+    // group by row
+    const rows = delta.reduce((pre: Op[][], op, index) => {
+      const currentCellValue = op.attributes![blotName.tableCellInner] as TableCellValue;
+      const currentRowId = currentCellValue.rowId;
+      const lastRow = pre[pre.length - 1];
+      const lastRowId = lastRow && lastRow[lastRow.length - 1].attributes && (lastRow[lastRow.length - 1].attributes![blotName.tableCellInner] as TableCellValue).rowId;
+
+      if (index === 0 || currentRowId !== lastRowId) {
+        pre.push([op]);
+      }
+      else {
+        pre[pre.length - 1].push(op);
+      }
+      return pre;
+    }, [] as Op[][]);
+    if (rows.length <= 0) return;
+    let prevCellId = '';
+    function getCellId(op: Op) {
+      const value = op.attributes![blotName.tableCellInner] as TableCellValue;
+      return `${value.rowId}-${value.colId}`;
+    }
+    const values: Op[][][] = [];
+    for (const row of rows) {
+      const rowValues: Op[][] = [];
+      for (const cell of row) {
+        const currentCellId = getCellId(cell);
+        if (!prevCellId) {
+          prevCellId = currentCellId;
+          rowValues.push([] as Op[]);
+        }
+        if (prevCellId === currentCellId) {
+          rowValues[rowValues.length - 1].push(cell);
+        }
+        else {
+          rowValues.push([cell]);
+          prevCellId = currentCellId;
+        }
+      }
+      values.push(rowValues);
+    }
+
+    function getRowAndColCount<T>(rows: T[][], cellValueGetter: (item: T) => TableCellValue) {
+      const [colCount, rowCount] = rows.reduce((pre, cells, i) => {
+        let colCount = 0;
+        let rowCount = 1;
+        for (const cell of cells) {
+          const cellValue = cellValueGetter(cell);
+          if (cellValue) {
+            if (cellValue.rowspan !== 1) {
+              rowCount = Math.max(cellValue.rowspan, rowCount);
+            }
+            colCount += cellValue.colspan;
+          }
+        }
+        return [Math.max(colCount, pre[0]), Math.max(i + rowCount, pre[1])] as [number, number];
+      }, [0, 0]);
+      return [colCount, rowCount];
+    }
+    const selectedRows = currentSelectedTds.reduce((selectedRows, cell) => {
+      const lastCell = selectedRows[selectedRows.length - 1]?.[selectedRows[selectedRows.length - 1]?.length - 1];
+      if (lastCell?.rowId !== cell.rowId) {
+        selectedRows.push([cell]);
+      }
+      else {
+        selectedRows[selectedRows.length - 1].push(cell);
+      }
+      return selectedRows;
+    }, [] as TableCellInnerFormat[][]);
+    const [deltaColCount, deltaRowCount] = getRowAndColCount(values, cells => cells[0].attributes![blotName.tableCellInner] as TableCellValue);
+    const [selectColCount, selectRowCount] = getRowAndColCount(selectedRows, cell => cell);
+    console.log(deltaColCount, deltaRowCount, rows);
+    console.log(selectColCount, selectRowCount, selectedRows);
+
+    const selectedTdsMap: TableCellInnerFormat[][] = new Array(selectRowCount).fill(0).map(() => new Array(selectColCount).fill(0));
+    for (let i = 0; i < selectedRows.length; i++) {
+      for (let j = 0; j < selectedRows[i].length; j++) {
+        const cell = selectedRows[i][j];
+        for (let l = 0; l < cell.rowspan; l++) {
+          for (let k = 0; k < cell.colspan; k++) {
+            selectedTdsMap[i + l][j + k] = cell;
+          }
+        }
+      }
+    }
+    // 这两个在跨行列的时候不是补全的, 需要补全
+    console.log(selectedTdsMap);
+    console.log(values);
+    debugger;
+
+    const skipMap: boolean[][] = new Array(selectRowCount).fill(0).map(() => new Array(selectColCount).fill(false));
+    const startColIndex = currentSelectedTds[0].getColumnIndex();
+    const tableMainBlot = findParentBlot(currentSelectedTds[0], blotName.tableMain);
+    const colIds = tableMainBlot.getColIds();
+    for (let i = 0; i < deltaRowCount; i++) {
+      const rowId = (rows[i][0].attributes![blotName.tableCellInner] as TableCellValue).rowId;
+      for (let j = 0; j < deltaColCount; j++) {
+        const currentCellValue = values[i][j]?.[0].attributes![blotName.tableCellInner] as TableCellValue;
+        if (skipMap[i + currentCellValue.rowspan - 1][j + currentCellValue.colspan - 1]) continue;
+        currentCellValue.rowId = rowId;
+        currentCellValue.colId = colIds[startColIndex + j];
+        for (let l = 0; l < currentCellValue.rowspan; l++) {
+          for (let k = 0; k < currentCellValue.colspan; k++) {
+            skipMap[i + l][startColIndex + k] = true;
+          }
+        }
+        const selectedCell = selectedTdsMap[i][j];
+        console.log(selectedCell);
+        const len = values[i][j].length;
+        for (let k = 1; k < len; k++) {
+          // TODO insertContent
+        }
+      }
+    }
+
+    // // const isSameCellCount = deltaRowCount === selectRowCount && deltaColCount === selectColCount;
+    // const offset = currentSelectedTds[0].offset(this.quill.scroll);
+    // const updateDelta = new Delta().retain(offset);
+
+    // // TODO 换一种方式
+    // // 用 insertAt, deleteAt 设置内容
+    // // 这样如果匹配上cell数量, 就用 setFormatValue
+    // const firstColIndex = currentSelectedTds[0].getColumnIndex();
+    // let currentColIndex = 0;
+    // let currentCellIndex = 0;
+    // const colIds = (Quill.find(this.table!) as TableMainFormat).getColIds();
+    // for (const [index, td] of delta.entries()) {
+    //   const tdValue = td.attributes![blotName.tableCellInner] as TableCellValue;
+    //   const prevTdValue = delta[index - 1]?.attributes![blotName.tableCellInner] as TableCellValue;
+    //   if (index !== 0 && (tdValue.rowId !== prevTdValue.rowId || tdValue.colId !== prevTdValue.colId)) {
+    //     // clear cell
+    //     updateDelta.delete(currentSelectedTds[currentCellIndex].length());
+    //     if (tdValue.rowId !== prevTdValue.rowId) {
+    //       currentColIndex = 0;
+    //     }
+    //     else {
+    //       currentColIndex += prevTdValue.colspan;
+    //     }
+    //     currentCellIndex += 1;
+    //     // retain to next selected cell
+    //     const lastOffset = currentSelectedTds[currentCellIndex - 1].offset(this.quill.scroll);
+    //     const lastLength = currentSelectedTds[currentCellIndex - 1].length();
+    //     const offset = currentSelectedTds[currentCellIndex].offset(this.quill.scroll);
+    //     updateDelta.retain(offset - lastOffset - lastLength);
+    //   }
+
+    //   const { tableId, rowId, wrapTag, style } = currentSelectedTds[currentCellIndex];
+    //   const updateAttributes = {
+    //     ...td.attributes,
+    //     [blotName.tableCellInner]: {
+    //       ...tdValue,
+    //       tableId,
+    //       rowId,
+    //       colId: colIds[currentColIndex + firstColIndex],
+    //       wrapTag,
+    //       style,
+    //     },
+    //   };
+    //   updateDelta.insert(td.insert || '', updateAttributes);
+    // }
+    // for (let i = currentCellIndex; i < currentSelectedTds.length; i++) {
+    //   updateDelta.delete(currentSelectedTds[i].length());
+    // }
+
+    // TODO 考虑 BlockEmbed 的情况
+    // TODO 考虑粘贴 emptyRow 到 emptyRow 的情况
+    // console.log(updateDelta);
+    // this.quill.updateContents(updateDelta);
+
+    this.hide();
+    // 计算单元格, 如果单元格与当前selectedTds完全匹配, 则进行进行单元格替换
+    // 若不是, 则按行进行粘贴, 从头开始循环到结束后回到0继续, 直到粘贴完毕, 列粘贴一样
+  };
+
+  keyboardHandler = async (e: KeyboardEvent) => {
+    if (e.ctrlKey) {
+      switch (e.key) {
+        case 'c':
+        case 'x': {
+          copyCell(this.tableModule, this.selectedTds, e.key === 'x');
+          break;
+        }
+      }
+    }
+    else if (e.key === 'Backspace' || e.key === 'Delete') {
+      this.removeCell(e);
+    }
+    this.removeCell(e);
+  };
 
   updateWhenTextChange = (eventName: string) => {
     if (eventName === Quill.events.TEXT_CHANGE) {
@@ -94,7 +299,7 @@ export class TableSelection extends TableDomSelector {
     this.updateWithSelectedTds();
   };
 
-  removeCell = (e: KeyboardEvent) => {
+  removeCell(e: KeyboardEvent) {
     const range = this.quill.getSelection();
     const activeElement = document.activeElement;
     if (range || (e.key !== 'Backspace' && e.key !== 'Delete') || !this.quill.root.contains(activeElement)) return;
@@ -113,7 +318,7 @@ export class TableSelection extends TableDomSelector {
       td.parent.insertBefore(clearTd, td);
       td.remove();
     }
-  };
+  }
 
   setSelectedTds(tds: TableCellInnerFormat[]) {
     const currentSelectedTds = new Set(this.selectedTds);
@@ -589,7 +794,7 @@ export class TableSelection extends TableDomSelector {
 
     this.showDisplay();
     this.update();
-    this.quill.root.addEventListener('keydown', this.removeCell);
+    this.quill.root.addEventListener('keydown', this.keyboardHandler);
     addScrollEvent.call(this, this.quill.root, () => {
       this.update();
     });
@@ -607,7 +812,7 @@ export class TableSelection extends TableDomSelector {
 
   hide() {
     clearScrollEvent.call(this);
-    this.quill.root.removeEventListener('keydown', this.removeCell);
+    this.quill.root.removeEventListener('keydown', this.keyboardHandler);
     this.hideDisplay();
     this.boundary = null;
     this.setSelectedTds([]);
@@ -621,6 +826,7 @@ export class TableSelection extends TableDomSelector {
     this.cellSelectWrap.remove();
     clearScrollEvent.call(this);
 
+    document.removeEventListener('paste', this.handlePaste);
     this.quill.off(tableUpEvent.AFTER_TABLE_RESIZE, this.updateAfterEvent);
     this.quill.off(Quill.events.EDITOR_CHANGE, this.updateWhenTextChange);
     this.quill.off(Quill.events.SELECTION_CHANGE, this.quillSelectionChangeHandler);
