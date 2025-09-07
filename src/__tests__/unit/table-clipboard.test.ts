@@ -1165,15 +1165,7 @@ describe('clipboard cell structure', () => {
       {
         ignoreAttrs: ['data-wrap-tag', 'data-tag', 'class', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'data-style', 'style', 'contenteditable'],
         replaceAttrs: {
-          'data-empty-row': function (value: string) {
-            try {
-              const emptyRow = JSON.parse(value);
-              return `length:${emptyRow.length}`;
-            }
-            catch {
-              return value;
-            }
-          },
+          'data-empty-row': replaceAttrEmptyRow,
         },
       },
     );
@@ -1271,15 +1263,7 @@ describe('clipboard cell structure', () => {
       {
         ignoreAttrs: ['data-wrap-tag', 'data-tag', 'class', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'data-colspan', 'data-style', 'style', 'contenteditable'],
         replaceAttrs: {
-          'data-empty-row': function (value: string) {
-            try {
-              const emptyRow = JSON.parse(value);
-              return `length:${emptyRow.length}`;
-            }
-            catch {
-              return value;
-            }
-          },
+          'data-empty-row': replaceAttrEmptyRow,
         },
       },
     );

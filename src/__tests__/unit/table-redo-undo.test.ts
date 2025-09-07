@@ -1,4 +1,4 @@
-import type { Parchment as TypeParchment } from 'quill';
+import type { Op, Parchment as TypeParchment } from 'quill';
 import type { TableCaptionFormat, TableMainFormat } from '../../formats';
 import type { ToolOption } from '../../utils';
 import Quill from 'quill';
@@ -6,7 +6,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { TableCellInnerFormat } from '../../formats';
 import { tableMenuTools, TableSelection } from '../../modules';
 import { TableUp } from '../../table-up';
-import { createQuillWithTableModule, createTable, createTableBodyHTML, createTableHTML, createTaleColHTML, datasetAlign, datasetFull, expectDelta } from './utils';
+import { createQuillWithTableModule, createTable, createTableBodyHTML, createTableDeltaOps, createTableHTML, createTaleColHTML, datasetAlign, datasetFull, expectDelta } from './utils';
 
 const Delta = Quill.import('delta');
 
@@ -1480,6 +1480,58 @@ describe('table undo', () => {
       `,
       { ignoreAttrs: ['data-wrap-tag', 'data-tag', 'class', 'data-table-id', 'data-row-id', 'data-col-id', 'data-rowspan', 'rowspan', 'data-colspan', 'colspan', 'contenteditable'] },
     );
+  });
+
+  it('table convert body undo and redo', async () => {
+    function resetWrapTag(skip: number, count: number, ops: Op[], wrapTag: string) {
+      return [...ops].map((op) => {
+        if (op.attributes?.['table-up-cell-inner']) {
+          if (skip > 0) {
+            skip -= 1;
+          }
+          else if (count > 0) {
+            count -= 1;
+            return { ...op, attributes: { ...op.attributes, 'table-up-cell-inner': { ...op.attributes['table-up-cell-inner'], wrapTag } } };
+          }
+        }
+        return op;
+      });
+    }
+
+    const quill = createQuillWithTableModule('<p><br></p>');
+    const originDelta = createTableDeltaOps(5, 5, { full: false }, {}, { isEmpty: false });
+    quill.setContents(originDelta);
+    await vi.runAllTimersAsync();
+    const table = quill.root.querySelector('table')!;
+    const tableModule = quill.getModule(TableUp.moduleName) as TableUp;
+    const tds = quill.scroll.descendants(TableCellInnerFormat, 0);
+
+    (tableMenuTools.ConvertTothead as ToolOption).handle.call({ quill, table } as any, tableModule, tds.slice(0, 10), null);
+    await vi.runAllTimersAsync();
+    const headDelta = new Delta(resetWrapTag(0, 10, originDelta, 'thead'));
+    expectDelta(quill.getContents(), headDelta);
+
+    (tableMenuTools.ConvertTotfoot as ToolOption).handle.call({ quill, table } as any, tableModule, tds.slice(15, 25), null);
+    await vi.runAllTimersAsync();
+    const footDelta = new Delta(resetWrapTag(15, 10, headDelta.ops, 'tfoot'));
+    expectDelta(quill.getContents(), footDelta);
+
+    const mergedTds = quill.scroll.descendants(TableCellInnerFormat, 0);
+    (tableMenuTools.ConvertTothead as ToolOption).handle.call({ quill, table } as any, tableModule, mergedTds.slice(0, 20), null);
+    await vi.runAllTimersAsync();
+    expectDelta(
+      quill.getContents(),
+      new Delta(resetWrapTag(0, 20, footDelta.ops, 'thead')),
+    );
+
+    quill.history.undo();
+    expectDelta(quill.getContents(), footDelta);
+
+    quill.history.undo();
+    expectDelta(quill.getContents(), headDelta);
+
+    quill.history.redo();
+    expectDelta(quill.getContents(), footDelta);
   });
 });
 
