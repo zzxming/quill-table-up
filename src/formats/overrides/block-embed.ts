@@ -1,8 +1,7 @@
-import type { Parchment as TypeParchment } from 'quill';
 import type { BlockEmbed as TypeBlockEmbed } from 'quill/blots/block';
 import type { TableCellInnerFormat } from '../table-cell-inner-format';
 import Quill from 'quill';
-import { blotName, findParentBlot } from '../../utils';
+import { blotName, bubbleFormats, findParentBlot } from '../../utils';
 
 const BlockEmbed = Quill.import('blots/block/embed') as typeof TypeBlockEmbed;
 
@@ -42,31 +41,4 @@ export class BlockEmbedOverride extends BlockEmbed {
       this.format(name, value);
     }
   }
-}
-
-// copy from `quill/blots/block`
-function bubbleFormats(
-  blot: TypeParchment.Blot | null,
-  formats: Record<string, unknown> = {},
-  filter = true,
-): Record<string, unknown> {
-  if (blot == null) return formats;
-  if ('formats' in blot && typeof blot.formats === 'function') {
-    formats = {
-      ...formats,
-      ...blot.formats(),
-    };
-    if (filter) {
-      // exclude syntax highlighting from deltas and getFormat()
-      delete formats['code-token'];
-    }
-  }
-  if (
-    blot.parent == null
-    || blot.parent.statics.blotName === 'scroll'
-    || blot.parent.statics.scope !== blot.statics.scope
-  ) {
-    return formats;
-  }
-  return bubbleFormats(blot.parent, formats, filter);
 }
