@@ -37,12 +37,7 @@ export function createSelectBox(options: Partial<TableSelectOptions> = {}) {
       if (childRow! > row && childCol! > col) {
         return;
       }
-      if (childRow! <= row && childCol! <= col) {
-        childs[i].classList.add('active');
-      }
-      else {
-        childs[i].classList.remove('active');
-      }
+      childs[i].classList.toggle('active', childRow! <= row && childCol! <= col);
     }
   };
   selectBlock.addEventListener('mousemove', (e) => {

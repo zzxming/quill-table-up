@@ -1054,7 +1054,7 @@ export class TableUp {
       return idMap;
     }, {} as Record<string, number>);
     // merge rowspan
-    const reverseTrBlots = [...trBlots].reverse();
+    const reverseTrBlots = trBlots.toReversed();
     const removeTr: number[] = [];
     for (const [index, tr] of reverseTrBlots.entries()) {
       const i = trBlots.length - index - 1;
@@ -1277,7 +1277,7 @@ export class TableUp {
     const rows = tableBlot.getRows();
     const tableId = tableBlot.tableId;
     const colIndex = baseCell.getColumnIndex();
-    const colIds = tableBlot.getColIds().slice(colIndex, colIndex + baseCell.colspan).reverse();
+    const colIds = tableBlot.getColIds().slice(colIndex, colIndex + baseCell.colspan).toReversed();
     const baseCellValue = baseCell.formats()[blotName.tableCellInner] as TableCellValue;
     const { emptyRow, ...extendsBaseCellValue } = baseCellValue;
 

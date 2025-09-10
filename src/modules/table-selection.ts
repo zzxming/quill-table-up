@@ -426,7 +426,7 @@ export class TableSelection extends TableDomSelector {
       width: boundary.x1 - boundary.x,
       height: boundary.y1 - boundary.y,
     }, this.quill.root);
-    return Array.from(selectedCells).sort((a, b) => a.index! - b.index!).map((cell) => {
+    return Array.from(selectedCells).toSorted((a, b) => a.index! - b.index!).map((cell) => {
       delete cell.index;
       return cell.getCellInner();
     });

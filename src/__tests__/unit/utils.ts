@@ -9,9 +9,7 @@ const Delta = Quill.import('delta');
 export const normalizeHTML = (html: string | { html: string }) => typeof html === 'object' ? html.html : html.replaceAll(/\n\s*/g, '');
 export function sortAttributes(element: HTMLElement) {
   const attributes = Array.from(element.attributes);
-  const sortedAttributes = attributes.sort((a, b) =>
-    a.name.localeCompare(b.name),
-  );
+  const sortedAttributes = attributes.toSorted((a, b) => a.name.localeCompare(b.name));
 
   while (element.attributes.length > 0) {
     element.removeAttribute(element.attributes[0].name);
