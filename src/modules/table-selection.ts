@@ -319,7 +319,7 @@ export class TableSelection extends TableDomSelector {
     }
   }
 
-  keyboardHandler = async (e: KeyboardEvent) => {
+  keyboardHandler = (e: KeyboardEvent) => {
     if (e.ctrlKey) {
       switch (e.key) {
         case 'c':
@@ -330,9 +330,8 @@ export class TableSelection extends TableDomSelector {
       }
     }
     else if (e.key === 'Backspace' || e.key === 'Delete') {
-      this.removeCell(e);
+      this.removeCellBySelectedTds();
     }
-    this.removeCell(e);
   };
 
   updateWhenTextChange = (eventName: string) => {
@@ -359,10 +358,10 @@ export class TableSelection extends TableDomSelector {
     this.updateWithSelectedTds();
   };
 
-  removeCell(e: KeyboardEvent) {
+  removeCellBySelectedTds() {
     const range = this.quill.getSelection();
     const activeElement = document.activeElement;
-    if (range || (e.key !== 'Backspace' && e.key !== 'Delete') || !this.quill.root.contains(activeElement)) return;
+    if (range || !this.quill.root.contains(activeElement)) return;
 
     if (this.table) {
       const tableMain = Quill.find(this.table) as TableMainFormat;
