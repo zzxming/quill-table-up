@@ -4,10 +4,12 @@ import type { TableUp } from '../table-up';
 import type { RelactiveRect, TableSelectionOptions } from '../utils';
 import Quill from 'quill';
 import { getTableMainRect, TableCellFormat, TableCellInnerFormat } from '../formats';
-import { addScrollEvent, blotName, clearScrollEvent, createBEM, createResizeObserver, findAllParentBlot, findParentBlot, getElementScrollPosition, getRelativeRect, isRectanglesIntersect, tableUpEvent } from '../utils';
+import { addScrollEvent, blotName, clearScrollEvent, createBEM, createResizeObserver, findAllParentBlot, findParentBlot, getElementScrollPosition, getRelativeRect, isRectanglesIntersect, isUndefined, tableUpEvent } from '../utils';
 import { TableDomSelector } from './table-dom-selector';
+import { copyCell } from './table-menu/constants';
 
 const ERROR_LIMIT = 0;
+const Delta = Quill.import('delta');
 
 export interface SelectionData {
   anchorNode: Node | null;
@@ -63,12 +65,275 @@ export class TableSelection extends TableDomSelector {
     this.resizeObserver = createResizeObserver(this.updateAfterEvent, { ignoreFirstBind: true });
     this.resizeObserver.observe(this.quill.root);
 
+    document.addEventListener('paste', this.handlePaste);
     this.quill.emitter.listenDOM('selectionchange', document, this.selectionChangeHandler.bind(this));
     this.quill.on(tableUpEvent.AFTER_TABLE_RESIZE, this.updateAfterEvent);
     this.quill.on(Quill.events.SELECTION_CHANGE, this.quillSelectionChangeHandler);
     this.quill.on(Quill.events.EDITOR_CHANGE, this.updateWhenTextChange);
     this.hide();
   }
+
+  handlePaste = (event: ClipboardEvent) => {
+    const activeElement = document.activeElement && this.quill.root.contains(document.activeElement);
+    if (!activeElement || this.quill.getSelection()) return;
+
+    const clipboardData = event.clipboardData;
+    if (!clipboardData) return;
+    event.preventDefault();
+
+    const currentSelectedTds = this.selectedTds;
+    if (currentSelectedTds.length <= 0) return;
+
+    const html = clipboardData.getData('text/html');
+    const delta = this.quill.clipboard.convert({ html }).ops.filter(op => op.attributes && op.attributes[blotName.tableCellInner]);
+
+    if (delta.length === 0) return;
+
+    this.pasteCells(currentSelectedTds, delta);
+  };
+
+  protected pasteCells(selectedTds: TableCellInnerFormat[], pasteDelta: any[]) {
+    const { rows: selectedRows, cols: selectedCols } = this.getTableCellStructure(selectedTds);
+    const { rows: pasteRows, cols: pasteCols, cells: pasteCells } = this.parsePasteDelta(pasteDelta);
+
+    if (selectedRows === pasteRows && selectedCols === pasteCols) {
+      this.pasteWithStructure(selectedTds, pasteCells);
+    }
+    else {
+      this.pasteWithLoop(selectedTds, pasteCells);
+    }
+  }
+
+  protected getTableCellStructure(cells: TableCellInnerFormat[]) {
+    const rowIds = new Set<string>();
+    const colIds = new Set<string>();
+
+    for (const cell of cells) {
+      rowIds.add(cell.rowId);
+      colIds.add(cell.colId);
+    }
+
+    return {
+      rows: rowIds.size,
+      cols: colIds.size,
+    };
+  }
+
+  protected parsePasteDelta(delta: any[]) {
+    const cells: any[] = [];
+    const processedCells = new Set<string>();
+
+    for (const op of delta) {
+      const cellValue = op.attributes[blotName.tableCellInner];
+      if (!cellValue) continue;
+
+      const cellKey = `${cellValue.rowId}-${cellValue.colId}`;
+      if (processedCells.has(cellKey)) continue;
+
+      // group delta with same cell
+      const cellOps = [];
+      for (const currentOp of delta) {
+        const currentValue = currentOp.attributes[blotName.tableCellInner];
+        if (currentValue && currentValue.rowId === cellValue.rowId && currentValue.colId === cellValue.colId) {
+          const cellOp = {
+            insert: currentOp.insert,
+            attributes: { ...currentOp.attributes },
+          };
+          delete cellOp.attributes[blotName.tableCellInner];
+          cellOps.push(cellOp);
+        }
+      }
+
+      cells.push({
+        rowId: cellValue.rowId,
+        colId: cellValue.colId,
+        rowspan: cellValue.rowspan || 1,
+        colspan: cellValue.colspan || 1,
+        deltaOps: cellOps,
+      });
+
+      processedCells.add(cellKey);
+    }
+
+    const rowIds = new Set<string>();
+    const colIds = new Set<string>();
+    for (const cell of cells) {
+      rowIds.add(cell.rowId);
+      colIds.add(cell.colId);
+    }
+
+    return {
+      rows: rowIds.size,
+      cols: colIds.size,
+      cells,
+    };
+  }
+
+  protected pasteWithStructure(selectedTds: TableCellInnerFormat[], pasteCells: any[]) {
+    const targetPositions = this.getCellPositions(selectedTds);
+    const pastePositions = this.getCellPositions(pasteCells);
+
+    const positionMap = new Map<string, any>();
+    for (const pos of pastePositions) {
+      positionMap.set(`${pos.rowIndex}-${pos.colIndex}`, pos.cell);
+    }
+
+    const processedCells = new Set<TableCellInnerFormat>();
+    for (const targetPos of targetPositions) {
+      const targetCell = targetPos.cell;
+
+      // skip updated cells
+      if (!targetCell.domNode.isConnected || processedCells.has(targetCell)) continue;
+
+      const pasteCell = positionMap.get(`${targetPos.rowIndex}-${targetPos.colIndex}`);
+      if (pasteCell) {
+        this.updateCellContent(targetCell, pasteCell.deltaOps, pasteCell.rowspan, pasteCell.colspan);
+        processedCells.add(targetCell);
+      }
+    }
+  }
+
+  protected getCellPositions(cells: any[]) {
+    const positions: { cell: any; rowIndex: number; colIndex: number }[] = [];
+
+    const rowMap = new Map<string, { cell: any; colIndex: number }[]>();
+    for (const cell of cells) {
+      const rowId = cell.rowId;
+      if (!rowMap.has(rowId)) {
+        rowMap.set(rowId, []);
+      }
+      rowMap.get(rowId)!.push({ cell, colIndex: -1 });
+    }
+
+    const rowIds = Array.from(rowMap.keys());
+    for (let rowIndex = 0; rowIndex < rowIds.length; rowIndex++) {
+      const rowId = rowIds[rowIndex];
+      const rowCells = rowMap.get(rowId)!;
+
+      let currentColIndex = 0;
+      for (const rowCell of rowCells) {
+        rowCell.colIndex = currentColIndex;
+        positions.push({
+          cell: rowCell.cell,
+          rowIndex,
+          colIndex: currentColIndex,
+        });
+        currentColIndex += rowCell.cell.colspan || 1;
+      }
+    }
+
+    return positions;
+  }
+
+  protected pasteWithLoop(selectedTds: TableCellInnerFormat[], pasteCells: any[]) {
+    const rowMap = new Map<string, any[]>();
+    for (const cell of pasteCells) {
+      if (!rowMap.has(cell.rowId)) {
+        rowMap.set(cell.rowId, []);
+      }
+      rowMap.get(cell.rowId)!.push(cell);
+    }
+    const pasteRows = Array.from(rowMap.values());
+
+    const targetCols = this.getTableCellStructure(selectedTds).cols;
+    // loop cell in row to fill content
+    for (let i = 0; i < selectedTds.length; i++) {
+      const targetCell = selectedTds[i];
+      // find the correct cell delta
+      const targetRow = Math.floor(i / targetCols);
+      const targetCol = i % targetCols;
+      const pasteRowIndex = targetRow % pasteRows.length;
+      const pasteRow = pasteRows[pasteRowIndex];
+      const pasteColIndex = targetCol % pasteRow.length;
+      const pasteCell = pasteRow[pasteColIndex];
+
+      this.updateCellContent(targetCell, pasteCell.deltaOps);
+    }
+  }
+
+  protected updateCellContent(cell: TableCellInnerFormat, deltaOps: any[], rowspan?: number, colspan?: number) {
+    if (!isUndefined(rowspan) && rowspan > 1) {
+      cell.rowspan = rowspan;
+    }
+    if (!isUndefined(colspan) && colspan > 1) {
+      cell.colspan = colspan;
+    }
+
+    const cellValue = cell.formats();
+    const insertDelta = new Delta();
+    for (const op of deltaOps) {
+      insertDelta.insert(op.insert, { ...op.attributes, ...cellValue });
+    }
+
+    const offset = cell.offset(this.quill.scroll);
+    const length = cell.length();
+    this.quill.updateContents(
+      new Delta()
+        .retain(offset)
+        .delete(length)
+        .concat(insertDelta),
+      Quill.sources.USER,
+    );
+
+    // remove cells covered by colspan/rowspan
+    this.removeOverlappingCells(cell, rowspan, colspan);
+  }
+
+  protected removeOverlappingCells(cell: TableCellInnerFormat, rowspan: number = 1, colspan: number = 1) {
+    if (rowspan === 1 && colspan === 1) return;
+
+    const table = findParentBlot(cell, blotName.tableMain);
+    const tableRow = cell.getTableRow();
+    if (!table || !tableRow) return;
+
+    const allCells = table.descendants(TableCellInnerFormat);
+    const rowCells = tableRow.descendants(TableCellInnerFormat);
+    const cellRowIndex = rowCells.indexOf(cell);
+    const cellColumnIndex = cell.getColumnIndex();
+
+    const cellsToRemove: TableCellInnerFormat[] = [];
+    for (const otherCell of allCells) {
+      if (otherCell === cell) continue;
+
+      const otherRow = otherCell.getTableRow();
+      if (!otherRow || otherRow !== tableRow) continue;
+
+      const otherRowCells = otherRow.descendants(TableCellInnerFormat);
+      const otherRowIndex = otherRowCells.indexOf(otherCell);
+      const otherColumnIndex = otherCell.getColumnIndex();
+
+      // check if it is within the colspan/rowspan range of the current cell
+      if (
+        (otherRowIndex >= cellRowIndex && otherRowIndex < cellRowIndex + rowspan)
+        || (otherColumnIndex >= cellColumnIndex && otherColumnIndex < cellColumnIndex + colspan)
+      ) {
+        cellsToRemove.push(otherCell);
+      }
+    }
+
+    // remove cells covered by the current cell(colspan/rowspan)
+    for (const cellToRemove of cellsToRemove) {
+      if (cellToRemove.domNode.isConnected) {
+        cellToRemove.remove();
+      }
+    }
+  }
+
+  keyboardHandler = async (e: KeyboardEvent) => {
+    if (e.ctrlKey) {
+      switch (e.key) {
+        case 'c':
+        case 'x': {
+          copyCell(this.tableModule, this.selectedTds, e.key === 'x');
+          break;
+        }
+      }
+    }
+    else if (e.key === 'Backspace' || e.key === 'Delete') {
+      this.removeCell(e);
+    }
+    this.removeCell(e);
+  };
 
   updateWhenTextChange = (eventName: string) => {
     if (eventName === Quill.events.TEXT_CHANGE) {
@@ -94,7 +359,7 @@ export class TableSelection extends TableDomSelector {
     this.updateWithSelectedTds();
   };
 
-  removeCell = (e: KeyboardEvent) => {
+  removeCell(e: KeyboardEvent) {
     const range = this.quill.getSelection();
     const activeElement = document.activeElement;
     if (range || (e.key !== 'Backspace' && e.key !== 'Delete') || !this.quill.root.contains(activeElement)) return;
@@ -113,7 +378,7 @@ export class TableSelection extends TableDomSelector {
       td.parent.insertBefore(clearTd, td);
       td.remove();
     }
-  };
+  }
 
   setSelectedTds(tds: TableCellInnerFormat[]) {
     const currentSelectedTds = new Set(this.selectedTds);
@@ -589,7 +854,7 @@ export class TableSelection extends TableDomSelector {
 
     this.showDisplay();
     this.update();
-    this.quill.root.addEventListener('keydown', this.removeCell);
+    this.quill.root.addEventListener('keydown', this.keyboardHandler);
     addScrollEvent.call(this, this.quill.root, () => {
       this.update();
     });
@@ -607,7 +872,7 @@ export class TableSelection extends TableDomSelector {
 
   hide() {
     clearScrollEvent.call(this);
-    this.quill.root.removeEventListener('keydown', this.removeCell);
+    this.quill.root.removeEventListener('keydown', this.keyboardHandler);
     this.hideDisplay();
     this.boundary = null;
     this.setSelectedTds([]);
@@ -621,6 +886,7 @@ export class TableSelection extends TableDomSelector {
     this.cellSelectWrap.remove();
     clearScrollEvent.call(this);
 
+    document.removeEventListener('paste', this.handlePaste);
     this.quill.off(tableUpEvent.AFTER_TABLE_RESIZE, this.updateAfterEvent);
     this.quill.off(Quill.events.EDITOR_CHANGE, this.updateWhenTextChange);
     this.quill.off(Quill.events.SELECTION_CHANGE, this.quillSelectionChangeHandler);
