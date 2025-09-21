@@ -10,12 +10,14 @@ export default defineConfig({
   reporter: 'html',
   use: {
     trace: 'on-first-retry',
-    permissions: ['clipboard-read', 'clipboard-write'],
   },
   projects: [
     {
       name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
+      use: {
+        ...devices['Desktop Chrome'],
+        permissions: ['clipboard-read', 'clipboard-write'],
+      },
     },
 
     {
