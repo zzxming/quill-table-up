@@ -119,15 +119,14 @@ export class TableSelection extends TableDomSelector {
   };
 
   updateAfterEvent = () => {
-    // if cell already remove from the editor. need remove it
-    const existCells: TableCellInnerFormat[] = [];
+    // if any cell doesn't exist, selection will be cleared
     for (let i = 0; i < this.selectedTds.length; i++) {
       const td = this.selectedTds[i];
-      if (this.quill.root.contains(td.domNode)) {
-        existCells.push(td);
+      if (!td.domNode.isConnected) {
+        this.selectedTds = [];
+        break;
       }
     }
-    this.selectedTds = existCells;
     this.updateWithSelectedTds();
   };
 
