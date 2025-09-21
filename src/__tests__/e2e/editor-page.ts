@@ -4,7 +4,7 @@ import type { Delta, Op } from 'quill';
 // Specify the index of the editor before use.
 export class EditorPage {
   public index: number = 0;
-  constructor(protected readonly page: Page) {}
+  constructor(public page: Page) {}
 
   get root() {
     return this.page.locator('.ql-editor');

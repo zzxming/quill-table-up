@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { createTableBySelect, extendTest, pasteHTML } from './utils';
+import { createTableBySelect, extendTest, pasteHTML, setBrowser } from './utils';
 
 test.beforeEach(async ({ page }) => {
   await page.goto('http://127.0.0.1:5500/docs/test.html');
@@ -370,7 +370,9 @@ extendTest.describe('TableSelection keyboard handler', () => {
     expect(await page.locator('#editor1 .ql-table').count()).toBe(0);
   });
 
-  extendTest('copy cells', async ({ page, editorPage }) => {
+  extendTest('copy cells', async ({ page, editorPage, browserName }) => {
+    page = await setBrowser(browserName) || page;
+    editorPage.page = page;
     editorPage.index = 0;
     await editorPage.setContents([
       { insert: '\n' },
@@ -414,7 +416,9 @@ extendTest.describe('TableSelection keyboard handler', () => {
     expect(copiedText.replaceAll('\r', '')).toEqual(`1\n2\n4\n5\n`);
   });
 
-  extendTest('paste cells with struct(colspan)', async ({ page, editorPage }) => {
+  extendTest('paste cells with struct(colspan)', async ({ page, editorPage, browserName }) => {
+    page = await setBrowser(browserName) || page;
+    editorPage.page = page;
     editorPage.index = 0;
     await createTableBySelect(page, 'container1', 3, 3);
 
@@ -435,7 +439,9 @@ extendTest.describe('TableSelection keyboard handler', () => {
     expect(cells.nth(3)).toHaveAttribute('colspan', '2');
   });
 
-  extendTest('paste cells with struct(rowspan)', async ({ page, editorPage }) => {
+  extendTest('paste cells with struct(rowspan)', async ({ page, editorPage, browserName }) => {
+    page = await setBrowser(browserName) || page;
+    editorPage.page = page;
     editorPage.index = 0;
     await createTableBySelect(page, 'container1', 5, 5);
 
@@ -458,7 +464,9 @@ extendTest.describe('TableSelection keyboard handler', () => {
     expect(cells.nth(6)).toHaveText('7');
   });
 
-  extendTest('paste cells with struct(colspan and rowspan)', async ({ page, editorPage }) => {
+  extendTest('paste cells with struct(colspan and rowspan)', async ({ page, editorPage, browserName }) => {
+    page = await setBrowser(browserName) || page;
+    editorPage.page = page;
     editorPage.index = 0;
     await createTableBySelect(page, 'container1', 5, 5);
 
@@ -481,7 +489,9 @@ extendTest.describe('TableSelection keyboard handler', () => {
     expect(cells.nth(5)).toHaveText('8');
   });
 
-  extendTest('paste cells with `emptyRow` in `autoMerge` true', async ({ page, editorPage }) => {
+  extendTest('paste cells with `emptyRow` in `autoMerge` true', async ({ page, editorPage, browserName }) => {
+    page = await setBrowser(browserName) || page;
+    editorPage.page = page;
     editorPage.index = 0;
     await createTableBySelect(page, 'container1', 5, 5);
 
@@ -512,7 +522,9 @@ extendTest.describe('TableSelection keyboard handler', () => {
     expect(await page.locator('#container1 .ql-table-wrapper tr').count()).toEqual(3);
   });
 
-  extendTest('paste cells with `emptyRow` in `autoMerge` false', async ({ page, editorPage }) => {
+  extendTest('paste cells with `emptyRow` in `autoMerge` false', async ({ page, editorPage, browserName }) => {
+    page = await setBrowser(browserName) || page;
+    editorPage.page = page;
     editorPage.index = 4;
     await createTableBySelect(page, 'container5', 5, 5);
 
@@ -563,7 +575,9 @@ extendTest.describe('TableSelection keyboard handler', () => {
     expect(await page.locator('#container5 .ql-table-wrapper tr').count()).toEqual(5);
   });
 
-  extendTest('paste cells with other Block', async ({ page, editorPage }) => {
+  extendTest('paste cells with other Block', async ({ page, editorPage, browserName }) => {
+    page = await setBrowser(browserName) || page;
+    editorPage.page = page;
     editorPage.index = 4;
     await createTableBySelect(page, 'container5', 5, 5);
 
