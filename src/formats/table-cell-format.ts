@@ -290,7 +290,7 @@ export class TableCellFormat extends ContainerFormat {
     if (this.emptyRow.length > 0) {
       const tableBody = this.parent.parent;
       if (tableBody instanceof TableBodyFormat) {
-        let insertBefore: TypeParchment.Blot | null = null;
+        let insertBefore: TypeParchment.Blot | null = this.parent.next;
         for (const rowId of this.emptyRow) {
           const row = this.scroll.create(blotName.tableRow, { tableId, rowId, wrapTag }) as TableRowFormat;
           tableBody.insertBefore(row, insertBefore);
