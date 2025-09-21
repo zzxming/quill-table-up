@@ -562,4 +562,44 @@ extendTest.describe('TableSelection keyboard handler', () => {
     }
     expect(await page.locator('#container5 .ql-table-wrapper tr').count()).toEqual(5);
   });
+
+  extendTest('paste cells with other Block', async ({ page, editorPage }) => {
+    editorPage.index = 4;
+    await createTableBySelect(page, 'container5', 5, 5);
+
+    const newCell1Bound = (await page.locator('#container5 .ql-table-wrapper td').nth(0).boundingBox())!;
+    expect(newCell1Bound).not.toBeNull();
+    await page.locator('#container5 .ql-table-wrapper td').nth(0).click();
+    page.mouse.move(newCell1Bound.x + newCell1Bound.width * 0.5, newCell1Bound.y + newCell1Bound.height * 0.5);
+    page.mouse.down();
+    page.mouse.move(newCell1Bound.x + newCell1Bound.width * 2.5, newCell1Bound.y + newCell1Bound.height * 1.5);
+    await editorPage.blur();
+    await pasteHTML(page, `<div class="ql-table-wrapper" data-table-id="1" contenteditable="false"><table class="ql-table" data-table-id="1" cellpadding="0" cellspacing="0" style="margin-right: auto; width: 363px;"><colgroup data-table-id="1" contenteditable="false"><col width="121px" data-table-id="1" data-col-id="1"><col width="121px" data-table-id="1" data-col-id="2"><col width="121px" data-table-id="1" data-col-id="3"></colgroup><tbody data-table-id="1"><tr class="ql-table-row" data-table-id="1" data-row-id="1" data-wrap-tag="tbody"><td class="ql-table-cell" data-table-id="1" data-row-id="1" data-col-id="1" data-wrap-tag="tbody" rowspan="1" colspan="1"><div class="ql-table-cell-inner" data-table-id="1" data-row-id="1" data-col-id="1" data-rowspan="1" data-colspan="1" data-tag="td" data-wrap-tag="tbody"><p>1</p></div></td><td class="ql-table-cell" data-table-id="1" data-row-id="1" data-col-id="2" data-wrap-tag="tbody" rowspan="1" colspan="1"><div class="ql-table-cell-inner" data-table-id="1" data-row-id="1" data-col-id="2" data-rowspan="1" data-colspan="1" data-tag="td" data-wrap-tag="tbody"><p>2<strong>123</strong>4</p><pre data-language="plain">www
+</pre></div></td><td class="ql-table-cell" data-table-id="1" data-row-id="1" data-col-id="3" data-wrap-tag="tbody" rowspan="1" colspan="1"><div class="ql-table-cell-inner" data-table-id="1" data-row-id="1" data-col-id="3" data-rowspan="1" data-colspan="1" data-tag="td" data-wrap-tag="tbody"><h1>3</h1></div></td></tr><tr class="ql-table-row" data-table-id="1" data-row-id="2" data-wrap-tag="tbody"><td class="ql-table-cell" data-table-id="1" data-row-id="2" data-col-id="1" data-wrap-tag="tbody" rowspan="1" colspan="2"><div class="ql-table-cell-inner" data-table-id="1" data-row-id="2" data-col-id="1" data-rowspan="1" data-colspan="2" data-tag="td" data-wrap-tag="tbody"><ol><li>4</li><li>5</li></ol></div></td><td class="ql-table-cell" data-table-id="1" data-row-id="2" data-col-id="3" data-wrap-tag="tbody" rowspan="1" colspan="1"><div class="ql-table-cell-inner" data-table-id="1" data-row-id="2" data-col-id="3" data-rowspan="1" data-colspan="1" data-tag="td" data-wrap-tag="tbody"><p>6</p></div></td></tr></tbody></table></div>`);
+    const cells = page.locator('#container5 .ql-table-wrapper td');
+
+    expect(cells.nth(0)).toHaveText('1');
+    expect(cells.nth(1)).toHaveText('21234www');
+    const strongEl = cells.nth(1).locator('strong');
+    expect(await strongEl.count()).toEqual(1);
+    expect(strongEl).toHaveText('123');
+    const codeBlock = cells.nth(1).locator('.ql-code-block-container');
+    const codeBlockLine = cells.nth(1).locator('.ql-code-block-container .ql-code-block');
+    expect(await codeBlock.count()).toEqual(1);
+    expect(await codeBlockLine.count()).toEqual(1);
+    expect(cells.nth(2)).toHaveText('3');
+    const header1 = cells.nth(2).locator('h1');
+    expect(await header1.count()).toEqual(1);
+    expect(cells.nth(5)).toHaveText('45');
+    expect(cells.nth(5)).toHaveAttribute('colspan', '2');
+    const orderedList = cells.nth(5).locator('ol');
+    const orderedListItem = orderedList.locator('li');
+    expect(await orderedList.count()).toEqual(1);
+    const listItemCount = await orderedListItem.count();
+    expect(listItemCount).toEqual(2);
+    for (let i = 0; i < listItemCount; i++) {
+      expect(orderedListItem.nth(i)).toHaveAttribute('data-list', 'ordered');
+    }
+    expect(cells.nth(6)).toHaveText('6');
+  });
 });
