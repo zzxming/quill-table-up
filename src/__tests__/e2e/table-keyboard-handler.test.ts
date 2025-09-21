@@ -519,7 +519,6 @@ extendTest.describe('TableSelection keyboard handler', () => {
     await pasteHTML(page, '<div class="ql-table-wrapper" data-table-id="j89168rvqrd" contenteditable="false"><table class="ql-table" data-table-id="j89168rvqrd" cellpadding="0" cellspacing="0" style="margin-right: auto; width: 730px;"><colgroup data-table-id="j89168rvqrd" contenteditable="false"><col width="146px" data-table-id="j89168rvqrd" data-col-id="i3bpg2i2oy"><col width="146px" data-table-id="j89168rvqrd" data-col-id="lpwv9bfkdxe"><col width="146px" data-table-id="j89168rvqrd" data-col-id="9oopcw7mbfq"><col width="146px" data-table-id="j89168rvqrd" data-col-id="ejdvsjml25"><col width="146px" data-table-id="j89168rvqrd" data-col-id="nialr8ceyks"></colgroup><tbody data-table-id="j89168rvqrd"><tr class="ql-table-row" data-table-id="j89168rvqrd" data-row-id="m8wb3vitcit" data-wrap-tag="tbody"><td class="ql-table-cell" data-table-id="j89168rvqrd" data-row-id="m8wb3vitcit" data-col-id="i3bpg2i2oy" data-wrap-tag="tbody" rowspan="3" colspan="5" data-empty-row="[&quot;v4r34a160is&quot;,&quot;n73z32w0t9l&quot;]" style="height: 49px;"><div class="ql-table-cell-inner" data-table-id="j89168rvqrd" data-row-id="m8wb3vitcit" data-col-id="i3bpg2i2oy" data-rowspan="3" data-colspan="5" data-tag="td" data-wrap-tag="tbody" data-empty-row="[&quot;v4r34a160is&quot;,&quot;n73z32w0t9l&quot;]" data-style="height: 49px;"><p></p></div></td></tr><tr class="ql-table-row" data-table-id="j89168rvqrd" data-row-id="v4r34a160is" data-wrap-tag="tbody"></tr><tr class="ql-table-row" data-table-id="j89168rvqrd" data-row-id="n73z32w0t9l" data-wrap-tag="tbody"></tr><tr class="ql-table-row" data-table-id="j89168rvqrd" data-row-id="rfiuu54tyn" data-wrap-tag="tbody"><td class="ql-table-cell" data-table-id="j89168rvqrd" data-row-id="rfiuu54tyn" data-col-id="i3bpg2i2oy" data-wrap-tag="tbody" rowspan="1" colspan="1"><div class="ql-table-cell-inner" data-table-id="j89168rvqrd" data-row-id="rfiuu54tyn" data-col-id="i3bpg2i2oy" data-rowspan="1" data-colspan="1" data-tag="td" data-wrap-tag="tbody"><p></p></div></td><td class="ql-table-cell" data-table-id="j89168rvqrd" data-row-id="rfiuu54tyn" data-col-id="lpwv9bfkdxe" data-wrap-tag="tbody" rowspan="1" colspan="1"><div class="ql-table-cell-inner" data-table-id="j89168rvqrd" data-row-id="rfiuu54tyn" data-col-id="lpwv9bfkdxe" data-rowspan="1" data-colspan="1" data-tag="td" data-wrap-tag="tbody"><p></p></div></td><td class="ql-table-cell" data-table-id="j89168rvqrd" data-row-id="rfiuu54tyn" data-col-id="9oopcw7mbfq" data-wrap-tag="tbody" rowspan="1" colspan="1"><div class="ql-table-cell-inner" data-table-id="j89168rvqrd" data-row-id="rfiuu54tyn" data-col-id="9oopcw7mbfq" data-rowspan="1" data-colspan="1" data-tag="td" data-wrap-tag="tbody"><p></p></div></td><td class="ql-table-cell" data-table-id="j89168rvqrd" data-row-id="rfiuu54tyn" data-col-id="ejdvsjml25" data-wrap-tag="tbody" rowspan="1" colspan="1"><div class="ql-table-cell-inner" data-table-id="j89168rvqrd" data-row-id="rfiuu54tyn" data-col-id="ejdvsjml25" data-rowspan="1" data-colspan="1" data-tag="td" data-wrap-tag="tbody"><p></p></div></td><td class="ql-table-cell" data-table-id="j89168rvqrd" data-row-id="rfiuu54tyn" data-col-id="nialr8ceyks" data-wrap-tag="tbody" rowspan="1" colspan="1"><div class="ql-table-cell-inner" data-table-id="j89168rvqrd" data-row-id="rfiuu54tyn" data-col-id="nialr8ceyks" data-rowspan="1" data-colspan="1" data-tag="td" data-wrap-tag="tbody"><p></p></div></td></tr></tbody></table></div>');
     const cell2 = page.locator('#container1 .ql-table-wrapper td').nth(0);
     expect(cell2).toHaveAttribute('data-empty-row');
-    expect(await page.locator('#container1 .ql-table-wrapper tr').count()).toEqual(3);
     const emptyRow2 = await cell2.getAttribute('data-empty-row');
     try {
       expect(emptyRow2).not.toBeNull();
@@ -530,5 +529,57 @@ extendTest.describe('TableSelection keyboard handler', () => {
       // data error
       expect(false).toEqual(true);
     }
+    expect(await page.locator('#container1 .ql-table-wrapper tr').count()).toEqual(3);
+  });
+
+  extendTest('paste cells with `emptyRow` in `autoMerge` false', async ({ page, editorPage }) => {
+    editorPage.index = 4;
+    await createTableBySelect(page, 'container5', 5, 5);
+
+    const newCell1Bound = (await page.locator('#container5 .ql-table-wrapper td').nth(0).boundingBox())!;
+    expect(newCell1Bound).not.toBeNull();
+    await page.locator('#container5 .ql-table-wrapper td').nth(0).click();
+    page.mouse.move(newCell1Bound.x + newCell1Bound.width * 0.5, newCell1Bound.y + newCell1Bound.height * 0.5);
+    page.mouse.down();
+    page.mouse.move(newCell1Bound.x + newCell1Bound.width * 4.5, newCell1Bound.y + newCell1Bound.height * 2.5);
+    await editorPage.blur();
+    await pasteHTML(page, '<div class="ql-table-wrapper" data-table-id="j89168rvqrd" contenteditable="false"><table class="ql-table" data-table-id="j89168rvqrd" cellpadding="0" cellspacing="0" style="margin-right: auto; width: 730px;"><colgroup data-table-id="j89168rvqrd" contenteditable="false"><col width="146px" data-table-id="j89168rvqrd" data-col-id="i3bpg2i2oy"><col width="146px" data-table-id="j89168rvqrd" data-col-id="lpwv9bfkdxe"><col width="146px" data-table-id="j89168rvqrd" data-col-id="9oopcw7mbfq"><col width="146px" data-table-id="j89168rvqrd" data-col-id="ejdvsjml25"><col width="146px" data-table-id="j89168rvqrd" data-col-id="nialr8ceyks"></colgroup><tbody data-table-id="j89168rvqrd"><tr class="ql-table-row" data-table-id="j89168rvqrd" data-row-id="m8wb3vitcit" data-wrap-tag="tbody"><td class="ql-table-cell" data-table-id="j89168rvqrd" data-row-id="m8wb3vitcit" data-col-id="i3bpg2i2oy" data-wrap-tag="tbody" rowspan="3" colspan="5" data-empty-row="["v4r34a160is","n73z32w0t9l"]"><div class="ql-table-cell-inner" data-table-id="j89168rvqrd" data-row-id="m8wb3vitcit" data-col-id="i3bpg2i2oy" data-rowspan="3" data-colspan="5" data-tag="td" data-wrap-tag="tbody" data-empty-row="["v4r34a160is","n73z32w0t9l"]"><p></p></div></td></tr><tr class="ql-table-row" data-table-id="j89168rvqrd" data-row-id="v4r34a160is" data-wrap-tag="tbody"></tr><tr class="ql-table-row" data-table-id="j89168rvqrd" data-row-id="n73z32w0t9l" data-wrap-tag="tbody"></tr></tbody></table></div>');
+    const cell1 = page.locator('#container5 .ql-table-wrapper td').nth(0);
+    expect(cell1).toHaveAttribute('data-empty-row');
+    const emptyRow1 = await cell1.getAttribute('data-empty-row');
+    try {
+      expect(emptyRow1).not.toBeNull();
+      const data = JSON.parse(emptyRow1!);
+      expect(data.length).toEqual(2);
+    }
+    catch {
+      // data error
+      expect(false).toEqual(true);
+    }
+    expect(await page.locator('#container5 .ql-table-wrapper tr').count()).toEqual(5);
+
+    await editorPage.setContents([]);
+    await createTableBySelect(page, 'container5', 5, 5);
+    const newCell2Bound = (await page.locator('#container5 .ql-table-wrapper td').nth(0).boundingBox())!;
+    expect(newCell2Bound).not.toBeNull();
+    await page.locator('#container5 .ql-table-wrapper td').nth(0).click();
+    page.mouse.move(newCell2Bound.x + newCell2Bound.width * 0.5, newCell2Bound.y + newCell2Bound.height * 0.5);
+    page.mouse.down();
+    page.mouse.move(newCell2Bound.x + newCell2Bound.width * 4.5, newCell2Bound.y + newCell2Bound.height * 3.5);
+    await editorPage.blur();
+    await pasteHTML(page, '<div class="ql-table-wrapper" data-table-id="j89168rvqrd" contenteditable="false"><table class="ql-table" data-table-id="j89168rvqrd" cellpadding="0" cellspacing="0" style="margin-right: auto; width: 730px;"><colgroup data-table-id="j89168rvqrd" contenteditable="false"><col width="146px" data-table-id="j89168rvqrd" data-col-id="i3bpg2i2oy"><col width="146px" data-table-id="j89168rvqrd" data-col-id="lpwv9bfkdxe"><col width="146px" data-table-id="j89168rvqrd" data-col-id="9oopcw7mbfq"><col width="146px" data-table-id="j89168rvqrd" data-col-id="ejdvsjml25"><col width="146px" data-table-id="j89168rvqrd" data-col-id="nialr8ceyks"></colgroup><tbody data-table-id="j89168rvqrd"><tr class="ql-table-row" data-table-id="j89168rvqrd" data-row-id="m8wb3vitcit" data-wrap-tag="tbody"><td class="ql-table-cell" data-table-id="j89168rvqrd" data-row-id="m8wb3vitcit" data-col-id="i3bpg2i2oy" data-wrap-tag="tbody" rowspan="3" colspan="5" data-empty-row="[&quot;v4r34a160is&quot;,&quot;n73z32w0t9l&quot;]" style="height: 49px;"><div class="ql-table-cell-inner" data-table-id="j89168rvqrd" data-row-id="m8wb3vitcit" data-col-id="i3bpg2i2oy" data-rowspan="3" data-colspan="5" data-tag="td" data-wrap-tag="tbody" data-empty-row="[&quot;v4r34a160is&quot;,&quot;n73z32w0t9l&quot;]" data-style="height: 49px;"><p></p></div></td></tr><tr class="ql-table-row" data-table-id="j89168rvqrd" data-row-id="v4r34a160is" data-wrap-tag="tbody"></tr><tr class="ql-table-row" data-table-id="j89168rvqrd" data-row-id="n73z32w0t9l" data-wrap-tag="tbody"></tr><tr class="ql-table-row" data-table-id="j89168rvqrd" data-row-id="rfiuu54tyn" data-wrap-tag="tbody"><td class="ql-table-cell" data-table-id="j89168rvqrd" data-row-id="rfiuu54tyn" data-col-id="i3bpg2i2oy" data-wrap-tag="tbody" rowspan="1" colspan="1"><div class="ql-table-cell-inner" data-table-id="j89168rvqrd" data-row-id="rfiuu54tyn" data-col-id="i3bpg2i2oy" data-rowspan="1" data-colspan="1" data-tag="td" data-wrap-tag="tbody"><p></p></div></td><td class="ql-table-cell" data-table-id="j89168rvqrd" data-row-id="rfiuu54tyn" data-col-id="lpwv9bfkdxe" data-wrap-tag="tbody" rowspan="1" colspan="1"><div class="ql-table-cell-inner" data-table-id="j89168rvqrd" data-row-id="rfiuu54tyn" data-col-id="lpwv9bfkdxe" data-rowspan="1" data-colspan="1" data-tag="td" data-wrap-tag="tbody"><p></p></div></td><td class="ql-table-cell" data-table-id="j89168rvqrd" data-row-id="rfiuu54tyn" data-col-id="9oopcw7mbfq" data-wrap-tag="tbody" rowspan="1" colspan="1"><div class="ql-table-cell-inner" data-table-id="j89168rvqrd" data-row-id="rfiuu54tyn" data-col-id="9oopcw7mbfq" data-rowspan="1" data-colspan="1" data-tag="td" data-wrap-tag="tbody"><p></p></div></td><td class="ql-table-cell" data-table-id="j89168rvqrd" data-row-id="rfiuu54tyn" data-col-id="ejdvsjml25" data-wrap-tag="tbody" rowspan="1" colspan="1"><div class="ql-table-cell-inner" data-table-id="j89168rvqrd" data-row-id="rfiuu54tyn" data-col-id="ejdvsjml25" data-rowspan="1" data-colspan="1" data-tag="td" data-wrap-tag="tbody"><p></p></div></td><td class="ql-table-cell" data-table-id="j89168rvqrd" data-row-id="rfiuu54tyn" data-col-id="nialr8ceyks" data-wrap-tag="tbody" rowspan="1" colspan="1"><div class="ql-table-cell-inner" data-table-id="j89168rvqrd" data-row-id="rfiuu54tyn" data-col-id="nialr8ceyks" data-rowspan="1" data-colspan="1" data-tag="td" data-wrap-tag="tbody"><p></p></div></td></tr></tbody></table></div>');
+    const cell2 = page.locator('#container5 .ql-table-wrapper td').nth(0);
+    expect(cell2).toHaveAttribute('data-empty-row');
+    const emptyRow2 = await cell2.getAttribute('data-empty-row');
+    try {
+      expect(emptyRow2).not.toBeNull();
+      const data = JSON.parse(emptyRow2!);
+      expect(data.length).toEqual(2);
+    }
+    catch {
+      // data error
+      expect(false).toEqual(true);
+    }
+    expect(await page.locator('#container5 .ql-table-wrapper tr').count()).toEqual(5);
   });
 });

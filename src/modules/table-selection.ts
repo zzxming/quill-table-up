@@ -89,7 +89,11 @@ export class TableSelection extends TableDomSelector {
 
     if (delta.length === 0) return;
 
-    pasteCells({ quill: this.quill }, currentSelectedTds, delta);
+    pasteCells(
+      { quill: this.quill, talbeModule: this.tableModule },
+      currentSelectedTds,
+      delta,
+    );
   };
 
   keyboardHandler = (e: KeyboardEvent) => {

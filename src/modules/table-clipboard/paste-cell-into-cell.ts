@@ -1,4 +1,5 @@
 import type { Op } from 'quill';
+import type { TableUp } from '../../table-up';
 import type { TableCellValue } from '../../utils';
 import Quill from 'quill';
 import { TableCellInnerFormat } from '../../formats';
@@ -6,7 +7,10 @@ import { blotName, findParentBlot } from '../../utils';
 
 const Delta = Quill.import('delta');
 
-interface ArgumentsModule { quill: Quill }
+interface ArgumentsModule {
+  quill: Quill;
+  talbeModule: TableUp;
+}
 interface TableCellValueLike {
   rowId: string;
   colId: string;
@@ -226,10 +230,10 @@ export function updateCellContent(modules: ArgumentsModule, cell: TableCellInner
   );
 
   // remove cells covered by colspan/rowspan
-  removeOverlappingCells(cell, rowspan, colspan);
+  removeOverlappingCells(modules, cell, rowspan, colspan);
 }
 
-export function removeOverlappingCells(cell: TableCellInnerFormat, rowspan: number = 1, colspan: number = 1) {
+export function removeOverlappingCells(modules: ArgumentsModule, cell: TableCellInnerFormat, rowspan: number = 1, colspan: number = 1) {
   if (rowspan === 1 && colspan === 1) return;
   const table = findParentBlot(cell, blotName.tableMain);
   if (!table) return;
@@ -252,7 +256,7 @@ export function removeOverlappingCells(cell: TableCellInnerFormat, rowspan: numb
     const otherColumnIndex = otherCell.getColumnIndex();
 
     // check if the other cell is within the rowspan/colspan range of the current cell
-    const isInRowspanRange = otherRowIndex >= cellRowIndex && otherRowIndex < cellRowIndex + rowspan;
+    const isInRowspanRange = otherRowIndex >= cellRowIndex && otherRowIndex < cellRowIndex + rowspan + (cell.emptyRow?.length || 0);
     const isInColspanRange = otherColumnIndex >= cellColumnIndex && otherColumnIndex < cellColumnIndex + colspan;
 
     if (isInRowspanRange && isInColspanRange) {
@@ -261,9 +265,14 @@ export function removeOverlappingCells(cell: TableCellInnerFormat, rowspan: numb
   }
 
   // remove cells covered by the current cell(colspan/rowspan)
+  const isAutoMerge = modules.talbeModule.options.autoMergeCell;
   for (const cellToRemove of cellsToRemove) {
     if (cellToRemove.domNode.isConnected) {
+      const cellRow = cellToRemove.getTableRow();
       cellToRemove.remove();
+      if (!isAutoMerge && cellRow && cellRow.length() <= 0) {
+        cellRow.remove();
+      }
     }
   }
 }
