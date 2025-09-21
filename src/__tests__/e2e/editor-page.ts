@@ -23,10 +23,11 @@ export class EditorPage {
     }, { index: this.index });
   }
 
+  async setSelection(index: null): Promise<void>;
   async setSelection(index: number, length: number): Promise<void>;
   async setSelection(range: { index: number; length: number }): Promise<void>;
   async setSelection(
-    range: { index: number; length: number } | number,
+    range: { index: number; length: number } | number | null,
     length?: number,
   ) {
     await this.page.evaluate(
