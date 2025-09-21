@@ -186,7 +186,7 @@ export class TableRowFormat extends ContainerFormat {
         if (newParent && newParent.length() <= 0) {
           newParent.remove();
         }
-        const afterParent = (this.parent as any).splitAfter(this);
+        const afterParent = (this.parent as TypeParchment.ParentBlot).splitAfter(this);
         if (afterParent && afterParent.length() <= 0) {
           afterParent.remove();
         }

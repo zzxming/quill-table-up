@@ -1,6 +1,8 @@
+import type { Parchment as TypeParchment } from 'quill';
 import type { TableBodyTag, TableCellValue } from '../utils';
 import { blotName, ensureArray, findParentBlot, getInlineStyles, toCamelCase } from '../utils';
 import { ContainerFormat } from './container-format';
+import { TableBodyFormat } from './table-body-format';
 import { TableCellInnerFormat } from './table-cell-inner-format';
 import { TableRowFormat } from './table-row-format';
 import { getValidCellspan } from './utils';
@@ -282,12 +284,18 @@ export class TableCellFormat extends ContainerFormat {
     }
     // when `replaceWith` called to replace cell. wrapTag may change. so row wrapTag also need to update
     if (this.parent.statics.blotName === blotName.tableRow && (this.parent as TableRowFormat).wrapTag !== wrapTag) {
-      (this.parent as TableRowFormat).setFormatValue('wrap-tag', this.wrapTag);
+      (this.parent as TableRowFormat).setFormatValue('wrap-tag', wrapTag);
     }
 
     if (this.emptyRow.length > 0) {
-      for (const rowId of this.emptyRow) {
-        this.parent.parent.insertBefore(this.scroll.create(blotName.tableRow, { tableId, rowId, wrapTag }), this.parent.next);
+      const tableBody = this.parent.parent;
+      if (tableBody instanceof TableBodyFormat) {
+        let insertBefore: TypeParchment.Blot | null = null;
+        for (const rowId of this.emptyRow) {
+          const row = this.scroll.create(blotName.tableRow, { tableId, rowId, wrapTag }) as TableRowFormat;
+          tableBody.insertBefore(row, insertBefore);
+          insertBefore = row.next;
+        }
       }
     }
 

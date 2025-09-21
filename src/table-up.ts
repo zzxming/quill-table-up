@@ -1349,8 +1349,12 @@ export class TableUp {
     const newBody = firstBody.clone() as TableBodyFormat;
     currentTable.appendChild(newBody);
     for (const row of currentTableRows) {
-      newBody.appendChild(row);
+      // only move the not empty row. the empty row will regenerate when `optimize`
+      if (row.length() > 0) {
+        newBody.appendChild(row);
+      }
     }
     newBody.convertBody(tag);
+    firstBody.remove();
   }
 }
