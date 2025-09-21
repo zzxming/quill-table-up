@@ -7,6 +7,15 @@ import { blotName, findParentBlot } from '../../utils';
 const Delta = Quill.import('delta');
 
 interface ArgumentsModule { quill: Quill }
+interface CellRecord {
+  rowId: string;
+  colId: string;
+  rowspan: number;
+  colspan: number;
+  emptyRow?: string[];
+  deltaOps: any[];
+}
+
 export function pasteCells(modules: ArgumentsModule, selectedTds: TableCellInnerFormat[], pasteDelta: Op[]) {
   const { rows: selectedRows, cols: selectedCols } = getTableCellStructure(selectedTds);
   const { rows: pasteRows, cols: pasteCols, cells: pasteCells } = parsePasteDelta(pasteDelta);
@@ -30,7 +39,6 @@ export function getTableCellStructure(cells: TableCellInnerFormat[]) {
 }
 
 export function parsePasteDelta(delta: any[]) {
-  interface CellRecord { rowId: string; colId: string; rowspan: number; colspan: number; emptyRow?: string[]; deltaOps: any[] }
   const cellMap = new Map<string, CellRecord>();
 
   for (const op of delta) {
