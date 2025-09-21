@@ -7,13 +7,15 @@ import { blotName, findParentBlot } from '../../utils';
 const Delta = Quill.import('delta');
 
 interface ArgumentsModule { quill: Quill }
-interface CellRecord {
+interface TableCellValueLike {
   rowId: string;
   colId: string;
-  rowspan: number;
   colspan: number;
+  rowspan: number;
   emptyRow?: string[];
-  deltaOps: any[];
+}
+interface CellRecord extends TableCellValueLike {
+  deltaOps: Op[];
 }
 
 export function pasteCells(modules: ArgumentsModule, selectedTds: TableCellInnerFormat[], pasteDelta: Op[]) {
@@ -38,11 +40,13 @@ export function getTableCellStructure(cells: TableCellInnerFormat[]) {
   return counts;
 }
 
-export function parsePasteDelta(delta: any[]) {
+export function parsePasteDelta(delta: Op[]) {
   const cellMap = new Map<string, CellRecord>();
 
   for (const op of delta) {
-    const cellValue = op.attributes[blotName.tableCellInner];
+    const attributes = op.attributes;
+    if (!attributes) continue;
+    const cellValue = attributes[blotName.tableCellInner] as TableCellValue;
     if (!cellValue) continue;
 
     const cellKey = `${cellValue.rowId}-${cellValue.colId}`;
@@ -61,7 +65,7 @@ export function parsePasteDelta(delta: any[]) {
     }
 
     const cell = cellMap.get(cellKey)!;
-    const { [blotName.tableCellInner]: cellInnerValue, ...attrs } = op.attributes;
+    const { [blotName.tableCellInner]: cellInnerValue, ...attrs } = attributes;
     cell.deltaOps.push({
       insert: op.insert,
       attributes: { ...attrs },
@@ -100,11 +104,11 @@ export function getCountByPosition(infos: ReturnType<typeof getCellPositions>) {
   };
 }
 
-export function pasteWithStructure(selectedTds: TableCellInnerFormat[], pasteCells: any[], modules: ArgumentsModule) {
+export function pasteWithStructure(selectedTds: TableCellInnerFormat[], pasteCells: CellRecord[], modules: ArgumentsModule) {
   const targetPositions = getCellPositions(selectedTds);
   const pastePositions = getCellPositions(pasteCells);
 
-  const positionMap = new Map<string, any>();
+  const positionMap = new Map<string, CellRecord>();
   for (const pos of pastePositions) {
     positionMap.set(`${pos.rowIndex}-${pos.colIndex}`, pos.cell);
   }
@@ -128,8 +132,8 @@ export function pasteWithStructure(selectedTds: TableCellInnerFormat[], pasteCel
   }
 }
 
-export function getCellPositions(cells: any[]) {
-  const positions: { cell: any; rowIndex: number; colIndex: number }[] = [];
+export function getCellPositions<T extends TableCellValueLike>(cells: T[]) {
+  const positions: { cell: T; rowIndex: number; colIndex: number }[] = [];
 
   // calculate the cell position(rowIndex, colIndex)
   const rowMap = groupCellByRow(cells);
@@ -164,8 +168,8 @@ export function getCellPositions(cells: any[]) {
   return positions;
 }
 
-export function groupCellByRow(cells: any[]) {
-  const rowMap = new Map<string, any[]>();
+export function groupCellByRow<T extends TableCellValueLike>(cells: T[]) {
+  const rowMap = new Map<string, T[]>();
   for (const cell of cells) {
     if (!rowMap.has(cell.rowId)) {
       rowMap.set(cell.rowId, []);
@@ -175,7 +179,7 @@ export function groupCellByRow(cells: any[]) {
   return rowMap;
 }
 
-export function pasteWithLoop(modules: ArgumentsModule, selectedTds: TableCellInnerFormat[], pasteCells: any[]) {
+export function pasteWithLoop(modules: ArgumentsModule, selectedTds: TableCellInnerFormat[], pasteCells: CellRecord[]) {
   const rowMap = groupCellByRow(pasteCells);
   const pasteRows = Array.from(rowMap.values());
 
@@ -195,7 +199,7 @@ export function pasteWithLoop(modules: ArgumentsModule, selectedTds: TableCellIn
   }
 }
 
-export function updateCellContent(modules: ArgumentsModule, cell: TableCellInnerFormat, deltaOps: any[], attrs?: Pick<TableCellValue, 'rowspan' | 'colspan' | 'emptyRow'>) {
+export function updateCellContent(modules: ArgumentsModule, cell: TableCellInnerFormat, deltaOps: Op[], attrs?: Pick<TableCellValue, 'rowspan' | 'colspan' | 'emptyRow'>) {
   const { rowspan = 1, colspan = 1, emptyRow } = attrs || {};
   if (attrs) {
     cell.rowspan = rowspan;
@@ -208,7 +212,7 @@ export function updateCellContent(modules: ArgumentsModule, cell: TableCellInner
   const cellValue = cell.formats();
   const insertDelta = new Delta();
   for (const op of deltaOps) {
-    insertDelta.insert(op.insert, { ...op.attributes, ...cellValue });
+    insertDelta.insert(op.insert!, { ...op.attributes, ...cellValue });
   }
 
   const offset = cell.offset(modules.quill.scroll);
