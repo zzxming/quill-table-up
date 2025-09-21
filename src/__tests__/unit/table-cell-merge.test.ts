@@ -1,6 +1,6 @@
 import Quill from 'quill';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { TableCellInnerFormat } from '../../formats';
+import { TableCellInnerFormat, TableMainFormat } from '../../formats';
 import { TableUp } from '../../table-up';
 import { createQuillWithTableModule, createTable, createTableDeltaOps, createTaleColHTML, expectDelta } from './utils';
 
@@ -699,5 +699,26 @@ describe('disable auto merge', () => {
         { insert: '\n' },
       ]),
     );
+  });
+
+  it('`emptyRow` should have same order with tr', async () => {
+    const quill = createQuillWithTableModule(`<p><br></p>`, { autoMergeCell: false });
+    quill.setContents(createTableDeltaOps(5, 3, { full: false }, {}, { isEmpty: false }));
+    const tableModule = quill.getModule(TableUp.moduleName) as TableUp;
+    const tds = quill.scroll.descendants(TableCellInnerFormat, 0);
+    tableModule.mergeCells([tds[3], tds[4], tds[5], tds[6], tds[7], tds[8], tds[9], tds[10], tds[11]]);
+    await vi.runAllTimersAsync();
+
+    const tableBlot = quill.scroll.descendants(TableMainFormat, 0)[0];
+    const emptyRowIds = tds[3].emptyRow;
+    const rowIds = tableBlot.getRowIds();
+    const startRowIndex = rowIds.indexOf(tds[3].rowId);
+
+    expect(emptyRowIds.length).toEqual(2);
+    expect(tds[3].rowspan).toEqual(3);
+    expect(startRowIndex).toEqual(1);
+    for (let i = startRowIndex + 1; i < startRowIndex + emptyRowIds.length; i++) {
+      expect(rowIds[i]).toEqual(emptyRowIds[i - startRowIndex - 1]);
+    }
   });
 });
