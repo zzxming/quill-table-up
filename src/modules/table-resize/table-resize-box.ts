@@ -235,7 +235,10 @@ export class TableResizeBox extends TableResizeCommon {
     if (this.tableCols.length > 0) {
       let colHeadStr = '';
       for (const [, col] of this.tableCols.entries()) {
-        const width = col.domNode.getBoundingClientRect().width;
+        let width = col.domNode.getBoundingClientRect().width;
+        if (width === 0) {
+          width = Number.parseInt(col.domNode.getAttribute('width')!, 10);
+        }
         colHeadStr += `<div class="${this.bem.be('col-header')}" style="width: ${width}px">
           <div class="${this.bem.be('col-separator')}" style="height: ${tableRect.height + this.size - 3}px"></div>
         </div>`;
