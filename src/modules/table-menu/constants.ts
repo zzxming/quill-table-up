@@ -21,7 +21,7 @@ import TableHead from '../../svg/table-head.svg';
 import { blotName, createBEM } from '../../utils';
 
 export const menuColorSelectClassName = 'color-selector';
-export function copyCell(tableModule: TableUp, selectedTds: TableCellInnerFormat[], isCut: boolean = false) {
+export async function copyCell(tableModule: TableUp, selectedTds: TableCellInnerFormat[], isCut: boolean = false) {
   const text = tableModule.getTextByCell(selectedTds);
   const html = tableModule.getHTMLByCell(selectedTds, isCut);
 
@@ -29,7 +29,7 @@ export function copyCell(tableModule: TableUp, selectedTds: TableCellInnerFormat
     'text/plain': new Blob([text], { type: 'text/plain' }),
     'text/html': new Blob([html], { type: 'text/html' }),
   });
-  navigator.clipboard.write([clipboardItem]);
+  await navigator.clipboard.write([clipboardItem]);
 }
 export const tableMenuTools: Record<string, Tool> = {
   Break: {

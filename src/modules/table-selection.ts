@@ -96,12 +96,12 @@ export class TableSelection extends TableDomSelector {
     );
   };
 
-  keyboardHandler = (e: KeyboardEvent) => {
+  keyboardHandler = async (e: KeyboardEvent) => {
     if (e.ctrlKey) {
       switch (e.key) {
         case 'c':
         case 'x': {
-          copyCell(this.tableModule, this.selectedTds, e.key === 'x');
+          await copyCell(this.tableModule, this.selectedTds, e.key === 'x');
           break;
         }
       }

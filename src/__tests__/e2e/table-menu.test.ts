@@ -88,7 +88,6 @@ extendTest('test TableMenuSelect should update when text change', async ({ page,
   await expect(menuWrapper).toBeVisible();
   const newMenuWrapper = (await menuWrapper.boundingBox())!;
   expect(newMenuWrapper).not.toBeNull();
-  console.log(newMenuWrapper.y, menuBound.y, lineBound.height);
   expect(newMenuWrapper.y - menuBound.y).toBeCloseTo(lineBound.height, 0);
 });
 

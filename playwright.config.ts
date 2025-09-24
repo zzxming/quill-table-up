@@ -28,6 +28,11 @@ export default defineConfig({
           firefoxUserPrefs: {
             'dom.events.asyncClipboard.readText': true,
             'dom.events.testing.asyncClipboard': true,
+            'dom.events.asyncClipboard.clipboardItem': true,
+            'dom.testing.structuredClone': true,
+            'dom.events.asyncClipboard.read': true,
+            'dom.events.asyncClipboard.write': true,
+            'dom.events.asyncClipboard.requireUserGesture': false,
           },
         },
       },
