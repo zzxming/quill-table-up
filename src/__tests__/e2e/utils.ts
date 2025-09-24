@@ -9,17 +9,29 @@ export async function createTableBySelect(page: Page, container: string, row: nu
 
 export async function pasteHTML(page: Page, html: string) {
   await page.evaluate(async ({ html }) => {
-    const mockClipboardData = {
-      getData: (format: any) => format === 'text/html' ? html : '',
-      types: ['text/html', 'text/plain'],
-    };
+    // Create clipboard data
+    const clipboardData = new DataTransfer();
+    clipboardData.setData('text/html', html);
 
-    const pasteEvent = new Event('paste', { bubbles: true });
-    Object.defineProperty(pasteEvent, 'clipboardData', {
-      value: mockClipboardData,
-      writable: false,
-    });
-    document.dispatchEvent(pasteEvent);
+    // Create and dispatch paste event directly on the active element
+    const activeElement = document.activeElement;
+    if (activeElement) {
+      const pasteEvent = new ClipboardEvent('paste', {
+        bubbles: true,
+        cancelable: true,
+        clipboardData,
+      });
+      activeElement.dispatchEvent(pasteEvent);
+    }
+    else {
+      // Fallback to document dispatch if no active element
+      const pasteEvent = new ClipboardEvent('paste', {
+        bubbles: true,
+        cancelable: true,
+        clipboardData,
+      });
+      document.dispatchEvent(pasteEvent);
+    }
   }, { html });
   await page.waitForTimeout(1000);
 }
