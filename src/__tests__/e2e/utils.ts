@@ -1,4 +1,4 @@
-import type { Page } from '@playwright/test';
+import type { Page, PlaywrightWorkerOptions } from '@playwright/test';
 import { test } from '@playwright/test';
 import { EditorPage } from './editor-page';
 
@@ -7,14 +7,26 @@ export async function createTableBySelect(page: Page, container: string, row: nu
   await page.locator(`#${container} .ql-toolbar .ql-custom-select .table-up-select-box__item[data-row="${row}"][data-col="${col}"]`).click();
 }
 
-export async function pasteHTML(page: Page, html: string) {
-  await page.evaluate(async ({ html }) => {
-    const clipboardItem = new ClipboardItem({
-      'text/html': new Blob([html], { type: 'text/html' }),
-    });
-    await navigator.clipboard.write([clipboardItem]);
-  }, { html });
-  await page.keyboard.press('Control+V');
+export async function pasteHTML(page: Page, html: string, { browserName = 'chromium' }: { browserName: PlaywrightWorkerOptions['browserName'] }) {
+  await page.evaluate(async ({ html, browserName }) => {
+    if (browserName === 'firefox') {
+      const clipboardItem = new ClipboardItem({ 'text/html': new Blob([html], { type: 'text/html' }) });
+      await navigator.clipboard.write([clipboardItem]);
+    }
+    else {
+      const clipboardData = new DataTransfer();
+      clipboardData.setData('text/html', html);
+      const pasteEvent = new ClipboardEvent('paste', {
+        bubbles: true,
+        cancelable: true,
+        clipboardData,
+      });
+      document.dispatchEvent(pasteEvent);
+    }
+  }, { html, browserName });
+  if (browserName === 'firefox') {
+    await page.keyboard.press('Control+V');
+  }
   await page.waitForTimeout(1000);
 }
 
