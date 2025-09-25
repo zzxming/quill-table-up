@@ -25,7 +25,7 @@ export async function pasteHTML(page: Page, html: string, { browserName = 'chrom
     }
   }, { html, browserName });
   if (browserName === 'firefox') {
-    await page.keyboard.press('Control+V');
+    await page.keyboard.press('Control+v');
   }
   await page.waitForTimeout(1000);
 }
