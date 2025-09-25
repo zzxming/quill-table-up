@@ -407,7 +407,7 @@ extendTest.describe('TableSelection keyboard handler', () => {
     page.mouse.move(cell1Bound.x + cell1Bound.width * 1.5, cell1Bound.y + cell1Bound.height * 1.5);
 
     const tableSelection = page.locator('#container1 .table-up-toolbox .table-up-selection__line');
-    expect(tableSelection).toBeVisible();
+    await expect(tableSelection).toBeVisible();
 
     await editorPage.blur();
     await page.keyboard.press('Control+c');
