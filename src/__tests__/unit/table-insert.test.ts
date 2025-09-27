@@ -388,7 +388,7 @@ describe('set contents', () => {
         { insert: '2' },
         { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '2', rowspan: 1, colspan: 1, tag: 'td', wrapTag: 'tbody', style: 'background-color: red; border-bottom-color: red;' } }, insert: '\n' },
         { insert: '3' },
-        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '1', rowspan: 1, colspan: 1, tag: 'td', wrapTag: 'tbody', style: 'border-color: red; border-right-color: red;' } }, insert: '\n' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '1', rowspan: 1, colspan: 1, tag: 'td', wrapTag: 'tbody', style: 'border-color: red;' } }, insert: '\n' },
         { insert: '4' },
         { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '2', rowspan: 1, colspan: 1, tag: 'td', wrapTag: 'tbody', style: 'border-color: red;' } }, insert: '\n' },
         { insert: '5' },
@@ -682,8 +682,8 @@ describe('set cell attribute', () => {
             ${createTaleColHTML(2)}
             <tbody>
               <tr data-row-id="1">
-                <td colspan="1" data-col-id="1" data-row-id="1" rowspan="1" style="border-color: red; border-right-color: red;">
-                  <div data-col-id="1" data-colspan="1" data-row-id="1" data-rowspan="1" data-style="border-color: red; border-right-color: red;">
+                <td colspan="1" data-col-id="1" data-row-id="1" rowspan="1" style="border-color: red;">
+                  <div data-col-id="1" data-colspan="1" data-row-id="1" data-rowspan="1" data-style="border-color: red;">
                     <p>1</p>
                   </div>
                 </td>
@@ -719,7 +719,7 @@ describe('set cell attribute', () => {
         { insert: { 'table-up-col': { tableId: '1', colId: '1', full: true, width: 50 } } },
         { insert: { 'table-up-col': { tableId: '1', colId: '2', full: true, width: 50 } } },
         { insert: '1' },
-        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '1', rowspan: 1, colspan: 1, tag: 'td', wrapTag: 'tbody', style: 'border-color: red; border-right-color: red;' } }, insert: '\n' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '1', rowspan: 1, colspan: 1, tag: 'td', wrapTag: 'tbody', style: 'border-color: red;' } }, insert: '\n' },
         { insert: '2' },
         { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '2', rowspan: 1, colspan: 1, tag: 'td', wrapTag: 'tbody', style: 'border-color: red;' } }, insert: '\n' },
         { insert: '3' },

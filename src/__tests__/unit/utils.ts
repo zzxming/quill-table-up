@@ -7,6 +7,21 @@ import { TableUp } from '../../table-up';
 const Delta = Quill.import('delta');
 
 export const normalizeHTML = (html: string | { html: string }) => typeof html === 'object' ? html.html : html.replaceAll(/\n\s*/g, '');
+export function normalizeStyle(style: string) {
+  if (!style) return '';
+  return style
+    .split(';')
+    .map(style => style.trim())
+    .filter(Boolean)
+    .map((style) => {
+      const [property, value] = style.split(':').map(s => s.trim());
+      return property && value ? `${property}:${value}` : '';
+    })
+    .filter(Boolean)
+    .toSorted()
+    .join(';');
+}
+
 export function sortAttributes(element: HTMLElement) {
   const attributes = Array.from(element.attributes);
   const sortedAttributes = attributes.toSorted((a, b) => a.name.localeCompare(b.name));
@@ -100,6 +115,14 @@ expect.extend({
       }
 
       sortAttributes(dom);
+
+      // normalize style attributes to handle different order
+      for (const node of Array.from(dom.querySelectorAll('[style]'))) {
+        const styleAttr = node.getAttribute('style');
+        if (styleAttr) {
+          node.setAttribute('style', normalizeStyle(styleAttr));
+        }
+      }
     }
 
     if (this.equals(receivedDOM.innerHTML, expectedDOM.innerHTML)) {

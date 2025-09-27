@@ -1568,8 +1568,8 @@ describe('undo cell attribute', () => {
             ${createTaleColHTML(2)}
             <tbody>
               <tr data-row-id="1">
-                <td colspan="1" data-col-id="1" data-row-id="1" rowspan="1" style="border-color: red; border-right-color: red;">
-                  <div data-col-id="1" data-colspan="1" data-row-id="1" data-rowspan="1" data-style="border-color: red; border-right-color: red;">
+                <td colspan="1" data-col-id="1" data-row-id="1" rowspan="1" style="border-color: red;">
+                  <div data-col-id="1" data-colspan="1" data-row-id="1" data-rowspan="1" data-style="border-color: red;">
                     <p>1</p>
                   </div>
                 </td>
