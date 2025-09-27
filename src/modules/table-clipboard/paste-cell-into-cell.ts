@@ -275,12 +275,12 @@ export function applyCellUpdates(modules: ArgumentsModule, updates: CellUpdate[]
       .concat(update.insertDelta)
       .delete(update.length);
   }
-  modules.quill.updateContents(combinedDelta, Quill.sources.USER);
-
   // remove cells covered by colspan/rowspan
   for (const update of updates) {
     removeOverlappingCells(modules, update);
   }
+
+  modules.quill.updateContents(combinedDelta, Quill.sources.USER);
 }
 
 export function removeOverlappingCells(modules: ArgumentsModule, updateCell: CellUpdate) {
@@ -307,7 +307,7 @@ export function removeOverlappingCells(modules: ArgumentsModule, updateCell: Cel
     const otherColumnIndex = otherCell.getColumnIndex();
 
     // check if the other cell is within the rowspan/colspan range of the current cell
-    const isInRowspanRange = otherRowIndex >= cellRowIndex && otherRowIndex < cellRowIndex + rowspan + (cell.emptyRow?.length || 0);
+    const isInRowspanRange = otherRowIndex >= cellRowIndex && otherRowIndex < cellRowIndex + rowspan;
     const isInColspanRange = otherColumnIndex >= cellColumnIndex && otherColumnIndex < cellColumnIndex + colspan;
 
     if (isInRowspanRange && isInColspanRange) {
