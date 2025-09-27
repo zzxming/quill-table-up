@@ -58,7 +58,7 @@ export function buildStyle({ isDev = false } = {}) {
       .pipe(dest(demoBundle));
   }
   if (isDev) {
-    watch('./src/**/*.less', buildLess.bind(undefined, true));
+    watch('./src/**/*.less', buildLess);
   }
   return buildLess();
 }
