@@ -136,6 +136,7 @@ const quills = [
     full: false,
     customSelect: defaultCustomSelect,
     customBtn: true,
+    autoMergeCell: false,
     modules: [
       { module: TableVirtualScrollbar },
       { module: TableAlign },

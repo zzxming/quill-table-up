@@ -5,7 +5,9 @@ import type { RelactiveRect, TableSelectionOptions } from '../utils';
 import Quill from 'quill';
 import { getTableMainRect, TableCellFormat, TableCellInnerFormat } from '../formats';
 import { addScrollEvent, blotName, clearScrollEvent, createBEM, createResizeObserver, findAllParentBlot, findParentBlot, getElementScrollPosition, getRelativeRect, isRectanglesIntersect, tableUpEvent } from '../utils';
+import { pasteCells } from './table-clipboard';
 import { TableDomSelector } from './table-dom-selector';
+import { copyCell } from './table-menu/constants';
 
 const ERROR_LIMIT = 0;
 
@@ -63,12 +65,51 @@ export class TableSelection extends TableDomSelector {
     this.resizeObserver = createResizeObserver(this.updateAfterEvent, { ignoreFirstBind: true });
     this.resizeObserver.observe(this.quill.root);
 
+    document.addEventListener('paste', this.handlePaste);
     this.quill.emitter.listenDOM('selectionchange', document, this.selectionChangeHandler.bind(this));
     this.quill.on(tableUpEvent.AFTER_TABLE_RESIZE, this.updateAfterEvent);
     this.quill.on(Quill.events.SELECTION_CHANGE, this.quillSelectionChangeHandler);
     this.quill.on(Quill.events.EDITOR_CHANGE, this.updateWhenTextChange);
     this.hide();
   }
+
+  handlePaste = (event: ClipboardEvent) => {
+    const activeElement = document.activeElement && this.quill.root.contains(document.activeElement);
+    if (!activeElement || this.quill.getSelection()) return;
+
+    const clipboardData = event.clipboardData;
+    if (!clipboardData) return;
+    event.preventDefault();
+
+    const currentSelectedTds = this.selectedTds;
+    if (currentSelectedTds.length <= 0) return;
+
+    const html = clipboardData.getData('text/html');
+    const delta = this.quill.clipboard.convert({ html }).ops.filter(op => op.attributes && op.attributes[blotName.tableCellInner]);
+
+    if (delta.length === 0) return;
+
+    pasteCells(
+      { quill: this.quill, talbeModule: this.tableModule },
+      currentSelectedTds,
+      delta,
+    );
+  };
+
+  keyboardHandler = async (e: KeyboardEvent) => {
+    if (e.ctrlKey) {
+      switch (e.key) {
+        case 'c':
+        case 'x': {
+          await copyCell(this.tableModule, this.selectedTds, e.key === 'x');
+          break;
+        }
+      }
+    }
+    else if (e.key === 'Backspace' || e.key === 'Delete') {
+      this.removeCellBySelectedTds();
+    }
+  };
 
   updateWhenTextChange = (eventName: string) => {
     if (eventName === Quill.events.TEXT_CHANGE) {
@@ -82,22 +123,21 @@ export class TableSelection extends TableDomSelector {
   };
 
   updateAfterEvent = () => {
-    // if cell already remove from the editor. need remove it
-    const existCells: TableCellInnerFormat[] = [];
+    // if any cell doesn't exist, selection will be cleared
     for (let i = 0; i < this.selectedTds.length; i++) {
       const td = this.selectedTds[i];
-      if (this.quill.root.contains(td.domNode)) {
-        existCells.push(td);
+      if (!td.domNode.isConnected) {
+        this.selectedTds = [];
+        break;
       }
     }
-    this.selectedTds = existCells;
     this.updateWithSelectedTds();
   };
 
-  removeCell = (e: KeyboardEvent) => {
+  removeCellBySelectedTds() {
     const range = this.quill.getSelection();
     const activeElement = document.activeElement;
-    if (range || (e.key !== 'Backspace' && e.key !== 'Delete') || !this.quill.root.contains(activeElement)) return;
+    if (range || !this.quill.root.contains(activeElement)) return;
 
     if (this.table) {
       const tableMain = Quill.find(this.table) as TableMainFormat;
@@ -113,7 +153,7 @@ export class TableSelection extends TableDomSelector {
       td.parent.insertBefore(clearTd, td);
       td.remove();
     }
-  };
+  }
 
   setSelectedTds(tds: TableCellInnerFormat[]) {
     const currentSelectedTds = new Set(this.selectedTds);
@@ -589,7 +629,7 @@ export class TableSelection extends TableDomSelector {
 
     this.showDisplay();
     this.update();
-    this.quill.root.addEventListener('keydown', this.removeCell);
+    this.quill.root.addEventListener('keydown', this.keyboardHandler);
     addScrollEvent.call(this, this.quill.root, () => {
       this.update();
     });
@@ -607,7 +647,7 @@ export class TableSelection extends TableDomSelector {
 
   hide() {
     clearScrollEvent.call(this);
-    this.quill.root.removeEventListener('keydown', this.removeCell);
+    this.quill.root.removeEventListener('keydown', this.keyboardHandler);
     this.hideDisplay();
     this.boundary = null;
     this.setSelectedTds([]);
@@ -621,6 +661,7 @@ export class TableSelection extends TableDomSelector {
     this.cellSelectWrap.remove();
     clearScrollEvent.call(this);
 
+    document.removeEventListener('paste', this.handlePaste);
     this.quill.off(tableUpEvent.AFTER_TABLE_RESIZE, this.updateAfterEvent);
     this.quill.off(Quill.events.EDITOR_CHANGE, this.updateWhenTextChange);
     this.quill.off(Quill.events.SELECTION_CHANGE, this.quillSelectionChangeHandler);

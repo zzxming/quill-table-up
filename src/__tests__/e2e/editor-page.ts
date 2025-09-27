@@ -4,7 +4,7 @@ import type { Delta, Op } from 'quill';
 // Specify the index of the editor before use.
 export class EditorPage {
   public index: number = 0;
-  constructor(protected readonly page: Page) {}
+  constructor(public page: Page) {}
 
   get root() {
     return this.page.locator('.ql-editor');
@@ -23,10 +23,11 @@ export class EditorPage {
     }, { index: this.index });
   }
 
+  async setSelection(index: null): Promise<void>;
   async setSelection(index: number, length: number): Promise<void>;
   async setSelection(range: { index: number; length: number }): Promise<void>;
   async setSelection(
-    range: { index: number; length: number } | number,
+    range: { index: number; length: number } | number | null,
     length?: number,
   ) {
     await this.page.evaluate(

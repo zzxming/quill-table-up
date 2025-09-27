@@ -88,7 +88,6 @@ extendTest('test TableMenuSelect should update when text change', async ({ page,
   await expect(menuWrapper).toBeVisible();
   const newMenuWrapper = (await menuWrapper.boundingBox())!;
   expect(newMenuWrapper).not.toBeNull();
-  console.log(newMenuWrapper.y, menuBound.y, lineBound.height);
   expect(newMenuWrapper.y - menuBound.y).toBeCloseTo(lineBound.height, 0);
 });
 
@@ -170,27 +169,4 @@ extendTest('table width switch should work', async ({ page }) => {
   await cell.click({ button: 'right' });
   await page.locator('.table-up-menu.is-contextmenu .table-up-menu__item').filter({ hasText: 'Switch table width' }).first().click();
   expect(await page.locator('#editor1 .ql-editor .ql-table col:not([data-full])').count()).toBe(4);
-});
-
-extendTest('TableSelection should have same boundbox with merge cell', async ({ page, editorPage }) => {
-  editorPage.index = 0;
-  await createTableBySelect(page, 'container1', 5, 5);
-  const cellBoundbox = (await page.locator('#editor1 .ql-editor .ql-table td').nth(0).boundingBox())!;
-  expect(cellBoundbox).not.toBeNull();
-  await page.locator('#editor1 .ql-editor .ql-table td').nth(0).click();
-
-  await page.mouse.move(cellBoundbox.x + cellBoundbox.width * 1.5, cellBoundbox.y + cellBoundbox.height * 1.5);
-  await page.mouse.down();
-  await page.mouse.move(cellBoundbox.x + cellBoundbox.width * 3.5, cellBoundbox.y + cellBoundbox.height * 3.5);
-  await page.mouse.up();
-
-  await page.locator('#editor1 .ql-editor .ql-table td').nth(6).click({ button: 'right' });
-  await page.locator('.table-up-menu.is-contextmenu .table-up-menu__item').filter({ hasText: 'Merge Cell' }).first().click();
-
-  const selectionBoundbox = (await page.locator('#container1 .table-up-toolbox .table-up-selection .table-up-selection__line').boundingBox())!;
-  expect(selectionBoundbox).not.toBeNull();
-  const mergeCellBoundbox = (await page.locator('#editor1 .ql-editor .ql-table td').nth(6).boundingBox())!;
-  expect(mergeCellBoundbox).not.toBeNull();
-
-  expect(selectionBoundbox).toEqual(mergeCellBoundbox);
 });

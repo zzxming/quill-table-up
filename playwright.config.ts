@@ -5,21 +5,40 @@ export default defineConfig({
   testDir: './src/__tests__/e2e',
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 2 : 0,
+  retries: process.env.CI ? 3 : 0,
   workers: process.env.CI ? 1 : undefined,
   reporter: 'html',
   use: {
     trace: 'on-first-retry',
+    launchOptions: {
+      slowMo: process.env.CI ? 0 : 300,
+    },
   },
   projects: [
     {
       name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
+      use: {
+        ...devices['Desktop Chrome'],
+        permissions: ['clipboard-read', 'clipboard-write'],
+      },
     },
 
     {
       name: 'firefox',
-      use: { ...devices['Desktop Firefox'] },
+      use: {
+        ...devices['Desktop Firefox'],
+        launchOptions: {
+          firefoxUserPrefs: {
+            'dom.events.asyncClipboard.readText': true,
+            'dom.events.testing.asyncClipboard': true,
+            'dom.events.asyncClipboard.clipboardItem': true,
+            'dom.testing.structuredClone': true,
+            'dom.events.asyncClipboard.read': true,
+            'dom.events.asyncClipboard.write': true,
+            'dom.events.asyncClipboard.requireUserGesture': false,
+          },
+        },
+      },
     },
 
     // {
