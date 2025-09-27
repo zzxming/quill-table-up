@@ -1,4 +1,4 @@
-import type { Op } from 'quill';
+import type { Op, Delta as TypeDelta } from 'quill';
 import type { TableUp } from '../../table-up';
 import type { TableCellValue } from '../../utils';
 import Quill from 'quill';
@@ -10,6 +10,16 @@ const Delta = Quill.import('delta');
 interface ArgumentsModule {
   quill: Quill;
   talbeModule: TableUp;
+}
+
+interface CellUpdate {
+  offset: number;
+  length: number;
+  insertDelta: TypeDelta;
+  cell: TableCellInnerFormat;
+  rowspan?: number;
+  colspan?: number;
+  emptyRow?: string[];
 }
 interface TableCellValueLike {
   rowId: string;
@@ -117,6 +127,7 @@ export function pasteWithStructure(selectedTds: TableCellInnerFormat[], pasteCel
     positionMap.set(`${pos.rowIndex}-${pos.colIndex}`, pos.cell);
   }
 
+  const updates: CellUpdate[] = [];
   const processedCells = new Set<TableCellInnerFormat>();
   for (const targetPos of targetPositions) {
     const targetCell = targetPos.cell;
@@ -126,14 +137,16 @@ export function pasteWithStructure(selectedTds: TableCellInnerFormat[], pasteCel
 
     const pasteCell = positionMap.get(`${targetPos.rowIndex}-${targetPos.colIndex}`);
     if (pasteCell) {
-      updateCellContent(modules, targetCell, pasteCell.deltaOps, {
+      const update = prepareCellUpdate(modules, targetCell, pasteCell.deltaOps, {
         rowspan: pasteCell.rowspan,
         colspan: pasteCell.colspan,
         emptyRow: pasteCell.emptyRow,
       });
+      updates.push(update);
       processedCells.add(targetCell);
     }
   }
+  applyCellUpdates(modules, updates);
 }
 
 export function getCellPositions<T extends TableCellValueLike>(cells: T[]) {
@@ -188,6 +201,8 @@ export function pasteWithLoop(modules: ArgumentsModule, selectedTds: TableCellIn
   const pasteRows = Array.from(rowMap.values());
 
   const targetCols = getTableCellStructure(selectedTds).cols;
+  const updates: CellUpdate[] = [];
+
   // loop cell in row to fill content
   for (let i = 0; i < selectedTds.length; i++) {
     const targetCell = selectedTds[i];
@@ -199,11 +214,18 @@ export function pasteWithLoop(modules: ArgumentsModule, selectedTds: TableCellIn
     const pasteColIndex = targetCol % pasteRow.length;
     const pasteCell = pasteRow[pasteColIndex];
 
-    updateCellContent(modules, targetCell, pasteCell.deltaOps);
+    const update = prepareCellUpdate(modules, targetCell, pasteCell.deltaOps);
+    updates.push(update);
   }
+  applyCellUpdates(modules, updates);
 }
 
-export function updateCellContent(modules: ArgumentsModule, cell: TableCellInnerFormat, deltaOps: Op[], attrs?: Pick<TableCellValue, 'rowspan' | 'colspan' | 'emptyRow'>) {
+export function prepareCellUpdate(
+  modules: ArgumentsModule,
+  cell: TableCellInnerFormat,
+  deltaOps: Op[],
+  attrs?: Pick<TableCellValue, 'rowspan' | 'colspan' | 'emptyRow'>,
+): CellUpdate {
   const { rowspan = 1, colspan = 1, emptyRow } = attrs || {};
   if (attrs) {
     cell.rowspan = rowspan;
@@ -221,19 +243,48 @@ export function updateCellContent(modules: ArgumentsModule, cell: TableCellInner
 
   const offset = cell.offset(modules.quill.scroll);
   const length = cell.length();
-  modules.quill.updateContents(
-    new Delta()
-      .retain(offset)
-      .delete(length)
-      .concat(insertDelta),
-    Quill.sources.USER,
-  );
 
-  // remove cells covered by colspan/rowspan
-  removeOverlappingCells(modules, cell, rowspan, colspan);
+  return {
+    offset,
+    length,
+    insertDelta,
+    cell,
+    rowspan,
+    colspan,
+    emptyRow,
+  };
 }
 
-export function removeOverlappingCells(modules: ArgumentsModule, cell: TableCellInnerFormat, rowspan: number = 1, colspan: number = 1) {
+export function applyCellUpdates(modules: ArgumentsModule, updates: CellUpdate[]) {
+  if (updates.length === 0) return;
+
+  // sort updates by offset to ensure proper deletion order
+  updates.sort((a, b) => a.offset - b.offset);
+  let combinedDelta = new Delta();
+  for (let i = 0; i < updates.length; i++) {
+    const update = updates[i];
+
+    let retain = update.offset;
+    if (i !== 0) {
+      // for subsequent updates, adjust offsets based on previous operations
+      const prev = updates[i - 1];
+      retain = update.offset - prev.offset - prev.length;
+    }
+    combinedDelta = combinedDelta
+      .retain(retain)
+      .concat(update.insertDelta)
+      .delete(update.length);
+  }
+  modules.quill.updateContents(combinedDelta, Quill.sources.USER);
+
+  // remove cells covered by colspan/rowspan
+  for (const update of updates) {
+    removeOverlappingCells(modules, update);
+  }
+}
+
+export function removeOverlappingCells(modules: ArgumentsModule, updateCell: CellUpdate) {
+  const { cell, rowspan = 1, colspan = 1 } = updateCell;
   if (rowspan === 1 && colspan === 1) return;
   const table = findParentBlot(cell, blotName.tableMain);
   if (!table) return;
