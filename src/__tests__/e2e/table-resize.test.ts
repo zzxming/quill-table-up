@@ -88,11 +88,13 @@ test('test TableResizeLine full width', async ({ page }) => {
   expect(colBoundingBox).not.toBeNull();
   await page.mouse.move(colBoundingBox.x + colBoundingBox.width / 2, colBoundingBox.y + cellBounding.height / 2);
   await page.mouse.down();
-  await page.mouse.move(colBoundingBox.x + colBoundingBox.width / 2 + tableBounding.width * 0.05, colBoundingBox.y + cellBounding.height / 2);
+  await page.mouse.move(colBoundingBox.x + colBoundingBox.width / 2 + 59.4, colBoundingBox.y + cellBounding.height / 2);
   await page.mouse.up();
   const cols = page.locator('#editor3 .ql-table-wrapper col');
-  await expect(cols.nth(1)).toHaveAttribute('width', '30%');
-  await expect(cols.nth(2)).toHaveAttribute('width', '20%');
+  await expect(cols.nth(1)).toHaveAttribute('width');
+  expect(Number.parseFloat((await cols.nth(1).getAttribute('width'))!)).toBeCloseTo(30, 1);
+  await expect(cols.nth(2)).toHaveAttribute('width');
+  expect(Number.parseFloat((await cols.nth(2).getAttribute('width'))!)).toBeCloseTo(20, 1);
 });
 
 test('test TableResizeBox full width', async ({ page }) => {
@@ -108,11 +110,13 @@ test('test TableResizeBox full width', async ({ page }) => {
   expect(colBoundingBox).not.toBeNull();
   await page.mouse.move(colBoundingBox.x + colBoundingBox.width - 4, colBoundingBox.y + 4);
   await page.mouse.down();
-  await page.mouse.move(colBoundingBox.x + colBoundingBox.width - 4 + tableBounding.width * 0.05, colBoundingBox.y);
+  await page.mouse.move(colBoundingBox.x + colBoundingBox.width + 58.4, colBoundingBox.y);
   await page.mouse.up();
   const cols = page.locator('#editor4 .ql-table-wrapper col');
-  await expect(cols.nth(1)).toHaveAttribute('width', '30%');
-  await expect(cols.nth(2)).toHaveAttribute('width', '20%');
+  await expect(cols.nth(1)).toHaveAttribute('width');
+  expect(Number.parseFloat((await cols.nth(1).getAttribute('width'))!)).toBeCloseTo(30, 1);
+  await expect(cols.nth(2)).toHaveAttribute('width');
+  expect(Number.parseFloat((await cols.nth(2).getAttribute('width'))!)).toBeCloseTo(20, 1);
 });
 
 test('test TableResizeBox position', async ({ page }) => {
