@@ -128,6 +128,33 @@ test('test TableResizeBox position', async ({ page }) => {
   expect(firstCellBounding.y).toEqual(toolBounding.y);
 });
 
+extendTest('TableResize on full width should not outer 100%', async ({ page, editorPage }) => {
+  editorPage.index = 3;
+  await createTableBySelect(page, 'container4', 3, 7);
+
+  const centerCell = page.locator('#editor4').getByRole('cell').nth(1);
+  await centerCell.click();
+  const cellBounding = (await centerCell.boundingBox())!;
+  const tableBounding = (await page.locator('#editor4 .ql-table').boundingBox())!;
+  expect(cellBounding).not.toBeNull();
+  expect(tableBounding).not.toBeNull();
+
+  const colBoundingBox = (await page.locator('#editor4 .table-up-resize-box__col-separator').nth(2).boundingBox())!;
+  expect(colBoundingBox).not.toBeNull();
+  await page.mouse.move(colBoundingBox.x + colBoundingBox.width - 4, colBoundingBox.y + 4);
+  await page.mouse.down();
+  await page.mouse.move(colBoundingBox.x + colBoundingBox.width - 4 - tableBounding.width, colBoundingBox.y);
+  await page.mouse.up();
+  await page.waitForTimeout(1000);
+  const cols = page.locator('#editor4 .ql-table-wrapper col');
+  const colCount = await cols.count();
+  let width = 0;
+  for (let i = 0; i < colCount; i++) {
+    width += Number.parseFloat((await cols.nth(i).getAttribute('width'))!);
+  }
+  expect(width).toBeCloseTo(100, 3);
+});
+
 test('test TableResizeScale functional', async ({ page }) => {
   await createTableBySelect(page, 'container1', 3, 3);
   const centerCell = page.locator('#editor1').getByRole('cell').nth(4);
