@@ -206,5 +206,6 @@ export class TableRowFormat extends ContainerFormat {
       this.next.moveChildren(this);
       this.next.remove();
     }
+    // TODO update fixed cell fixed width
   }
 }
