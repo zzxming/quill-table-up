@@ -31,7 +31,10 @@ const baseOptions = {
   watch: false,
 };
 
-export function buildStyle({ isDev = false } = {}) {
+export function buildStyle({
+  isDev = false,
+  onSuccess = () => {},
+} = {}) {
   function buildLess() {
     return src(['./src/style/index.less', './src/style/table-creator.less'])
       .pipe(less())
@@ -55,7 +58,10 @@ export function buildStyle({ isDev = false } = {}) {
         }),
       )
       .pipe(dest(distBundle))
-      .pipe(dest(demoBundle));
+      .pipe(dest(demoBundle))
+      .on('finish', () => {
+        onSuccess();
+      });
   }
   if (isDev) {
     watch('./src/**/*.less', buildLess);
