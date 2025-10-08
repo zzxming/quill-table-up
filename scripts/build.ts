@@ -12,20 +12,24 @@ async function main() {
     wss = new WebSocketServer({ port: 8080 });
     startServer();
   }
+  function reloadClients() {
+    console.log(`[${new Date().toLocaleString()}] Build completed successfully!`);
+    if (wss && wss.clients) {
+      for (const client of wss.clients) {
+        if (client.readyState === 1) {
+          client.send(JSON.stringify({ type: 'reload' }));
+        }
+      }
+    }
+  }
   await Promise.all([
-    buildStyle({ isDev }),
+    buildStyle({
+      isDev,
+      onSuccess: reloadClients,
+    }),
     buildTS({
       isDev,
-      onSuccess() {
-        console.log(`[${new Date().toLocaleString()}] Build completed successfully!`);
-        if (wss && wss.clients) {
-          for (const client of wss.clients) {
-            if (client.readyState === 1) {
-              client.send(JSON.stringify({ type: 'reload' }));
-            }
-          }
-        }
-      },
+      onSuccess: reloadClients,
     }),
   ]);
 }
