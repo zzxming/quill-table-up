@@ -171,12 +171,13 @@ export class TableResizeCommon extends TableDomSelector {
       }
 
       for (const { index, width } of updateInfo) {
-        cols[index].width = `${Math.round(width)}${isFull ? '%' : 'px'}`;
+        const resultWidth = Number.parseFloat(width.toFixed(3));
+        cols[index].width = `${resultWidth}${isFull ? '%' : 'px'}`;
         this.colWidthChange(
           index,
           {
-            px: isFull ? Math.round(width / 100 * tableWidth) : Math.round(width),
-            pre: Math.round(width),
+            px: isFull ? Math.round(width / 100 * tableWidth) : resultWidth,
+            pre: resultWidth,
           },
           isFull,
         );
