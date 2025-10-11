@@ -3,6 +3,7 @@ export * from './blot-helper';
 export * from './color';
 export * from './components';
 export * from './constants';
+export * from './drag-helper';
 export * from './is';
 export * from './position';
 export * from './resize-observer-helper';

@@ -1,9 +1,9 @@
-import type { TableCellFormat } from '../../formats';
+import type { TableCellFormat, TableColFormat } from '../../formats';
 import type { TableUp } from '../../table-up';
 import type { TableSelection } from '../table-selection';
 import Quill from 'quill';
 import { getTableMainRect, TableRowFormat } from '../../formats';
-import { blotName, createBEM, findParentBlot } from '../../utils';
+import { blotName, createBEM, dragElement, findParentBlot } from '../../utils';
 import { TableResizeCommon } from './table-resize-common';
 import { isTableAlignRight } from './utils';
 
@@ -11,13 +11,12 @@ export class TableResizeLine extends TableResizeCommon {
   colResizer?: HTMLElement;
   rowResizer?: HTMLElement;
   currentTableCell?: HTMLElement;
-  dragging = false;
-  curColIndex: number = -1;
-  curRowIndex: number = -1;
   tableCellBlot?: TableCellFormat;
-
   bem = createBEM('resize-line');
-  constructor(public tableModule: TableUp, public quill: Quill, _options: any) {
+  stopColDrag?: () => void;
+  stopRowDrag?: () => void;
+
+  constructor(public tableModule: TableUp, public quill: Quill) {
     super(tableModule, quill);
     this.colResizer = this.tableModule.addContainer(this.bem.be('col'));
     this.rowResizer = this.tableModule.addContainer(this.bem.be('row'));
@@ -36,9 +35,21 @@ export class TableResizeLine extends TableResizeCommon {
     }
   };
 
-  mousemoveHandler = (e: MouseEvent) => {
+  findTableCell(e: MouseEvent) {
+    for (const el of e.composedPath()) {
+      if (el instanceof HTMLElement && ['TD', 'TH'].includes(el.tagName)) {
+        return el;
+      }
+      if (el === document.body) {
+        return null;
+      }
+    }
+    return null;
+  }
+
+  pointermoveHandler = (e: MouseEvent) => {
     if (this.dragging) return;
-    // when mousedown to select mutiple line. if move on resizer will get wrong selection
+    // when pointerdown to select mutiple line. if move on resizer will get wrong selection
     const tableSelection = this.tableModule.getModule<TableSelection>('table-selection');
     if (tableSelection?.dragging) return;
     const tableCell = this.findTableCell(e);
@@ -59,63 +70,74 @@ export class TableResizeLine extends TableResizeCommon {
     }
   };
 
-  findTableCell(e: MouseEvent) {
-    for (const el of e.composedPath()) {
-      if (el instanceof HTMLElement && ['TD', 'TH'].includes(el.tagName)) {
-        return el;
-      }
-      if (el === document.body) {
-        return null;
-      }
-    }
-    return null;
+  findDragColIndex(cols: TableColFormat[]) {
+    if (!this.tableCellBlot) return -1;
+    return cols.findIndex(col => col.colId === this.tableCellBlot!.colId);
   }
-
-  findCurrentColIndex() {
-    return this.curColIndex + (this.tableCellBlot?.colspan || 1) - 1;
-  }
-
-  handleColMouseUpFunc = async function (this: TableResizeLine) {
-    await this.handleColMouseUp();
-    this.updateColResizer();
-  }.bind(this);
 
   updateColResizer() {
     if (!this.tableBlot || !this.tableCellBlot || !this.colResizer) return;
-    const tableCellBlot = this.tableCellBlot;
     this.colResizer.remove();
-    const { rect } = getTableMainRect(this.tableBlot);
-    if (!rect) return;
+    const { rect: tableRect } = getTableMainRect(this.tableBlot);
+    if (!tableRect) return;
     this.colResizer = this.tableModule.addContainer(this.bem.be('col'));
-    const tableCellRect = tableCellBlot.domNode.getBoundingClientRect();
+    const tableCellRect = this.tableCellBlot.domNode.getBoundingClientRect();
     const rootRect = this.quill.root.getBoundingClientRect();
     let left = tableCellRect.right - rootRect.x;
     if (isTableAlignRight(this.tableBlot)) {
       left = tableCellRect.left - rootRect.x;
     }
     Object.assign(this.colResizer.style, {
-      top: `${rect.y - rootRect.y}px`,
+      top: `${tableRect.y - rootRect.y}px`,
       left: `${left}px`,
-      height: `${rect.height}px`,
+      height: `${tableRect.height}px`,
     });
 
-    const cols = this.tableBlot.getCols();
-    this.curColIndex = cols.findIndex(col => col.colId === tableCellBlot.colId);
+    const { stop } = dragElement(this.colResizer, {
+      axis: 'x',
+      onStart: (position, e) => {
+        this.dragging = true;
 
-    this.colResizer.addEventListener('mousedown', this.handleColMouseDownFunc);
-    this.colResizer.addEventListener('dragstart', (e) => {
-      e.preventDefault();
+        this.calculateColDragRange();
+        this.createColBreak();
+        if (!this.tableBlot) return;
+        const tableWrapperRect = this.tableBlot.domNode.parentElement!.getBoundingClientRect();
+        const { rect: tableRect } = getTableMainRect(this.tableBlot);
+        if (!tableRect) return;
+        // record current tablb rect to calculate the offset if have scroll when dragging
+        this.startX = tableRect.x;
+        const rootRect = this.quill.root.getBoundingClientRect();
+        Object.assign(this.dragColBreak!.style, {
+          top: `${Math.max(tableWrapperRect.y, tableRect.y) - rootRect.y}px`,
+          left: `${e.clientX - rootRect.x}px`,
+          height: `${Math.min(tableWrapperRect.height, tableRect.height)}px`,
+        });
+      },
+      onMove: (position) => {
+        if (!this.dragColBreak) return;
+        const resultX = this.limitColLeft(position.x);
+        const rootRect = this.quill.root.getBoundingClientRect();
+        this.dragColBreak.style.left = `${resultX - rootRect.x}px`;
+      },
+      onEnd: (position) => {
+        this.dragging = false;
+
+        this.updateTableCol(position.x);
+        this.removeBreak();
+      },
     });
+    if (this.stopColDrag) this.stopColDrag();
+    this.stopColDrag = stop;
+
+    this.colResizer.addEventListener('dragstart', e => e.preventDefault());
   }
 
-  findCurrentRowIndex() {
-    return this.curRowIndex;
+  findDragRowIndex(rows: TableRowFormat[]) {
+    if (!this.tableCellBlot) return -1;
+    const currentRow = this.tableCellBlot.parent;
+    if (!(currentRow instanceof TableRowFormat)) return -1;
+    return rows.indexOf(currentRow);
   }
-
-  handleRowMouseUpFunc = function (this: TableResizeLine) {
-    this.handleRowMouseUp();
-    this.updateRowResizer();
-  }.bind(this);
 
   updateRowResizer() {
     if (!this.tableBlot || !this.tableCellBlot || !this.rowResizer) return;
@@ -124,11 +146,6 @@ export class TableResizeLine extends TableResizeCommon {
     const { rect } = getTableMainRect(this.tableBlot);
     if (!rect) return;
     this.rowResizer = this.tableModule.addContainer(this.bem.be('row'));
-    const currentRow = tableCellBlot.parent;
-    if (!(currentRow instanceof TableRowFormat)) {
-      return;
-    }
-
     const tableCellRect = tableCellBlot.domNode.getBoundingClientRect();
     const rootRect = this.quill.root.getBoundingClientRect();
     Object.assign(this.rowResizer.style, {
@@ -137,20 +154,50 @@ export class TableResizeLine extends TableResizeCommon {
       width: `${rect.width}px`,
     });
 
-    const rows = this.tableBlot.getRows();
-    this.curRowIndex = rows.indexOf(currentRow);
+    const { stop } = dragElement(this.rowResizer, {
+      axis: 'y',
+      onStart: (position, e) => {
+        this.dragging = true;
 
-    this.rowResizer.addEventListener('mousedown', this.handleRowMouseDownFunc);
-    this.rowResizer.addEventListener('dragstart', (e) => {
-      e.preventDefault();
+        this.calculateRowDragRange();
+        this.createRowBreak();
+        if (!this.tableBlot) return;
+        const tableWrapperRect = this.tableBlot.domNode.parentElement!.getBoundingClientRect();
+        const { rect: tableRect } = getTableMainRect(this.tableBlot);
+        if (!tableRect) return;
+        // record current tablb rect to calculate the offset if have scroll when dragging
+        this.startY = tableRect.y;
+        const rootRect = this.quill.root.getBoundingClientRect();
+        Object.assign(this.dragRowBreak!.style, {
+          top: `${e.clientY - rootRect.y}px`,
+          left: `${Math.max(tableWrapperRect.x, tableRect.x) - rootRect.x}px`,
+          width: `${Math.min(tableWrapperRect.width, tableRect.width)}px`,
+        });
+      },
+      onMove: (position) => {
+        if (!this.dragRowBreak || !this.table) return;
+        const resultY = this.limitRowTop(position.y);
+        const rootRect = this.quill.root.getBoundingClientRect();
+        this.dragRowBreak.style.top = `${resultY - rootRect.y}px`;
+      },
+      onEnd: (position) => {
+        this.dragging = false;
+
+        this.updateTableRow(position.y);
+        this.removeBreak();
+      },
     });
+    if (this.stopRowDrag) this.stopRowDrag();
+    this.stopRowDrag = stop;
+
+    this.rowResizer.addEventListener('dragstart', e => e.preventDefault());
   }
 
   show() {
     if (!this.table || !this.rowResizer || !this.colResizer) return;
     this.rowResizer.classList.remove(this.bem.is('hidden'));
     this.colResizer.classList.remove(this.bem.is('hidden'));
-    this.table.addEventListener('mousemove', this.mousemoveHandler);
+    this.table.addEventListener('pointermove', this.pointermoveHandler);
   }
 
   hide() {
@@ -159,7 +206,7 @@ export class TableResizeLine extends TableResizeCommon {
     this.rowResizer.classList.add(this.bem.is('hidden'));
     this.colResizer.classList.add(this.bem.is('hidden'));
     if (!this.table) return;
-    this.table.removeEventListener('mousemove', this.mousemoveHandler);
+    this.table.removeEventListener('pointermove', this.pointermoveHandler);
   }
 
   update() {
@@ -176,7 +223,6 @@ export class TableResizeLine extends TableResizeCommon {
       this.rowResizer.remove();
       this.rowResizer = undefined;
     }
-
     this.quill.off(Quill.events.EDITOR_CHANGE, this.updateWhenTextChange);
   }
 }

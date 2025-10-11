@@ -34,7 +34,12 @@ test('test TableResizeLine fixed width', async ({ page }) => {
   await page.mouse.up();
   const cells = await page.locator('#editor1 .ql-table-wrapper tr').nth(1).locator('td').all();
   for (const cell of cells) {
-    await expect(cell).toHaveCSS('height', `${Math.floor(cellBounding.height) + 100}px`);
+    expect(cell).toHaveAttribute('style');
+    const styleAttribute = (await cell.getAttribute('style'))!;
+    const heightMatch = styleAttribute?.match(/height\s*:\s*([^;]+)/);
+    const heightValue = heightMatch ? heightMatch[1].trim() : null;
+    expect(heightValue).not.toBeNull();
+    expect(Number.parseFloat(heightValue!)).toBeCloseTo(cellBounding.height + 100, 3);
   }
 });
 
@@ -51,11 +56,11 @@ test('test TableResizeBox fixed width', async ({ page }) => {
   if (!colBoundingBox) {
     throw new Error('colBoundingBox is null');
   }
-  await page.mouse.move(colBoundingBox.x + colBoundingBox.width - 4, colBoundingBox.y + 4);
+  await page.mouse.move(colBoundingBox.x, colBoundingBox.y + 4);
   await page.mouse.down();
-  await page.mouse.move(colBoundingBox.x + colBoundingBox.width - 4 + 100, colBoundingBox.y + 4);
+  await page.mouse.move(colBoundingBox.x + 100 + 1, colBoundingBox.y);
   await page.mouse.up();
-  expect(page.locator('#editor2 .ql-table-wrapper col').nth(1)).toHaveAttribute('width', `${Math.floor(cellBounding.width - 4) + 100}px`);
+  expect(page.locator('#editor2 .ql-table-wrapper col').nth(1)).toHaveAttribute('width', `${Math.floor(cellBounding.width) + 100}px`);
 
   // row
   const rowBoundingBox = await page.locator('#editor2 .table-up-resize-box__row-separator').nth(1).boundingBox();
@@ -65,12 +70,17 @@ test('test TableResizeBox fixed width', async ({ page }) => {
   }
   await page.mouse.move(rowBoundingBox.x + 4, rowBoundingBox.y + rowBoundingBox.height - 4);
   await page.mouse.down();
-  await page.mouse.move(rowBoundingBox.x + 4, rowBoundingBox.y + rowBoundingBox.height - 4 + 100);
+  await page.mouse.move(rowBoundingBox.x + 4, rowBoundingBox.y + rowBoundingBox.height - 4 + 100 + 1);
   await page.mouse.up();
   const cells = await page.locator('#editor2 .ql-table-wrapper tr').nth(1).locator('td').all();
   expect(cells.length).toEqual(3);
   for (const cell of cells) {
-    await expect(cell).toHaveCSS('height', `${Math.floor(cellBounding.height - 4) + 100}px`);
+    expect(cell).toHaveAttribute('style');
+    const styleAttribute = (await cell.getAttribute('style'))!;
+    const heightMatch = styleAttribute?.match(/height\s*:\s*([^;]+)/);
+    const heightValue = heightMatch ? heightMatch[1].trim() : null;
+    expect(heightValue).not.toBeNull();
+    expect(Number.parseFloat(heightValue!)).toBeCloseTo(cellBounding.height + 100, 3);
   }
 });
 
@@ -88,7 +98,7 @@ test('test TableResizeLine full width', async ({ page }) => {
   expect(colBoundingBox).not.toBeNull();
   await page.mouse.move(colBoundingBox.x + colBoundingBox.width / 2, colBoundingBox.y + cellBounding.height / 2);
   await page.mouse.down();
-  await page.mouse.move(colBoundingBox.x + colBoundingBox.width / 2 + 59.4, colBoundingBox.y + cellBounding.height / 2);
+  await page.mouse.move(colBoundingBox.x + colBoundingBox.width / 2 + tableBounding.width * 0.05, colBoundingBox.y + cellBounding.height / 2);
   await page.mouse.up();
   const cols = page.locator('#editor3 .ql-table-wrapper col');
   await expect(cols.nth(1)).toHaveAttribute('width');
@@ -108,9 +118,9 @@ test('test TableResizeBox full width', async ({ page }) => {
 
   const colBoundingBox = (await page.locator('#editor4 .table-up-resize-box__col-separator').nth(1).boundingBox())!;
   expect(colBoundingBox).not.toBeNull();
-  await page.mouse.move(colBoundingBox.x + colBoundingBox.width - 4, colBoundingBox.y + 4);
+  await page.mouse.move(colBoundingBox.x, colBoundingBox.y + 4);
   await page.mouse.down();
-  await page.mouse.move(colBoundingBox.x + colBoundingBox.width + 58.4, colBoundingBox.y);
+  await page.mouse.move(colBoundingBox.x + tableBounding.width * 0.05 + 1, colBoundingBox.y);
   await page.mouse.up();
   const cols = page.locator('#editor4 .ql-table-wrapper col');
   await expect(cols.nth(1)).toHaveAttribute('width');
