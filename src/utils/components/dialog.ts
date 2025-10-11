@@ -1,4 +1,5 @@
 import { createBEM } from '../bem';
+import { createButton } from './button';
 
 interface DialogOptions {
   child?: HTMLElement;
@@ -38,4 +39,45 @@ export function createDialog({ child, target = document.body, beforeClose = () =
   zindex += 1;
 
   return { dialog, close };
+}
+
+export async function createConfirmDialog({ message, confirm, cancel }: {
+  message: string;
+  confirm: string;
+  cancel: string;
+}) {
+  return new Promise<boolean>((resolve) => {
+    const content = document.createElement('div');
+    Object.assign(content.style, {
+      padding: '8px 12px',
+      fontSize: '14px',
+      lineHeight: '1.5',
+    });
+    const tip = document.createElement('p');
+    tip.textContent = message;
+    const btnWrapper = document.createElement('div');
+    Object.assign(btnWrapper.style, {
+      display: 'flex',
+      justifyContent: 'flex-end',
+      gap: `6px`,
+    });
+    const cancelBtn = createButton({ content: cancel });
+    const confirmBtn = createButton({ type: 'confirm', content: confirm });
+
+    btnWrapper.appendChild(cancelBtn);
+    btnWrapper.appendChild(confirmBtn);
+    content.appendChild(tip);
+    content.appendChild(btnWrapper);
+
+    const { close } = createDialog({ child: content });
+
+    cancelBtn.addEventListener('click', () => {
+      resolve(false);
+      close();
+    });
+    confirmBtn.addEventListener('click', () => {
+      resolve(true);
+      close();
+    });
+  });
 }

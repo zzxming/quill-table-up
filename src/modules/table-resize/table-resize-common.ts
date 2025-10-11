@@ -2,7 +2,7 @@ import type Quill from 'quill';
 import type { TableMainFormat } from '../../formats';
 import type { TableUp } from '../../table-up';
 import { getTableMainRect } from '../../formats';
-import { createBEM, createButton, createDialog, tableUpEvent, tableUpSize } from '../../utils';
+import { createBEM, createConfirmDialog, tableUpEvent, tableUpSize } from '../../utils';
 import { TableDomSelector } from '../table-dom-selector';
 import { isTableAlignRight } from './utils';
 
@@ -38,47 +38,6 @@ export class TableResizeCommon extends TableDomSelector {
   }
 
   colWidthChange(_i: number, _w: sizeChangeValue, _isFull: boolean) {}
-
-  async createConfirmDialog({ message, confirm, cancel }: {
-    message: string;
-    confirm: string;
-    cancel: string;
-  }) {
-    return new Promise<boolean>((resolve) => {
-      const content = document.createElement('div');
-      Object.assign(content.style, {
-        padding: '8px 12px',
-        fontSize: '14px',
-        lineHeight: '1.5',
-      });
-      const tip = document.createElement('p');
-      tip.textContent = message;
-      const btnWrapper = document.createElement('div');
-      Object.assign(btnWrapper.style, {
-        display: 'flex',
-        justifyContent: 'flex-end',
-        gap: `6px`,
-      });
-      const cancelBtn = createButton({ content: cancel });
-      const confirmBtn = createButton({ type: 'confirm', content: confirm });
-
-      btnWrapper.appendChild(cancelBtn);
-      btnWrapper.appendChild(confirmBtn);
-      content.appendChild(tip);
-      content.appendChild(btnWrapper);
-
-      const { close } = createDialog({ child: content });
-
-      cancelBtn.addEventListener('click', () => {
-        resolve(false);
-        close();
-      });
-      confirmBtn.addEventListener('click', () => {
-        resolve(true);
-        close();
-      });
-    });
-  }
 
   async handleColMouseUp() {
     if (!this.dragColBreak || !this.tableBlot || this.colIndex === -1) return;
@@ -151,7 +110,7 @@ export class TableResizeCommon extends TableDomSelector {
         }
 
         if (resultWidth > 100) {
-          if (!await this.createConfirmDialog({
+          if (!await createConfirmDialog({
             message: this.tableModule.options.texts.perWidthInsufficient,
             confirm: this.tableModule.options.texts.confirmText,
             cancel: this.tableModule.options.texts.cancelText,
