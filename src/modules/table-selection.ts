@@ -165,32 +165,6 @@ export class TableSelection extends TableDomSelector {
     }
   }
 
-  getFirstTextNode(dom: HTMLElement | Node): Node {
-    for (const node of Array.from(dom.childNodes)) {
-      if (node.nodeType === Node.TEXT_NODE) {
-        return node;
-      }
-    }
-    return dom;
-  }
-
-  getLastTextNode(dom: HTMLElement | Node): Node {
-    for (let i = dom.childNodes.length - 1; i >= 0; i--) {
-      const node = dom.childNodes[i];
-      if (node.nodeType === Node.TEXT_NODE) {
-        return node;
-      }
-    }
-    return dom;
-  }
-
-  getNodeTailOffset(node: Node) {
-    const tempRange = document.createRange();
-    tempRange.selectNodeContents(node);
-    tempRange.collapse(false);
-    return tempRange.startOffset;
-  }
-
   quillSelectionChangeHandler = (range: TypeRange | null, _oldRange: TypeRange | null, source: EmitterSource) => {
     if (source === Quill.sources.API) return;
     if (range && !this.quill.composition.isComposing && this.selectedTds.length > 0) {
@@ -259,45 +233,6 @@ export class TableSelection extends TableDomSelector {
 
     // compare position
     return (nodePosition & Node.DOCUMENT_POSITION_PRECEDING) !== 0;
-  }
-
-  findWrapSelection(points: { node: Node | null; offset: number }[]) {
-    let startNode: Node | null = null;
-    let startOffset = 0;
-    let endNode: Node | null = null;
-    let endOffset = 0;
-
-    for (const { node, offset } of points) {
-      if (node) {
-        if (
-          !startNode
-          || this.selectionDirectionUp({
-            anchorNode: startNode,
-            anchorOffset: startOffset,
-            focusNode: node,
-            focusOffset: offset,
-          })
-        ) {
-          startNode = node;
-          startOffset = offset;
-        }
-
-        if (
-          !endNode
-          || this.selectionDirectionUp({
-            anchorNode: node,
-            anchorOffset: offset,
-            focusNode: endNode,
-            focusOffset: endOffset,
-          })
-        ) {
-          endNode = node;
-          endOffset = offset;
-        }
-      }
-    }
-
-    return { startNode, startOffset, endNode, endOffset };
   }
 
   resolveOptions(options: Partial<TableSelectionOptions>): TableSelectionOptions {
