@@ -8,10 +8,6 @@ import { addScrollEvent, clearScrollEvent, createBEM, createResizeObserver, find
 import { TableResizeCommon } from './table-resize-common';
 import { isTableAlignRight } from './utils';
 
-interface Point {
-  x: number;
-  y: number;
-}
 export class TableResizeBox extends TableResizeCommon {
   root: HTMLElement;
   tableWrapperBlot?: TableWrapperFormat;
@@ -61,12 +57,16 @@ export class TableResizeBox extends TableResizeCommon {
 
   handleResizerHeader(isX: boolean, index: number, e: MouseEvent) {
     if (!this.table) return;
+    interface Position {
+      x: number;
+      y: number;
+    }
     const { clientX, clientY } = e;
     const tableRect = this.table.getBoundingClientRect();
     if (!e.shiftKey) {
       this.lastHeaderSelect = null;
     }
-    const currentBoundary: [Point, Point] = [
+    const currentBoundary: [Position, Position] = [
       { x: isX ? tableRect.left : clientX, y: isX ? clientY : tableRect.top },
       { x: isX ? tableRect.right : clientX, y: isX ? clientY : tableRect.bottom },
     ];
