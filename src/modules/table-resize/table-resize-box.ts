@@ -13,6 +13,8 @@ interface Point {
   y: number;
 }
 export class TableResizeBox extends TableResizeCommon {
+  static moduleName = 'table-resize-box';
+
   root: HTMLElement;
   tableWrapperBlot?: TableWrapperFormat;
   resizeObserver?: ResizeObserver;
