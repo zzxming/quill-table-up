@@ -8,6 +8,8 @@ import { TableResizeCommon } from './table-resize-common';
 import { isTableAlignRight } from './utils';
 
 export class TableResizeBox extends TableResizeCommon {
+  static moduleName = 'table-resize-box';
+
   root: HTMLElement;
   tableWrapperBlot?: TableWrapperFormat;
   resizeObserver?: ResizeObserver;

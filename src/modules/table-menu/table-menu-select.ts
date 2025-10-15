@@ -9,6 +9,8 @@ import { tableUpEvent } from '../../utils';
 import { TableMenuCommon } from './table-menu-common';
 
 export class TableMenuSelect extends TableMenuCommon {
+  static moduleName = 'table-menu-select';
+
   constructor(public tableModule: TableUp, public quill: Quill, options: TableMenuOptionsInput) {
     super(tableModule, quill, options);
 
