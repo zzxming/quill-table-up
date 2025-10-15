@@ -1,9 +1,13 @@
-interface Position { x: number; y: number }
-interface DragElementOptions {
+export interface Position { x: number; y: number }
+export interface DragPosition {
+  startPosition: Position;
+  position: Position;
+}
+export interface DragElementOptions {
   axis: 'x' | 'y' | 'both';
-  onMove: (position: Position, e: PointerEvent) => void;
-  onStart: (position: Position, e: PointerEvent) => void;
-  onEnd: (position: Position, e: PointerEvent) => void;
+  onStart: (position: DragPosition, e: PointerEvent) => void | boolean;
+  onMove: (position: DragPosition, e: PointerEvent) => void;
+  onEnd: (position: DragPosition, e: PointerEvent) => void;
   buttons: number[];
   container: HTMLElement;
   draggingElement: HTMLElement | Window | Document;
@@ -59,22 +63,23 @@ export function dragElement(target: HTMLElement, options: Partial<DragElementOpt
       x: e.clientX - (container ? targetRect.left - containerRect!.left + container.scrollLeft : targetRect.left),
       y: e.clientY - (container ? targetRect.top - containerRect!.top + container.scrollTop : targetRect.top),
     };
+    if (onStart({ position, startPosition: pos }, e) === false) return;
+
     startPosition = pos;
     position = pos;
-
-    onStart(pos, e);
   }
   function handlePointerMove(e: PointerEvent) {
     if (!startPosition) return;
     updatePositionByEvent(e);
-    onMove(position, e);
+    onMove({ position, startPosition }, e);
   }
   function handlePointerUp(e: PointerEvent) {
     (draggingElement as HTMLElement).removeEventListener('pointermove', handlePointerMove);
     (draggingElement as HTMLElement).removeEventListener('pointerup', handlePointerUp);
     updatePositionByEvent(e);
+    onEnd({ position, startPosition: startPosition! }, e);
     startPosition = undefined;
-    onEnd(position, e);
+    position = { x: 0, y: 0 };
   }
 
   (draggingElement as HTMLElement).addEventListener('pointerdown', handlePointerDown);

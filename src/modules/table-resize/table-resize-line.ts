@@ -113,13 +113,13 @@ export class TableResizeLine extends TableResizeCommon {
           height: `${Math.min(tableWrapperRect.height, tableRect.height)}px`,
         });
       },
-      onMove: (position) => {
+      onMove: ({ position }) => {
         if (!this.dragColBreak) return;
         const resultX = this.limitColLeft(position.x);
         const rootRect = this.quill.root.getBoundingClientRect();
         this.dragColBreak.style.left = `${resultX - rootRect.x}px`;
       },
-      onEnd: (position) => {
+      onEnd: ({ position }) => {
         this.dragging = false;
 
         this.updateTableCol(position.x);
@@ -174,13 +174,13 @@ export class TableResizeLine extends TableResizeCommon {
           width: `${Math.min(tableWrapperRect.width, tableRect.width)}px`,
         });
       },
-      onMove: (position) => {
+      onMove: ({ position }) => {
         if (!this.dragRowBreak || !this.table) return;
         const resultY = this.limitRowTop(position.y);
         const rootRect = this.quill.root.getBoundingClientRect();
         this.dragRowBreak.style.top = `${resultY - rootRect.y}px`;
       },
-      onEnd: (position) => {
+      onEnd: ({ position }) => {
         this.dragging = false;
 
         this.updateTableRow(position.y);
