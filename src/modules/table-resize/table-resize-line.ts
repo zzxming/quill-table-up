@@ -8,6 +8,8 @@ import { TableResizeCommon } from './table-resize-common';
 import { isTableAlignRight } from './utils';
 
 export class TableResizeLine extends TableResizeCommon {
+  static moduleName = 'table-resize-line';
+
   colResizer?: HTMLElement;
   rowResizer?: HTMLElement;
   currentTableCell?: HTMLElement;

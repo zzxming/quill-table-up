@@ -8,6 +8,8 @@ import { TableDomSelector } from '../table-dom-selector';
 import { isTableAlignRight } from './utils';
 
 export class TableResizeScale extends TableDomSelector {
+  static moduleName = 'table-resize-scale';
+
   scrollHandler: [HTMLElement, (e: Event) => void][] = [];
   tableMainBlot?: TableMainFormat;
   tableWrapperBlot?: TableWrapperFormat;

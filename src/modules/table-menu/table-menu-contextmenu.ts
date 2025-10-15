@@ -8,6 +8,8 @@ import { TableMenuCommon } from './table-menu-common';
 
 type TableMenuOptionsInput = Partial<Omit<TableMenuOptions, 'texts'>>;
 export class TableMenuContextmenu extends TableMenuCommon {
+  static moduleName = 'table-menu-contextmenu';
+
   colorChooseTooltipOption: ToolTipOptions = {
     direction: 'right',
   };
