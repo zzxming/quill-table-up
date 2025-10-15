@@ -10,7 +10,7 @@ export function startServer() {
   const server = http.createServer((req, res) => {
     const filePath = join(projectRoot, req.url === '/' ? 'index.html' : req.url!);
     const fileExtname = String(extname(filePath)).toLowerCase();
-    const mimeTypes = {
+    const mimeTypes: Record<string, string> = {
       '.html': 'text/html',
       '.js': 'text/javascript',
       '.css': 'text/css',
