@@ -151,7 +151,6 @@ export class TableResizeScale extends TableDomSelector {
 
       this.resizeobserver.observe(this.tableMainBlot.domNode);
       addScrollEvent.call(this, this.quill.root, () => this.update());
-      addScrollEvent.call(this, this.tableWrapperBlot.domNode, () => this.update());
     }
     this.buildResizer();
   }

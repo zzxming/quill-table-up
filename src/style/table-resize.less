@@ -185,18 +185,23 @@
   }
 }
 
-.@{namespace} {
-  &-drag-line {
-    position: fixed;
-    z-index: 0;
-    background-color: #409eff;
-    &.is-col {
-      width: 2px;
-      cursor: ew-resize;
-    }
-    &.is-row {
-      height: 2px;
-      cursor: ns-resize;
+.table-up {
+  &-drag {
+    position: absolute;
+    overflow: hidden;
+    pointer-events: none;
+    &__line {
+      position: absolute;
+      z-index: 0;
+      background-color: #409eff;
+      &.is-col {
+        width: 2px;
+        cursor: ew-resize;
+      }
+      &.is-row {
+        height: 2px;
+        cursor: ns-resize;
+      }
     }
   }
 }
