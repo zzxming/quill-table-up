@@ -32,6 +32,7 @@ export const tableUpEvent = {
 
 export const tableUpInternal = {
   moduleName: 'table-up',
+  tableSelectionName: 'table-selection',
 };
 
 export const defaultColorMap = [

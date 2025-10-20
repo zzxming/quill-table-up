@@ -3,7 +3,7 @@ import type { TableUp } from '../../table-up';
 import type { TableSelection } from '../table-selection';
 import Quill from 'quill';
 import { getTableMainRect, TableCaptionFormat, TableCellInnerFormat } from '../../formats';
-import { addScrollEvent, clearScrollEvent, createBEM, createResizeObserver, dragElement, findChildBlot } from '../../utils';
+import { addScrollEvent, clearScrollEvent, createBEM, createResizeObserver, dragElement, findChildBlot, tableUpInternal } from '../../utils';
 import { TableResizeCommon } from './table-resize-common';
 import { isTableAlignRight } from './utils';
 
@@ -113,7 +113,7 @@ export class TableResizeBox extends TableResizeCommon {
       this.lastHeaderSelect = { isX, index };
     }
 
-    const tableSelection = this.tableModule.getModule<TableSelection>('table-selection');
+    const tableSelection = this.tableModule.getModule<TableSelection>(tableUpInternal.tableSelectionName);
     if (tableSelection) {
       tableSelection.table = this.table;
       tableSelection.setSelectedTds(tableSelection.computeSelectedTds(...currentBoundary));
@@ -267,7 +267,7 @@ export class TableResizeBox extends TableResizeCommon {
         height: `${this.size}px`,
       });
       this.corner.addEventListener('click', () => {
-        const tableSelection = this.tableModule.getModule<TableSelection>('table-selection');
+        const tableSelection = this.tableModule.getModule<TableSelection>(tableUpInternal.tableSelectionName);
         if (tableSelection && this.tableBlot) {
           tableSelection.setSelectedTds(this.tableBlot.descendants(TableCellInnerFormat));
           tableSelection.show();
