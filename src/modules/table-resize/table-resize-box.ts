@@ -126,10 +126,11 @@ export class TableResizeBox extends TableResizeCommon {
   }
 
   bindColEvents() {
+    if (!this.tableWrapperBlot) return;
     const tableColHeads = Array.from(this.root.getElementsByClassName(this.bem.be('col-header'))) as HTMLElement[];
     const tableColHeadSeparators = Array.from(this.root.getElementsByClassName(this.bem.be('col-separator'))) as HTMLElement[];
 
-    addScrollEvent.call(this, this.tableWrapperBlot!.domNode, () => {
+    addScrollEvent.call(this, this.tableWrapperBlot.domNode, () => {
       this.colHeadWrapper!.scrollLeft = this.tableWrapperBlot!.domNode.scrollLeft;
     });
 
