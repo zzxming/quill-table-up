@@ -1,9 +1,9 @@
-import type { TableMainFormat } from '../formats';
-import type { TableUp } from '../table-up';
+import type { TableMainFormat } from '../../formats';
+import type { TableUp } from '../../table-up';
 import Quill from 'quill';
-import { getTableMainRect } from '../formats';
-import { addScrollEvent, clearScrollEvent, createBEM, debounce } from '../utils';
-import { TableDomSelector } from './table-dom-selector';
+import { getTableMainRect } from '../../formats';
+import { addScrollEvent, clearScrollEvent, createBEM, debounce } from '../../utils';
+import { TableDomSelector } from '../table-dom-selector';
 
 export class Scrollbar {
   minSize: number = 20;
