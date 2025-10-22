@@ -237,8 +237,10 @@ export class TableMenuCommon extends TableDomSelector {
 
     // get tooltip instance. makesure color picker only display one at time
     const tooltip: MenuTooltipInstance = createTooltip(item, {
+      ...this.colorChooseTooltipOption,
       type: 'click',
       content: colorSelectWrapper,
+      container: this.quill.container,
       onOpen: () => {
         const tableSelection = this.tableModule.getModule<TableSelection>(tableUpInternal.tableSelectionName);
         if (this.isMenuDisplay && tableSelection) {
@@ -268,7 +270,6 @@ export class TableMenuCommon extends TableDomSelector {
           this.activeTooltip = null;
         }
       },
-      ...this.colorChooseTooltipOption,
     })!;
     tooltip.isColorPick = true;
     return tooltip;
