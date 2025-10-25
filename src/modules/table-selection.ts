@@ -4,7 +4,7 @@ import type { TableUp } from '../table-up';
 import type { RelactiveRect, TableSelectionOptions } from '../utils';
 import Quill from 'quill';
 import { getTableMainRect, TableCellFormat, TableCellInnerFormat } from '../formats';
-import { addScrollEvent, blotName, clearScrollEvent, createBEM, createResizeObserver, findAllParentBlot, findParentBlot, getElementScrollPosition, getRelativeRect, isRectanglesIntersect, tableUpEvent } from '../utils';
+import { addScrollEvent, blotName, clearScrollEvent, createBEM, createResizeObserver, findAllParentBlot, findParentBlot, getElementScrollPosition, getRelativeRect, isRectanglesIntersect, tableUpEvent, tableUpInternal } from '../utils';
 import { pasteCells } from './table-clipboard';
 import { TableDomSelector } from './table-dom-selector';
 import { copyCell } from './table-menu/constants';
@@ -19,7 +19,7 @@ export interface SelectionData {
 }
 
 export class TableSelection extends TableDomSelector {
-  static moduleName: string = 'table-selection';
+  static moduleName: string = tableUpInternal.tableSelectionName;
 
   options: TableSelectionOptions;
   boundary: RelactiveRect | null = null;

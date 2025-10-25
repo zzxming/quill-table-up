@@ -190,8 +190,13 @@ export class TableCellInnerFormat extends ContainerFormat {
   }
 
   getColumnIndex() {
-    const table = findParentBlot(this, blotName.tableMain);
-    return table.getColIds().indexOf(this.colId);
+    const tableBlot = findParentBlot(this, blotName.tableMain);
+    return tableBlot.getColIds().indexOf(this.colId);
+  }
+
+  getRowIndex() {
+    const tableBlot = findParentBlot(this, blotName.tableMain);
+    return tableBlot.getRowIds().indexOf(this.rowId);
   }
 
   getTableBody() {

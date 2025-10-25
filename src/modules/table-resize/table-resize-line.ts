@@ -3,7 +3,7 @@ import type { TableUp } from '../../table-up';
 import type { TableSelection } from '../table-selection';
 import Quill from 'quill';
 import { getTableMainRect, TableRowFormat } from '../../formats';
-import { blotName, createBEM, dragElement, findParentBlot } from '../../utils';
+import { blotName, createBEM, dragElement, findParentBlot, tableUpInternal } from '../../utils';
 import { TableResizeCommon } from './table-resize-common';
 import { isTableAlignRight } from './utils';
 
@@ -52,7 +52,7 @@ export class TableResizeLine extends TableResizeCommon {
   pointermoveHandler = (e: MouseEvent) => {
     if (this.dragging) return;
     // when pointerdown to select mutiple line. if move on resizer will get wrong selection
-    const tableSelection = this.tableModule.getModule<TableSelection>('table-selection');
+    const tableSelection = this.tableModule.getModule<TableSelection>(tableUpInternal.tableSelectionName);
     if (tableSelection?.dragging) return;
     const tableCell = this.findTableCell(e);
     if (!tableCell) {
