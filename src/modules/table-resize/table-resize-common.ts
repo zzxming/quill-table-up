@@ -105,7 +105,7 @@ export class TableResizeCommon extends TableDomSelector {
       this.calculateColDragRangeByFull();
     }
     else {
-      this.calculateColDragRangeByFull();
+      this.calculateColDragRangeByFixed();
     }
   }
 
