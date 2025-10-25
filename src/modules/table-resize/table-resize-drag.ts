@@ -274,7 +274,7 @@ export class DragTableHelper {
         for (let i = rowIndex; i < rowIndex + cell.rowspan && i < rowIds.length; i++) {
           cellIndex.add(i);
           const id = rowIds[i];
-          countRowspan.set(id, (countRowspan.get(id) || 0) + cell.rowspan);
+          countRowspan.set(id, (countRowspan.get(id) || 0) + cell.colspan);
         }
         cellIndex.add(Math.min(rowIndex + cell.rowspan, rowIds.length));
       }
