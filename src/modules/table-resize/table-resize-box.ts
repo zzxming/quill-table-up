@@ -314,7 +314,7 @@ export class TableResizeBox extends TableResizeCommon {
     for (const [i, el] of tableRowHeads.entries()) {
       // emptyRow doesn't generate head. logic need row index, not head inedx
       const index = Number(el.dataset.index || i);
-      el.addEventListener('click', this.handleResizerHeaderClick.bind(this, true, index));
+      el.addEventListener('click', this.handleResizerHeaderClick.bind(this, true, i));
       if (this.options.draggable) {
         const { stop } = dragElement(el, this.dragHeadOptions(false, { index, dragHelper }));
         this.stopRowMoveDrag.push(stop);
