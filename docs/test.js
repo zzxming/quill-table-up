@@ -184,6 +184,9 @@ const quills = [
   if (i < 4) {
     editor.style.height = '600px';
   }
+  if (i === 4) {
+    editor.style.padding = '20px';
+  }
   container.appendChild(editor);
   const output = document.createElement('div');
   output.id = `output${i + 1}`;
