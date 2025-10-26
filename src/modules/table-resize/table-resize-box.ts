@@ -311,7 +311,9 @@ export class TableResizeBox extends TableResizeCommon {
       this.stopRowMoveDrag = [];
     }
     const dragHelper = new DragTableHelper(this.tableModule, this.tableBlot!, this.dragYCommon, false);
-    for (const [index, el] of tableRowHeads.entries()) {
+    for (const [i, el] of tableRowHeads.entries()) {
+      // emptyRow doesn't generate head. logic need row index, not head inedx
+      const index = Number(el.dataset.index || i);
       el.addEventListener('click', this.handleResizerHeaderClick.bind(this, true, index));
       if (this.options.draggable) {
         const { stop } = dragElement(el, this.dragHeadOptions(false, { index, dragHelper }));
@@ -512,9 +514,21 @@ export class TableResizeBox extends TableResizeCommon {
 
     if (tableRows.length > 0) {
       let rowHeadStr = '';
-      for (const row of tableRows) {
-        const height = `${row.domNode.getBoundingClientRect().height}px`;
-        rowHeadStr += `<div class="${this.bem.be('row-header')}" style="height: ${Number.parseFloat(height)}px">
+      for (let i = 0; i < tableRows.length; i++) {
+        const index = i;
+        const row = tableRows[i];
+        let height = row.domNode.getBoundingClientRect().height;
+        // empty row have different height in chrome and firefox
+        // count total height to set
+        if (row.children.length === 1 && (row.children.head?.emptyRow.length || 0) > 0) {
+          const length = row.children.head!.emptyRow.length;
+          for (let start = i + 1; start < tableRows.length && start <= i + length; start++) {
+            const nextRow = tableRows[start];
+            height += nextRow.domNode.getBoundingClientRect().height;
+          }
+          i += length;
+        }
+        rowHeadStr += `<div class="${this.bem.be('row-header')}" data-index="${index}" style="height: ${height}px">
           <div class="${this.bem.be('row-separator')}" style="width: ${tableRect.width + this.options.size - 3}px"></div>
         </div>`;
       }
