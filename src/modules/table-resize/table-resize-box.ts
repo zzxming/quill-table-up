@@ -195,7 +195,7 @@ export class TableResizeBox extends TableResizeCommon {
     });
 
     this.dragPlaceholder = document.createElement('div');
-    this.dragPlaceholder.classList.add(dragBEM.be('placeholder'));
+    this.dragPlaceholder.classList.add(dragBEM.be('placeholder'), dragBEM.is('hidden'));
     this.dragWrapper.appendChild(this.dragPlaceholder);
     Object.assign(this.dragPlaceholder.style, {
       left: `${isX ? tableSelection.boundary!.x - wrapLeft : 0}px`,
@@ -385,7 +385,7 @@ export class TableResizeBox extends TableResizeCommon {
           }
           this.createContentDragger(e, isX, dragHelper);
           if (!this.tableWrapperBlot) return;
-          this.autoScroller = new TableAutoScroller(50, 20);
+          this.autoScroller = new TableAutoScroller(50, 40);
           this.autoScroller.minusY = this.options.size;
           this.autoScroller.minusX = this.options.size;
           this.autoScroller.updateMousePosition(e.clientX, e.clientY);
@@ -399,6 +399,7 @@ export class TableResizeBox extends TableResizeCommon {
           this.autoScroller?.updateMousePosition(e.clientX, e.clientY);
           if (!this.dragPlaceholder || !this.markIndicator || !this.tableWrapperBlot) return;
 
+          this.dragPlaceholder.classList.remove(this.bem.is('hidden'));
           const rootRect = this.quill.root.getBoundingClientRect();
           const tableWrapperRect = this.tableWrapperBlot.domNode.getBoundingClientRect();
           const resultPosition = helper.dragCommon.limitRange(
