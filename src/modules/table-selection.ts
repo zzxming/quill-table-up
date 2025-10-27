@@ -73,7 +73,7 @@ export class TableSelection extends TableDomSelector {
     this.quill.on(Quill.events.SELECTION_CHANGE, this.quillSelectionChangeHandler);
     this.quill.on(Quill.events.EDITOR_CHANGE, this.updateWhenTextChange);
 
-    this.autoScroller = new AutoScroller(50, 0);
+    this.autoScroller = new AutoScroller(50, 40);
     this.hide();
   }
 
