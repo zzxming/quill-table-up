@@ -385,7 +385,7 @@ export class TableResizeBox extends TableResizeCommon {
     const spanAttr = isX ? 'colspan' : 'rowspan';
     for (const cell of cells) {
       if (cell[spanAttr] <= 1) continue;
-      const colIndex = ids.indexOf(cell.colId);
+      const colIndex = ids.indexOf(isX ? cell.colId : cell.rowId);
       if (colIndex === -1) continue;
       for (let i = colIndex + 1; i < colIndex + cell[spanAttr] && i < ids.length; i++) {
         cellIndex.add(i);
