@@ -288,7 +288,7 @@ export class TableMenuCommon extends TableDomSelector {
   }
 
   createTipText(item: HTMLElement, text: string) {
-    const tipTextDom = createTooltip(item, { msg: text });
+    const tipTextDom = createTooltip(item, { msg: text, container: this.quill.container });
     tipTextDom && this.tooltipItem.push(tipTextDom);
   }
 
