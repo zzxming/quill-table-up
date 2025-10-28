@@ -33,6 +33,7 @@ export class TableResizeBox extends TableResizeCommon {
   stopRowMoveDrag: (() => void)[] = [];
   autoScroller: TableAutoScroller | null = null;
   updateContentDraggingPosition: () => void;
+  cellSpanIndex: Set<number> = new Set();
 
   constructor(public tableModule: TableUp, public quill: Quill, options: Partial<TableResizeBoxOptions>) {
     super(tableModule, quill);
@@ -244,7 +245,10 @@ export class TableResizeBox extends TableResizeCommon {
       for (const stop of this.stopColMoveDrag) stop();
       this.stopColMoveDrag = [];
     }
-    const dragHelper = new DragTableHelper(this.tableModule, this.tableBlot!, this.dragXCommon, true);
+    const dragHelper = new DragTableHelper(this.tableModule, this.tableBlot!, this.dragXCommon, {
+      isDragX: true,
+      allowMoveToIndex: index => this.allowMoveToIndex(index),
+    });
     for (const [index, el] of tableColHeads.entries()) {
       el.addEventListener('click', this.handleResizerHeaderClick.bind(this, false, index));
       if (this.options.draggable) {
@@ -310,7 +314,10 @@ export class TableResizeBox extends TableResizeCommon {
       for (const stop of this.stopRowMoveDrag) stop();
       this.stopRowMoveDrag = [];
     }
-    const dragHelper = new DragTableHelper(this.tableModule, this.tableBlot!, this.dragYCommon, false);
+    const dragHelper = new DragTableHelper(this.tableModule, this.tableBlot!, this.dragYCommon, {
+      isDragX: false,
+      allowMoveToIndex: index => this.allowMoveToIndex(index),
+    });
     for (const [i, el] of tableRowHeads.entries()) {
       // emptyRow doesn't generate head. logic need row index, not head inedx
       const index = Number(el.dataset.index || i);
@@ -366,6 +373,27 @@ export class TableResizeBox extends TableResizeCommon {
     }
   }
 
+  allowMoveToIndex(index: number) {
+    return !this.cellSpanIndex.has(index);
+  }
+
+  recordCellSpan(isX: boolean) {
+    const cellIndex = new Set<number>();
+    if (!this.tableBlot) return cellIndex;
+    const cells = this.tableBlot.descendants(TableCellInnerFormat);
+    const ids: string[] = isX ? this.tableBlot.getColIds() : this.tableBlot.getRowIds();
+    const spanAttr = isX ? 'colspan' : 'rowspan';
+    for (const cell of cells) {
+      if (cell[spanAttr] <= 1) continue;
+      const colIndex = ids.indexOf(cell.colId);
+      if (colIndex === -1) continue;
+      for (let i = colIndex + 1; i < colIndex + cell[spanAttr] && i < ids.length; i++) {
+        cellIndex.add(i);
+      }
+    }
+    return cellIndex;
+  }
+
   dragHeadOptions(isX: boolean, context: { index: number; dragHelper: DragTableHelper }): Partial<DragElementOptions> {
     const { dragHelper, index } = context;
     return {
@@ -384,6 +412,7 @@ export class TableResizeBox extends TableResizeCommon {
             this.draggingRowIndex = index;
           }
           this.createContentDragger(e, isX, dragHelper);
+          this.cellSpanIndex = this.recordCellSpan(isX);
           if (!this.tableWrapperBlot) return;
           this.autoScroller = new TableAutoScroller(50, 40);
           this.autoScroller.minusY = this.options.size;
@@ -432,6 +461,7 @@ export class TableResizeBox extends TableResizeCommon {
           );
           this.quill.updateContents(changeDelta);
           this.dragging = false;
+          this.cellSpanIndex = new Set();
           this.autoScroller?.stop();
           removeScrollEvent.call(this, this.quill.root, this.updateContentDraggingPosition);
           removeScrollEvent.call(this, this.tableWrapperBlot!.domNode, this.updateContentDraggingPosition);

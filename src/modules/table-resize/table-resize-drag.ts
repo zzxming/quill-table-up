@@ -23,20 +23,27 @@ export class TableAutoScroller extends AutoScroller {
   }
 }
 
+interface DragHelperOptions {
+  isDragX: boolean;
+  allowMoveToIndex?: (index: number) => boolean;
+}
 export class DragTableHelper {
-  isDragX = false;
   startPosition: ({ position: number; size: number; index: number })[] = [];
   selectedIndex = new Set<number>();
   moveToIndex = -1;
   tableModule: TableUp;
   tableBlot: TableMainFormat;
   dragCommon: TableResizeCommonHelper;
+  options: DragHelperOptions;
+  get isDragX() {
+    return this.options.isDragX;
+  }
 
-  constructor(tableModule: TableUp, tableBlot: TableMainFormat, dragCommon: TableResizeCommonHelper, isDragX: boolean) {
+  constructor(tableModule: TableUp, tableBlot: TableMainFormat, dragCommon: TableResizeCommonHelper, options: DragHelperOptions) {
     this.tableModule = tableModule;
     this.tableBlot = tableBlot;
     this.dragCommon = dragCommon;
-    this.isDragX = isDragX;
+    this.options = options;
   }
 
   onStart(positionInfo: DragPosition, e: PointerEvent, callback?: (context: this) => void) {
@@ -105,6 +112,7 @@ export class DragTableHelper {
     index = Math.max(0, Math.min(index, this.startPosition.length));
     // if index in selectedIndex, not allow to move
     if (this.selectedIndex.has(index)) return -1;
+    if (this.options.allowMoveToIndex && !this.options.allowMoveToIndex(index)) return -1;
     return index;
   }
 
