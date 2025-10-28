@@ -378,6 +378,8 @@ export class TableResizeBox extends TableResizeCommon {
   }
 
   recordCellSpan(isX: boolean) {
+    // record colspan or rowspan cell index when dragging content
+    // drag content not allow to insert on these index
     const cellIndex = new Set<number>();
     if (!this.tableBlot) return cellIndex;
     const cells = this.tableBlot.descendants(TableCellInnerFormat);
@@ -385,9 +387,9 @@ export class TableResizeBox extends TableResizeCommon {
     const spanAttr = isX ? 'colspan' : 'rowspan';
     for (const cell of cells) {
       if (cell[spanAttr] <= 1) continue;
-      const colIndex = ids.indexOf(isX ? cell.colId : cell.rowId);
-      if (colIndex === -1) continue;
-      for (let i = colIndex + 1; i < colIndex + cell[spanAttr] && i < ids.length; i++) {
+      const index = ids.indexOf(isX ? cell.colId : cell.rowId);
+      if (index === -1) continue;
+      for (let i = index + 1; i < index + cell[spanAttr] && i < ids.length; i++) {
         cellIndex.add(i);
       }
     }
