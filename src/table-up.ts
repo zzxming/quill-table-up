@@ -441,7 +441,7 @@ export class TableUp {
         const range = this.getSelection(true);
         const formats = this.getFormat(range);
         // only when selection in cell and selectedTds > 1 can format all cells
-        const tableSelection = tableUpModule.getModule<TableSelection>('table-selection');
+        const tableSelection = tableUpModule.getModule<TableSelection>(tableUpInternal.tableSelectionName);
         if (!formats[blotName.tableCellInner] || range.length > 0 || (tableUpModule && tableSelection && tableSelection.selectedTds.length <= 1)) {
           return originFormat.call(this, name, value, source);
         }
@@ -542,7 +542,7 @@ export class TableUp {
           }
           // if selection range is not in table, but use the TableSelection selected cells
           // clean all other formats in cell
-          const tableSelection = tableUpModule.getModule<TableSelection>('table-selection');
+          const tableSelection = tableUpModule.getModule<TableSelection>(tableUpInternal.tableSelectionName);
           if (tableUpModule && tableSelection && tableSelection.selectedTds.length > 0 && tableSelection.table) {
             const tableMain = Quill.find(tableSelection.table) as TableMainFormat;
             if (!tableMain) {

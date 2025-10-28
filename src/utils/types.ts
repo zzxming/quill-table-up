@@ -35,6 +35,10 @@ export interface TableSelectionOptions {
 export interface TableResizeScaleOptions {
   blockSize: number;
 }
+export interface TableResizeBoxOptions {
+  size: number;
+  draggable: boolean;
+}
 export interface TableCreatorTextOptions {
   fullCheckboxText: string;
   customBtnText: string;

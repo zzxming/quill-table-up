@@ -30,15 +30,12 @@
     "src"
   ],
   "scripts": {
-    "lint": "eslint . --cache",
-    "lint:fix": "eslint . --fix",
+    "lint": "eslint",
     "build": "tsx ./scripts/build.ts",
     "dev": "tsx ./scripts/build.ts watch",
     "server": "tsx ./scripts/start-server.ts",
     "test:unit": "vitest",
-    "test:unit-ui": "vitest --ui",
-    "test:e2e": "playwright test",
-    "test:e2e-ui": "playwright test --ui"
+    "test:e2e": "playwright test"
   },
   "peerDependencies": {
     "quill": "^2.0.3"

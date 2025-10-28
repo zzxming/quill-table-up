@@ -2,7 +2,7 @@ import type { TableUp } from '../../table-up';
 import type { TableMenuOptions, ToolOption, TooltipInstance, ToolTipOptions } from '../../utils';
 import type { TableSelection } from '../table-selection';
 import Quill from 'quill';
-import { createBEM, createColorPicker, createTooltip, debounce, defaultColorMap, isArray, isFunction, randomId, tableUpEvent } from '../../utils';
+import { createBEM, createColorPicker, createTooltip, debounce, defaultColorMap, isArray, isFunction, randomId, tableUpEvent, tableUpInternal } from '../../utils';
 import { TableDomSelector } from '../table-dom-selector';
 import { colorClassName, maxSaveColorCount, menuColorSelectClassName, tableMenuTools } from './constants';
 
@@ -240,7 +240,7 @@ export class TableMenuCommon extends TableDomSelector {
       type: 'click',
       content: colorSelectWrapper,
       onOpen: () => {
-        const tableSelection = this.tableModule.getModule<TableSelection>('table-selection');
+        const tableSelection = this.tableModule.getModule<TableSelection>(tableUpInternal.tableSelectionName);
         if (this.isMenuDisplay && tableSelection) {
           tableSelection.hideDisplay();
         }
@@ -248,7 +248,7 @@ export class TableMenuCommon extends TableDomSelector {
         return false;
       },
       onClose: () => {
-        const tableSelection = this.tableModule.getModule<TableSelection>('table-selection');
+        const tableSelection = this.tableModule.getModule<TableSelection>(tableUpInternal.tableSelectionName);
         if (this.isMenuDisplay && tableSelection) {
           tableSelection.updateWithSelectedTds();
           tableSelection.showDisplay();
@@ -282,7 +282,7 @@ export class TableMenuCommon extends TableDomSelector {
   }
 
   getSelectedTds() {
-    const tableSelection = this.tableModule.getModule<TableSelection>('table-selection');
+    const tableSelection = this.tableModule.getModule<TableSelection>(tableUpInternal.tableSelectionName);
     return tableSelection?.selectedTds || [];
   }
 

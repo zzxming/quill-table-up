@@ -2,7 +2,7 @@ import type Quill from 'quill';
 import type { TableUp } from '../../table-up';
 import type { InternalTableSelectionModule, TableMenuOptions, ToolTipOptions } from '../../utils';
 import type { TableSelection } from '../table-selection';
-import { limitDomInViewPort, tableUpEvent } from '../../utils';
+import { limitDomInViewPort, tableUpEvent, tableUpInternal } from '../../utils';
 import { menuColorSelectClassName } from './constants';
 import { TableMenuCommon } from './table-menu-common';
 
@@ -36,7 +36,7 @@ export class TableMenuContextmenu extends TableMenuCommon {
 
     const tableNode = path.find(node => node.tagName && node.tagName.toUpperCase() === 'TABLE' && node.classList.contains('ql-table'));
 
-    const tableSelection = this.tableModule.getModule<TableSelection>('table-selection');
+    const tableSelection = this.tableModule.getModule<TableSelection>(tableUpInternal.tableSelectionName);
     if (tableNode && tableSelection?.selectedTds?.length) {
       if (!this.menu) {
         this.menu = this.buildTools();
@@ -77,7 +77,7 @@ export class TableMenuContextmenu extends TableMenuCommon {
 
   update(position?: { x: number; y: number }) {
     super.update();
-    const tableSelection = this.tableModule.getModule<TableSelection>('table-selection');
+    const tableSelection = this.tableModule.getModule<TableSelection>(tableUpInternal.tableSelectionName);
     if (!this.table || !this.isMenuDisplay || !this.menu) {
       this.hide();
       return;

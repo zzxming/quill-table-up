@@ -10,7 +10,6 @@ export class TableResizeCommonHelper {
   maxRange: number = Number.POSITIVE_INFINITY;
   minRange: number = Number.NEGATIVE_INFINITY;
   startValue: number = 0;
-  dragBEM = createBEM('drag');
   dragBreak: HTMLElement | null = null;
   tableModule: TableUp;
   isX: boolean = false;
@@ -22,8 +21,9 @@ export class TableResizeCommonHelper {
 
   createBreak() {
     if (this.dragBreak) this.dragBreak.remove();
-    this.dragBreak = this.tableModule.addContainer(this.dragBEM.be('line'));
-    this.dragBreak.classList.add(this.dragBEM.is(this.isX ? 'col' : 'row'));
+    const dragBEM = createBEM('drag');
+    this.dragBreak = this.tableModule.addContainer(dragBEM.be('line'));
+    this.dragBreak.classList.add(dragBEM.is(this.isX ? 'col' : 'row'));
   }
 
   getOffsetFromStart(tableBlot?: TableMainFormat) {

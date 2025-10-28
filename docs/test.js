@@ -17,6 +17,8 @@ Quill.register({
   [`modules/${TableUp.moduleName}`]: TableUp,
 }, true);
 
+const wrapper = document.querySelector('.wrapper');
+
 const toolbarConfig = [
   ['bold', 'italic', 'underline', 'strike'],
   ['blockquote', 'code-block', 'code'],
@@ -151,7 +153,45 @@ const quills = [
       },
     ],
   },
+  {
+    full: false,
+    customSelect: defaultCustomSelect,
+    customBtn: true,
+    autoMergeCell: false,
+    modules: [
+      { module: TableVirtualScrollbar },
+      { module: TableAlign },
+      { module: TableResizeBox },
+      { module: TableResizeScale },
+      { module: TableSelection },
+      {
+        module: TableMenuContextmenu,
+        options: {
+          tools: menuTools,
+        },
+      },
+    ],
+  },
 ].map((ops, i) => {
+  const container = document.createElement('div');
+  container.id = `container${i + 1}`;
+  const btn = document.createElement('button');
+  btn.id = `btn${i + 1}`;
+  btn.textContent = 'console';
+  container.appendChild(btn);
+  const editor = document.createElement('div');
+  editor.id = `editor${i + 1}`;
+  if (i < 4) {
+    editor.style.height = '600px';
+  }
+  if (i === 4) {
+    editor.style.padding = '20px';
+  }
+  container.appendChild(editor);
+  const output = document.createElement('div');
+  output.id = `output${i + 1}`;
+  container.appendChild(output);
+  wrapper.appendChild(container);
   return new Quill(`#editor${i + 1}`, {
     // debug: 'info',
     theme: 'snow',

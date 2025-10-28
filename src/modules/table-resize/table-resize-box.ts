@@ -1,15 +1,18 @@
 import type { TableMainFormat, TableWrapperFormat } from '../../formats';
 import type { TableUp } from '../../table-up';
+import type { DragElementOptions, TableResizeBoxOptions } from '../../utils';
 import type { TableSelection } from '../table-selection';
 import Quill from 'quill';
 import { getTableMainRect, TableCaptionFormat, TableCellInnerFormat } from '../../formats';
-import { addScrollEvent, clearScrollEvent, createBEM, createResizeObserver, dragElement, findChildBlot } from '../../utils';
+import { addScrollEvent, clearScrollEvent, createBEM, createResizeObserver, dragElement, findChildBlot, removeScrollEvent, tableUpInternal } from '../../utils';
 import { TableResizeCommon } from './table-resize-common';
+import { DragTableHelper, TableAutoScroller } from './table-resize-drag';
 import { isTableAlignRight } from './utils';
 
 export class TableResizeBox extends TableResizeCommon {
   static moduleName = 'table-resize-box';
 
+  options: TableResizeBoxOptions;
   root: HTMLElement;
   tableWrapperBlot?: TableWrapperFormat;
   resizeObserver?: ResizeObserver;
@@ -18,18 +21,34 @@ export class TableResizeBox extends TableResizeCommon {
   corner: HTMLElement | null = null;
   scrollHandler: [HTMLElement, (e: Event) => void][] = [];
   lastHeaderSelect: { isX: boolean; index: number } | null = null;
-  size: number = 12;
   bem = createBEM('resize-box');
   draggingColIndex = -1;
   draggingRowIndex = -1;
   stopColDrag: (() => void)[] = [];
   stopRowDrag: (() => void)[] = [];
+  dragWrapper: HTMLElement | null = null;
+  dragPlaceholder: HTMLElement | null = null;
+  markIndicator: HTMLElement | null = null;
+  stopColMoveDrag: (() => void)[] = [];
+  stopRowMoveDrag: (() => void)[] = [];
+  autoScroller: TableAutoScroller | null = null;
+  updateContentDraggingPosition: () => void;
+  cellSpanIndex: Set<number> = new Set();
 
-  constructor(public tableModule: TableUp, public quill: Quill, _options: any) {
+  constructor(public tableModule: TableUp, public quill: Quill, options: Partial<TableResizeBoxOptions>) {
     super(tableModule, quill);
+    this.options = this.resolveOptions(options);
 
+    this.updateContentDraggingPosition = () => this.updateContentDraggerPosition(null as any);
     this.root = this.tableModule.addContainer(this.bem.b());
     this.quill.on(Quill.events.EDITOR_CHANGE, this.updateWhenTextChange);
+  }
+
+  resolveOptions(options: Partial<TableResizeBoxOptions>) {
+    return Object.assign({
+      size: 12,
+      draggable: true,
+    }, options);
   }
 
   updateWhenTextChange = (eventName: string) => {
@@ -113,7 +132,7 @@ export class TableResizeBox extends TableResizeCommon {
       this.lastHeaderSelect = { isX, index };
     }
 
-    const tableSelection = this.tableModule.getModule<TableSelection>('table-selection');
+    const tableSelection = this.tableModule.getModule<TableSelection>(tableUpInternal.tableSelectionName);
     if (tableSelection) {
       tableSelection.table = this.table;
       tableSelection.setSelectedTds(tableSelection.computeSelectedTds(...currentBoundary));
@@ -125,16 +144,117 @@ export class TableResizeBox extends TableResizeCommon {
     return this.draggingColIndex;
   }
 
+  findDragRowIndex() {
+    return this.draggingRowIndex;
+  }
+
+  updateContentDraggerPosition(dragHelper: DragTableHelper) {
+    if (!dragHelper || !this.dragWrapper || !this.markIndicator || !this.tableBlot || !this.tableWrapperBlot) return;
+    const { rect: tableRect } = getTableMainRect(this.tableBlot);
+    if (!tableRect || dragHelper.moveToIndex < 0) return;
+    const tableWrapperRect = this.tableWrapperBlot.domNode.getBoundingClientRect();
+    const rootRect = this.quill.root.getBoundingClientRect();
+    Object.assign(this.dragWrapper.style, {
+      top: `${Math.max(tableRect.y, tableWrapperRect.y) - rootRect.y}px`,
+      left: `${Math.max(tableRect.x, tableWrapperRect.x) - rootRect.x}px`,
+    });
+
+    const { position } = dragHelper.startPosition[dragHelper.moveToIndex] || {};
+    const offsetX = this.dragXCommon.getOffsetFromStart(this.tableBlot);
+    const offsetY = this.dragYCommon.getOffsetFromStart(this.tableBlot);
+    const markIndicatorStyle = dragHelper.isDragX
+      ? {
+          top: `${Math.max(tableRect.y, tableWrapperRect.y) - rootRect.y}px`,
+          left: `${position - rootRect.left + offsetX}px`,
+        }
+      : {
+          top: `${position - rootRect.top + offsetY}px`,
+          left: `${Math.max(tableRect.x, tableWrapperRect.x) - rootRect.x}px`,
+        };
+    Object.assign(this.markIndicator.style, markIndicatorStyle);
+  }
+
+  createContentDragger(e: PointerEvent, isX: boolean, dragHelper: DragTableHelper) {
+    if (!this.tableBlot) return;
+    const tableSelection = this.tableModule.getModule<TableSelection>(tableUpInternal.tableSelectionName);
+    if (!tableSelection || !this.tableWrapperBlot) return;
+    tableSelection.updateWithSelectedTds();
+    const placeholderWidth = tableSelection.boundary!.width;
+    const placeholderHeight = tableSelection.boundary!.height;
+
+    const rootRect = this.quill.root.getBoundingClientRect();
+    const tableWrapperRect = this.tableWrapperBlot.domNode.getBoundingClientRect();
+    const dragBEM = createBEM('drag');
+    this.dragWrapper = this.tableModule.addContainer(dragBEM.b());
+    const wrapLeft = tableWrapperRect.x - rootRect.x;
+    const wrapTop = tableWrapperRect.y - rootRect.y;
+    Object.assign(this.dragWrapper.style, {
+      left: `${wrapLeft}px`,
+      top: `${wrapTop}px`,
+      width: `${tableWrapperRect.width}px`,
+      height: `${tableWrapperRect.height}px`,
+    });
+
+    this.dragPlaceholder = document.createElement('div');
+    this.dragPlaceholder.classList.add(dragBEM.be('placeholder'), dragBEM.is('hidden'));
+    this.dragWrapper.appendChild(this.dragPlaceholder);
+    Object.assign(this.dragPlaceholder.style, {
+      left: `${isX ? tableSelection.boundary!.x - wrapLeft : 0}px`,
+      top: `${isX ? 0 : tableSelection.boundary!.y - wrapTop}px`,
+      width: `${placeholderWidth}px`,
+      height: `${placeholderHeight}px`,
+    });
+
+    this.markIndicator = this.tableModule.addContainer(dragBEM.be('indicator'));
+    let markIndicatorStyle = {};
+    markIndicatorStyle = isX
+      ? {
+          top: `${wrapTop}px`,
+          height: `${Math.min(tableSelection.boundary!.height, tableWrapperRect.height)}px`,
+        }
+      : {
+          left: `${wrapLeft}px`,
+          width: `${Math.min(tableSelection.boundary!.width, tableWrapperRect.width)}px`,
+        };
+    Object.assign(this.markIndicator.style, markIndicatorStyle);
+    this.updateContentDraggingPosition = () => this.updateContentDraggerPosition(dragHelper);
+    addScrollEvent.call(this, this.quill.root, this.updateContentDraggingPosition);
+    addScrollEvent.call(this, this.tableWrapperBlot.domNode, this.updateContentDraggingPosition);
+
+    // absolute position. range in tableWrapper viewport
+    if (isX) {
+      this.dragXCommon.minRange = 0;
+      this.dragXCommon.maxRange = tableWrapperRect.width - placeholderWidth;
+    }
+    else {
+      this.dragYCommon.minRange = 0;
+      this.dragYCommon.maxRange = tableWrapperRect.height - placeholderHeight;
+    }
+  }
+
   bindColEvents() {
+    if (!this.tableWrapperBlot) return;
     const tableColHeads = Array.from(this.root.getElementsByClassName(this.bem.be('col-header'))) as HTMLElement[];
     const tableColHeadSeparators = Array.from(this.root.getElementsByClassName(this.bem.be('col-separator'))) as HTMLElement[];
 
-    addScrollEvent.call(this, this.tableWrapperBlot!.domNode, () => {
+    addScrollEvent.call(this, this.tableWrapperBlot.domNode, () => {
       this.colHeadWrapper!.scrollLeft = this.tableWrapperBlot!.domNode.scrollLeft;
     });
 
-    for (const [i, el] of tableColHeads.entries()) {
-      el.addEventListener('click', this.handleResizerHeaderClick.bind(this, false, i));
+    if (this.stopColMoveDrag.length > 0) {
+      for (const stop of this.stopColMoveDrag) stop();
+      this.stopColMoveDrag = [];
+    }
+    const dragHelper = new DragTableHelper(this.tableModule, this.tableBlot!, this.dragXCommon, {
+      isDragX: true,
+      allowMoveToIndex: index => this.allowMoveToIndex(index),
+    });
+    for (const [index, el] of tableColHeads.entries()) {
+      el.addEventListener('click', this.handleResizerHeaderClick.bind(this, false, index));
+      if (this.options.draggable) {
+        const { stop } = dragElement(el, this.dragHeadOptions(true, { index, dragHelper }));
+        this.stopColMoveDrag.push(stop);
+      }
     }
 
     if (this.stopColDrag.length > 0) {
@@ -182,10 +302,6 @@ export class TableResizeBox extends TableResizeCommon {
     }
   }
 
-  findDragRowIndex() {
-    return this.draggingRowIndex;
-  }
-
   bindRowEvents() {
     const tableRowHeads = Array.from(this.root.getElementsByClassName(this.bem.be('row-header'))) as HTMLElement[];
     const tableRowHeadSeparators = Array.from(this.root.getElementsByClassName(this.bem.be('row-separator'))) as HTMLElement[];
@@ -194,8 +310,22 @@ export class TableResizeBox extends TableResizeCommon {
       this.rowHeadWrapper!.scrollTop = this.tableWrapperBlot!.domNode.scrollTop;
     });
 
+    if (this.stopRowMoveDrag.length > 0) {
+      for (const stop of this.stopRowMoveDrag) stop();
+      this.stopRowMoveDrag = [];
+    }
+    const dragHelper = new DragTableHelper(this.tableModule, this.tableBlot!, this.dragYCommon, {
+      isDragX: false,
+      allowMoveToIndex: index => this.allowMoveToIndex(index),
+    });
     for (const [i, el] of tableRowHeads.entries()) {
+      // emptyRow doesn't generate head. logic need row index, not head inedx
+      const index = Number(el.dataset.index || i);
       el.addEventListener('click', this.handleResizerHeaderClick.bind(this, true, i));
+      if (this.options.draggable) {
+        const { stop } = dragElement(el, this.dragHeadOptions(false, { index, dragHelper }));
+        this.stopRowMoveDrag.push(stop);
+      }
     }
 
     if (this.stopRowDrag.length > 0) {
@@ -205,7 +335,7 @@ export class TableResizeBox extends TableResizeCommon {
     for (const [i, el] of tableRowHeadSeparators.entries()) {
       const { stop } = dragElement(el, {
         axis: 'y',
-        onStart: (position, e) => {
+        onStart: (ops, e) => {
           this.dragging = true;
 
           this.draggingRowIndex = i;
@@ -243,6 +373,113 @@ export class TableResizeBox extends TableResizeCommon {
     }
   }
 
+  allowMoveToIndex(index: number) {
+    return !this.cellSpanIndex.has(index);
+  }
+
+  recordCellSpan(isX: boolean) {
+    // record colspan or rowspan cell index when dragging content
+    // drag content not allow to insert on these index
+    const cellIndex = new Set<number>();
+    if (!this.tableBlot) return cellIndex;
+    const cells = this.tableBlot.descendants(TableCellInnerFormat);
+    const ids: string[] = isX ? this.tableBlot.getColIds() : this.tableBlot.getRowIds();
+    const spanAttr = isX ? 'colspan' : 'rowspan';
+    for (const cell of cells) {
+      if (cell[spanAttr] <= 1) continue;
+      const index = ids.indexOf(isX ? cell.colId : cell.rowId);
+      if (index === -1) continue;
+      for (let i = index + 1; i < index + cell[spanAttr] && i < ids.length; i++) {
+        cellIndex.add(i);
+      }
+    }
+    return cellIndex;
+  }
+
+  dragHeadOptions(isX: boolean, context: { index: number; dragHelper: DragTableHelper }): Partial<DragElementOptions> {
+    const { dragHelper, index } = context;
+    return {
+      axis: isX ? 'x' : 'y',
+      onStart: (positionInfo, e) => {
+        let prevent = false;
+        dragHelper.onStart(positionInfo, e, () => {
+          const selectedIndex = new Set(Array.from(dragHelper.selectedIndex).slice(0, -1));
+          prevent = selectedIndex.has(index);
+          if (prevent === false) return;
+          this.dragging = true;
+          if (isX) {
+            this.draggingColIndex = index;
+          }
+          else {
+            this.draggingRowIndex = index;
+          }
+          this.createContentDragger(e, isX, dragHelper);
+          this.cellSpanIndex = this.recordCellSpan(isX);
+          if (!this.tableWrapperBlot) return;
+          this.autoScroller = new TableAutoScroller(50, 40);
+          this.autoScroller.minusY = this.options.size;
+          this.autoScroller.minusX = this.options.size;
+          this.autoScroller.updateMousePosition(e.clientX, e.clientY);
+          this.autoScroller.start(this.tableWrapperBlot.domNode);
+        });
+        return prevent;
+      },
+      onMove: (positionInfo, e) => {
+        dragHelper.onMove(positionInfo, e, (helper) => {
+          const { position } = positionInfo;
+          this.autoScroller?.updateMousePosition(e.clientX, e.clientY);
+          if (!this.dragPlaceholder || !this.markIndicator || !this.tableWrapperBlot) return;
+
+          this.dragPlaceholder.classList.remove(this.bem.is('hidden'));
+          const rootRect = this.quill.root.getBoundingClientRect();
+          const tableWrapperRect = this.tableWrapperBlot.domNode.getBoundingClientRect();
+          const resultPosition = helper.dragCommon.limitRange(
+            this.tableBlot,
+            isX ? position.x - tableWrapperRect.left : position.y - tableWrapperRect.top,
+            false,
+          );
+          this.dragPlaceholder.style[isX ? 'left' : 'top'] = `${resultPosition}px`;
+          if (helper.moveToIndex < 0) {
+            Object.assign(this.markIndicator.style, {
+              opacity: '0',
+            });
+            return;
+          }
+          const isBeyond = helper.moveToIndex >= helper.startPosition.length;
+          const item = helper.startPosition[isBeyond ? helper.moveToIndex - 1 : helper.moveToIndex];
+          const indicatorPosition = item.position + (isBeyond ? item.size : 0);
+          const offset = helper.dragCommon.getOffsetFromStart(this.tableBlot);
+          Object.assign(this.markIndicator.style, {
+            opacity: '1',
+            [isX ? 'left' : 'top']: `${indicatorPosition - (isX ? rootRect.left : rootRect.top) + offset}px`,
+          });
+        });
+      },
+      onEnd: (positionInfo, e) => {
+        dragHelper.onEnd(positionInfo, e, (helper) => {
+          const changeDelta = helper.updateTableStructure(
+            this.quill.getContents(),
+            (isX ? this.draggingColIndex : this.draggingRowIndex) > helper.moveToIndex,
+          );
+          this.quill.updateContents(changeDelta);
+          this.dragging = false;
+          this.cellSpanIndex = new Set();
+          this.autoScroller?.stop();
+          removeScrollEvent.call(this, this.quill.root, this.updateContentDraggingPosition);
+          removeScrollEvent.call(this, this.tableWrapperBlot!.domNode, this.updateContentDraggingPosition);
+          if (this.dragWrapper) {
+            this.dragWrapper.remove();
+            this.dragWrapper = null;
+          }
+          if (this.markIndicator) {
+            this.markIndicator.remove();
+            this.markIndicator = null;
+          }
+        });
+      },
+    };
+  }
+
   update() {
     if (!this.tableBlot || !this.tableWrapperBlot) return;
     const { rect: tableRect } = getTableMainRect(this.tableBlot);
@@ -263,11 +500,11 @@ export class TableResizeBox extends TableResizeCommon {
       this.corner = document.createElement('div');
       this.corner.classList.add(this.bem.be('corner'));
       Object.assign(this.corner.style, {
-        width: `${this.size}px`,
-        height: `${this.size}px`,
+        width: `${this.options.size}px`,
+        height: `${this.options.size}px`,
       });
       this.corner.addEventListener('click', () => {
-        const tableSelection = this.tableModule.getModule<TableSelection>('table-selection');
+        const tableSelection = this.tableModule.getModule<TableSelection>(tableUpInternal.tableSelectionName);
         if (tableSelection && this.tableBlot) {
           tableSelection.setSelectedTds(this.tableBlot.descendants(TableCellInnerFormat));
           tableSelection.show();
@@ -285,7 +522,7 @@ export class TableResizeBox extends TableResizeCommon {
           width = Number.parseInt(col.domNode.getAttribute('width')!, 10);
         }
         colHeadStr += `<div class="${this.bem.be('col-header')}" style="width: ${width}px">
-          <div class="${this.bem.be('col-separator')}" style="height: ${tableRect.height + this.size - 3}px"></div>
+          <div class="${this.bem.be('col-separator')}" style="height: ${tableRect.height + this.options.size - 3}px"></div>
         </div>`;
       }
       const colHeadWrapper = document.createElement('div');
@@ -293,9 +530,9 @@ export class TableResizeBox extends TableResizeCommon {
       const colHead = document.createElement('div');
       colHead.classList.add(this.bem.be('col-wrapper'));
       Object.assign(colHeadWrapper.style, {
-        transform: `translateY(-${this.size}px)`,
+        transform: `translateY(-${this.options.size}px)`,
         maxWidth: `${tableWrapperRect.width}px`,
-        height: `${this.size}px`,
+        height: `${this.options.size}px`,
       });
       Object.assign(colHead.style, {
         width: `${tableRect.width}px`,
@@ -310,10 +547,22 @@ export class TableResizeBox extends TableResizeCommon {
 
     if (tableRows.length > 0) {
       let rowHeadStr = '';
-      for (const row of tableRows) {
-        const height = `${row.domNode.getBoundingClientRect().height}px`;
-        rowHeadStr += `<div class="${this.bem.be('row-header')}" style="height: ${Number.parseFloat(height)}px">
-          <div class="${this.bem.be('row-separator')}" style="width: ${tableRect.width + this.size - 3}px"></div>
+      for (let i = 0; i < tableRows.length; i++) {
+        const index = i;
+        const row = tableRows[i];
+        let height = row.domNode.getBoundingClientRect().height;
+        // empty row have different height in chrome and firefox
+        // count total height to set
+        if (row.children.length === 1 && (row.children.head?.emptyRow.length || 0) > 0) {
+          const length = row.children.head!.emptyRow.length;
+          for (let start = i + 1; start < tableRows.length && start <= i + length; start++) {
+            const nextRow = tableRows[start];
+            height += nextRow.domNode.getBoundingClientRect().height;
+          }
+          i += length;
+        }
+        rowHeadStr += `<div class="${this.bem.be('row-header')}" data-index="${index}" style="height: ${height}px">
+          <div class="${this.bem.be('row-separator')}" style="width: ${tableRect.width + this.options.size - 3}px"></div>
         </div>`;
       }
       const rowHeadWrapper = document.createElement('div');
@@ -321,8 +570,8 @@ export class TableResizeBox extends TableResizeCommon {
       const rowHead = document.createElement('div');
       rowHead.classList.add(this.bem.be('row-wrapper'));
       Object.assign(rowHeadWrapper.style, {
-        transform: `translateX(-${this.size}px)`,
-        width: `${this.size}px`,
+        transform: `translateX(-${this.options.size}px)`,
+        width: `${this.options.size}px`,
         maxHeight: `${tableWrapperRect.height}px`,
       });
       Object.assign(rowHead.style, {
@@ -345,8 +594,8 @@ export class TableResizeBox extends TableResizeCommon {
     else {
       this.root.classList.add(this.bem.is('caption-bottom'));
     }
-    let cornerTranslateX = -1 * this.size;
-    let rowHeadWrapperTranslateX = -1 * this.size;
+    let cornerTranslateX = -1 * this.options.size;
+    let rowHeadWrapperTranslateX = -1 * this.options.size;
     if (isTableAlignRight(this.tableBlot)) {
       this.root.classList.add(this.bem.is('align-right'));
       cornerTranslateX = Math.min(tableWrapperRect.width, tableRect.width);
@@ -357,8 +606,8 @@ export class TableResizeBox extends TableResizeCommon {
     }
     if (this.corner) {
       Object.assign(this.corner.style, {
-        transform: `translateY(${-1 * this.size}px) translateX(${cornerTranslateX}px)`,
-        top: `${tableCaptionIsTop ? 0 : tableRect.height + this.size}px`,
+        transform: `translateY(${-1 * this.options.size}px) translateX(${cornerTranslateX}px)`,
+        top: `${tableCaptionIsTop ? 0 : tableRect.height + this.options.size}px`,
       });
     }
     if (this.rowHeadWrapper) {
@@ -369,7 +618,7 @@ export class TableResizeBox extends TableResizeCommon {
     }
     if (this.colHeadWrapper) {
       Object.assign(this.colHeadWrapper.style, {
-        top: `${tableCaptionIsTop ? 0 : tableRect.height + this.size}px`,
+        top: `${tableCaptionIsTop ? 0 : tableRect.height + this.options.size}px`,
         maxWidth: `${tableWrapperRect.width}px`,
       });
     }

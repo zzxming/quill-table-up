@@ -203,5 +203,25 @@
         cursor: ns-resize;
       }
     }
+    &__placeholder {
+      &.is-hidden {
+        display: none;
+      }
+      position: absolute;
+      background-color: #04f2;
+      pointer-events: none;
+      z-index: 0;
+    }
+    &__indicator {
+      position: absolute;
+      width: 0px;
+      height: 0px;
+      border: 1px solid rgba(63, 133, 255, 1);
+      cursor: col-resize;
+      z-index: 0;
+      opacity: 0;
+      transition: opacity 0.2s ease-in;
+      pointer-events: none;
+    }
   }
 }
