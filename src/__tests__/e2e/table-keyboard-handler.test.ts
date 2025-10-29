@@ -1,3 +1,6 @@
+import type { TableCellInnerFormat } from '../../formats';
+import type { TableSelection } from '../../modules';
+import type { TableUp } from '../../table-up';
 import { expect, test } from '@playwright/test';
 import { createTableBySelect, extendTest, pasteHTML } from './utils';
 
@@ -402,9 +405,15 @@ extendTest.describe('TableSelection keyboard handler', () => {
     expect(cell1Bound).not.toBeNull();
 
     await page.locator('#container1 .ql-table-wrapper td').nth(0).click();
-    page.mouse.move(cell1Bound.x + cell1Bound.width * 0.5, cell1Bound.y + cell1Bound.height * 0.5);
-    page.mouse.down();
-    page.mouse.move(cell1Bound.x + cell1Bound.width * 1.5, cell1Bound.y + cell1Bound.height * 1.5);
+    // set table selection
+    await page.evaluate(() => {
+      const tableUp = window.quills[0].getModule('table-up') as TableUp;
+      const tableSelection = tableUp.getModule<TableSelection>('table-selection')!;
+      const doms = document.querySelectorAll('#container1 td .ql-table-cell-inner');
+      const cells = Array.from(doms).map(dom => (window as any).Quill.find(dom)) as TableCellInnerFormat[];
+      tableSelection.setSelectedTds([cells[0], cells[1], cells[3]]);
+      tableSelection.updateWithSelectedTds();
+    });
 
     const tableSelection = page.locator('#container1 .table-up-toolbox .table-up-selection__line');
     await expect(tableSelection).toBeVisible();
