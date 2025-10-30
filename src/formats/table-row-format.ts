@@ -207,4 +207,12 @@ export class TableRowFormat extends ContainerFormat {
       this.next.remove();
     }
   }
+
+  remove() {
+    super.remove();
+    // remove next empty row
+    if (this.next && this.next instanceof TableRowFormat && this.next.length() <= 0) {
+      this.next.remove();
+    }
+  }
 }

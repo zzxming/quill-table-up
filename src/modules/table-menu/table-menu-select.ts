@@ -5,7 +5,7 @@ import type { InternalTableSelectionModule } from '../../utils';
 import type { TableSelection } from '../table-selection';
 import type { TableMenuOptionsInput } from './table-menu-common';
 import { computePosition, flip, limitShift, offset, shift } from '@floating-ui/dom';
-import { tableUpEvent } from '../../utils';
+import { tableUpEvent, tableUpInternal } from '../../utils';
 import { TableMenuCommon } from './table-menu-common';
 
 export class TableMenuSelect extends TableMenuCommon {
@@ -71,7 +71,7 @@ export class TableMenuSelect extends TableMenuCommon {
     this.isMenuDisplay = true;
     this.menu.classList.remove(this.bem.is('hidden'));
 
-    const tableSelection = this.tableModule.getModule<TableSelection>('table-selection');
+    const tableSelection = this.tableModule.getModule<TableSelection>(tableUpInternal.tableSelectionName);
     if (tableSelection?.isDisplaySelection) {
       computePosition(tableSelection.cellSelect, this.menu, {
         placement: 'bottom',
