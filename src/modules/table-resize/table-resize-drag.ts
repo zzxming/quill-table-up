@@ -1,5 +1,5 @@
 import type { Delta as TypeDelta } from 'quill';
-import type { TableCellInnerFormat, TableMainFormat, TableRowFormat } from '../../formats';
+import type { TableMainFormat, TableRowFormat } from '../../formats';
 import type { TableUp } from '../../table-up';
 import type { DragPosition } from '../../utils';
 import type { TableSelection } from '../table-selection';
@@ -7,6 +7,7 @@ import type { TableResizeCommonHelper } from './table-resize-common';
 import Quill from 'quill';
 import { getTableMainRect } from '../../formats';
 import { AutoScroller, isUndefined, tableUpInternal } from '../../utils';
+import { isCellsSpan } from './utils';
 
 const Delta = Quill.import('delta');
 
@@ -49,7 +50,7 @@ export class DragTableHelper {
   onStart(positionInfo: DragPosition, e: PointerEvent, callback?: (context: this) => void) {
     const tableSelection = this.tableModule.getModule<TableSelection>(tableUpInternal.tableSelectionName);
     if (!tableSelection?.boundary || !this.tableBlot) return false;
-    const { isSpan, cellIndex } = this.isCellSpan(tableSelection.selectedTds);
+    const { isSpan, cellIndex } = isCellsSpan(this.isDragX, this.tableBlot, tableSelection.selectedTds);
     if (!isSpan) return false;
     const { rect: tableRect } = getTableMainRect(this.tableBlot);
     if (!tableRect) return false;
@@ -236,66 +237,5 @@ export class DragTableHelper {
         : rowInsertDelta.compose(rowDeleteDelta);
     }
     return changeDelta;
-  }
-
-  isCellSpan(cells: TableCellInnerFormat[]) {
-    if (this.isDragX) {
-      // if cells have span all rows
-      const cols = this.tableBlot.getCols();
-      const colIds = cols.map(col => col.colId);
-      const countColIds = new Set<string>();
-      const countRowspan = new Map<string, number>(colIds.map(id => [id, 0]));
-      const cellIndex = new Set<number>();
-      for (const cell of cells) {
-        countColIds.add(cell.colId);
-        const colIndex = colIds.indexOf(cell.colId);
-        if (colIndex === -1) continue;
-        for (let i = colIndex; i < colIndex + cell.colspan && i < colIds.length; i++) {
-          cellIndex.add(i);
-          const id = colIds[i];
-          countRowspan.set(id, (countRowspan.get(id) || 0) + cell.rowspan);
-        }
-        cellIndex.add(Math.min(colIndex + cell.colspan, colIds.length));
-      }
-      const rowCount = this.tableBlot.getRows()?.length || 0;
-      for (const [id, count] of countRowspan.entries()) {
-        if (count >= rowCount) {
-          countColIds.delete(id);
-        }
-      }
-      return {
-        cellIndex,
-        isSpan: countColIds.size <= 0,
-      };
-    }
-    else {
-      // if cells have span all columns
-      const rows = this.tableBlot.getRows();
-      const rowIds = rows.map(row => row.rowId);
-      const countRowIds = new Set<string>();
-      const countRowspan = new Map<string, number>(rowIds.map(id => [id, 0]));
-      const cellIndex = new Set<number>();
-      for (const cell of cells) {
-        countRowIds.add(cell.rowId);
-        const rowIndex = rowIds.indexOf(cell.rowId);
-        if (rowIndex === -1) continue;
-        for (let i = rowIndex; i < rowIndex + cell.rowspan && i < rowIds.length; i++) {
-          cellIndex.add(i);
-          const id = rowIds[i];
-          countRowspan.set(id, (countRowspan.get(id) || 0) + cell.colspan);
-        }
-        cellIndex.add(Math.min(rowIndex + cell.rowspan, rowIds.length));
-      }
-      const colCount = this.tableBlot.getCols()?.length || 0;
-      for (const [id, count] of countRowspan.entries()) {
-        if (count >= colCount) {
-          countRowIds.delete(id);
-        }
-      }
-      return {
-        cellIndex,
-        isSpan: countRowIds.size <= 0,
-      };
-    }
   }
 }

@@ -4,10 +4,10 @@ import type { DragElementOptions, TableResizeBoxOptions } from '../../utils';
 import type { TableSelection } from '../table-selection';
 import Quill from 'quill';
 import { getTableMainRect, TableCaptionFormat, TableCellInnerFormat } from '../../formats';
-import { addScrollEvent, clearScrollEvent, createBEM, createResizeObserver, dragElement, findChildBlot, removeScrollEvent, tableUpInternal } from '../../utils';
+import { addScrollEvent, clearScrollEvent, createBEM, createResizeObserver, dragElement, findChildBlot, removeScrollEvent, tableUpEvent, tableUpInternal } from '../../utils';
 import { TableResizeCommon } from './table-resize-common';
 import { DragTableHelper, TableAutoScroller } from './table-resize-drag';
-import { isTableAlignRight } from './utils';
+import { isCellsSpan, isTableAlignRight } from './utils';
 
 export class TableResizeBox extends TableResizeCommon {
   static moduleName = 'table-resize-box';
@@ -29,6 +29,7 @@ export class TableResizeBox extends TableResizeCommon {
   dragWrapper: HTMLElement | null = null;
   dragPlaceholder: HTMLElement | null = null;
   markIndicator: HTMLElement | null = null;
+  dragTip: HTMLElement | null = null;
   stopColMoveDrag: (() => void)[] = [];
   stopRowMoveDrag: (() => void)[] = [];
   autoScroller: TableAutoScroller | null = null;
@@ -42,14 +43,49 @@ export class TableResizeBox extends TableResizeCommon {
     this.updateContentDraggingPosition = () => this.updateContentDraggerPosition(null as any);
     this.root = this.tableModule.addContainer(this.bem.b());
     this.quill.on(Quill.events.EDITOR_CHANGE, this.updateWhenTextChange);
+    this.quill.on(tableUpEvent.TABLE_SELECTION_CHANGE, this.updateWrapperHead);
   }
 
   resolveOptions(options: Partial<TableResizeBoxOptions>) {
     return Object.assign({
-      size: 12,
+      size: 16,
       draggable: true,
     }, options);
   }
+
+  updateWrapperHead = () => {
+    if (!this.options.draggable) return;
+    const tableSelection = this.tableModule.getModule<TableSelection>(tableUpInternal.tableSelectionName);
+    if (!tableSelection || !this.tableBlot) return;
+    const { isSpan: isSpanX, cellIndex: cellXIndex } = isCellsSpan(true, this.tableBlot, tableSelection.selectedTds);
+    const { isSpan: isSpanY, cellIndex: cellYIndex } = isCellsSpan(false, this.tableBlot, tableSelection.selectedTds);
+    // add cursor drag style
+    // but if select all table, style will not be added
+    if (isSpanX) {
+      const tableColHeads = Array.from(this.root.getElementsByClassName(this.bem.be('col-header'))) as HTMLElement[];
+      for (const el of tableColHeads) el.classList.remove(this.bem.is('selected'));
+      if (!isSpanY) {
+        for (const i of Array.from(cellXIndex).slice(0, -1)) {
+          tableColHeads[i].classList.add(this.bem.is('selected'));
+        }
+      }
+    }
+    if (isSpanY) {
+      const tableRowHeads = Array.from(this.root.getElementsByClassName(this.bem.be('row-header'))) as HTMLElement[];
+      const tableRowHeadsSorted: HTMLElement[] = [];
+      for (const el of tableRowHeads) {
+        el.classList.remove(this.bem.is('selected'));
+        tableRowHeadsSorted[Number(el.dataset.index)] = el;
+      }
+      if (!isSpanX) {
+        for (const i of Array.from(cellYIndex).slice(0, -1)) {
+          if (tableRowHeadsSorted[i]) {
+            tableRowHeadsSorted[i].classList.add(this.bem.is('selected'));
+          }
+        }
+      }
+    }
+  };
 
   updateWhenTextChange = (eventName: string) => {
     if (eventName === Quill.events.TEXT_CHANGE) {
@@ -220,6 +256,11 @@ export class TableResizeBox extends TableResizeCommon {
     this.updateContentDraggingPosition = () => this.updateContentDraggerPosition(dragHelper);
     addScrollEvent.call(this, this.quill.root, this.updateContentDraggingPosition);
     addScrollEvent.call(this, this.tableWrapperBlot.domNode, this.updateContentDraggingPosition);
+
+    this.dragTip = this.tableModule.addContainer(dragBEM.be('tip'));
+    const dragTipContent = document.createElement('div');
+    dragTipContent.classList.add(dragBEM.be('tip-content'));
+    this.dragTip.appendChild(dragTipContent);
 
     // absolute position. range in tableWrapper viewport
     if (isX) {
@@ -403,9 +444,18 @@ export class TableResizeBox extends TableResizeCommon {
       onStart: (positionInfo, e) => {
         let prevent = false;
         dragHelper.onStart(positionInfo, e, () => {
+          if (!this.tableBlot) return;
+          const count = (isX ? this.tableBlot.getCols() : this.tableBlot.getRows()).length;
+          if (dragHelper.selectedIndex.size > count) {
+            prevent = false;
+            return;
+          }
           const selectedIndex = new Set(Array.from(dragHelper.selectedIndex).slice(0, -1));
           prevent = selectedIndex.has(index);
-          if (prevent === false) return;
+          if (!selectedIndex.has(index)) {
+            prevent = false;
+            return;
+          }
           this.dragging = true;
           if (isX) {
             this.draggingColIndex = index;
@@ -428,7 +478,7 @@ export class TableResizeBox extends TableResizeCommon {
         dragHelper.onMove(positionInfo, e, (helper) => {
           const { position } = positionInfo;
           this.autoScroller?.updateMousePosition(e.clientX, e.clientY);
-          if (!this.dragPlaceholder || !this.markIndicator || !this.tableWrapperBlot) return;
+          if (!this.dragPlaceholder || !this.markIndicator || !this.dragTip || !this.tableWrapperBlot) return;
 
           this.dragPlaceholder.classList.remove(this.bem.is('hidden'));
           const rootRect = this.quill.root.getBoundingClientRect();
@@ -439,6 +489,10 @@ export class TableResizeBox extends TableResizeCommon {
             false,
           );
           this.dragPlaceholder.style[isX ? 'left' : 'top'] = `${resultPosition}px`;
+          Object.assign(this.dragTip.style, {
+            left: `${e.clientX - 10}px`,
+            top: `${e.clientY - 10}px`,
+          });
           if (helper.moveToIndex < 0) {
             Object.assign(this.markIndicator.style, {
               opacity: '0',
@@ -474,6 +528,10 @@ export class TableResizeBox extends TableResizeCommon {
           if (this.markIndicator) {
             this.markIndicator.remove();
             this.markIndicator = null;
+          }
+          if (this.dragTip) {
+            this.dragTip.remove();
+            this.dragTip = null;
           }
         });
       },
