@@ -79,7 +79,9 @@ export class TableResizeBox extends TableResizeCommon {
       }
       if (!isSpanX) {
         for (const i of Array.from(cellYIndex).slice(0, -1)) {
-          tableRowHeadsSorted[i].classList.add(this.bem.is('selected'));
+          if (tableRowHeadsSorted[i]) {
+            tableRowHeadsSorted[i].classList.add(this.bem.is('selected'));
+          }
         }
       }
     }
@@ -443,8 +445,8 @@ export class TableResizeBox extends TableResizeCommon {
         let prevent = false;
         dragHelper.onStart(positionInfo, e, () => {
           if (!this.tableBlot) return;
-          const cols = this.tableBlot.getCols();
-          if (dragHelper.selectedIndex.size > cols.length) {
+          const count = (isX ? this.tableBlot.getCols() : this.tableBlot.getRows()).length;
+          if (dragHelper.selectedIndex.size > count) {
             prevent = false;
             return;
           }
