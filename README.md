@@ -401,5 +401,5 @@ If you change the `TableWrapperFormat` blot name, you also need to add new css s
 .ql-toolbar .ql-picker:not(.ql-color-picker):not(.ql-icon-picker).ql-table-up .ql-picker-label svg {
   position: static;
   margin-top: 0;
-}
+}
 ```
