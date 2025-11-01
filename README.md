@@ -132,6 +132,13 @@ The table cell selection handler
 
 The table cell resize handler
 
+#### TableResizeBox Options
+
+| Attribute | Description                                       | Type      | Default |
+| --------- | ------------------------------------------------- | --------- | ------- |
+| size      | bounding box size(px)                             | `number`  | `12`    |
+| draggable | allow drag bounding box head to sort content cell | `boolean` | `true`  |
+
 ### TableMenuContextmenu / TableMenuSelect
 
 The table operate menu
@@ -394,5 +401,5 @@ If you change the `TableWrapperFormat` blot name, you also need to add new css s
 .ql-toolbar .ql-picker:not(.ql-color-picker):not(.ql-icon-picker).ql-table-up .ql-picker-label svg {
   position: static;
   margin-top: 0;
-}
+}
 ```
