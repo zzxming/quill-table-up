@@ -1,6 +1,6 @@
 import type { TableMainFormat, TableWrapperFormat } from '../../formats';
 import type { TableUp } from '../../table-up';
-import type { DragElementOptions, TableResizeBoxOptions } from '../../utils';
+import type { DragElementOptions, Position, TableResizeBoxOptions } from '../../utils';
 import type { TableSelection } from '../table-selection';
 import Quill from 'quill';
 import { getTableMainRect, TableCaptionFormat, TableCellInnerFormat } from '../../formats';
@@ -116,10 +116,6 @@ export class TableResizeBox extends TableResizeCommon {
 
   handleResizerHeaderClick(isX: boolean, index: number, e: MouseEvent) {
     if (!this.table) return;
-    interface Position {
-      x: number;
-      y: number;
-    }
     const { clientX, clientY } = e;
     const tableRect = this.table.getBoundingClientRect();
     if (!e.shiftKey) {

@@ -1,7 +1,7 @@
 import type { EmitterSource, Parchment as TypeParchment, Range as TypeRange } from 'quill';
 import type { TableMainFormat, TableWrapperFormat } from '../formats';
 import type { TableUp } from '../table-up';
-import type { RelactiveRect, TableSelectionOptions } from '../utils';
+import type { Position, RelactiveRect, TableSelectionOptions } from '../utils';
 import Quill from 'quill';
 import { getTableMainRect, TableCellFormat, TableCellInnerFormat } from '../formats';
 import { addScrollEvent, AutoScroller, blotName, clearScrollEvent, createBEM, createResizeObserver, findAllParentBlot, findParentBlot, getElementScrollPosition, getRelativeRect, isRectanglesIntersect, tableUpEvent, tableUpInternal } from '../utils';
@@ -24,7 +24,7 @@ export class TableSelection extends TableDomSelector {
   options: TableSelectionOptions;
   boundary: RelactiveRect | null = null;
   scrollRecordEls: HTMLElement[] = [];
-  startScrollRecordPosition: { x: number; y: number }[] = [];
+  startScrollRecordPosition: Position[] = [];
   selectedTableScrollX: number = 0;
   selectedTableScrollY: number = 0;
   selectedEditorScrollX: number = 0;
@@ -328,7 +328,7 @@ export class TableSelection extends TableDomSelector {
     return cellSelect;
   }
 
-  computeSelectedTds(startPoint: { x: number; y: number }, endPoint: { x: number; y: number }) {
+  computeSelectedTds(startPoint: Position, endPoint: Position) {
     if (!this.table) return [];
     type TempSortedTableCellFormat = TableCellFormat & { index?: number; __rect?: DOMRect };
 

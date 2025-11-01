@@ -1,4 +1,5 @@
-export interface Position { x: number; y: number }
+import type { Position } from './types';
+
 export interface DragPosition {
   startPosition: Position;
   position: Position;

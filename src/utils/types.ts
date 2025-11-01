@@ -107,6 +107,7 @@ export interface TableValue {
   align?: string;
 }
 
+export interface Position { x: number; y: number }
 export interface RelactiveRect {
   x: number;
   y: number;
@@ -132,14 +133,8 @@ export interface InternalTableSelectionModule extends InternalModule {
   isDisplaySelection: boolean;
   tableMenu?: InternalModule;
   computeSelectedTds: (
-    startPoint: {
-      x: number;
-      y: number;
-    },
-    endPoint: {
-      x: number;
-      y: number;
-    }
+    startPoint: Position,
+    endPoint: Position
   ) => TableCellInnerFormat[];
   setSelectedTds: (tds: TableCellInnerFormat[]) => void;
   updateWithSelectedTds: () => void;

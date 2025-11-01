@@ -1,6 +1,6 @@
 import type Quill from 'quill';
 import type { TableUp } from '../../table-up';
-import type { InternalTableSelectionModule, TableMenuOptions } from '../../utils';
+import type { InternalTableSelectionModule, Position, TableMenuOptions } from '../../utils';
 import type { TableSelection } from '../table-selection';
 import { addScrollEvent, clearScrollEvent, limitDomInViewPort, tableUpEvent, tableUpInternal } from '../../utils';
 import { menuColorSelectClassName } from './constants';
@@ -74,7 +74,7 @@ export class TableMenuContextmenu extends TableMenuCommon {
   // override show. because TableSelection will call tableMenu.show() after select td
   show() {}
 
-  update(position?: { x: number; y: number }) {
+  update(position?: Position) {
     super.update();
     const tableSelection = this.tableModule.getModule<TableSelection>(tableUpInternal.tableSelectionName);
     if (!this.table || !this.isMenuDisplay || !this.menu) {
