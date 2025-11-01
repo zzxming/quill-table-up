@@ -2,12 +2,13 @@ export interface Position { x: number; y: number }
 export interface DragPosition {
   startPosition: Position;
   position: Position;
+  movePosition: Position;
 }
 export interface DragElementOptions {
   axis: 'x' | 'y' | 'both';
-  onStart: (position: DragPosition, e: PointerEvent) => void | boolean;
-  onMove: (position: DragPosition, e: PointerEvent) => void;
-  onEnd: (position: DragPosition, e: PointerEvent) => void;
+  onStart: (position: DragPosition, e: PointerEvent,) => void | boolean;
+  onMove: (position: DragPosition, e: PointerEvent,) => void;
+  onEnd: (position: DragPosition, e: PointerEvent,) => void;
   buttons: number[];
   container: HTMLElement;
   draggingElement: HTMLElement | Window | Document;
@@ -27,7 +28,8 @@ export function dragElement(target: HTMLElement, options: Partial<DragElementOpt
   } = options;
 
   let position = { x: 0, y: 0 };
-  let startPosition: typeof position | undefined;
+  let startPosition: Position | undefined;
+  let startPoint = { x: 0, y: 0 };
 
   function updatePositionByEvent(e: PointerEvent) {
     if (!startPosition) return;
@@ -63,7 +65,14 @@ export function dragElement(target: HTMLElement, options: Partial<DragElementOpt
       x: e.clientX - (container ? targetRect.left - containerRect!.left + container.scrollLeft : targetRect.left),
       y: e.clientY - (container ? targetRect.top - containerRect!.top + container.scrollTop : targetRect.top),
     };
-    if (onStart({ position, startPosition: pos }, e) === false) return;
+    startPoint = { x: e.clientX, y: e.clientY };
+    if (onStart({
+      position,
+      startPosition: pos,
+      movePosition: { x: e.clientX - startPoint.x, y: e.clientY - startPoint.y },
+    }, e) === false) {
+      return;
+    }
 
     startPosition = pos;
     position = pos;
@@ -71,14 +80,23 @@ export function dragElement(target: HTMLElement, options: Partial<DragElementOpt
   function handlePointerMove(e: PointerEvent) {
     if (!startPosition) return;
     updatePositionByEvent(e);
-    onMove({ position, startPosition }, e);
+    onMove({
+      position,
+      startPosition,
+      movePosition: { x: e.clientX - startPoint.x, y: e.clientY - startPoint.y },
+    }, e);
   }
   function handlePointerUp(e: PointerEvent) {
     (draggingElement as HTMLElement).removeEventListener('pointermove', handlePointerMove);
     (draggingElement as HTMLElement).removeEventListener('pointerup', handlePointerUp);
     updatePositionByEvent(e);
-    onEnd({ position, startPosition: startPosition! }, e);
+    onEnd({
+      position,
+      startPosition: startPosition!,
+      movePosition: { x: e.clientX - startPoint.x, y: e.clientY - startPoint.y },
+    }, e);
     startPosition = undefined;
+    startPoint = { x: 0, y: 0 };
     position = { x: 0, y: 0 };
   }
 
