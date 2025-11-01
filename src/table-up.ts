@@ -512,7 +512,7 @@ export class TableUp {
               const { [blotName.tableCellInner]: nullValue, ...attrs } = attributes;
               if (changeCellStyle) {
                 const tableCellInner = contents.slice(deltaIndex - 1, deltaIndex).ops[0];
-                if (tableCellInner && tableCellInner.attributes && tableCellInner.attributes[blotName.tableCellInner]) {
+                if (tableCellInner?.attributes?.[blotName.tableCellInner]) {
                   const tableCellInnerValue = tableCellInner.attributes[blotName.tableCellInner] as TableCellValue;
                   const { style, ...value } = tableCellInnerValue;
                   const newStyle = changeCellStyle(style);
@@ -967,7 +967,7 @@ export class TableUp {
   deleteTable(selectedTds: TableCellInnerFormat[]) {
     if (selectedTds.length === 0) return;
     const tableBlot = findParentBlot(selectedTds[0], blotName.tableMain);
-    tableBlot && tableBlot.remove();
+    tableBlot?.remove();
   }
 
   appendRow(selectedTds: TableCellInnerFormat[], isDown: boolean) {

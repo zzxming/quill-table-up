@@ -274,7 +274,7 @@ describe('insert block embed blot', () => {
     );
   });
 
-  it('makesure the text delta order is correct', async () => {
+  it('makesure the text delta order is correct', () => {
     const quill = createQuillWithTableModule(`<p><br></p>`);
     quill.setContents([
       { insert: '\n' },

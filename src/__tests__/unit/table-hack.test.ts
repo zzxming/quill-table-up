@@ -130,7 +130,7 @@ describe('hack html convert', () => {
     );
   });
 
-  it('getHTMLByCell should not get contenteditable table cell or caption', async () => {
+  it('getHTMLByCell should not get contenteditable table cell or caption', () => {
     const quill = createQuillWithTableModule(`<p><br></p>`);
     quill.setContents([
       { insert: '\nTable Caption' },
@@ -207,7 +207,7 @@ describe('hack html convert', () => {
 });
 
 describe('hack format cell', () => {
-  it('origin format cell should effect', async () => {
+  it('origin format cell should effect', () => {
     const quill = createQuillWithTableModule('<p>0123456789</p>');
     quill.setSelection(3, 2, Quill.sources.SILENT);
     quill.format('bold', true);
@@ -372,7 +372,7 @@ describe('hack format cell', () => {
     expect(quill.getSelection()).toEqual({ index: 18, length: 0 });
   });
 
-  it('selection not in cell and selectedTds not empty should format all text in cell', async () => {
+  it('selection not in cell and selectedTds not empty should format all text in cell', () => {
     const quill = createQuillWithTableModule('<p></p>', { modules: [{ module: TableSelection }] });
     quill.setContents(createTableDeltaOps(2, 2, { full: false }));
     quill.updateContents(
@@ -419,7 +419,7 @@ describe('hack format cell', () => {
     );
   });
 
-  it('selection can get format tableCellInner. should format like origin', async () => {
+  it('selection can get format tableCellInner. should format like origin', () => {
     const quill = createQuillWithTableModule('<p></p>', { modules: [{ module: TableSelection }] });
     quill.setContents([
       { insert: '12345\n' },
@@ -463,7 +463,7 @@ describe('hack format cell', () => {
 });
 
 describe('hack toolbar clean handler', () => {
-  it('clean handler should not effect when selection not have cell', async () => {
+  it('clean handler should not effect when selection not have cell', () => {
     const quill = createQuillWithTableModule('<p></p>');
     quill.setContents([
       { attributes: { underline: true, strike: true, italic: true, bold: true }, insert: '12345' },
@@ -480,7 +480,7 @@ describe('hack toolbar clean handler', () => {
     expect(quill.getSelection()).toEqual({ index: 0, length: 5 });
   });
 
-  it('clean handler should clean format exclude cell', async () => {
+  it('clean handler should clean format exclude cell', () => {
     const quill = createQuillWithTableModule('<p></p>');
     quill.setContents([
       { insert: '\n' },
@@ -522,7 +522,7 @@ describe('hack toolbar clean handler', () => {
     expect(quill.getSelection()).toEqual({ index: 4, length: 3 });
   });
 
-  it('clean handler should not clean if selection length 0', async () => {
+  it('clean handler should not clean if selection length 0', () => {
     const quill = createQuillWithTableModule('<p></p>');
     quill.setContents([
       { insert: '\n' },
@@ -565,7 +565,7 @@ describe('hack toolbar clean handler', () => {
     expect(quill.getSelection()).toEqual({ index: 8, length: 0 });
   });
 
-  it('clean handler should clean all format in selectedTds', async () => {
+  it('clean handler should clean all format in selectedTds', () => {
     const quill = createQuillWithTableModule('<p></p>', { modules: [{ module: TableSelection }] });
     quill.setContents([
       { insert: '\n' },
@@ -612,7 +612,7 @@ describe('hack toolbar clean handler', () => {
     expect(quill.getSelection()).toBeNull();
   });
 
-  it('selection not in cell but have selectedTds. should clean all text in selected cell', async () => {
+  it('selection not in cell but have selectedTds. should clean all text in selected cell', () => {
     const quill = createQuillWithTableModule('<p></p>', { modules: [{ module: TableSelection }] });
     quill.setContents([
       { insert: '12345', attributes: { bold: true } },
@@ -658,7 +658,7 @@ describe('hack toolbar clean handler', () => {
     expect(quill.getSelection()).toBeNull();
   });
 
-  it('clean handler should clean block format text in cell', async () => {
+  it('clean handler should clean block format text in cell', () => {
     const quill = createQuillWithTableModule('<p></p>');
     quill.setContents([
       { insert: '\n' },
@@ -758,7 +758,7 @@ describe('hack toolbar clean handler', () => {
     );
   });
 
-  it('clean handler trigger source should be USER', async () => {
+  it('clean handler trigger source should be USER', () => {
     const quill = createQuillWithTableModule('<p></p>', { modules: [{ module: TableSelection }] });
     quill.setContents([
       { insert: '\n' },
@@ -779,7 +779,7 @@ describe('hack toolbar clean handler', () => {
     expect(textChangeSpy).toHaveBeenCalledWith(expect.anything(), expect.anything(), Quill.sources.USER);
   });
 
-  it('clean handler should not clean cell style when selection in cell', async () => {
+  it('clean handler should not clean cell style when selection in cell', () => {
     const quill = createQuillWithTableModule('<p></p>', { modules: [{ module: TableSelection }] });
     quill.setContents([
       { insert: '\n' },
@@ -862,7 +862,7 @@ describe('hack toolbar clean handler', () => {
     );
   });
 
-  it('clean handler should clean cell style when have selectedTds cleaning', async () => {
+  it('clean handler should clean cell style when have selectedTds cleaning', () => {
     const quill = createQuillWithTableModule('<p></p>', { modules: [{ module: TableSelection }] });
     quill.setContents([
       { insert: '\n' },
@@ -947,7 +947,7 @@ describe('hack toolbar clean handler', () => {
     );
   });
 
-  it('clean handler should clean cell selectedTds style', async () => {
+  it('clean handler should clean cell selectedTds style', () => {
     const quill = createQuillWithTableModule('<p></p>', { modules: [{ module: TableSelection }] });
     quill.setContents([
       { insert: '\n' },

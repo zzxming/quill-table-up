@@ -63,7 +63,7 @@ export class TableMenuSelect extends TableMenuCommon {
     if (!this.menu || !this.table || selectedTds.length === 0) {
       if (this.menu || !this.table) {
         this.isMenuDisplay = false;
-        this.menu && this.menu.classList.add(this.bem.is('hidden'));
+        this.menu?.classList.add(this.bem.is('hidden'));
         this.hide();
       }
       return;

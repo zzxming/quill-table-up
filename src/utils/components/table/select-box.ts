@@ -56,7 +56,7 @@ export function createSelectBox(options: Partial<TableSelectOptions> = {}) {
   selectBlock.addEventListener('click', () => {
     const { row, col } = selectDom.dataset;
     if (!row || !col) return;
-    options.onSelect && options.onSelect(Number(row), Number(col));
+    options.onSelect?.(Number(row), Number(col));
   });
   selectDom.appendChild(selectBlock);
 
@@ -68,7 +68,7 @@ export function createSelectBox(options: Partial<TableSelectOptions> = {}) {
     selectCustom.addEventListener('click', async () => {
       const res = await showTableCreator(texts);
       if (res) {
-        options.onSelect && options.onSelect(res.row, res.col);
+        options.onSelect?.(res.row, res.col);
       }
     });
     selectDom.appendChild(selectCustom);

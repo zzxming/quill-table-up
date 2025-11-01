@@ -117,7 +117,7 @@ export const tableCantInsert: Set<string> = new Set([blotName.tableCellInner]);
 
 export const isForbidInTableBlot = (blot: TypeParchment.Blot) => tableCantInsert.has(blot.statics.blotName);
 export function isForbidInTable(current: TypeParchment.Blot): boolean {
-  return current && current.parent
+  return current?.parent
     ? isForbidInTableBlot(current.parent)
       ? true
       : isForbidInTable(current.parent)

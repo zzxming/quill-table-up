@@ -644,7 +644,7 @@ export class TableResizeBox extends TableResizeCommon {
 
     // computed about `caption`
     const [tableCaptionBlot] = findChildBlot(this.tableBlot, TableCaptionFormat);
-    const tableCaptionIsTop = !tableCaptionBlot || !(tableCaptionBlot && tableCaptionBlot.side === 'top');
+    const tableCaptionIsTop = !tableCaptionBlot || !(tableCaptionBlot?.side === 'top');
     if (tableCaptionIsTop) {
       this.root.classList.remove(this.bem.is('caption-bottom'));
     }

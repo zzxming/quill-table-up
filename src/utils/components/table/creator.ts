@@ -73,7 +73,7 @@ export async function showTableCreator(options: Partial<TableCreatorOptions> = {
         }
       });
     }
-    confirmBtn.addEventListener('click', async () => {
+    confirmBtn.addEventListener('click', () => {
       const result = validateInput();
       if (result) {
         resolve(result);

@@ -241,7 +241,7 @@ export class TableCellInnerFormat extends ContainerFormat {
     }
     super.formatAt(index, length, name, value);
     // set style for `td`
-    if (value && value.style) {
+    if (value?.style) {
       this.setStyleByString(value.style);
     }
   }

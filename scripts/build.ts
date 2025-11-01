@@ -14,7 +14,7 @@ async function main() {
   }
   function reloadClients() {
     console.log(`[${new Date().toLocaleString()}] Build completed successfully!`);
-    if (wss && wss.clients) {
+    if (wss?.clients) {
       for (const client of wss.clients) {
         if (client.readyState === 1) {
           client.send(JSON.stringify({ type: 'reload' }));

@@ -88,7 +88,7 @@ export class TableSelection extends TableDomSelector {
     if (currentSelectedTds.length <= 0) return;
 
     const html = clipboardData.getData('text/html');
-    const delta = this.quill.clipboard.convert({ html }).ops.filter(op => op.attributes && op.attributes[blotName.tableCellInner]);
+    const delta = this.quill.clipboard.convert({ html }).ops.filter(op => op.attributes?.[blotName.tableCellInner]);
 
     if (delta.length === 0) return;
 

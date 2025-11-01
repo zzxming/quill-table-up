@@ -236,7 +236,7 @@ export class TableMainFormat extends ContainerFormat {
         if (row.children.length === 0 && row.prev) {
           // find the not empty row
           let prev = row.prev as TableRowFormat;
-          while (prev && prev.children.length === 0) {
+          while (prev?.children.length === 0) {
             prev = prev.prev as TableRowFormat;
           }
           prev.foreachCellInner((cell) => {

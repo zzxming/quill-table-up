@@ -77,7 +77,7 @@ export function findChildBlot<T extends TypeParchment.BlotConstructor>(parent: T
 
 function mixinProps<T = any, U = any>(target: T, source: U, excludeReg?: RegExp) {
   for (const prop of Object.getOwnPropertyNames(source)) {
-    if (excludeReg && excludeReg.test(prop)) continue;
+    if (excludeReg?.test(prop)) continue;
     Object.defineProperty(target, prop, Object.getOwnPropertyDescriptor(source, prop)!);
   }
   return target;

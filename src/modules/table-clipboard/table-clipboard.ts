@@ -194,7 +194,7 @@ export class TableClipboard extends Clipboard {
   matchThead(node: Node, delta: TypeDelta) {
     const deltaData = this.matchTbody(node, delta);
     for (const op of deltaData.ops) {
-      if (op.attributes && op.attributes[blotName.tableCellInner]) {
+      if (op.attributes?.[blotName.tableCellInner]) {
         const tableCellInner = op.attributes[blotName.tableCellInner] as TableCellValue;
         tableCellInner.wrapTag = 'thead';
       }
@@ -205,7 +205,7 @@ export class TableClipboard extends Clipboard {
   matchTfoot(node: Node, delta: TypeDelta) {
     const deltaData = this.matchTbody(node, delta);
     for (const op of deltaData.ops) {
-      if (op.attributes && op.attributes[blotName.tableCellInner]) {
+      if (op.attributes?.[blotName.tableCellInner]) {
         const tableCellInner = op.attributes[blotName.tableCellInner] as TableCellValue;
         tableCellInner.wrapTag = 'tfoot';
       }
@@ -320,7 +320,7 @@ export class TableClipboard extends Clipboard {
       for (const op of delta.ops) {
         const { attributes, ...other } = op;
         const tableCellInner = attributes?.[blotName.tableCellInner] as TableCellValue;
-        if (attributes && tableCellInner && tableCellInner.style) {
+        if (attributes && tableCellInner?.style) {
           const { background, ...attrs } = attributes;
 
           const bgTemp = document.createElement('div');
@@ -362,7 +362,7 @@ export class TableClipboard extends Clipboard {
   matchCaption(node: Node, delta: TypeDelta) {
     for (const op of delta.ops) {
       const { attributes } = op;
-      if (attributes && attributes[blotName.tableCaption]) {
+      if (attributes?.[blotName.tableCaption]) {
         (attributes[blotName.tableCaption] as TableCaptionValue).tableId = this.tableId;
         op.attributes = attributes;
       }

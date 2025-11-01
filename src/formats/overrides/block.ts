@@ -58,7 +58,7 @@ export class BlockOverride extends Block {
           const index = this.offset(currentParent);
           const length = this.length();
           const selfParent = currentParent.isolate(index, length);
-          if (selfParent && selfParent.parent) {
+          if (selfParent?.parent) {
             selfParent.parent.insertBefore(replacement, selfParent.next);
           }
           replacement.appendChild(this);
