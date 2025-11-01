@@ -3,7 +3,7 @@ import type { TableUp } from '../../table-up';
 import type { TableSelection } from '../table-selection';
 import Quill from 'quill';
 import { getTableMainRect, TableRowFormat } from '../../formats';
-import { blotName, createBEM, dragElement, findParentBlot, tableUpInternal } from '../../utils';
+import { addScrollEvent, blotName, clearScrollEvent, createBEM, dragElement, findParentBlot, tableUpInternal } from '../../utils';
 import { TableResizeCommon } from './table-resize-common';
 import { isTableAlignRight } from './utils';
 
@@ -17,6 +17,7 @@ export class TableResizeLine extends TableResizeCommon {
   bem = createBEM('resize-line');
   stopColDrag?: () => void;
   stopRowDrag?: () => void;
+  scrollHandler: [HTMLElement, (e: Event) => void][] = [];
 
   constructor(public tableModule: TableUp, public quill: Quill) {
     super(tableModule, quill);
@@ -24,6 +25,15 @@ export class TableResizeLine extends TableResizeCommon {
     this.rowResizer = this.tableModule.addContainer(this.bem.be('row'));
 
     this.quill.on(Quill.events.EDITOR_CHANGE, this.updateWhenTextChange);
+  }
+
+  setSelectionTable(table: HTMLTableElement | undefined) {
+    if (this.table === table) return;
+    this.hide();
+    this.table = table;
+    if (this.table) {
+      this.show();
+    }
   }
 
   updateWhenTextChange = (eventName: string) => {
@@ -69,6 +79,10 @@ export class TableResizeLine extends TableResizeCommon {
         this.updateColResizer();
       }
       this.updateRowResizer();
+      addScrollEvent.call(this, this.quill.root, () => {
+        if (this.dragging) return;
+        this.hideResizer();
+      });
     }
   };
 
@@ -202,18 +216,18 @@ export class TableResizeLine extends TableResizeCommon {
     this.table.addEventListener('pointermove', this.pointermoveHandler);
   }
 
-  hide() {
-    this.currentTableCell = undefined;
+  hideResizer() {
     if (!this.rowResizer || !this.colResizer) return;
     this.rowResizer.classList.add(this.bem.is('hidden'));
     this.colResizer.classList.add(this.bem.is('hidden'));
-    if (!this.table) return;
-    this.table.removeEventListener('pointermove', this.pointermoveHandler);
   }
 
-  update() {
-    this.updateColResizer();
-    this.updateRowResizer();
+  hide() {
+    this.currentTableCell = undefined;
+    clearScrollEvent.call(this);
+    this.hideResizer();
+    if (!this.table) return;
+    this.table.removeEventListener('pointermove', this.pointermoveHandler);
   }
 
   destroy(): void {

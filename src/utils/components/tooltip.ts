@@ -34,7 +34,6 @@ export interface ToolTipOptions {
   onDestroy?: () => void;
 }
 const DISTANCE = 4;
-let tooltipContainer: HTMLElement;
 export interface TooltipInstance {
   destroy: () => void;
   show: (force?: boolean) => void;
@@ -44,10 +43,7 @@ export function createTooltip(target: HTMLElement, options: ToolTipOptions = {})
   const { msg = '', delay = 150, content, direction = 'bottom', type = 'hover', container, onOpen, onClose, closed, onDestroy } = options;
   const bem = createBEM('tooltip');
   if (msg || content) {
-    if (!tooltipContainer) {
-      tooltipContainer = document.createElement('div');
-    }
-    const appendTo = container || tooltipContainer;
+    const appendTo = container || document.body;
     const tooltip = document.createElement('div');
     tooltip.classList.add(bem.b(), 'hidden', 'transparent');
     if (content) {
@@ -75,9 +71,6 @@ export function createTooltip(target: HTMLElement, options: ToolTipOptions = {})
       tooltip.classList.add('hidden');
       if (appendTo.contains(tooltip)) {
         appendTo.removeChild(tooltip);
-        if (appendTo === tooltipContainer && !tooltipContainer.hasChildNodes()) {
-          document.body.removeChild(tooltipContainer);
-        }
       }
       if (cleanup) cleanup();
       if (closed) closed();
@@ -90,9 +83,6 @@ export function createTooltip(target: HTMLElement, options: ToolTipOptions = {})
         if (onOpen) {
           const allow = onOpen(force);
           if (!force && allow) return;
-        }
-        if (appendTo === tooltipContainer && !tooltipContainer.parentElement) {
-          document.body.appendChild(tooltipContainer);
         }
         appendTo.appendChild(tooltip);
         tooltip.removeEventListener('transitionend', transitionendHandler);
