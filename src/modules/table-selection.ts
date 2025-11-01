@@ -1,10 +1,10 @@
 import type { EmitterSource, Parchment as TypeParchment, Range as TypeRange } from 'quill';
 import type { TableMainFormat, TableWrapperFormat } from '../formats';
 import type { TableUp } from '../table-up';
-import type { RelactiveRect, TableSelectionOptions } from '../utils';
+import type { Position, RelactiveRect, TableSelectionOptions } from '../utils';
 import Quill from 'quill';
 import { getTableMainRect, TableCellFormat, TableCellInnerFormat } from '../formats';
-import { addScrollEvent, blotName, clearScrollEvent, createBEM, createResizeObserver, findAllParentBlot, findParentBlot, getElementScrollPosition, getRelativeRect, isRectanglesIntersect, tableUpEvent, tableUpInternal } from '../utils';
+import { addScrollEvent, AutoScroller, blotName, clearScrollEvent, createBEM, createResizeObserver, findAllParentBlot, findParentBlot, getElementScrollPosition, getRelativeRect, isRectanglesIntersect, tableUpEvent, tableUpInternal } from '../utils';
 import { pasteCells } from './table-clipboard';
 import { TableDomSelector } from './table-dom-selector';
 import { copyCell } from './table-menu/constants';
@@ -24,7 +24,7 @@ export class TableSelection extends TableDomSelector {
   options: TableSelectionOptions;
   boundary: RelactiveRect | null = null;
   scrollRecordEls: HTMLElement[] = [];
-  startScrollRecordPosition: { x: number; y: number }[] = [];
+  startScrollRecordPosition: Position[] = [];
   selectedTableScrollX: number = 0;
   selectedTableScrollY: number = 0;
   selectedEditorScrollX: number = 0;
@@ -36,6 +36,7 @@ export class TableSelection extends TableDomSelector {
   resizeObserver: ResizeObserver;
   isDisplaySelection = false;
   bem = createBEM('selection');
+  autoScroller: AutoScroller;
   lastSelection: SelectionData = {
     anchorNode: null,
     anchorOffset: 0,
@@ -70,6 +71,8 @@ export class TableSelection extends TableDomSelector {
     this.quill.on(tableUpEvent.AFTER_TABLE_RESIZE, this.updateAfterEvent);
     this.quill.on(Quill.events.SELECTION_CHANGE, this.quillSelectionChangeHandler);
     this.quill.on(Quill.events.EDITOR_CHANGE, this.updateWhenTextChange);
+
+    this.autoScroller = new AutoScroller(50, 40);
     this.hide();
   }
 
@@ -325,7 +328,7 @@ export class TableSelection extends TableDomSelector {
     return cellSelect;
   }
 
-  computeSelectedTds(startPoint: { x: number; y: number }, endPoint: { x: number; y: number }) {
+  computeSelectedTds(startPoint: Position, endPoint: Position) {
     if (!this.table) return [];
     type TempSortedTableCellFormat = TableCellFormat & { index?: number; __rect?: DOMRect };
 
@@ -467,16 +470,23 @@ export class TableSelection extends TableDomSelector {
         this.quill.blur();
       }
       this.update();
+      this.autoScroller.updateMousePosition(clientX, clientY);
     };
     const mouseUpHandler = () => {
       document.body.removeEventListener('mousemove', mouseMoveHandler, false);
       document.body.removeEventListener('mouseup', mouseUpHandler, false);
+      this.autoScroller.stop();
       this.dragging = false;
       this.clearRecordScrollPosition();
     };
 
     document.body.addEventListener('mousemove', mouseMoveHandler, false);
     document.body.addEventListener('mouseup', mouseUpHandler, false);
+    const tableMain = Quill.find(closestTable) as TableMainFormat;
+    if (!tableMain) return;
+    const tableWrapper = tableMain.parent!.domNode as HTMLElement;
+    this.autoScroller.updateMousePosition(clientX, clientY);
+    this.autoScroller.start(tableWrapper);
   }
 
   updateWithSelectedTds() {

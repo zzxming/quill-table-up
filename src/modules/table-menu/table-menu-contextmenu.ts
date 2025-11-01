@@ -1,8 +1,8 @@
 import type Quill from 'quill';
 import type { TableUp } from '../../table-up';
-import type { InternalTableSelectionModule, TableMenuOptions, ToolTipOptions } from '../../utils';
+import type { InternalTableSelectionModule, Position, TableMenuOptions } from '../../utils';
 import type { TableSelection } from '../table-selection';
-import { limitDomInViewPort, tableUpEvent, tableUpInternal } from '../../utils';
+import { addScrollEvent, clearScrollEvent, limitDomInViewPort, tableUpEvent, tableUpInternal } from '../../utils';
 import { menuColorSelectClassName } from './constants';
 import { TableMenuCommon } from './table-menu-common';
 
@@ -10,9 +10,7 @@ type TableMenuOptionsInput = Partial<Omit<TableMenuOptions, 'texts'>>;
 export class TableMenuContextmenu extends TableMenuCommon {
   static moduleName = 'table-menu-contextmenu';
 
-  colorChooseTooltipOption: ToolTipOptions = {
-    direction: 'right',
-  };
+  scrollHandler: [HTMLElement, (e: Event) => void][] = [];
 
   constructor(public tableModule: TableUp, public quill: Quill, options: TableMenuOptionsInput) {
     super(tableModule, quill, options);
@@ -42,13 +40,14 @@ export class TableMenuContextmenu extends TableMenuCommon {
         this.menu = this.buildTools();
       }
       // manual call menu show
-      Object.assign(this.menu.style, { display: 'flex' });
       this.isMenuDisplay = true;
-
       this.update({ x: e.clientX, y: e.clientY });
-      document.addEventListener('click', () => {
+      const tempHide = () => {
         this.hide();
-      }, { once: true });
+        clearScrollEvent.call(this);
+      };
+      addScrollEvent.call(this, this.quill.root, tempHide);
+      document.addEventListener('click', tempHide, { once: true });
     }
     else {
       this.hide();
@@ -62,7 +61,7 @@ export class TableMenuContextmenu extends TableMenuCommon {
     for (const item of Array.from(items)) {
       item.addEventListener('click', e => e.stopPropagation());
     }
-    document.body.appendChild(menu);
+    this.quill.container.appendChild(menu);
     return menu;
   }
 
@@ -75,7 +74,7 @@ export class TableMenuContextmenu extends TableMenuCommon {
   // override show. because TableSelection will call tableMenu.show() after select td
   show() {}
 
-  update(position?: { x: number; y: number }) {
+  update(position?: Position) {
     super.update();
     const tableSelection = this.tableModule.getModule<TableSelection>(tableUpInternal.tableSelectionName);
     if (!this.table || !this.isMenuDisplay || !this.menu) {
@@ -86,28 +85,20 @@ export class TableMenuContextmenu extends TableMenuCommon {
       return;
     }
 
-    const style: Record<string, any> = {
-      display: 'flex',
-      left: 0,
-      top: 0,
-    };
-
-    const { x, y } = position;
-    style.left = x;
-    style.top = y;
-
+    const rootRect = this.quill.container.getBoundingClientRect();
     Object.assign(this.menu.style, {
-      ...style,
-      left: `${style.left + window.scrollX}px`,
-      top: `${style.top + window.scrollY}px`,
+      left: `${position.x - rootRect.x}px`,
+      top: `${position.y - rootRect.y}px`,
     });
 
     // limit menu in viewport
     const menuRect = this.menu.getBoundingClientRect();
     const { left: limitLeft, top: limitTop } = limitDomInViewPort(menuRect);
+    const diffX = menuRect.left - limitLeft;
+    const diffY = menuRect.top - limitTop;
     Object.assign(this.menu.style, {
-      left: `${limitLeft + window.scrollX}px`,
-      top: `${limitTop + window.scrollY}px`,
+      left: `${position.x - rootRect.x - diffX}px`,
+      top: `${position.y - rootRect.y - diffY}px`,
     });
   }
 

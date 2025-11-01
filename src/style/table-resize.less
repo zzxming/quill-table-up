@@ -91,8 +91,17 @@
     &-header {
       position: relative;
       flex-shrink: 0;
-      background-color: #f3f4f5;
+      background-color: #f5f6f7;
       border: 1px solid #ccc;
+      &:hover {
+        background-color: rgba(23, 26, 29, 0.1);
+      }
+      &.is-selected {
+        cursor: grab;
+        &:hover {
+          background-color: #f5f6f7;
+        }
+      }
     }
   }
   &__col {
@@ -222,6 +231,19 @@
       opacity: 0;
       transition: opacity 0.2s ease-in;
       pointer-events: none;
+    }
+    &__tip {
+      position: fixed;
+      margin-left: -20px;
+      margin-top: -20px;
+      padding-top: 20px;
+      padding-left: 20px;
+      cursor: grabbing;
+      z-index: 1000;
+      &-content {
+        width: 100px;
+        height: 24px;
+      }
     }
   }
 }
