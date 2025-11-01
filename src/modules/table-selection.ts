@@ -127,8 +127,7 @@ export class TableSelection extends TableDomSelector {
 
   updateAfterEvent = () => {
     // if any cell doesn't exist, selection will be cleared
-    for (let i = 0; i < this.selectedTds.length; i++) {
-      const td = this.selectedTds[i];
+    for (const td of this.selectedTds) {
       if (!td.domNode.isConnected) {
         this.selectedTds = [];
         break;

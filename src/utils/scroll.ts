@@ -17,8 +17,7 @@ export function removeScrollEvent(this: ScrollHandle, dom: HTMLElement, handle: 
 }
 
 export function clearScrollEvent(this: ScrollHandle) {
-  for (let i = 0; i < this.scrollHandler.length; i++) {
-    const [dom, handle] = this.scrollHandler[i];
+  for (const [dom, handle] of this.scrollHandler) {
     dom.removeEventListener('scroll', handle);
   }
   this.scrollHandler = [];

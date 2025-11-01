@@ -134,7 +134,7 @@ export interface InternalTableSelectionModule extends InternalModule {
   tableMenu?: InternalModule;
   computeSelectedTds: (
     startPoint: Position,
-    endPoint: Position
+    endPoint: Position,
   ) => TableCellInnerFormat[];
   setSelectedTds: (tds: TableCellInnerFormat[]) => void;
   updateWithSelectedTds: () => void;

@@ -89,11 +89,7 @@ export function mixinClass<
   base: T,
   mixins: U,
 ): T & Omit<U[number], 'constructor' | keyof InstanceType<T>> {
-  const targetClass: any = class extends base {
-    constructor(...props: any[]) {
-      super(...props);
-    }
-  };
+  const targetClass: any = class extends base {};
   for (const source of mixins) {
     mixinProps(targetClass.prototype, source.prototype, /^constructor$/);
   }

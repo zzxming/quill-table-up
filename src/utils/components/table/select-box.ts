@@ -32,12 +32,12 @@ export function createSelectBox(options: Partial<TableSelectOptions> = {}) {
     }
     if (!row || !col) return;
     const childs = Array.from(selectBlock.children) as HTMLElement[];
-    for (let i = 0; i < childs.length; i++) {
-      const { row: childRow, col: childCol } = childs[i].dataset;
+    for (const child of childs) {
+      const { row: childRow, col: childCol } = child.dataset;
       if (childRow! > row && childCol! > col) {
         return;
       }
-      childs[i].classList.toggle('active', childRow! <= row && childCol! <= col);
+      child.classList.toggle('active', childRow! <= row && childCol! <= col);
     }
   };
   selectBlock.addEventListener('mousemove', (e) => {

@@ -215,8 +215,7 @@ export class TableClipboard extends Clipboard {
 
   matchColgroup(node: Node, delta: TypeDelta) {
     const ops: Record<string, any>[] = [];
-    for (let i = 0; i < delta.ops.length; i++) {
-      const op = delta.ops[i];
+    for (const op of delta.ops) {
       if (op && isObject(op.insert) && op.insert[blotName.tableCol]) {
         ops.push(op);
       }
@@ -361,8 +360,7 @@ export class TableClipboard extends Clipboard {
   }
 
   matchCaption(node: Node, delta: TypeDelta) {
-    for (let i = 0; i < delta.ops.length; i++) {
-      const op = delta.ops[i];
+    for (const op of delta.ops) {
       const { attributes } = op;
       if (attributes && attributes[blotName.tableCaption]) {
         (attributes[blotName.tableCaption] as TableCaptionValue).tableId = this.tableId;
