@@ -25,8 +25,8 @@ export function cssTextToObject(cssText: string): Record<string, string> {
 
   const styles = cssText.trim().split(';');
 
-  for (let i = 0; i < styles.length; i++) {
-    const style = styles[i].trim();
+  for (const item of styles) {
+    const style = item.trim();
     if (!style) continue;
 
     const colonPosition = style.indexOf(':');

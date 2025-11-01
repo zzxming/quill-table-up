@@ -7,9 +7,9 @@ export interface DragPosition {
 }
 export interface DragElementOptions {
   axis: 'x' | 'y' | 'both';
-  onStart: (position: DragPosition, e: PointerEvent,) => void | boolean;
-  onMove: (position: DragPosition, e: PointerEvent,) => void;
-  onEnd: (position: DragPosition, e: PointerEvent,) => void;
+  onStart: (position: DragPosition, e: PointerEvent) => void | boolean;
+  onMove: (position: DragPosition, e: PointerEvent) => void;
+  onEnd: (position: DragPosition, e: PointerEvent) => void;
   buttons: number[];
   container: HTMLElement;
   draggingElement: HTMLElement | Window | Document;
