@@ -35,6 +35,7 @@ export class TableResizeBox extends TableResizeCommon {
   autoScroller: TableAutoScroller | null = null;
   updateContentDraggingPosition: () => void;
   cellSpanIndex: Set<number> = new Set();
+  dragPlaceholderStartPosition = { x: 0, y: 0 };
 
   constructor(public tableModule: TableUp, public quill: Quill, options: Partial<TableResizeBoxOptions>) {
     super(tableModule, quill);
@@ -234,16 +235,19 @@ export class TableResizeBox extends TableResizeCommon {
     this.dragPlaceholder = document.createElement('div');
     this.dragPlaceholder.classList.add(dragBEM.be('placeholder'), dragBEM.is('hidden'));
     this.dragWrapper.appendChild(this.dragPlaceholder);
+    this.dragPlaceholderStartPosition = {
+      x: isX ? tableSelection.boundary!.x - wrapLeft : 0,
+      y: isX ? 0 : tableSelection.boundary!.y - wrapTop,
+    };
     Object.assign(this.dragPlaceholder.style, {
-      left: `${isX ? tableSelection.boundary!.x - wrapLeft : 0}px`,
-      top: `${isX ? 0 : tableSelection.boundary!.y - wrapTop}px`,
+      left: `${this.dragPlaceholderStartPosition.x}px`,
+      top: `${this.dragPlaceholderStartPosition.y}px`,
       width: `${placeholderWidth}px`,
       height: `${placeholderHeight}px`,
     });
 
     this.markIndicator = this.tableModule.addContainer(dragBEM.be('indicator'));
-    let markIndicatorStyle = {};
-    markIndicatorStyle = isX
+    const markIndicatorStyle = isX
       ? {
           top: `${wrapTop}px`,
           height: `${Math.min(tableSelection.boundary!.height, tableWrapperRect.height)}px`,
@@ -476,16 +480,14 @@ export class TableResizeBox extends TableResizeCommon {
       },
       onMove: (positionInfo, e) => {
         dragHelper.onMove(positionInfo, e, (helper) => {
-          const { position } = positionInfo;
+          const { movePosition } = positionInfo;
           this.autoScroller?.updateMousePosition(e.clientX, e.clientY);
           if (!this.dragPlaceholder || !this.markIndicator || !this.dragTip || !this.tableWrapperBlot) return;
 
           this.dragPlaceholder.classList.remove(this.bem.is('hidden'));
-          const rootRect = this.quill.root.getBoundingClientRect();
-          const tableWrapperRect = this.tableWrapperBlot.domNode.getBoundingClientRect();
           const resultPosition = helper.dragCommon.limitRange(
             this.tableBlot,
-            isX ? position.x - tableWrapperRect.left : position.y - tableWrapperRect.top,
+            this.dragPlaceholderStartPosition[isX ? 'x' : 'y'] + movePosition[isX ? 'x' : 'y'],
             false,
           );
           this.dragPlaceholder.style[isX ? 'left' : 'top'] = `${resultPosition}px`;
@@ -499,6 +501,7 @@ export class TableResizeBox extends TableResizeCommon {
             });
             return;
           }
+          const rootRect = this.quill.root.getBoundingClientRect();
           const isBeyond = helper.moveToIndex >= helper.startPosition.length;
           const item = helper.startPosition[isBeyond ? helper.moveToIndex - 1 : helper.moveToIndex];
           const indicatorPosition = item.position + (isBeyond ? item.size : 0);
