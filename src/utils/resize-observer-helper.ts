@@ -20,10 +20,10 @@ export function createResizeObserver(callback: (entries: ResizeObserverEntry[]) 
     }
     callback(entries);
   });
-  const originObserve = observer.observe;
+  const originObserve = observer.observe.bind(observer);
   observer.observe = (target: ResizeObserveTarget, options?: ResizeObserverOptions) => {
     observeEls.add(target);
-    originObserve.call(observer, target, options);
+    originObserve(target, options);
   };
 
   const originUnobserve = observer.unobserve;
