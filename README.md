@@ -2,9 +2,9 @@
 
 Enhancement of quill table module
 
-[demo](https://zzxming.github.io/quill-table-up/)
+[demo](https://quill-modules.github.io/quill-table-up/)
 
-[quill@1.3.7 table module](https://github.com/zzxming/quill-table)
+[quill@1.3.7 table module](https://github.com/quill-modules/quill-table)
 
 - [x] complete UI operation process
 - [x] insert/delete row/column/table; merge/split cells
@@ -22,7 +22,7 @@ Enhancement of quill table module
 npm install quill-table-up
 ```
 
-> the registe module name is used internal. so if you want to change it, place use the function [`updateTableConstants`](https://github.com/zzxming/quill-table-up?tab=readme-ov-file#change-internal-constants-variable)
+> the registe module name is used internal. so if you want to change it, place use the function [`updateTableConstants`](https://github.com/quill-modules/quill-table-up?tab=readme-ov-file#change-internal-constants-variable)
 
 ```js
 import Quill from 'quill';
@@ -63,7 +63,7 @@ const quill = new Quill('#editor', {
 
 ## Options
 
-**Full options usage see [demo](https://github.com/zzxming/quill-table-up/blob/master/docs/index.js#L38)**
+**Full options usage see [demo](https://github.com/quill-modules/quill-table-up/blob/master/docs/index.js#L38)**
 
 | Attribute     | Description                                                                                                                 | Type                                                                            | Default                                    |
 | ------------- | --------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- | ------------------------------------------ |
@@ -76,7 +76,7 @@ const quill = new Quill('#editor', {
 | autoMergeCell | empty row or column will auto merge to one                                                                                  | `boolean`                                                                       | `true`                                     |
 | modules       | the module plugin to help user control about table operate. see [`Export Internal Module`](#export-internal-module)         | `[]`                                                                            | `{ module: Contstructor, options: any }[]` |
 
-> I'm not suggest to use `TableVirtualScrollbar` and `TableResizeLine` at same time, because it have a little conflict when user hover on it. Just like the first editor in [demo](https://zzxming.github.io/quill-table-up/)
+> I'm not suggest to use `TableVirtualScrollbar` and `TableResizeLine` at same time, because it have a little conflict when user hover on it. Just like the first editor in [demo](https://quill-modules.github.io/quill-table-up/)
 
 > If you doesn't use `TableVirtualScrollbar`, you may need to set css `.ql-editor .ql-table-wrapper { scrollbar-width: auto; }` to display the browser origin scrollbar.
 
@@ -359,7 +359,7 @@ If you need to rewrite extends from quill `Block` or `Scroll` blot. you need to 
 
 `Header`, `List'`, `Blockquote` and `CodeBlock` have been overrides. If you need to rewrite them, you need to rewrite them before `TableUp` registed.
 
-Please read [source code](https://github.com/zzxming/quill-table-up/tree/master/src/formats/overrides) to know those change.
+Please read [source code](https://github.com/quill-modules/quill-table-up/tree/master/src/formats/overrides) to know those change.
 
 ```ts
 import { BlockOverride, ScrollOverride, } from 'quill-table-up';
@@ -385,8 +385,8 @@ You can change internal constants variable by importing `updateTableConstants` f
 
 It helps to migrate from other table modules with the same data structure.
 
-- [full variable demo](https://github.com/zzxming/quill-table-up/blob/master/docs/update-constants.js)
-- [change blot name that in delta demo](https://github.com/zzxming/quill-table-up/blob/master/docs/update-formats-value.js)
+- [full variable demo](https://github.com/quill-modules/quill-table-up/blob/master/docs/update-constants.js)
+- [change blot name that in delta demo](https://github.com/quill-modules/quill-table-up/blob/master/docs/update-formats-value.js)
 
 If you change the `TableWrapperFormat` blot name, you also need to add new css style to make toolbar icon have correct style.
 
