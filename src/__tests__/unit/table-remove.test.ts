@@ -104,11 +104,6 @@ describe('remove column from table', () => {
                 <td rowspan="2" colspan="1">
                   <div>
                     <p><br></p>
-                    <p><br></p>
-                    <p><br></p>
-                    <p><br></p>
-                    <p><br></p>
-                    <p><br></p>
                   </div>
                 </td>
                 <td rowspan="1" colspan="1"><div><p><br></p></div></td>
@@ -120,8 +115,6 @@ describe('remove column from table', () => {
                 <td rowspan="1" colspan="1"><div><p><br></p></div></td>
                 <td rowspan="1" colspan="1">
                   <div>
-                    <p><br></p>
-                    <p><br></p>
                     <p><br></p>
                   </div>
                 </td>
@@ -232,7 +225,7 @@ describe('unusual delete', () => {
     await vi.runAllTimersAsync();
     tableModule.mergeCells([tds[17], tds[18], tds[22], tds[23]]);
     await vi.runAllTimersAsync();
-    quill.deleteText(18, 8);
+    quill.deleteText(9, 5);
     await vi.runAllTimersAsync();
     expect(quill.root).toEqualHTML(
       `
@@ -246,29 +239,17 @@ describe('unusual delete', () => {
             </colgroup>
             <tbody>
               <tr>
-                <td rowspan="3" colspan="1">
+                <td rowspan="2" colspan="1">
                   <div>
-                    <p><br></p>
-                    <p><br></p>
-                    <p><br></p>
-                    <p><br></p>
-                    <p><br></p>
-                    <p><br></p>
-                    <p><br></p>
-                    <p><br></p>
                     <p><br></p>
                   </div>
                 </td>
                 <td rowspan="1" colspan="1"><div><p><br></p></div></td>
-                <td rowspan="3" colspan="1">
+                <td rowspan="2" colspan="1">
                   <div>
-                    <p><br></p>
                     <p><br></p>
                   </div>
                 </td>
-              </tr>
-              <tr>
-                <td rowspan="1" colspan="1"><div><p><br></p></div></td>
               </tr>
               <tr>
                 <td rowspan="1" colspan="1"><div><p><br></p></div></td>
@@ -292,7 +273,7 @@ describe('unusual delete', () => {
     tableModule.mergeCells([tds[4], tds[9], tds[14], tds[19]]);
     tableModule.mergeCells([tds[17], tds[18], tds[22], tds[23]]);
     await vi.runAllTimersAsync();
-    quill.deleteText(21, 3);
+    quill.deleteText(10, 3);
     await vi.runAllTimersAsync();
     expect(quill.root).toEqualHTML(
       `
@@ -307,22 +288,11 @@ describe('unusual delete', () => {
                <td rowspan="3" colspan="3">
                   <div>
                     <p><br></p>
-                    <p><br></p>
-                    <p><br></p>
-                    <p><br></p>
-                    <p><br></p>
-                    <p><br></p>
-                    <p><br></p>
-                    <p><br></p>
-                    <p><br></p>
                   </div>
                 </td>
                 <td rowspan="1" colspan="1"><div><p><br></p></div></td>
                 <td rowspan="4" colspan="1">
                   <div>
-                    <p><br></p>
-                    <p><br></p>
-                    <p><br></p>
                     <p><br></p>
                   </div>
                 </td>

@@ -1247,7 +1247,10 @@ export class TableUp {
         pre[1][rowId] += selectTd.colspan;
         // merge select cell
         if (index !== 0) {
-          selectTd.moveChildren(pre[2]);
+          // remove empty \n
+          if (selectTd.length() > 1) {
+            selectTd.moveChildren(pre[2]);
+          }
           selectTd.parent.remove();
         }
         return pre;
