@@ -38,9 +38,6 @@ describe('merge and split cell', () => {
                 <td rowspan="2" colspan="2">
                   <div>
                     <p><br></p>
-                    <p><br></p>
-                    <p><br></p>
-                    <p><br></p>
                   </div>
                 </td>
                 <td rowspan="1" colspan="1"><div><p><br></p></div></td>
@@ -80,11 +77,6 @@ describe('merge and split cell', () => {
                 <td rowspan="1" colspan="1"><div><p><br></p></div></td>
                 <td rowspan="2" colspan="1">
                   <div>
-                    <p><br></p>
-                    <p><br></p>
-                    <p><br></p>
-                    <p><br></p>
-                    <p><br></p>
                     <p><br></p>
                   </div>
                 </td>
@@ -130,7 +122,7 @@ describe('merge and split cell', () => {
                 ${new Array(3).fill(0).map(() => `<td rowspan="1" colspan="1"><div><p><br></p></div></td>`).join('\n')}
                 <td rowspan="3" colspan="2">
                   <div>
-                    ${new Array(9).fill(0).map(() => `<p><br></p>`).join('\n')}
+                    <p><br></p>
                   </div>
                 </td>
                 <td rowspan="1" colspan="1"><div><p><br></p></div></td>
@@ -138,7 +130,7 @@ describe('merge and split cell', () => {
               <tr>
                 <td rowspan="3" colspan="3">
                   <div>
-                    ${new Array(9).fill(0).map(() => `<p><br></p>`).join('\n')}
+                    <p><br></p>
                   </div>
                 </td>
                 <td rowspan="1" colspan="1"><div><p><br></p></div></td>
@@ -150,7 +142,7 @@ describe('merge and split cell', () => {
                 <td rowspan="1" colspan="1"><div><p><br></p></div></td>
                 <td rowspan="3" colspan="2">
                   <div>
-                    ${new Array(9).fill(0).map(() => `<p><br></p>`).join('\n')}
+                    <p><br></p>
                   </div>
                 </td>
               </tr>
@@ -192,9 +184,6 @@ describe('merge and split cell', () => {
               <tr>
                 <td rowspan="1" colspan="1">
                   <div>
-                    <p><br></p>
-                    <p><br></p>
-                    <p><br></p>
                     <p><br></p>
                   </div>
                 </td>

@@ -510,11 +510,6 @@ describe('insert row into table', () => {
                 <td rowspan="3" colspan="3">
                   <div>
                     <p><br></p>
-                    <p><br></p>
-                    <p><br></p>
-                    <p><br></p>
-                    <p><br></p>
-                    <p><br></p>
                   </div>
                 </td>
                 <td rowspan="1" colspan="1"><div><p><br></p></div></td>
@@ -528,7 +523,6 @@ describe('insert row into table', () => {
                 <td rowspan="1" colspan="1"><div><p><br></p></div></td>
                 <td rowspan="2" colspan="1">
                   <div>
-                    <p><br></p>
                     <p><br></p>
                   </div>
                 </td>
@@ -606,11 +600,6 @@ describe('insert row into table', () => {
                 <td rowspan="1" colspan="1"><div><p><br></p></div></td>
                 <td rowspan="3" colspan="1">
                   <div>
-                    <p><br></p>
-                    <p><br></p>
-                    <p><br></p>
-                    <p><br></p>
-                    <p><br></p>
                     <p><br></p>
                   </div>
                 </td>
@@ -780,7 +769,7 @@ describe('set cell attribute', () => {
         { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '4', rowspan: 1, colspan: 1, tag: 'td', wrapTag: 'tbody', style: 'border-bottom-color: red;' } }, insert: '\n' },
         { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '5', rowspan: 1, colspan: 1, tag: 'td', wrapTag: 'tbody' } }, insert: '\n' },
         { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '1', rowspan: 1, colspan: 1, tag: 'td', wrapTag: 'tbody', style: 'border-right-color: red;' } }, insert: '\n' },
-        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '2', rowspan: 3, colspan: 3, tag: 'td', wrapTag: 'tbody', style: 'border-color: red;' } }, insert: '\n\n\n\n\n\n\n\n\n' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '2', rowspan: 3, colspan: 3, tag: 'td', wrapTag: 'tbody', style: 'border-color: red;' } }, insert: '\n' },
         { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '5', rowspan: 1, colspan: 1, tag: 'td', wrapTag: 'tbody' } }, insert: '\n' },
         { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '3', colId: '1', rowspan: 1, colspan: 1, tag: 'td', wrapTag: 'tbody', style: 'border-right-color: red;' } }, insert: '\n' },
         { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '3', colId: '5', rowspan: 1, colspan: 1, tag: 'td', wrapTag: 'tbody' } }, insert: '\n' },
@@ -822,7 +811,7 @@ describe('set cell attribute', () => {
         { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '3', rowspan: 1, colspan: 1, tag: 'td', wrapTag: 'tbody' } }, insert: '\n' },
         { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '4', rowspan: 1, colspan: 1, tag: 'td', wrapTag: 'tbody' } }, insert: '\n' },
 
-        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '1', rowspan: 2, colspan: 2, tag: 'td', wrapTag: 'tbody' } }, insert: '\n\n\n\n' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '1', rowspan: 2, colspan: 2, tag: 'td', wrapTag: 'tbody' } }, insert: '\n' },
         { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '3', rowspan: 1, colspan: 1, tag: 'td', wrapTag: 'tbody' } }, insert: '\n' },
         { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '4', rowspan: 1, colspan: 1, tag: 'td', wrapTag: 'tbody' } }, insert: '\n' },
 
@@ -830,7 +819,7 @@ describe('set cell attribute', () => {
         { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '3', colId: '4', rowspan: 1, colspan: 1, tag: 'td', wrapTag: 'tbody' } }, insert: '\n' },
 
         { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '4', colId: '1', rowspan: 1, colspan: 1, tag: 'td', wrapTag: 'tbody', style: 'border-right-color: red;' } }, insert: '\n' },
-        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '4', colId: '2', rowspan: 2, colspan: 2, tag: 'td', wrapTag: 'tbody', style: 'border-color: red;' } }, insert: '\n\n\n\n' },
+        { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '4', colId: '2', rowspan: 2, colspan: 2, tag: 'td', wrapTag: 'tbody', style: 'border-color: red;' } }, insert: '\n' },
         { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '4', colId: '4', rowspan: 1, colspan: 1, tag: 'td', wrapTag: 'tbody' } }, insert: '\n' },
 
         { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '5', colId: '1', rowspan: 1, colspan: 1, tag: 'td', wrapTag: 'tbody', style: 'border-right-color: red;' } }, insert: '\n' },
