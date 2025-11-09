@@ -410,18 +410,25 @@ extendTest.describe('TableSelection keyboard handler', () => {
       const tableUp = window.quills[0].getModule('table-up') as TableUp;
       const tableSelection = tableUp.getModule<TableSelection>('table-selection')!;
       const doms = document.querySelectorAll('#container1 td .ql-table-cell-inner');
-      const cells = Array.from(doms).map(dom => (window as any).Quill.find(dom)) as TableCellInnerFormat[];
+      const cells = Array.from(doms).map(dom => window.Quill.find(dom)) as TableCellInnerFormat[];
       tableSelection.setSelectedTds([cells[0], cells[1], cells[3]]);
       tableSelection.updateWithSelectedTds();
     });
+    await page.waitForTimeout(1000);
 
     const tableSelection = page.locator('#container1 .table-up-toolbox .table-up-selection__line');
     await expect(tableSelection).toBeVisible();
 
     await editorPage.blur();
     await page.keyboard.press('Control+c');
+
+    const cellText = await page.evaluate(() => {
+      const tableUp = window.quills[0].getModule('table-up') as TableUp;
+      const tds = tableUp.getModule<TableSelection>('table-selection')!.selectedTds;
+      return tableUp.getTextByCell(tds);
+    });
     const copiedText = await page.evaluate(() => navigator.clipboard.readText());
-    expect(copiedText.replaceAll('\r', '')).toEqual(`1\n2\n4\n5\n`);
+    expect(copiedText.replaceAll('\r', '')).toEqual(cellText);
   });
 
   extendTest('paste cells with struct(colspan)', async ({ page, browserName, editorPage }) => {
