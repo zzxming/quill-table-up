@@ -151,6 +151,7 @@ export class TableResizeScale extends TableDomSelector {
 
       this.resizeobserver.observe(this.tableMainBlot.domNode);
       addScrollEvent.call(this, this.quill.root, () => this.update());
+      addScrollEvent.call(this, this.tableWrapperBlot.domNode, () => this.update());
     }
     this.buildResizer();
   }
@@ -163,12 +164,12 @@ export class TableResizeScale extends TableDomSelector {
       this.root = undefined;
       this.block = undefined;
     }
+    clearScrollEvent.call(this);
   }
 
   destroy() {
     this.hide();
     this.quill.off(Quill.events.TEXT_CHANGE, this.updateWhenTextChange);
     this.resizeobserver.disconnect();
-    clearScrollEvent.call(this);
   }
 }
