@@ -238,6 +238,53 @@ extendTest.describe('TableResizeScale functional', () => {
     await page.locator('.table-up-menu.is-contextmenu .table-up-menu__item').filter({ hasText: 'Switch table width' }).first().click();
     await expect(page.locator('#container1 .table-up-scale')).not.toBeVisible();
   });
+
+  extendTest('TableResizeScale block should scroll with table wrapper', async ({ page, editorPage }) => {
+    editorPage.index = 0;
+    await editorPage.setContents([
+      { insert: '\n' },
+      { insert: { 'table-up-col': { tableId: '1', colId: '1', width: 500 } } },
+      { insert: { 'table-up-col': { tableId: '1', colId: '2', width: 500 } } },
+      { insert: { 'table-up-col': { tableId: '1', colId: '3', width: 500 } } },
+      { insert: '1' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '1', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '2' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '2', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '3' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '3', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '4' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '1', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '5' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '2', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '6' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '3', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '7' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '3', colId: '1', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '8' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '3', colId: '2', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '9' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '3', colId: '3', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '\n' },
+    ]);
+
+    const cell = page.locator('#container1 .ql-editor .ql-table td').nth(0);
+    await cell.click();
+
+    const scaleWrapper = page.locator('#container1 .table-up-scale');
+    const block = page.locator('#container1 .table-up-scale .table-up-scale__block');
+    await expect(block).toBeVisible();
+    const scaleWrapperBounding = (await scaleWrapper.boundingBox())!;
+    const blockBounding = (await block.boundingBox())!;
+    expect(scaleWrapperBounding).not.toBeNull();
+    expect(blockBounding).not.toBeNull();
+    expect(blockBounding.x + blockBounding.width).toBeGreaterThan(scaleWrapperBounding.x + scaleWrapperBounding.width);
+
+    await page.locator('#editor1 .ql-table-wrapper').evaluate((el) => {
+      el.scrollLeft = el.scrollWidth;
+    });
+    const scrollBlockBounding = (await block.boundingBox())!;
+    expect(scrollBlockBounding.x + scrollBlockBounding.width).toBeLessThanOrEqual(scaleWrapperBounding.x + scaleWrapperBounding.width);
+  });
 });
 
 extendTest('test TableResizeBox head click and shift click (column)', async ({ page }) => {
