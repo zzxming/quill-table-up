@@ -137,6 +137,12 @@ export class TableResizeLine extends TableResizeCommon {
       },
       onEnd: ({ position }) => {
         this.dragging = false;
+        // update the resizer position to the final position
+        if (this.colResizer) {
+          const resultX = this.dragXCommon.limitRange(this.tableBlot, position.x, true);
+          const rootRect = this.quill.root.getBoundingClientRect();
+          this.colResizer.style.left = `${resultX - rootRect.x}px`;
+        }
 
         this.updateTableCol(position.x);
         this.removeBreak();
@@ -198,6 +204,12 @@ export class TableResizeLine extends TableResizeCommon {
       },
       onEnd: ({ position }) => {
         this.dragging = false;
+        // update the resizer position to the final position
+        if (this.rowResizer) {
+          const resultY = this.dragYCommon.limitRange(this.tableBlot, position.y, true);
+          const rootRect = this.quill.root.getBoundingClientRect();
+          this.rowResizer.style.left = `${resultY - rootRect.y}px`;
+        }
 
         this.updateTableRow(position.y);
         this.removeBreak();
