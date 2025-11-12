@@ -169,73 +169,122 @@ extendTest('TableResize on full width should not outer 100%', async ({ page, edi
   expect(width).toBeCloseTo(100, 3);
 });
 
-test('test TableResizeScale functional', async ({ page }) => {
-  await createTableBySelect(page, 'container1', 3, 3);
-  const centerCell = page.locator('#editor1').getByRole('cell').nth(4);
-  await centerCell.click();
-  const cellBounding = (await centerCell.boundingBox())!;
-  const scaleBtnBounding = (await page.locator('#editor1 .table-up-scale__block').boundingBox())!;
-  expect(cellBounding).not.toBeNull();
-  expect(scaleBtnBounding).not.toBeNull();
-  await page.mouse.move(scaleBtnBounding.x + scaleBtnBounding.width / 2, scaleBtnBounding.y + scaleBtnBounding.height / 2);
-  await page.mouse.down();
-  await page.mouse.move(scaleBtnBounding.x + scaleBtnBounding.width / 2 - 90, scaleBtnBounding.y + scaleBtnBounding.height / 2 + 90);
-  await page.mouse.up();
-  const cols = page.locator('#editor1 .ql-table-wrapper col');
-  for (const col of await cols.all()) {
-    await expect(col).toHaveAttribute('width', `${Math.floor(cellBounding.width - 30)}px`);
-  }
+extendTest.describe('TableResizeScale functional', () => {
+  extendTest('test TableResizeScale functional', async ({ page }) => {
+    await createTableBySelect(page, 'container1', 3, 3);
+    const centerCell = page.locator('#editor1').getByRole('cell').nth(4);
+    await centerCell.click();
+    const cellBounding = (await centerCell.boundingBox())!;
+    const scaleBtnBounding = (await page.locator('#editor1 .table-up-scale__block').boundingBox())!;
+    expect(cellBounding).not.toBeNull();
+    expect(scaleBtnBounding).not.toBeNull();
+    await page.mouse.move(scaleBtnBounding.x + scaleBtnBounding.width / 2, scaleBtnBounding.y + scaleBtnBounding.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(scaleBtnBounding.x + scaleBtnBounding.width / 2 - 90, scaleBtnBounding.y + scaleBtnBounding.height / 2 + 90);
+    await page.mouse.up();
+    const cols = page.locator('#editor1 .ql-table-wrapper col');
+    for (const col of await cols.all()) {
+      await expect(col).toHaveAttribute('width', `${Math.floor(cellBounding.width - 30)}px`);
+    }
 
-  const cells = page.locator('#editor1 .ql-table-wrapper td');
-  for (const cell of await cells.all()) {
-    await expect(cell).toHaveCSS('height', `${Math.floor(cellBounding.height + 30)}px`);
-  }
-});
-
-extendTest('test TableResizeBox and TableResizeScale should update when text change', async ({ page, editorPage }) => {
-  editorPage.index = 1;
-  await createTableBySelect(page, 'container2', 3, 3);
-
-  const lineBound = (await page.locator('#editor2 .ql-editor > p').first().boundingBox())!;
-  expect(lineBound).not.toBeNull();
-  await page.locator('#editor2 .ql-table .ql-table-cell').nth(0).click();
-  const scale = page.locator('#container2 .table-up-scale');
-  const boxTop = await page.locator('#container2 .table-up-resize-box').evaluate((element) => {
-    return Number.parseFloat(window.getComputedStyle(element).top);
-  });
-  const scaleTop = await scale.evaluate((element) => {
-    return Number.parseFloat(window.getComputedStyle(element).top);
-  });
-  await expect(scale).toBeVisible();
-  await expect(page.locator('#container2 .table-up-resize-box .table-up-resize-box__corner')).toBeVisible();
-
-  await editorPage.updateContents([{ insert: '12345\n12345\n12345' }], 'user');
-  await page.evaluate(() => {
-    window.scrollTo(0, 0);
+    const cells = page.locator('#editor1 .ql-table-wrapper td');
+    for (const cell of await cells.all()) {
+      await expect(cell).toHaveCSS('height', `${Math.floor(cellBounding.height + 30)}px`);
+    }
   });
 
-  await expect(scale).toBeVisible();
-  await expect(page.locator('#container2 .table-up-resize-box .table-up-resize-box__corner')).toBeVisible();
-  const newScaleTop = await scale.evaluate((element) => {
-    return Number.parseFloat(window.getComputedStyle(element).top);
+  extendTest('test TableResizeBox and TableResizeScale should update when text change', async ({ page, editorPage }) => {
+    editorPage.index = 1;
+    await createTableBySelect(page, 'container2', 3, 3);
+
+    const lineBound = (await page.locator('#editor2 .ql-editor > p').first().boundingBox())!;
+    expect(lineBound).not.toBeNull();
+    await page.locator('#editor2 .ql-table .ql-table-cell').nth(0).click();
+    const scale = page.locator('#container2 .table-up-scale');
+    const boxTop = await page.locator('#container2 .table-up-resize-box').evaluate((element) => {
+      return Number.parseFloat(window.getComputedStyle(element).top);
+    });
+    const scaleTop = await scale.evaluate((element) => {
+      return Number.parseFloat(window.getComputedStyle(element).top);
+    });
+    await expect(scale).toBeVisible();
+    await expect(page.locator('#container2 .table-up-resize-box .table-up-resize-box__corner')).toBeVisible();
+
+    await editorPage.updateContents([{ insert: '12345\n12345\n12345' }], 'user');
+    await page.evaluate(() => {
+      window.scrollTo(0, 0);
+    });
+
+    await expect(scale).toBeVisible();
+    await expect(page.locator('#container2 .table-up-resize-box .table-up-resize-box__corner')).toBeVisible();
+    const newScaleTop = await scale.evaluate((element) => {
+      return Number.parseFloat(window.getComputedStyle(element).top);
+    });
+    expect(newScaleTop).toBeCloseTo(scaleTop + lineBound.height * 2, 4);
+    const newBoxTop = await page.locator('#container2 .table-up-resize-box').evaluate((element) => {
+      return Number.parseFloat(window.getComputedStyle(element).top);
+    });
+    expect(newBoxTop).toBeCloseTo(boxTop + lineBound.height * 2, 4);
   });
-  expect(newScaleTop).toBeCloseTo(scaleTop + lineBound.height * 2, 4);
-  const newBoxTop = await page.locator('#container2 .table-up-resize-box').evaluate((element) => {
-    return Number.parseFloat(window.getComputedStyle(element).top);
+
+  extendTest('test TableResizeScale should hide when table width switch full', async ({ page }) => {
+    await createTableBySelect(page, 'container1', 3, 3);
+
+    const cell = page.locator('#editor1 .ql-editor .ql-table td').nth(0);
+    await cell.click();
+    await expect(page.locator('#container1 .table-up-scale')).toBeVisible();
+
+    await cell.click({ button: 'right' });
+    await page.locator('.table-up-menu.is-contextmenu .table-up-menu__item').filter({ hasText: 'Switch table width' }).first().click();
+    await expect(page.locator('#container1 .table-up-scale')).not.toBeVisible();
   });
-  expect(newBoxTop).toBeCloseTo(boxTop + lineBound.height * 2, 4);
-});
 
-extendTest('test TableResizeScale should hide when table width switch full', async ({ page }) => {
-  await createTableBySelect(page, 'container1', 3, 3);
+  extendTest('TableResizeScale block should scroll with table wrapper', async ({ page, editorPage }) => {
+    editorPage.index = 0;
+    await editorPage.setContents([
+      { insert: '\n' },
+      { insert: { 'table-up-col': { tableId: '1', colId: '1', width: 500 } } },
+      { insert: { 'table-up-col': { tableId: '1', colId: '2', width: 500 } } },
+      { insert: { 'table-up-col': { tableId: '1', colId: '3', width: 500 } } },
+      { insert: '1' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '1', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '2' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '2', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '3' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '1', colId: '3', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '4' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '1', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '5' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '2', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '6' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '2', colId: '3', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '7' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '3', colId: '1', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '8' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '3', colId: '2', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '9' },
+      { attributes: { 'table-up-cell-inner': { tableId: '1', rowId: '3', colId: '3', rowspan: 1, colspan: 1 } }, insert: '\n' },
+      { insert: '\n' },
+    ]);
 
-  const cell = page.locator('#editor1 .ql-editor .ql-table td').nth(0);
-  await cell.click();
-  await expect(page.locator('#container1 .table-up-scale')).toBeVisible();
+    const cell = page.locator('#container1 .ql-editor .ql-table td').nth(0);
+    await cell.click();
 
-  await cell.click({ button: 'right' });
-  await page.locator('.table-up-menu.is-contextmenu .table-up-menu__item').filter({ hasText: 'Switch table width' }).first().click();
-  await expect(page.locator('#container1 .table-up-scale')).not.toBeVisible();
+    const scaleWrapper = page.locator('#container1 .table-up-scale');
+    const block = page.locator('#container1 .table-up-scale .table-up-scale__block');
+    await expect(block).toBeVisible();
+    const scaleWrapperBounding = (await scaleWrapper.boundingBox())!;
+    const blockBounding = (await block.boundingBox())!;
+    expect(scaleWrapperBounding).not.toBeNull();
+    expect(blockBounding).not.toBeNull();
+    expect(blockBounding.x + blockBounding.width).toBeGreaterThan(scaleWrapperBounding.x + scaleWrapperBounding.width);
+
+    await page.locator('#editor1 .ql-table-wrapper').evaluate((el) => {
+      el.scrollLeft = el.scrollWidth;
+    });
+    const scrollBlockBounding = (await block.boundingBox())!;
+    expect(scrollBlockBounding.x + scrollBlockBounding.width).toBeLessThanOrEqual(scaleWrapperBounding.x + scaleWrapperBounding.width);
+  });
 });
 
 extendTest('test TableResizeBox head click and shift click (column)', async ({ page }) => {
