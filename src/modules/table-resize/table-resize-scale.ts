@@ -14,7 +14,6 @@ export class TableResizeScale extends TableDomSelector {
   tableMainBlot?: TableMainFormat;
   tableWrapperBlot?: TableWrapperFormat;
   bem = createBEM('scale');
-  offset: number = 6;
   options: TableResizeScaleOptions;
   root?: HTMLElement;
   block?: HTMLElement;
@@ -40,6 +39,7 @@ export class TableResizeScale extends TableDomSelector {
   resolveOptions(options: Partial<TableResizeScaleOptions>) {
     return Object.assign({
       blockSize: 12,
+      offset: 6,
     }, options);
   }
 
@@ -115,7 +115,7 @@ export class TableResizeScale extends TableDomSelector {
     const tableWrapperRect = this.tableWrapperBlot.domNode.getBoundingClientRect();
     const editorRect = this.quill.root.getBoundingClientRect();
     const { scrollTop, scrollLeft } = this.tableWrapperBlot.domNode;
-    const blockSize = this.options.blockSize * 2 + this.offset;
+    const blockSize = this.options.blockSize * 2 + this.options.offset;
     const rootWidth = Math.min(tableRect.width, tableWrapperRect.width) + blockSize;
     const rootHeight = Math.min(tableRect.height, tableWrapperRect.height) + blockSize;
     Object.assign(this.root.style, {
