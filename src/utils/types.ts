@@ -34,6 +34,7 @@ export interface TableSelectionOptions {
 }
 export interface TableResizeScaleOptions {
   blockSize: number;
+  offset: number;
 }
 export interface TableResizeBoxOptions {
   size: number;

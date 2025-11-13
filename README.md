@@ -275,6 +275,18 @@ const tableMenuTools: Record<string, Tool> = {
     tip: 'Toggle td between th',
     handle: (tableModule, selectedTds) => {},
   },
+  ConvertTothead: {
+    name: 'ConvertTothead',
+    icon: ConvertCell,
+    tip: 'Convert to thead',
+    handle: (tableModule, selectedTds) => {},
+  },
+  ConvertTotfoot: {
+    name: 'ConvertTotfoot',
+    icon: ConvertCell,
+    tip: 'Convert to tfoot',
+    handle: (tableModule, selectedTds) => {},
+  },
 };
 const defaultTools = [
   tableMenuTools.InsertTop,
@@ -302,9 +314,10 @@ Equal scale table cell handler
 
 #### Options
 
-| Attribute | Description              | Type     | Default |
-| --------- | ------------------------ | -------- | ------- |
-| blockSize | resize handle block size | `number` | `12`    |
+| Attribute | Description                   | Type     | Default |
+| --------- | ----------------------------- | -------- | ------- |
+| blockSize | resize handle block size      | `number` | `12`    |
+| offset    | resize handle offset to table | `number` | `6`     |
 
 ### TableAlign
 
