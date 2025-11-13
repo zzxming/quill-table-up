@@ -3,7 +3,7 @@ import type { TableUp } from '../../table-up';
 import type { TableResizeScaleOptions } from '../../utils';
 import Quill from 'quill';
 import { getTableMainRect } from '../../formats';
-import { addScrollEvent, clearScrollEvent, createBEM, tableUpSize } from '../../utils';
+import { addScrollEvent, clearScrollEvent, createBEM, dragElement, tableUpSize } from '../../utils';
 import { TableDomSelector } from '../table-dom-selector';
 import { isTableAlignRight } from './utils';
 
@@ -14,8 +14,6 @@ export class TableResizeScale extends TableDomSelector {
   tableMainBlot?: TableMainFormat;
   tableWrapperBlot?: TableWrapperFormat;
   bem = createBEM('scale');
-  startX: number = 0;
-  startY: number = 0;
   offset: number = 6;
   options: TableResizeScaleOptions;
   root?: HTMLElement;
@@ -58,37 +56,34 @@ export class TableResizeScale extends TableDomSelector {
 
     let originColWidth: { blot: TableColFormat; width: number }[] = [];
     let originRowHeight: { blot: TableRowFormat; height: number }[] = [];
-    const handleMouseMove = (e: MouseEvent) => {
-      if (!this.tableMainBlot) return;
-      // divide equally by col count/row count
-      const isRight = isTableAlignRight(this.tableMainBlot) ? -1 : 1;
-      const diffX = (e.clientX - this.startX) * isRight;
-      const diffY = e.clientY - this.startY;
-      const itemWidth = Math.floor(diffX / originColWidth.length);
-      const itemHeight = Math.floor(diffY / originRowHeight.length);
 
-      for (const { blot, width } of originColWidth) {
-        blot.width = Math.max(width + itemWidth, tableUpSize.colMinWidthPx);
-      }
-      for (const { blot, height } of originRowHeight) {
-        blot.setHeight(`${Math.max(height + itemHeight, tableUpSize.rowMinHeightPx)}px`);
-      }
-    };
-    const handleMouseUp = () => {
-      originColWidth = [];
-      originRowHeight = [];
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
-    };
-    this.block.addEventListener('mousedown', (e) => {
-      if (!this.tableMainBlot || this.isTableOutofEditor()) return;
-      this.startX = e.clientX;
-      this.startY = e.clientY;
-      // save the origin width and height to calculate result width and height
-      originColWidth = this.tableMainBlot.getCols().map(col => ({ blot: col, width: Math.floor(col.width) }));
-      originRowHeight = this.tableMainBlot.getRows().map(row => ({ blot: row, height: Math.floor(row.domNode.getBoundingClientRect().height) }));
-      document.addEventListener('mousemove', handleMouseMove);
-      document.addEventListener('mouseup', handleMouseUp);
+    dragElement(this.block, {
+      onStart: () => {
+        if (!this.tableMainBlot || this.isTableOutofEditor()) return;
+        // save the origin width and height to calculate result width and height
+        originColWidth = this.tableMainBlot.getCols().map(col => ({ blot: col, width: Math.floor(col.width) }));
+        originRowHeight = this.tableMainBlot.getRows().map(row => ({ blot: row, height: Math.floor(row.domNode.getBoundingClientRect().height) }));
+      },
+      onMove: ({ movePosition }) => {
+        if (!this.tableMainBlot) return;
+        // divide equally by col count/row count
+        const isRight = isTableAlignRight(this.tableMainBlot) ? -1 : 1;
+        const diffX = movePosition.x * isRight;
+        const diffY = movePosition.y;
+        const itemWidth = Math.floor(diffX / originColWidth.length);
+        const itemHeight = Math.floor(diffY / originRowHeight.length);
+
+        for (const { blot, width } of originColWidth) {
+          blot.width = Math.max(width + itemWidth, tableUpSize.colMinWidthPx);
+        }
+        for (const { blot, height } of originRowHeight) {
+          blot.setHeight(`${Math.max(height + itemHeight, tableUpSize.rowMinHeightPx)}px`);
+        }
+      },
+      onEnd: () => {
+        originColWidth = [];
+        originRowHeight = [];
+      },
     });
     this.block.addEventListener('dragstart', e => e.preventDefault());
   }
