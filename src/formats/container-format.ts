@@ -15,8 +15,8 @@ export class ContainerFormat extends Container {
   static requiredContainer: TypeParchment.BlotConstructor;
   static defaultChild?: TypeParchment.BlotConstructor;
 
-  static allowAttrs = new Set<string>([]);
-  static allowDataAttrs = new Set<string>([]);
+  static allowAttrs = new Set<string>();
+  static allowDataAttrs = new Set<string>();
   // handle the attribute change when use `setFormatValue`
   static allowDataAttrsChangeHandler: Record<string, string> = {};
 
