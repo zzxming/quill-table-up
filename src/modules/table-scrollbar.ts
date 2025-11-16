@@ -1,10 +1,29 @@
 import type { TableMainFormat } from '../formats';
 import type { TableUp } from '../table-up';
+import type { Position } from '../utils';
 import Quill from 'quill';
 import { getTableMainRect } from '../formats';
 import { addScrollEvent, clearScrollEvent, createBEM, debounce } from '../utils';
 import { TableDomSelector } from './table-dom-selector';
 
+const propertyMapY = {
+  size: 'height',
+  offset: 'offsetHeight',
+  scrollDirection: 'scrollTop',
+  scrollSize: 'scrollHeight',
+  axis: 'y',
+  direction: 'top',
+  client: 'clientY',
+} as const;
+const propertyMapX = {
+  size: 'width',
+  offset: 'offsetWidth',
+  scrollDirection: 'scrollLeft',
+  scrollSize: 'scrollWidth',
+  axis: 'x',
+  direction: 'left',
+  client: 'clientX',
+} as const;
 export class Scrollbar {
   minSize: number = 20;
   gap: number = 4;
@@ -16,22 +35,15 @@ export class Scrollbar {
   sizeWidth: string = '';
   sizeHeight: string = '';
   size: string = '';
-  thumbState: {
-    X: number;
-    Y: number;
-  } = {
-    X: 0,
-    Y: 0,
-  };
-
+  bem = createBEM('scrollbar');
+  tableMainBlot: TableMainFormat;
   ob: ResizeObserver;
   container: HTMLElement;
   scrollbar: HTMLElement;
   thumb: HTMLElement = document.createElement('div');
   scrollHandler: [HTMLElement, (e: Event) => void][] = [];
-  propertyMap: { readonly size: 'height'; readonly offset: 'offsetHeight'; readonly scrollDirection: 'scrollTop'; readonly scrollSize: 'scrollHeight'; readonly axis: 'Y'; readonly direction: 'top'; readonly client: 'clientY' } | { readonly size: 'width'; readonly offset: 'offsetWidth'; readonly scrollDirection: 'scrollLeft'; readonly scrollSize: 'scrollWidth'; readonly axis: 'X'; readonly direction: 'left'; readonly client: 'clientX' };
-  bem = createBEM('scrollbar');
-  tableMainBlot: TableMainFormat;
+  propertyMap: typeof propertyMapY | typeof propertyMapX;
+  thumbState: Position = { x: 0, y: 0 };
 
   get isVertical() {
     return this.options.isVertical;
@@ -40,25 +52,7 @@ export class Scrollbar {
   constructor(public quill: Quill, public table: HTMLElement, public options: { isVertical: boolean }) {
     this.tableMainBlot = Quill.find(this.table) as TableMainFormat;
     this.container = table.parentElement!;
-    this.propertyMap = this.isVertical
-      ? {
-          size: 'height',
-          offset: 'offsetHeight',
-          scrollDirection: 'scrollTop',
-          scrollSize: 'scrollHeight',
-          axis: 'Y',
-          direction: 'top',
-          client: 'clientY',
-        } as const
-      : {
-          size: 'width',
-          offset: 'offsetWidth',
-          scrollDirection: 'scrollLeft',
-          scrollSize: 'scrollWidth',
-          axis: 'X',
-          direction: 'left',
-          client: 'clientX',
-        } as const;
+    this.propertyMap = this.isVertical ? propertyMapY : propertyMapX;
     this.calculateSize();
     this.ob = new ResizeObserver(() => this.update());
     this.ob.observe(table);
@@ -189,7 +183,7 @@ export class Scrollbar {
     this.move = wrap[this.propertyMap.scrollDirection] * 100 / offset * (this.isVertical ? this.ratioY : this.ratioX);
     Object.assign(this.thumb.style, {
       [this.propertyMap.size]: this.size,
-      transform: `translate${this.propertyMap.axis}(${this.move}%)`,
+      transform: `translate${this.propertyMap.axis.toUpperCase()}(${this.move}%)`,
     });
   }
 

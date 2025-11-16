@@ -187,8 +187,7 @@ export function createTableDeltaOps(row: number, col: number, colOptions?: ColOp
     );
   }
   for (const [i, _] of new Array(col).fill(0).entries()) {
-    const value: TableColDeltaValue = { tableId, colId: `${i + 1}`, width: 1 / col * 100 };
-    value.full = full;
+    const value: TableColDeltaValue = { tableId, colId: `${i + 1}`, width: 1 / col * 100, full };
     if (!full) {
       value.width = width;
     }

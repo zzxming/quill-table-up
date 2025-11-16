@@ -31,7 +31,7 @@ export class TableCaptionFormat extends BlockOverride {
   static formats(domNode: HTMLElement) {
     const { tableId } = domNode.dataset;
     const value: TableCaptionValue = {
-      tableId: String(tableId),
+      tableId: tableId!,
       side: domNode.style.captionSide === 'bottom' ? 'bottom' : 'top',
     };
     return value;

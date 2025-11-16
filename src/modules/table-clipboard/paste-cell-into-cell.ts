@@ -17,8 +17,8 @@ interface CellUpdate {
   length: number;
   insertDelta: TypeDelta;
   cell: TableCellInnerFormat;
-  rowspan?: number;
-  colspan?: number;
+  rowspan: number;
+  colspan: number;
   emptyRow?: string[];
 }
 interface TableCellValueLike {

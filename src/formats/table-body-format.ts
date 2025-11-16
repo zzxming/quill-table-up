@@ -40,7 +40,7 @@ export class TableBodyFormat extends ContainerFormat {
   convertBody(tag: TableBodyTag) {
     const blots = this.descendants(TableCellInnerFormat);
     for (const blot of blots) {
-      (blot as any).wrapTag = tag;
+      blot.wrapTag = tag;
     }
   }
 
