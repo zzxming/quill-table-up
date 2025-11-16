@@ -59,7 +59,7 @@ export class TableResizeScale extends TableDomSelector {
 
     dragElement(this.block, {
       onStart: () => {
-        if (!this.tableMainBlot || this.isTableOutofEditor()) return;
+        if (!this.tableMainBlot) return;
         // save the origin width and height to calculate result width and height
         originColWidth = this.tableMainBlot.getCols().map(col => ({ blot: col, width: Math.floor(col.width) }));
         originRowHeight = this.tableMainBlot.getRows().map(row => ({ blot: row, height: Math.floor(row.domNode.getBoundingClientRect().height) }));
@@ -86,22 +86,6 @@ export class TableResizeScale extends TableDomSelector {
       },
     });
     this.block.addEventListener('dragstart', e => e.preventDefault());
-  }
-
-  isTableOutofEditor(): boolean {
-    if (!this.tableMainBlot || !this.tableWrapperBlot || this.tableMainBlot.full) return false;
-    // if tableMain width larger than tableWrapper. reset tableMain width equal editor width
-    const tableRect = this.tableMainBlot.domNode.getBoundingClientRect();
-    const tableWrapperRect = this.tableWrapperBlot.domNode.getBoundingClientRect();
-    // equal scale
-    if (tableRect.width > tableWrapperRect.width) {
-      for (const col of this.tableMainBlot.getCols()) {
-        col.width = Math.floor((col.width / tableRect.width) * tableWrapperRect.width);
-      }
-      this.tableMainBlot.colWidthFillTable();
-      return true;
-    }
-    return false;
   }
 
   update() {
