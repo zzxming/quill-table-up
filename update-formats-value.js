@@ -1,16 +1,16 @@
 /**
  *  This file is an example of modifying the blot name and delta data structure
-
+ *
  * Change the blot name
  *  table-up-col -> a-col
  *  table-up-cell -> a-cell
  *  table-up-cell-inner -> a-cell-inner
-
+ *
  * Change the delta data structure
  *  colId -> column
  *  rowId -> row
  *  colId -> cell
-
+ *
  */
 
 import Quill from 'quill';

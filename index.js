@@ -55,6 +55,7 @@ const quillOptions = [
             module: TableResizeScale,
             options: {
               blockSize: 12,
+              offset: 6,
             },
           },
           {
@@ -171,7 +172,13 @@ const quillOptions = [
         modules: [
           { module: TableVirtualScrollbar },
           { module: TableAlign },
-          { module: TableResizeBox },
+          {
+            module: TableResizeBox,
+            options: {
+              size: 12,
+              draggable: true,
+            },
+          },
           { module: TableResizeScale },
           { module: TableSelection },
           { module: TableMenuSelect },
